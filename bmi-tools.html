@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BMI / 体脂估算</title>
+  <style>
+    :root {
+      --bg: #f5f5f5;
+      --card: #ffffff;
+      --text: rgba(0, 0, 0, 0.85);
+      --muted: rgba(0, 0, 0, 0.65);
+      --border: #f0f0f0;
+      --primary: #1677ff;
+      --danger: #ff4d4f;
+      --ok: #52c41a;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+        Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 0;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .card h2 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 10px;
+      align-items: center;
+      margin: 8px 0;
+    }
+
+    .row label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    input, select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      outline: none;
+      font-size: 16px;
+      background: #fff;
+      min-height: 44px;
+    }
+
+    input:focus, select:focus {
+      border-color: rgba(22, 119, 255, 0.45);
+      box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.15);
+    }
+
+    .result {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .kv {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      background: #fafafa;
+    }
+
+    .kv .k {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .kv .v {
+      font-family: var(--mono);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 520px) {
+      .container { padding: 14px; }
+      .row { grid-template-columns: 1fr; gap: 6px; align-items: stretch; }
+      .kv { flex-direction: column; align-items: flex-start; }
+      .kv .v { white-space: normal; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>BMI / 体脂估算</h1>
+      <div class="sub">快速参考 · 结果会有误差</div>
+    </div>
+
+    <div class="card">
+      <h2>BMI & 体脂（估算）</h2>
+
+      <div class="row">
+        <label for="heightCm">身高（cm）</label>
+        <input id="heightCm" type="number" min="50" max="250" step="0.1" value="170" />
+      </div>
+      <div class="row">
+        <label for="weightKg">体重（kg）</label>
+        <input id="weightKg" type="number" min="10" max="300" step="0.1" value="65" />
+      </div>
+      <div class="row">
+        <label for="ageYears">年龄（岁）</label>
+        <input id="ageYears" type="number" min="1" max="120" step="1" value="30" />
+      </div>
+      <div class="row">
+        <label for="sex">性别</label>
+        <select id="sex">
+          <option value="male" selected>男</option>
+          <option value="female">女</option>
+        </select>
+      </div>
+
+      <div class="result">
+        <div class="kv"><div class="k">BMI</div><div class="v" id="outBmi">-</div></div>
+        <div class="kv"><div class="k">BMI 分类（WHO）</div><div class="v" id="outBmiCat">-</div></div>
+        <div class="kv"><div class="k">体脂率估算（%）</div><div class="v" id="outBf">-</div></div>
+      </div>
+
+      <div class="hint">
+        体脂率这里用常见的 BMI 估算公式（Deurenberg），适合快速参考；误差会受肌肉量、体型、围度等影响。更准确建议使用体脂秤/围度法/DEXA 等。
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toNum(el, fallback = 0) {
+      const v = Number(el.value);
+      return Number.isFinite(v) ? v : fallback;
+    }
+
+    function clamp(n, min, max) {
+      return Math.max(min, Math.min(max, n));
+    }
+
+    const els = {
+      heightCm: document.getElementById('heightCm'),
+      weightKg: document.getElementById('weightKg'),
+      ageYears: document.getElementById('ageYears'),
+      sex: document.getElementById('sex'),
+      outBmi: document.getElementById('outBmi'),
+      outBmiCat: document.getElementById('outBmiCat'),
+      outBf: document.getElementById('outBf'),
+    };
+
+    function bmiCategory(bmi) {
+      if (!Number.isFinite(bmi) || bmi <= 0) return '-';
+      // WHO classification (for adults)
+      if (bmi < 18.5) return '偏瘦（<18.5）';
+      if (bmi < 25) return '正常（18.5–24.9）';
+      if (bmi < 30) return '超重（25–29.9）';
+      return '肥胖（≥30）';
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem('bmi_tool_state');
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          for (const k in data) {
+            if (els[k] && els[k].tagName !== 'SPAN' && els[k].tagName !== 'DIV') {
+              els[k].value = data[k];
+            }
+          }
+        } catch (e) {}
+      }
+    }
+
+    function saveState() {
+      const state = {};
+      for (const k in els) {
+        if (els[k] && els[k].tagName !== 'SPAN' && els[k].tagName !== 'DIV') {
+          state[k] = els[k].value;
+        }
+      }
+      localStorage.setItem('bmi_tool_state', JSON.stringify(state));
+    }
+
+    function compute() {
+      saveState();
+      const hCm = Math.max(1, toNum(els.heightCm));
+      const wKg = Math.max(0, toNum(els.weightKg));
+      const age = clamp(toNum(els.ageYears), 1, 120);
+      const sex = els.sex.value; // male/female
+
+      const hM = hCm / 100;
+      const bmi = wKg / (hM * hM);
+
+      els.outBmi.textContent = bmi > 0 ? bmi.toFixed(1) : '-';
+      els.outBmiCat.textContent = bmiCategory(bmi);
+
+      // Deurenberg formula:
+      // BF% = 1.20*BMI + 0.23*Age - 10.8*Sex - 5.4, Sex=1 male, 0 female
+      const sexFlag = sex === 'male' ? 1 : 0;
+      const bf = 1.2 * bmi + 0.23 * age - 10.8 * sexFlag - 5.4;
+      els.outBf.textContent = Number.isFinite(bf) ? bf.toFixed(1) : '-';
+    }
+
+    for (const key of Object.keys(els)) {
+      const el = els[key];
+      if (!el) continue;
+      el.addEventListener('input', compute);
+      el.addEventListener('change', compute);
+    }
+
+    loadState();
+    compute();
+  </script>
+</body>
+</html>
+

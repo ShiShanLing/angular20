@@ -1,0 +1,1150 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>健康小工具（BMI / 体脂 / 步数热量 / 喝水提醒导出）</title>
+  <style>
+    :root {
+      --bg: #f5f5f5;
+      --card: #ffffff;
+      --text: rgba(0, 0, 0, 0.85);
+      --muted: rgba(0, 0, 0, 0.65);
+      --border: #f0f0f0;
+      --primary: #1677ff;
+      --danger: #ff4d4f;
+      --ok: #52c41a;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+        Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 0;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    @media (min-width: 920px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .card h2 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 10px;
+      align-items: center;
+      margin: 8px 0;
+    }
+
+    .row label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      outline: none;
+      font-size: 16px; /* iOS 小于 16px 会自动放大 */
+      background: #fff;
+      min-height: 44px;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+      font-size: 14px;
+      font-family: var(--mono);
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(22, 119, 255, 0.45);
+      box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.15);
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: #fff;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      min-height: 44px;
+    }
+
+    button.primary {
+      border-color: rgba(22, 119, 255, 0.45);
+      background: rgba(22, 119, 255, 0.08);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .result {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .split {
+      display: grid;
+      gap: 12px;
+    }
+
+    @media (min-width: 920px) {
+      .split {
+        grid-template-columns: 1fr 1fr;
+        align-items: start;
+      }
+    }
+
+    .kv {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      background: #fafafa;
+    }
+
+    .kv .k {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .kv .v {
+      font-family: var(--mono);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      margin-top: 10px;
+    }
+
+    .timer {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fafafa;
+    }
+
+    .timer .time {
+      font-family: var(--mono);
+      font-size: 28px;
+      letter-spacing: 1px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .todo {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      background: #fafafa;
+    }
+
+    .todo ul {
+      list-style: none;
+      padding: 0;
+      margin: 10px 0 0 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    .todo li {
+      display: grid;
+      grid-template-columns: 24px 1fr 54px;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .todo li.done {
+      opacity: 0.65;
+    }
+
+    .todo li.done .text {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    .todo .text {
+      font-size: 14px;
+      word-break: break-word;
+    }
+
+    .todo .btn-mini {
+      min-height: 32px;
+      padding: 6px 8px;
+      font-size: 12px;
+    }
+
+    .warn { color: var(--danger); }
+    .ok { color: var(--ok); }
+
+    @media (max-width: 520px) {
+      .container { padding: 14px; }
+      .row { grid-template-columns: 1fr; gap: 6px; align-items: stretch; }
+      .kv { flex-direction: column; align-items: flex-start; }
+      .kv .v { white-space: normal; }
+      .actions button { width: 100%; }
+      .todo li { grid-template-columns: 24px 1fr; }
+      .todo li button { grid-column: 1 / -1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>健康小工具</h1>
+      <div class="sub">BMI / 体脂估算 / 步数⇄热量 / 喝水提醒（导出日历 .ics）</div>
+    </div>
+
+    <div class="grid">
+      <!-- BMI / 体脂 -->
+      <div class="card">
+        <h2>BMI & 体脂（估算）</h2>
+
+        <div class="row">
+          <label for="heightCm">身高（cm）</label>
+          <input id="heightCm" type="number" min="50" max="250" step="0.1" value="170" />
+        </div>
+        <div class="row">
+          <label for="weightKg">体重（kg）</label>
+          <input id="weightKg" type="number" min="10" max="300" step="0.1" value="65" />
+        </div>
+        <div class="row">
+          <label for="ageYears">年龄（岁）</label>
+          <input id="ageYears" type="number" min="1" max="120" step="1" value="30" />
+        </div>
+        <div class="row">
+          <label for="sex">性别</label>
+          <select id="sex">
+            <option value="male" selected>男</option>
+            <option value="female">女</option>
+          </select>
+        </div>
+
+        <div class="result">
+          <div class="kv"><div class="k">BMI</div><div class="v" id="outBmi">-</div></div>
+          <div class="kv"><div class="k">BMI 分类（WHO）</div><div class="v" id="outBmiCat">-</div></div>
+          <div class="kv"><div class="k">体脂率估算（%）</div><div class="v" id="outBf">-</div></div>
+        </div>
+
+        <div class="hint">
+          体脂率这里用的是常见的 BMI 估算公式（Deurenberg），适合做快速参考，但误差会受肌肉量、围度、体型等影响；更准可用体脂秤或围度/DEXA 等方法。
+        </div>
+      </div>
+
+      <!-- 步数 / 热量 -->
+      <div class="card">
+        <h2>热量 & 步数换算（估算）</h2>
+
+        <div class="row">
+          <label for="steps">步数（steps）</label>
+          <input id="steps" type="number" min="0" step="100" value="8000" />
+        </div>
+        <div class="row">
+          <label for="strideMode">步幅估算方式</label>
+          <select id="strideMode">
+            <option value="auto" selected>按身高估算（≈身高×0.415）</option>
+            <option value="manual">手动输入步幅</option>
+          </select>
+        </div>
+        <div class="row" id="strideRow" style="display:none;">
+          <label for="strideCm">步幅（cm）</label>
+          <input id="strideCm" type="number" min="20" max="200" step="0.1" value="70" />
+        </div>
+
+        <div class="result">
+          <div class="kv"><div class="k">距离估算（km）</div><div class="v" id="outKm">-</div></div>
+          <div class="kv"><div class="k">每步消耗（kcal/步）</div><div class="v" id="outKcalPerStep">-</div></div>
+          <div class="kv"><div class="k">步数 → 热量（kcal）</div><div class="v" id="outKcalFromSteps">-</div></div>
+        </div>
+
+        <div class="hint">
+          简化模型：默认按体重做线性缩放，每步约消耗 0.04 kcal（70kg 参考值）。实际会受速度、坡度、步频、个体代谢差异影响。
+        </div>
+      </div>
+
+      <!-- 喝水提醒导出 -->
+      <div class="card" style="grid-column: 1 / -1;">
+        <h2>喝水提醒（导出到日历 .ics）</h2>
+
+        <div class="row">
+          <label for="waterDailyGoal">每日目标（ml）</label>
+          <input id="waterDailyGoal" type="number" min="0" step="50" value="2000" />
+        </div>
+        <div class="row">
+          <label for="waterPerReminder">每次提醒（ml）</label>
+          <input id="waterPerReminder" type="number" min="0" step="50" value="250" />
+        </div>
+        <div class="row">
+          <label for="startDate">开始日期</label>
+          <input id="startDate" type="date" />
+        </div>
+        <div class="row">
+          <label for="days">持续天数</label>
+          <input id="days" type="number" min="1" max="365" step="1" value="30" />
+        </div>
+        <div class="row">
+          <label for="timeList">每天提醒时间（HH:MM，多行）</label>
+          <textarea id="timeList">09:30
+11:00
+14:00
+16:00
+18:30</textarea>
+        </div>
+        <div class="row">
+          <label for="tzid">时区标识（TZID）</label>
+          <input id="tzid" type="text" value="Asia/Shanghai" />
+        </div>
+
+        <div class="result">
+          <div class="kv"><div class="k">每天提醒次数</div><div class="v" id="outTimesPerDay">-</div></div>
+          <div class="kv"><div class="k">每天计划饮水（ml）</div><div class="v" id="outPlannedMl">-</div></div>
+          <div class="kv"><div class="k">提示</div><div class="v" id="outWaterHint">-</div></div>
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="btnDownloadIcs" type="button">下载日历提醒（.ics）</button>
+          <button id="btnCopyIcs" type="button">复制 .ics 内容</button>
+        </div>
+
+        <div class="hint">
+          导出说明：下载的 `.ics` 可以导入到手机日历（iOS/安卓常见日历均支持）。每条提醒事件默认持续 5 分钟。
+        </div>
+      </div>
+
+      <!-- 时间效率 -->
+      <div class="card" style="grid-column: 1 / -1;">
+        <h2>时间效率：番茄钟 + 今日计划 / 倒计时 + 工期分解</h2>
+
+        <div class="split">
+          <div>
+            <h3 style="margin:0 0 8px 0;font-size:13px;color:var(--muted);">番茄钟 + 今日计划</h3>
+
+            <div class="timer">
+              <div class="pill">
+                <span>模式：</span>
+                <strong id="pomoMode">工作</strong>
+                <span>（第 <span id="pomoRound">1</span> 轮）</span>
+              </div>
+              <div class="time" id="pomoTime">25:00</div>
+
+              <div class="row" style="margin:0;">
+                <label for="pomoWork">工作（分钟）</label>
+                <input id="pomoWork" type="number" min="1" max="120" step="1" value="25" />
+              </div>
+              <div class="row" style="margin:0;">
+                <label for="pomoBreak">休息（分钟）</label>
+                <input id="pomoBreak" type="number" min="1" max="60" step="1" value="5" />
+              </div>
+              <div class="row" style="margin:0;">
+                <label for="pomoLongBreak">长休息（分钟）</label>
+                <input id="pomoLongBreak" type="number" min="1" max="90" step="1" value="15" />
+              </div>
+              <div class="row" style="margin:0;">
+                <label for="pomoLongEvery">每几轮长休息</label>
+                <input id="pomoLongEvery" type="number" min="2" max="10" step="1" value="4" />
+              </div>
+
+              <div class="actions">
+                <button class="primary" id="btnPomoStart" type="button">开始</button>
+                <button id="btnPomoPause" type="button" disabled>暂停</button>
+                <button id="btnPomoNext" type="button">切换到下一段</button>
+                <button id="btnPomoReset" type="button">重置</button>
+              </div>
+
+              <div class="hint">
+                说明：这是本地计时器（不会上传数据）。到点会弹窗提示；如果浏览器不允许弹窗，你可以看倒计时与标题变化。
+              </div>
+            </div>
+
+            <div class="todo" style="margin-top:12px;">
+              <div class="row" style="margin:0;">
+                <label for="todoInput">今日计划（输入一条，回车添加）</label>
+                <input id="todoInput" type="text" placeholder="例如：写日报 / 运动 30 分钟 / 阅读 20 页" />
+              </div>
+              <div class="actions">
+                <button class="primary" id="btnTodoAdd" type="button">添加</button>
+                <button id="btnTodoClearDone" type="button">清理已完成</button>
+                <button id="btnTodoClearAll" type="button">清空今天</button>
+              </div>
+              <ul id="todoList"></ul>
+              <div class="hint">
+                今日计划会按日期保存在浏览器本地（localStorage）。换一天会自动显示新列表。
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 style="margin:0 0 8px 0;font-size:13px;color:var(--muted);">倒计时 + 工期分解</h3>
+
+            <div class="row">
+              <label for="deadline">截止时间</label>
+              <input id="deadline" type="datetime-local" />
+            </div>
+
+            <div class="row">
+              <label for="totalHours">总工时（小时）</label>
+              <input id="totalHours" type="number" min="0" step="0.5" value="40" />
+            </div>
+
+            <div class="row">
+              <label for="doneHours">已完成（小时）</label>
+              <input id="doneHours" type="number" min="0" step="0.5" value="0" />
+            </div>
+
+            <div class="row">
+              <label for="hoursPerDay">每天可投入（小时）</label>
+              <input id="hoursPerDay" type="number" min="0" step="0.5" value="2" />
+            </div>
+
+            <div class="row">
+              <label for="workdaysOnly">仅计算工作日</label>
+              <select id="workdaysOnly">
+                <option value="no" selected>否（按自然日）</option>
+                <option value="yes">是（周一到周五）</option>
+              </select>
+            </div>
+
+            <div class="result">
+              <div class="kv"><div class="k">距离截止倒计时</div><div class="v" id="outCountdown">-</div></div>
+              <div class="kv"><div class="k">剩余工时</div><div class="v" id="outRemainHours">-</div></div>
+              <div class="kv"><div class="k">剩余可用天数</div><div class="v" id="outRemainDays">-</div></div>
+              <div class="kv"><div class="k">建议每天至少投入</div><div class="v" id="outNeedPerDay">-</div></div>
+              <div class="kv"><div class="k">是否来得及</div><div class="v" id="outFeasible">-</div></div>
+            </div>
+
+            <div class="hint">
+              说明：工期分解是“平均分配”的估算：剩余工时 ÷ 剩余可用天数。实际项目建议给风险缓冲（例如再加 20%）。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // -----------------------------
+    // 工具函数
+    // -----------------------------
+    function toNum(el, fallback = 0) {
+      const v = Number(el.value);
+      return Number.isFinite(v) ? v : fallback;
+    }
+
+    function clamp(n, min, max) {
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function fmt(n, digits = 2) {
+      const v = Number.isFinite(n) ? n : 0;
+      return v.toLocaleString('zh-CN', { maximumFractionDigits: digits });
+    }
+
+    function pad2(n) { return String(n).padStart(2, '0'); }
+
+    function ymd(date) {
+      return `${date.getFullYear()}${pad2(date.getMonth() + 1)}${pad2(date.getDate())}`;
+    }
+
+    function nowStampUtc() {
+      // DTSTAMP 使用 UTC（Z）
+      const d = new Date();
+      return `${d.getUTCFullYear()}${pad2(d.getUTCMonth()+1)}${pad2(d.getUTCDate())}T${pad2(d.getUTCHours())}${pad2(d.getUTCMinutes())}${pad2(d.getUTCSeconds())}Z`;
+    }
+
+    function parseTimeLines(text) {
+      const lines = String(text || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      const times = [];
+      for (const line of lines) {
+        const m = /^(\d{1,2}):(\d{2})$/.exec(line);
+        if (!m) continue;
+        const hh = clamp(Number(m[1]), 0, 23);
+        const mm = clamp(Number(m[2]), 0, 59);
+        times.push({ hh, mm, raw: `${pad2(hh)}:${pad2(mm)}` });
+      }
+      // 去重 + 排序
+      const uniq = Array.from(new Set(times.map(t => t.raw))).map(raw => {
+        const [h, m] = raw.split(':').map(Number);
+        return { hh: h, mm: m, raw };
+      });
+      uniq.sort((a, b) => (a.hh*60+a.mm) - (b.hh*60+b.mm));
+      return uniq;
+    }
+
+    // -----------------------------
+    // DOM
+    // -----------------------------
+    const els = {
+      heightCm: document.getElementById('heightCm'),
+      weightKg: document.getElementById('weightKg'),
+      ageYears: document.getElementById('ageYears'),
+      sex: document.getElementById('sex'),
+      outBmi: document.getElementById('outBmi'),
+      outBmiCat: document.getElementById('outBmiCat'),
+      outBf: document.getElementById('outBf'),
+
+      steps: document.getElementById('steps'),
+      strideMode: document.getElementById('strideMode'),
+      strideRow: document.getElementById('strideRow'),
+      strideCm: document.getElementById('strideCm'),
+      outKm: document.getElementById('outKm'),
+      outKcalPerStep: document.getElementById('outKcalPerStep'),
+      outKcalFromSteps: document.getElementById('outKcalFromSteps'),
+
+      waterDailyGoal: document.getElementById('waterDailyGoal'),
+      waterPerReminder: document.getElementById('waterPerReminder'),
+      startDate: document.getElementById('startDate'),
+      days: document.getElementById('days'),
+      timeList: document.getElementById('timeList'),
+      tzid: document.getElementById('tzid'),
+      outTimesPerDay: document.getElementById('outTimesPerDay'),
+      outPlannedMl: document.getElementById('outPlannedMl'),
+      outWaterHint: document.getElementById('outWaterHint'),
+      btnDownloadIcs: document.getElementById('btnDownloadIcs'),
+      btnCopyIcs: document.getElementById('btnCopyIcs'),
+
+      // 番茄钟
+      pomoMode: document.getElementById('pomoMode'),
+      pomoRound: document.getElementById('pomoRound'),
+      pomoTime: document.getElementById('pomoTime'),
+      pomoWork: document.getElementById('pomoWork'),
+      pomoBreak: document.getElementById('pomoBreak'),
+      pomoLongBreak: document.getElementById('pomoLongBreak'),
+      pomoLongEvery: document.getElementById('pomoLongEvery'),
+      btnPomoStart: document.getElementById('btnPomoStart'),
+      btnPomoPause: document.getElementById('btnPomoPause'),
+      btnPomoNext: document.getElementById('btnPomoNext'),
+      btnPomoReset: document.getElementById('btnPomoReset'),
+
+      // 今日计划
+      todoInput: document.getElementById('todoInput'),
+      btnTodoAdd: document.getElementById('btnTodoAdd'),
+      btnTodoClearDone: document.getElementById('btnTodoClearDone'),
+      btnTodoClearAll: document.getElementById('btnTodoClearAll'),
+      todoList: document.getElementById('todoList'),
+
+      // 倒计时/工期
+      deadline: document.getElementById('deadline'),
+      totalHours: document.getElementById('totalHours'),
+      doneHours: document.getElementById('doneHours'),
+      hoursPerDay: document.getElementById('hoursPerDay'),
+      workdaysOnly: document.getElementById('workdaysOnly'),
+      outCountdown: document.getElementById('outCountdown'),
+      outRemainHours: document.getElementById('outRemainHours'),
+      outRemainDays: document.getElementById('outRemainDays'),
+      outNeedPerDay: document.getElementById('outNeedPerDay'),
+      outFeasible: document.getElementById('outFeasible'),
+    };
+
+    // 初始化默认日期 = 今天
+    (function initDate() {
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = pad2(d.getMonth() + 1);
+      const dd = pad2(d.getDate());
+      els.startDate.value = `${yyyy}-${mm}-${dd}`;
+    })();
+
+    // 初始化截止时间：默认设置为今天 18:00（若已过则明天 18:00）
+    (function initDeadline() {
+      const d = new Date();
+      const target = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 18, 0, 0);
+      if (target.getTime() <= d.getTime()) target.setDate(target.getDate() + 1);
+      const yyyy = target.getFullYear();
+      const mm = pad2(target.getMonth() + 1);
+      const dd = pad2(target.getDate());
+      const hh = pad2(target.getHours());
+      const mi = pad2(target.getMinutes());
+      els.deadline.value = `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+    })();
+
+    // -----------------------------
+    // BMI / 体脂
+    // -----------------------------
+    function computeBmiAndBf() {
+      const hCm = Math.max(1, toNum(els.heightCm));
+      const wKg = Math.max(0, toNum(els.weightKg));
+      const age = clamp(toNum(els.ageYears), 1, 120);
+      const sex = els.sex.value; // male/female
+
+      const hM = hCm / 100;
+      const bmi = wKg / (hM * hM);
+
+      els.outBmi.textContent = bmi > 0 ? bmi.toFixed(1) : '-';
+      els.outBmiCat.textContent = bmiCategory(bmi);
+
+      // Deurenberg formula:
+      // BF% = 1.20*BMI + 0.23*Age - 10.8*Sex - 5.4, Sex=1 male, 0 female
+      const sexFlag = sex === 'male' ? 1 : 0;
+      const bf = 1.2 * bmi + 0.23 * age - 10.8 * sexFlag - 5.4;
+      els.outBf.textContent = Number.isFinite(bf) ? bf.toFixed(1) : '-';
+    }
+
+    function bmiCategory(bmi) {
+      if (!Number.isFinite(bmi) || bmi <= 0) return '-';
+      // WHO classification (for adults)
+      if (bmi < 18.5) return '偏瘦（<18.5）';
+      if (bmi < 25) return '正常（18.5–24.9）';
+      if (bmi < 30) return '超重（25–29.9）';
+      return '肥胖（≥30）';
+    }
+
+    // -----------------------------
+    // 步数 / 热量
+    // -----------------------------
+    function computeStepsKcal() {
+      const steps = Math.max(0, toNum(els.steps));
+      const wKg = Math.max(0, toNum(els.weightKg));
+      const hCm = Math.max(1, toNum(els.heightCm));
+
+      const mode = els.strideMode.value;
+      els.strideRow.style.display = mode === 'manual' ? '' : 'none';
+
+      // 步幅（cm）：默认按身高估算（常用经验值：0.415×身高）
+      const strideCm = mode === 'manual'
+        ? clamp(toNum(els.strideCm), 20, 200)
+        : (hCm * 0.415);
+
+      const km = steps * (strideCm / 100) / 1000;
+      els.outKm.textContent = `${fmt(km, 2)} km`;
+
+      // 每步消耗（kcal/步）：用一个简单的线性模型
+      // 参考值：70kg 时约 0.04 kcal/步（粗估）
+      const kcalPerStep = 0.04 * (wKg > 0 ? (wKg / 70) : 1);
+      els.outKcalPerStep.textContent = kcalPerStep.toFixed(4);
+
+      const kcalFromSteps = steps * kcalPerStep;
+      els.outKcalFromSteps.textContent = `${fmt(kcalFromSteps, 0)} kcal`;
+    }
+
+    // -----------------------------
+    // 喝水提醒（.ics）
+    // -----------------------------
+    function computeWaterPlan() {
+      const goal = Math.max(0, toNum(els.waterDailyGoal));
+      const per = Math.max(0, toNum(els.waterPerReminder));
+      const times = parseTimeLines(els.timeList.value);
+
+      els.outTimesPerDay.textContent = `${times.length} 次/天`;
+      const planned = per * times.length;
+      els.outPlannedMl.textContent = `${fmt(planned, 0)} ml`;
+
+      if (goal === 0 || times.length === 0 || per === 0) {
+        els.outWaterHint.innerHTML = '<span class="warn">请设置目标/每次饮水量/提醒时间</span>';
+        return;
+      }
+
+      const diff = planned - goal;
+      if (Math.abs(diff) <= 1e-9) {
+        els.outWaterHint.innerHTML = '<span class="ok">刚好等于每日目标</span>';
+      } else if (diff > 0) {
+        els.outWaterHint.innerHTML = `<span class="ok">比目标多 ${fmt(diff, 0)} ml（可适当减少次数或每次 ml）</span>`;
+      } else {
+        els.outWaterHint.innerHTML = `<span class="warn">比目标少 ${fmt(-diff, 0)} ml（可增加次数或每次 ml）</span>`;
+      }
+    }
+
+    function buildIcs() {
+      const per = Math.max(0, toNum(els.waterPerReminder));
+      const startDateStr = els.startDate.value;
+      const days = clamp(toNum(els.days), 1, 365);
+      const tzid = (els.tzid.value || 'Asia/Shanghai').trim();
+      const times = parseTimeLines(els.timeList.value);
+
+      if (!startDateStr || times.length === 0 || per === 0) {
+        return { ok: false, error: '请先填写开始日期、每天提醒时间、每次提醒饮水量。', ics: '' };
+      }
+
+      const [y, m, d] = startDateStr.split('-').map(Number);
+      const start = new Date(y, (m - 1), d);
+      const dtstamp = nowStampUtc();
+
+      // 事件标题尽量短，手机日历里更好看
+      const summary = `喝水提醒（${Math.round(per)}ml）`;
+      const desc = `喝水提醒：每次约 ${Math.round(per)} ml。\\n（此提醒由 health-tools.html 导出）`;
+
+      const lines = [];
+      lines.push('BEGIN:VCALENDAR');
+      lines.push('VERSION:2.0');
+      lines.push('PRODID:-//Health Tools//CN');
+      lines.push('CALSCALE:GREGORIAN');
+      lines.push('METHOD:PUBLISH');
+
+      // 逐天逐时间生成事件（最兼容）
+      // 每个事件 5 分钟
+      const durationMin = 5;
+
+      let uidCounter = 0;
+      for (let dayIdx = 0; dayIdx < days; dayIdx++) {
+        const cur = new Date(start.getTime());
+        cur.setDate(start.getDate() + dayIdx);
+        const dateStr = ymd(cur);
+
+        for (const t of times) {
+          uidCounter++;
+          const hh = pad2(t.hh);
+          const mm = pad2(t.mm);
+          const dtStartLocal = `${dateStr}T${hh}${mm}00`;
+
+          // 结束时间（本地浮动时间）：简单加 durationMin
+          const end = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate(), t.hh, t.mm, 0);
+          end.setMinutes(end.getMinutes() + durationMin);
+          const dtEndLocal = `${ymd(end)}T${pad2(end.getHours())}${pad2(end.getMinutes())}${pad2(end.getSeconds())}`;
+
+          const uid = `water-${dateStr}-${hh}${mm}-${uidCounter}@health-tools`;
+          lines.push('BEGIN:VEVENT');
+          lines.push(`UID:${uid}`);
+          lines.push(`DTSTAMP:${dtstamp}`);
+          lines.push(`SUMMARY:${summary}`);
+          lines.push(`DESCRIPTION:${desc}`);
+          lines.push(`DTSTART;TZID=${tzid}:${dtStartLocal}`);
+          lines.push(`DTEND;TZID=${tzid}:${dtEndLocal}`);
+          lines.push('END:VEVENT');
+        }
+      }
+
+      lines.push('END:VCALENDAR');
+      return { ok: true, error: '', ics: lines.join('\r\n') + '\r\n' };
+    }
+
+    function downloadText(filename, text) {
+      const blob = new Blob([text], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    // -----------------------------
+    // 番茄钟
+    // -----------------------------
+    const pomo = {
+      intervalId: null,
+      mode: 'work', // 'work' | 'break' | 'longBreak'
+      round: 1,
+      remainingSec: 25 * 60,
+      isRunning: false,
+      lastTickMs: 0,
+    };
+
+    function pomoSettings() {
+      const workMin = clamp(toNum(els.pomoWork), 1, 120);
+      const breakMin = clamp(toNum(els.pomoBreak), 1, 60);
+      const longMin = clamp(toNum(els.pomoLongBreak), 1, 90);
+      const longEvery = clamp(toNum(els.pomoLongEvery), 2, 10);
+      return { workMin, breakMin, longMin, longEvery };
+    }
+
+    function pomoModeLabel(mode) {
+      if (mode === 'work') return '工作';
+      if (mode === 'break') return '休息';
+      return '长休息';
+    }
+
+    function setPomoDisplay() {
+      const mm = Math.floor(pomo.remainingSec / 60);
+      const ss = pomo.remainingSec % 60;
+      els.pomoTime.textContent = `${pad2(mm)}:${pad2(ss)}`;
+      els.pomoMode.textContent = pomoModeLabel(pomo.mode);
+      els.pomoRound.textContent = String(pomo.round);
+
+      // 把倒计时放到页面标题里，方便切换标签页时查看
+      document.title = `${els.pomoTime.textContent} · ${pomoModeLabel(pomo.mode)} · 健康小工具`;
+    }
+
+    function setPomoMode(nextMode) {
+      const { workMin, breakMin, longMin } = pomoSettings();
+      pomo.mode = nextMode;
+      pomo.remainingSec = (nextMode === 'work' ? workMin : (nextMode === 'break' ? breakMin : longMin)) * 60;
+      setPomoDisplay();
+    }
+
+    function pomoStart() {
+      if (pomo.isRunning) return;
+      pomo.isRunning = true;
+      els.btnPomoStart.disabled = true;
+      els.btnPomoPause.disabled = false;
+      pomo.lastTickMs = Date.now();
+      pomo.intervalId = window.setInterval(pomoTick, 250);
+    }
+
+    function pomoPause() {
+      if (!pomo.isRunning) return;
+      pomo.isRunning = false;
+      els.btnPomoStart.disabled = false;
+      els.btnPomoPause.disabled = true;
+      if (pomo.intervalId !== null) {
+        window.clearInterval(pomo.intervalId);
+        pomo.intervalId = null;
+      }
+    }
+
+    function pomoReset() {
+      pomoPause();
+      pomo.round = 1;
+      setPomoMode('work');
+    }
+
+    function pomoNextSegment() {
+      // 手动切换到下一段（工作↔休息↔长休息）
+      const { longEvery } = pomoSettings();
+      if (pomo.mode === 'work') {
+        const useLong = (pomo.round % longEvery === 0);
+        setPomoMode(useLong ? 'longBreak' : 'break');
+      } else {
+        // 从休息回到工作：进入下一轮
+        if (pomo.mode !== 'work') pomo.round++;
+        setPomoMode('work');
+      }
+    }
+
+    function pomoTick() {
+      const now = Date.now();
+      const delta = Math.floor((now - pomo.lastTickMs) / 1000);
+      if (delta <= 0) return;
+      pomo.lastTickMs += delta * 1000;
+
+      pomo.remainingSec = Math.max(0, pomo.remainingSec - delta);
+      setPomoDisplay();
+
+      if (pomo.remainingSec === 0) {
+        pomoPause();
+        alert(`${pomoModeLabel(pomo.mode)}结束：切换到下一段`);
+        pomoNextSegment();
+      }
+    }
+
+    // 初始化番茄钟显示
+    (function initPomo() {
+      setPomoMode('work');
+      setPomoDisplay();
+      els.btnPomoStart.addEventListener('click', pomoStart);
+      els.btnPomoPause.addEventListener('click', pomoPause);
+      els.btnPomoNext.addEventListener('click', () => { pomoPause(); pomoNextSegment(); });
+      els.btnPomoReset.addEventListener('click', pomoReset);
+
+      // 改动设置时，如果未运行则刷新到当前模式的初始时间
+      for (const input of [els.pomoWork, els.pomoBreak, els.pomoLongBreak, els.pomoLongEvery]) {
+        input.addEventListener('change', () => { if (!pomo.isRunning) setPomoMode(pomo.mode); });
+      }
+    })();
+
+    // -----------------------------
+    // 今日计划（localStorage 按日期存储）
+    // -----------------------------
+    function todayKey() {
+      const d = new Date();
+      const key = `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+      return `health-tools.todo.${key}`;
+    }
+
+    function loadTodos() {
+      try {
+        const raw = localStorage.getItem(todayKey());
+        const list = raw ? JSON.parse(raw) : [];
+        return Array.isArray(list) ? list : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveTodos(list) {
+      localStorage.setItem(todayKey(), JSON.stringify(list));
+    }
+
+    function renderTodos() {
+      const list = loadTodos();
+      els.todoList.innerHTML = '';
+      for (const item of list) {
+        const li = document.createElement('li');
+        if (item.done) li.classList.add('done');
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = !!item.done;
+        cb.style.minHeight = '20px';
+        cb.addEventListener('change', () => {
+          const next = loadTodos().map(t => t.id === item.id ? { ...t, done: cb.checked } : t);
+          saveTodos(next);
+          renderTodos();
+        });
+
+        const text = document.createElement('div');
+        text.className = 'text';
+        text.textContent = item.text;
+
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'btn-mini';
+        del.textContent = '删除';
+        del.addEventListener('click', () => {
+          const next = loadTodos().filter(t => t.id !== item.id);
+          saveTodos(next);
+          renderTodos();
+        });
+
+        li.appendChild(cb);
+        li.appendChild(text);
+        li.appendChild(del);
+        els.todoList.appendChild(li);
+      }
+    }
+
+    function addTodo() {
+      const text = String(els.todoInput.value || '').trim();
+      if (!text) return;
+      const list = loadTodos();
+      list.unshift({ id: `${Date.now()}-${Math.random().toString(16).slice(2)}`, text, done: false });
+      saveTodos(list);
+      els.todoInput.value = '';
+      renderTodos();
+    }
+
+    (function initTodo() {
+      renderTodos();
+      els.btnTodoAdd.addEventListener('click', addTodo);
+      els.todoInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); addTodo(); }
+      });
+      els.btnTodoClearDone.addEventListener('click', () => {
+        const next = loadTodos().filter(t => !t.done);
+        saveTodos(next);
+        renderTodos();
+      });
+      els.btnTodoClearAll.addEventListener('click', () => {
+        if (!confirm('确定清空今天的全部计划吗？')) return;
+        saveTodos([]);
+        renderTodos();
+      });
+    })();
+
+    // -----------------------------
+    // 倒计时 + 工期分解
+    // -----------------------------
+    function isWorkday(d) {
+      const day = d.getDay(); // 0=Sun..6=Sat
+      return day >= 1 && day <= 5;
+    }
+
+    function countAvailableDays(from, to, workdaysOnly) {
+      if (to.getTime() <= from.getTime()) return 0;
+      let count = 0;
+      const cur = new Date(from.getFullYear(), from.getMonth(), from.getDate(), 0, 0, 0);
+      const end = new Date(to.getFullYear(), to.getMonth(), to.getDate(), 0, 0, 0);
+      while (cur.getTime() < end.getTime()) {
+        if (!workdaysOnly || isWorkday(cur)) count++;
+        cur.setDate(cur.getDate() + 1);
+        if (count > 5000) break;
+      }
+      return count;
+    }
+
+    function formatCountdown(ms) {
+      const totalSec = Math.max(0, Math.floor(ms / 1000));
+      const days = Math.floor(totalSec / 86400);
+      const hours = Math.floor((totalSec % 86400) / 3600);
+      const mins = Math.floor((totalSec % 3600) / 60);
+      const secs = totalSec % 60;
+      return `${days}天 ${pad2(hours)}:${pad2(mins)}:${pad2(secs)}`;
+    }
+
+    function computeSchedule() {
+      const dlStr = els.deadline.value;
+      const total = Math.max(0, toNum(els.totalHours));
+      const done = Math.max(0, toNum(els.doneHours));
+      const perDay = Math.max(0, toNum(els.hoursPerDay));
+      const workdaysOnly = els.workdaysOnly.value === 'yes';
+
+      const remain = Math.max(0, total - done);
+      els.outRemainHours.textContent = `${fmt(remain, 1)} 小时`;
+
+      if (!dlStr) {
+        els.outCountdown.textContent = '-';
+        els.outRemainDays.textContent = '-';
+        els.outNeedPerDay.textContent = '-';
+        els.outFeasible.textContent = '-';
+        return;
+      }
+
+      const deadline = new Date(dlStr);
+      const now = new Date();
+      const ms = deadline.getTime() - now.getTime();
+      els.outCountdown.textContent = formatCountdown(ms);
+
+      const daysAvail = countAvailableDays(now, deadline, workdaysOnly);
+      els.outRemainDays.textContent = `${daysAvail} 天`;
+
+      if (daysAvail === 0) {
+        const ok = remain === 0;
+        els.outNeedPerDay.textContent = ok ? '0' : '∞';
+        els.outFeasible.innerHTML = ok ? '<span class="ok">已完成</span>' : '<span class="warn">来不及（已到期）</span>';
+        return;
+      }
+
+      const needPerDay = remain / daysAvail;
+      els.outNeedPerDay.textContent = `${fmt(needPerDay, 2)} 小时/天`;
+
+      const feasible = perDay > 0 ? (needPerDay <= perDay + 1e-9) : (remain === 0);
+      els.outFeasible.innerHTML = feasible
+        ? '<span class="ok">大概率来得及</span>'
+        : '<span class="warn">可能来不及（需要提高每天投入或延长截止）</span>';
+    }
+
+    // 每秒刷新倒计时（工期分解按输入变化刷新）
+    (function initSchedule() {
+      computeSchedule();
+      for (const el of [els.deadline, els.totalHours, els.doneHours, els.hoursPerDay, els.workdaysOnly]) {
+        el.addEventListener('input', computeSchedule);
+        el.addEventListener('change', computeSchedule);
+      }
+      window.setInterval(computeSchedule, 1000);
+    })();
+
+    // -----------------------------
+    // 绑定事件
+    // -----------------------------
+    function loadState() {
+      const saved = localStorage.getItem('health_tool_state');
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          for (const k in data) {
+            if (els[k] && els[k].tagName !== 'BUTTON' && els[k].tagName !== 'DIV' && els[k].tagName !== 'SPAN') {
+              els[k].value = data[k];
+            }
+          }
+        } catch (e) {}
+      }
+    }
+
+    function saveState() {
+      const state = {};
+      for (const k in els) {
+        if (els[k] && els[k].tagName !== 'BUTTON' && els[k].tagName !== 'DIV' && els[k].tagName !== 'SPAN') {
+          state[k] = els[k].value;
+        }
+      }
+      localStorage.setItem('health_tool_state', JSON.stringify(state));
+    }
+
+    function computeAll() {
+      saveState();
+      computeBmiAndBf();
+      computeStepsKcal();
+      computeWaterPlan();
+    }
+
+    for (const key of Object.keys(els)) {
+      const el = els[key];
+      if (!el) continue;
+      if (el.tagName === 'BUTTON') continue;
+      el.addEventListener('input', computeAll);
+      el.addEventListener('change', computeAll);
+    }
+
+    els.btnDownloadIcs.addEventListener('click', () => {
+      const { ok, error, ics } = buildIcs();
+      if (!ok) { alert(error); return; }
+      downloadText('water-reminders.ics', ics);
+    });
+
+    els.btnCopyIcs.addEventListener('click', async () => {
+      const { ok, error, ics } = buildIcs();
+      if (!ok) { alert(error); return; }
+      try {
+        await navigator.clipboard.writeText(ics);
+        alert('已复制 .ics 内容');
+      } catch (e) {
+        alert('复制失败：浏览器可能不允许剪贴板访问。你可以改用“下载 .ics”。');
+      }
+    });
+
+    loadState();
+    computeAll();
+  </script>
+</body>
+</html>

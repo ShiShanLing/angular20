@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>喝水提醒（导出日历 .ics）</title>
+  <style>
+    :root {
+      --bg: #f5f5f5;
+      --card: #ffffff;
+      --text: rgba(0, 0, 0, 0.85);
+      --muted: rgba(0, 0, 0, 0.65);
+      --border: #f0f0f0;
+      --primary: #1677ff;
+      --danger: #ff4d4f;
+      --ok: #52c41a;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+        Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 0;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .card h2 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 190px 1fr;
+      gap: 10px;
+      align-items: center;
+      margin: 8px 0;
+    }
+
+    .row label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    input, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      outline: none;
+      font-size: 16px;
+      background: #fff;
+      min-height: 44px;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+      font-size: 14px;
+      font-family: var(--mono);
+    }
+
+    input:focus, textarea:focus {
+      border-color: rgba(22, 119, 255, 0.45);
+      box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.15);
+    }
+
+    .result {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .kv {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      background: #fafafa;
+    }
+
+    .kv .k {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .kv .v {
+      font-family: var(--mono);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: #fff;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      min-height: 44px;
+    }
+
+    button.primary {
+      border-color: rgba(22, 119, 255, 0.45);
+      background: rgba(22, 119, 255, 0.08);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      margin-top: 10px;
+    }
+
+    .warn { color: var(--danger); }
+    .ok { color: var(--ok); }
+
+    @media (max-width: 520px) {
+      .container { padding: 14px; }
+      .row { grid-template-columns: 1fr; gap: 6px; align-items: stretch; }
+      .kv { flex-direction: column; align-items: flex-start; }
+      .kv .v { white-space: normal; }
+      .actions button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>喝水提醒</h1>
+      <div class="sub">生成并下载日历提醒（.ics）</div>
+    </div>
+
+    <div class="card">
+      <h2>喝水提醒（导出到日历 .ics）</h2>
+
+      <div class="row">
+        <label for="waterDailyGoal">每日目标（ml）</label>
+        <input id="waterDailyGoal" type="number" min="0" step="50" value="2000" />
+      </div>
+      <div class="row">
+        <label for="waterPerReminder">每次提醒（ml）</label>
+        <input id="waterPerReminder" type="number" min="0" step="50" value="250" />
+      </div>
+      <div class="row">
+        <label for="startDate">开始日期</label>
+        <input id="startDate" type="date" />
+      </div>
+      <div class="row">
+        <label for="days">持续天数</label>
+        <input id="days" type="number" min="1" max="365" step="1" value="30" />
+      </div>
+      <div class="row">
+        <label for="timeList">每天提醒时间（HH:MM，多行）</label>
+        <textarea id="timeList">09:30
+11:00
+14:00
+16:00
+18:30</textarea>
+      </div>
+      <div class="row">
+        <label for="tzid">时区标识（TZID）</label>
+        <input id="tzid" type="text" value="Asia/Shanghai" />
+      </div>
+
+      <div class="result">
+        <div class="kv"><div class="k">每天提醒次数</div><div class="v" id="outTimesPerDay">-</div></div>
+        <div class="kv"><div class="k">每天计划饮水（ml）</div><div class="v" id="outPlannedMl">-</div></div>
+        <div class="kv"><div class="k">提示</div><div class="v" id="outWaterHint">-</div></div>
+      </div>
+
+      <div class="actions">
+        <button class="primary" id="btnDownloadIcs" type="button">下载日历提醒（.ics）</button>
+        <button id="btnCopyIcs" type="button">复制 .ics 内容</button>
+      </div>
+
+      <div class="hint">
+        导出说明：下载的 `.ics` 可以导入到手机日历（iOS/安卓常见日历均支持）。每条提醒事件默认持续 5 分钟。
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toNum(el, fallback = 0) {
+      const v = Number(el.value);
+      return Number.isFinite(v) ? v : fallback;
+    }
+
+    function clamp(n, min, max) {
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function fmt(n, digits = 0) {
+      const v = Number.isFinite(n) ? n : 0;
+      return v.toLocaleString('zh-CN', { maximumFractionDigits: digits });
+    }
+
+    function pad2(n) { return String(n).padStart(2, '0'); }
+
+    function ymd(date) {
+      return `${date.getFullYear()}${pad2(date.getMonth() + 1)}${pad2(date.getDate())}`;
+    }
+
+    function nowStampUtc() {
+      const d = new Date();
+      return `${d.getUTCFullYear()}${pad2(d.getUTCMonth()+1)}${pad2(d.getUTCDate())}T${pad2(d.getUTCHours())}${pad2(d.getUTCMinutes())}${pad2(d.getUTCSeconds())}Z`;
+    }
+
+    function parseTimeLines(text) {
+      const lines = String(text || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      const times = [];
+      for (const line of lines) {
+        const m = /^(\d{1,2}):(\d{2})$/.exec(line);
+        if (!m) continue;
+        const hh = clamp(Number(m[1]), 0, 23);
+        const mm = clamp(Number(m[2]), 0, 59);
+        times.push({ hh, mm, raw: `${pad2(hh)}:${pad2(mm)}` });
+      }
+      const uniq = Array.from(new Set(times.map(t => t.raw))).map(raw => {
+        const [h, m] = raw.split(':').map(Number);
+        return { hh: h, mm: m, raw };
+      });
+      uniq.sort((a, b) => (a.hh*60+a.mm) - (b.hh*60+b.mm));
+      return uniq;
+    }
+
+    const els = {
+      waterDailyGoal: document.getElementById('waterDailyGoal'),
+      waterPerReminder: document.getElementById('waterPerReminder'),
+      startDate: document.getElementById('startDate'),
+      days: document.getElementById('days'),
+      timeList: document.getElementById('timeList'),
+      tzid: document.getElementById('tzid'),
+      outTimesPerDay: document.getElementById('outTimesPerDay'),
+      outPlannedMl: document.getElementById('outPlannedMl'),
+      outWaterHint: document.getElementById('outWaterHint'),
+      btnDownloadIcs: document.getElementById('btnDownloadIcs'),
+      btnCopyIcs: document.getElementById('btnCopyIcs'),
+    };
+
+    (function initDate() {
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = pad2(d.getMonth() + 1);
+      const dd = pad2(d.getDate());
+      els.startDate.value = `${yyyy}-${mm}-${dd}`;
+    })();
+
+    function loadState() {
+      const saved = localStorage.getItem('water_reminder_state');
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          for (const k in data) {
+            if (els[k] && els[k].tagName !== 'BUTTON' && els[k].tagName !== 'DIV' && els[k].tagName !== 'SPAN') {
+              els[k].value = data[k];
+            }
+          }
+        } catch (e) {}
+      }
+    }
+
+    function saveState() {
+      const state = {};
+      for (const k in els) {
+        if (els[k] && els[k].tagName !== 'BUTTON' && els[k].tagName !== 'DIV' && els[k].tagName !== 'SPAN') {
+          state[k] = els[k].value;
+        }
+      }
+      localStorage.setItem('water_reminder_state', JSON.stringify(state));
+    }
+
+    function computePlan() {
+      saveState();
+      const goal = Math.max(0, toNum(els.waterDailyGoal));
+      const per = Math.max(0, toNum(els.waterPerReminder));
+      const times = parseTimeLines(els.timeList.value);
+
+      els.outTimesPerDay.textContent = `${times.length} 次/天`;
+      const planned = per * times.length;
+      els.outPlannedMl.textContent = `${fmt(planned)} ml`;
+
+      if (goal === 0 || times.length === 0 || per === 0) {
+        els.outWaterHint.innerHTML = '<span class="warn">请设置目标/每次饮水量/提醒时间</span>';
+        return;
+      }
+
+      const diff = planned - goal;
+      if (Math.abs(diff) <= 1e-9) {
+        els.outWaterHint.innerHTML = '<span class="ok">刚好等于每日目标</span>';
+      } else if (diff > 0) {
+        els.outWaterHint.innerHTML = `<span class="ok">比目标多 ${fmt(diff)} ml（可适当减少次数或每次 ml）</span>`;
+      } else {
+        els.outWaterHint.innerHTML = `<span class="warn">比目标少 ${fmt(-diff)} ml（可增加次数或每次 ml）</span>`;
+      }
+    }
+
+    function buildIcs() {
+      const per = Math.max(0, toNum(els.waterPerReminder));
+      const startDateStr = els.startDate.value;
+      const days = clamp(toNum(els.days), 1, 365);
+      const tzid = (els.tzid.value || 'Asia/Shanghai').trim();
+      const times = parseTimeLines(els.timeList.value);
+
+      if (!startDateStr || times.length === 0 || per === 0) {
+        return { ok: false, error: '请先填写开始日期、每天提醒时间、每次提醒饮水量。', ics: '' };
+      }
+
+      const [y, m, d] = startDateStr.split('-').map(Number);
+      const start = new Date(y, (m - 1), d);
+      const dtstamp = nowStampUtc();
+
+      const summary = `喝水提醒（${Math.round(per)}ml）`;
+      const desc = `喝水提醒：每次约 ${Math.round(per)} ml。\\n（此提醒由 water-reminder.html 导出）`;
+      const durationMin = 5;
+
+      const lines = [];
+      lines.push('BEGIN:VCALENDAR');
+      lines.push('VERSION:2.0');
+      lines.push('PRODID:-//Water Reminder//CN');
+      lines.push('CALSCALE:GREGORIAN');
+      lines.push('METHOD:PUBLISH');
+
+      let uidCounter = 0;
+      for (let dayIdx = 0; dayIdx < days; dayIdx++) {
+        const cur = new Date(start.getTime());
+        cur.setDate(start.getDate() + dayIdx);
+        const dateStr = ymd(cur);
+
+        for (const t of times) {
+          uidCounter++;
+          const hh = pad2(t.hh);
+          const mm = pad2(t.mm);
+          const dtStartLocal = `${dateStr}T${hh}${mm}00`;
+
+          const end = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate(), t.hh, t.mm, 0);
+          end.setMinutes(end.getMinutes() + durationMin);
+          const dtEndLocal = `${ymd(end)}T${pad2(end.getHours())}${pad2(end.getMinutes())}${pad2(end.getSeconds())}`;
+
+          const uid = `water-${dateStr}-${hh}${mm}-${uidCounter}@water-reminder`;
+          lines.push('BEGIN:VEVENT');
+          lines.push(`UID:${uid}`);
+          lines.push(`DTSTAMP:${dtstamp}`);
+          lines.push(`SUMMARY:${summary}`);
+          lines.push(`DESCRIPTION:${desc}`);
+          lines.push(`DTSTART;TZID=${tzid}:${dtStartLocal}`);
+          lines.push(`DTEND;TZID=${tzid}:${dtEndLocal}`);
+          lines.push('END:VEVENT');
+        }
+      }
+
+      lines.push('END:VCALENDAR');
+      return { ok: true, error: '', ics: lines.join('\r\n') + '\r\n' };
+    }
+
+    function downloadText(filename, text) {
+      const blob = new Blob([text], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    for (const key of Object.keys(els)) {
+      const el = els[key];
+      if (!el || el.tagName === 'BUTTON') continue;
+      el.addEventListener('input', computePlan);
+      el.addEventListener('change', computePlan);
+    }
+
+    els.btnDownloadIcs.addEventListener('click', () => {
+      const { ok, error, ics } = buildIcs();
+      if (!ok) { alert(error); return; }
+      downloadText('water-reminders.ics', ics);
+    });
+
+    els.btnCopyIcs.addEventListener('click', async () => {
+      const { ok, error, ics } = buildIcs();
+      if (!ok) { alert(error); return; }
+      try {
+        await navigator.clipboard.writeText(ics);
+        alert('已复制 .ics 内容');
+      } catch {
+        alert('复制失败：浏览器可能不允许剪贴板访问。你可以改用“下载 .ics”。');
+      }
+    });
+
+    loadState();
+    computePlan();
+  </script>
+</body>
+</html>
+

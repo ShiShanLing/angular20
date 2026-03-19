@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>时间效率：番茄钟 / 今日计划 / 倒计时 / 工期分解</title>
+  <style>
+    :root {
+      --bg: #f5f5f5;
+      --card: #ffffff;
+      --text: rgba(0, 0, 0, 0.85);
+      --muted: rgba(0, 0, 0, 0.65);
+      --border: #f0f0f0;
+      --primary: #1677ff;
+      --danger: #ff4d4f;
+      --ok: #52c41a;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+        Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 0;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 10px;
+      align-items: center;
+      margin: 8px 0;
+    }
+
+    .row label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      outline: none;
+      font-size: 16px;
+      background: #fff;
+      min-height: 44px;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+      font-size: 14px;
+      font-family: var(--mono);
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(22, 119, 255, 0.45);
+      box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.15);
+    }
+
+    .split {
+      display: grid;
+      gap: 12px;
+    }
+
+    @media (min-width: 920px) {
+      .split {
+        grid-template-columns: 1fr 1fr;
+        align-items: start;
+      }
+    }
+
+    .timer {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fafafa;
+    }
+
+    .timer .time {
+      font-family: var(--mono);
+      font-size: 28px;
+      letter-spacing: 1px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .todo {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      background: #fafafa;
+    }
+
+    .todo ul {
+      list-style: none;
+      padding: 0;
+      margin: 10px 0 0 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    .todo li {
+      display: grid;
+      grid-template-columns: 24px 1fr 54px;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .todo li.done {
+      opacity: 0.65;
+    }
+
+    .todo li.done .text {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    .todo .text {
+      font-size: 14px;
+      word-break: break-word;
+    }
+
+    .result {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .kv {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      background: #fafafa;
+    }
+
+    .kv .k {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .kv .v {
+      font-family: var(--mono);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: #fff;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      min-height: 44px;
+    }
+
+    button.primary {
+      border-color: rgba(22, 119, 255, 0.45);
+      background: rgba(22, 119, 255, 0.08);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .btn-mini {
+      min-height: 32px;
+      padding: 6px 8px;
+      font-size: 12px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      margin-top: 10px;
+    }
+
+    .warn { color: var(--danger); }
+    .ok { color: var(--ok); }
+
+    @media (max-width: 520px) {
+      .container { padding: 14px; }
+      .row { grid-template-columns: 1fr; gap: 6px; align-items: stretch; }
+      .kv { flex-direction: column; align-items: flex-start; }
+      .kv .v { white-space: normal; }
+      .actions button { width: 100%; }
+      .todo li { grid-template-columns: 24px 1fr; }
+      .todo li button { grid-column: 1 / -1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>时间效率</h1>
+      <div class="sub">番茄钟 + 今日计划 / 倒计时 + 工期分解</div>
+    </div>
+
+    <div class="card">
+      <div class="split">
+        <div>
+          <h2 style="margin:0 0 8px 0;font-size:14px;">番茄钟 + 今日计划</h2>
+
+          <div class="timer">
+            <div class="pill">
+              <span>模式：</span>
+              <strong id="pomoMode">工作</strong>
+              <span>（第 <span id="pomoRound">1</span> 轮）</span>
+            </div>
+            <div class="time" id="pomoTime">25:00</div>
+
+            <div class="row" style="margin:0;">
+              <label for="pomoWork">工作（分钟）</label>
+              <input id="pomoWork" type="number" min="1" max="120" step="1" value="25" />
+            </div>
+            <div class="row" style="margin:0;">
+              <label for="pomoBreak">休息（分钟）</label>
+              <input id="pomoBreak" type="number" min="1" max="60" step="1" value="5" />
+            </div>
+            <div class="row" style="margin:0;">
+              <label for="pomoLongBreak">长休息（分钟）</label>
+              <input id="pomoLongBreak" type="number" min="1" max="90" step="1" value="15" />
+            </div>
+            <div class="row" style="margin:0;">
+              <label for="pomoLongEvery">每几轮长休息</label>
+              <input id="pomoLongEvery" type="number" min="2" max="10" step="1" value="4" />
+            </div>
+
+            <div class="actions">
+              <button class="primary" id="btnPomoStart" type="button">开始</button>
+              <button id="btnPomoPause" type="button" disabled>暂停</button>
+              <button id="btnPomoNext" type="button">切换到下一段</button>
+              <button id="btnPomoReset" type="button">重置</button>
+            </div>
+
+            <div class="hint">
+              到点会弹窗提示；如果浏览器不允许弹窗，你可以看倒计时与标题变化。
+            </div>
+          </div>
+
+          <div class="todo" style="margin-top:12px;">
+            <div class="row" style="margin:0;">
+              <label for="todoInput">今日计划（输入一条，回车添加）</label>
+              <input id="todoInput" type="text" placeholder="例如：写日报 / 运动 30 分钟 / 阅读 20 页" />
+            </div>
+            <div class="actions">
+              <button class="primary" id="btnTodoAdd" type="button">添加</button>
+              <button id="btnTodoClearDone" type="button">清理已完成</button>
+              <button id="btnTodoClearAll" type="button">清空今天</button>
+            </div>
+            <ul id="todoList"></ul>
+            <div class="hint">
+              今日计划会按日期保存在浏览器本地（localStorage）。换一天会自动显示新列表。
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h2 style="margin:0 0 8px 0;font-size:14px;">倒计时 + 工期分解</h2>
+
+          <div class="row">
+            <label for="deadline">截止时间</label>
+            <input id="deadline" type="datetime-local" />
+          </div>
+
+          <div class="row">
+            <label for="totalHours">总工时（小时）</label>
+            <input id="totalHours" type="number" min="0" step="0.5" value="40" />
+          </div>
+
+          <div class="row">
+            <label for="doneHours">已完成（小时）</label>
+            <input id="doneHours" type="number" min="0" step="0.5" value="0" />
+          </div>
+
+          <div class="row">
+            <label for="hoursPerDay">每天可投入（小时）</label>
+            <input id="hoursPerDay" type="number" min="0" step="0.5" value="2" />
+          </div>
+
+          <div class="row">
+            <label for="workdaysOnly">仅计算工作日</label>
+            <select id="workdaysOnly">
+              <option value="no" selected>否（按自然日）</option>
+              <option value="yes">是（周一到周五）</option>
+            </select>
+          </div>
+
+          <div class="result">
+            <div class="kv"><div class="k">距离截止倒计时</div><div class="v" id="outCountdown">-</div></div>
+            <div class="kv"><div class="k">剩余工时</div><div class="v" id="outRemainHours">-</div></div>
+            <div class="kv"><div class="k">剩余可用天数</div><div class="v" id="outRemainDays">-</div></div>
+            <div class="kv"><div class="k">建议每天至少投入</div><div class="v" id="outNeedPerDay">-</div></div>
+            <div class="kv"><div class="k">是否来得及</div><div class="v" id="outFeasible">-</div></div>
+          </div>
+
+          <div class="hint">
+            工期分解是“平均分配”的估算：剩余工时 ÷ 剩余可用天数。建议留风险缓冲（比如再加 20%）。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toNum(el, fallback = 0) {
+      const v = Number(el.value);
+      return Number.isFinite(v) ? v : fallback;
+    }
+
+    function clamp(n, min, max) {
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function fmt(n, digits = 2) {
+      const v = Number.isFinite(n) ? n : 0;
+      return v.toLocaleString('zh-CN', { maximumFractionDigits: digits });
+    }
+
+    function pad2(n) { return String(n).padStart(2, '0'); }
+
+    // -----------------------------
+    // 番茄钟
+    // -----------------------------
+    const pomo = {
+      intervalId: null,
+      mode: 'work', // 'work' | 'break' | 'longBreak'
+      round: 1,
+      remainingSec: 25 * 60,
+      isRunning: false,
+      lastTickMs: 0,
+    };
+
+    const els = {
+      pomoMode: document.getElementById('pomoMode'),
+      pomoRound: document.getElementById('pomoRound'),
+      pomoTime: document.getElementById('pomoTime'),
+      pomoWork: document.getElementById('pomoWork'),
+      pomoBreak: document.getElementById('pomoBreak'),
+      pomoLongBreak: document.getElementById('pomoLongBreak'),
+      pomoLongEvery: document.getElementById('pomoLongEvery'),
+      btnPomoStart: document.getElementById('btnPomoStart'),
+      btnPomoPause: document.getElementById('btnPomoPause'),
+      btnPomoNext: document.getElementById('btnPomoNext'),
+      btnPomoReset: document.getElementById('btnPomoReset'),
+
+      todoInput: document.getElementById('todoInput'),
+      btnTodoAdd: document.getElementById('btnTodoAdd'),
+      btnTodoClearDone: document.getElementById('btnTodoClearDone'),
+      btnTodoClearAll: document.getElementById('btnTodoClearAll'),
+      todoList: document.getElementById('todoList'),
+
+      deadline: document.getElementById('deadline'),
+      totalHours: document.getElementById('totalHours'),
+      doneHours: document.getElementById('doneHours'),
+      hoursPerDay: document.getElementById('hoursPerDay'),
+      workdaysOnly: document.getElementById('workdaysOnly'),
+      outCountdown: document.getElementById('outCountdown'),
+      outRemainHours: document.getElementById('outRemainHours'),
+      outRemainDays: document.getElementById('outRemainDays'),
+      outNeedPerDay: document.getElementById('outNeedPerDay'),
+      outFeasible: document.getElementById('outFeasible'),
+    };
+
+    function pomoSettings() {
+      const workMin = clamp(toNum(els.pomoWork), 1, 120);
+      const breakMin = clamp(toNum(els.pomoBreak), 1, 60);
+      const longMin = clamp(toNum(els.pomoLongBreak), 1, 90);
+      const longEvery = clamp(toNum(els.pomoLongEvery), 2, 10);
+      return { workMin, breakMin, longMin, longEvery };
+    }
+
+    function pomoModeLabel(mode) {
+      if (mode === 'work') return '工作';
+      if (mode === 'break') return '休息';
+      return '长休息';
+    }
+
+    function setPomoDisplay() {
+      const mm = Math.floor(pomo.remainingSec / 60);
+      const ss = pomo.remainingSec % 60;
+      els.pomoTime.textContent = `${pad2(mm)}:${pad2(ss)}`;
+      els.pomoMode.textContent = pomoModeLabel(pomo.mode);
+      els.pomoRound.textContent = String(pomo.round);
+      document.title = `${els.pomoTime.textContent} · ${pomoModeLabel(pomo.mode)} · 时间效率`;
+    }
+
+    function setPomoMode(nextMode) {
+      const { workMin, breakMin, longMin } = pomoSettings();
+      pomo.mode = nextMode;
+      pomo.remainingSec = (nextMode === 'work' ? workMin : (nextMode === 'break' ? breakMin : longMin)) * 60;
+      setPomoDisplay();
+    }
+
+    function pomoStart() {
+      if (pomo.isRunning) return;
+      pomo.isRunning = true;
+      els.btnPomoStart.disabled = true;
+      els.btnPomoPause.disabled = false;
+      pomo.lastTickMs = Date.now();
+      pomo.intervalId = window.setInterval(pomoTick, 250);
+    }
+
+    function pomoPause() {
+      if (!pomo.isRunning) return;
+      pomo.isRunning = false;
+      els.btnPomoStart.disabled = false;
+      els.btnPomoPause.disabled = true;
+      if (pomo.intervalId !== null) {
+        window.clearInterval(pomo.intervalId);
+        pomo.intervalId = null;
+      }
+    }
+
+    function pomoReset() {
+      pomoPause();
+      pomo.round = 1;
+      setPomoMode('work');
+    }
+
+    function pomoNextSegment() {
+      const { longEvery } = pomoSettings();
+      if (pomo.mode === 'work') {
+        const useLong = (pomo.round % longEvery === 0);
+        setPomoMode(useLong ? 'longBreak' : 'break');
+      } else {
+        pomo.round++;
+        setPomoMode('work');
+      }
+    }
+
+    function pomoTick() {
+      const now = Date.now();
+      const delta = Math.floor((now - pomo.lastTickMs) / 1000);
+      if (delta <= 0) return;
+      pomo.lastTickMs += delta * 1000;
+      pomo.remainingSec = Math.max(0, pomo.remainingSec - delta);
+      setPomoDisplay();
+      if (pomo.remainingSec === 0) {
+        pomoPause();
+        alert(`${pomoModeLabel(pomo.mode)}结束：切换到下一段`);
+        pomoNextSegment();
+      }
+    }
+
+    // -----------------------------
+    // 今日计划（localStorage 按日期存储）
+    // -----------------------------
+    function todayKey() {
+      const d = new Date();
+      const key = `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+      return `time-tools.todo.${key}`;
+    }
+
+    function loadTodos() {
+      try {
+        const raw = localStorage.getItem(todayKey());
+        const list = raw ? JSON.parse(raw) : [];
+        return Array.isArray(list) ? list : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveTodos(list) {
+      localStorage.setItem(todayKey(), JSON.stringify(list));
+    }
+
+    function renderTodos() {
+      const list = loadTodos();
+      els.todoList.innerHTML = '';
+      for (const item of list) {
+        const li = document.createElement('li');
+        if (item.done) li.classList.add('done');
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = !!item.done;
+        cb.style.minHeight = '20px';
+        cb.addEventListener('change', () => {
+          const next = loadTodos().map(t => t.id === item.id ? { ...t, done: cb.checked } : t);
+          saveTodos(next);
+          renderTodos();
+        });
+
+        const text = document.createElement('div');
+        text.className = 'text';
+        text.textContent = item.text;
+
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'btn-mini';
+        del.textContent = '删除';
+        del.addEventListener('click', () => {
+          const next = loadTodos().filter(t => t.id !== item.id);
+          saveTodos(next);
+          renderTodos();
+        });
+
+        li.appendChild(cb);
+        li.appendChild(text);
+        li.appendChild(del);
+        els.todoList.appendChild(li);
+      }
+    }
+
+    function addTodo() {
+      const text = String(els.todoInput.value || '').trim();
+      if (!text) return;
+      const list = loadTodos();
+      list.unshift({ id: `${Date.now()}-${Math.random().toString(16).slice(2)}`, text, done: false });
+      saveTodos(list);
+      els.todoInput.value = '';
+      renderTodos();
+    }
+
+    // -----------------------------
+    // 倒计时 + 工期分解
+    // -----------------------------
+    function isWorkday(d) {
+      const day = d.getDay();
+      return day >= 1 && day <= 5;
+    }
+
+    function countAvailableDays(from, to, workdaysOnly) {
+      if (to.getTime() <= from.getTime()) return 0;
+      let count = 0;
+      const cur = new Date(from.getFullYear(), from.getMonth(), from.getDate(), 0, 0, 0);
+      const end = new Date(to.getFullYear(), to.getMonth(), to.getDate(), 0, 0, 0);
+      while (cur.getTime() < end.getTime()) {
+        if (!workdaysOnly || isWorkday(cur)) count++;
+        cur.setDate(cur.getDate() + 1);
+        if (count > 5000) break;
+      }
+      return count;
+    }
+
+    function formatCountdown(ms) {
+      const totalSec = Math.max(0, Math.floor(ms / 1000));
+      const days = Math.floor(totalSec / 86400);
+      const hours = Math.floor((totalSec % 86400) / 3600);
+      const mins = Math.floor((totalSec % 3600) / 60);
+      const secs = totalSec % 60;
+      return `${days}天 ${pad2(hours)}:${pad2(mins)}:${pad2(secs)}`;
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem('time_tool_state');
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          for (const k in data) {
+            if (els[k] && els[k].tagName !== 'BUTTON' && els[k].tagName !== 'DIV' && els[k].tagName !== 'SPAN' && els[k].tagName !== 'UL') {
+              els[k].value = data[k];
+            }
+          }
+        } catch (e) {}
+      }
+    }
+
+    function saveState() {
+      const state = {};
+      for (const k in els) {
+        if (els[k] && els[k].tagName !== 'BUTTON' && els[k].tagName !== 'DIV' && els[k].tagName !== 'SPAN' && els[k].tagName !== 'UL') {
+          state[k] = els[k].value;
+        }
+      }
+      localStorage.setItem('time_tool_state', JSON.stringify(state));
+    }
+
+    function computeSchedule() {
+      saveState();
+      const dlStr = els.deadline.value;
+      const total = Math.max(0, toNum(els.totalHours));
+      const done = Math.max(0, toNum(els.doneHours));
+      const perDay = Math.max(0, toNum(els.hoursPerDay));
+      const workdaysOnly = els.workdaysOnly.value === 'yes';
+
+      const remain = Math.max(0, total - done);
+      els.outRemainHours.textContent = `${fmt(remain, 1)} 小时`;
+
+      if (!dlStr) {
+        els.outCountdown.textContent = '-';
+        els.outRemainDays.textContent = '-';
+        els.outNeedPerDay.textContent = '-';
+        els.outFeasible.textContent = '-';
+        return;
+      }
+
+      const deadline = new Date(dlStr);
+      const now = new Date();
+      const ms = deadline.getTime() - now.getTime();
+      els.outCountdown.textContent = formatCountdown(ms);
+
+      const daysAvail = countAvailableDays(now, deadline, workdaysOnly);
+      els.outRemainDays.textContent = `${daysAvail} 天`;
+
+      if (daysAvail === 0) {
+        const ok = remain === 0;
+        els.outNeedPerDay.textContent = ok ? '0' : '∞';
+        els.outFeasible.innerHTML = ok ? '<span class="ok">已完成</span>' : '<span class="warn">来不及（已到期）</span>';
+        return;
+      }
+
+      const needPerDay = remain / daysAvail;
+      els.outNeedPerDay.textContent = `${fmt(needPerDay, 2)} 小时/天`;
+
+      const feasible = perDay > 0 ? (needPerDay <= perDay + 1e-9) : (remain === 0);
+      els.outFeasible.innerHTML = feasible
+        ? '<span class="ok">大概率来得及</span>'
+        : '<span class="warn">可能来不及（需要提高每天投入或延长截止）</span>';
+    }
+
+    // 初始化截止时间：今天 18:00（过了就明天 18:00）
+    (function initDeadline() {
+      const d = new Date();
+      const target = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 18, 0, 0);
+      if (target.getTime() <= d.getTime()) target.setDate(target.getDate() + 1);
+      const yyyy = target.getFullYear();
+      const mm = pad2(target.getMonth() + 1);
+      const dd = pad2(target.getDate());
+      const hh = pad2(target.getHours());
+      const mi = pad2(target.getMinutes());
+      els.deadline.value = `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+    })();
+
+    // 绑定事件
+    els.btnPomoStart.addEventListener('click', pomoStart);
+    els.btnPomoPause.addEventListener('click', pomoPause);
+    els.btnPomoNext.addEventListener('click', () => { pomoPause(); pomoNextSegment(); });
+    els.btnPomoReset.addEventListener('click', pomoReset);
+    for (const input of [els.pomoWork, els.pomoBreak, els.pomoLongBreak, els.pomoLongEvery]) {
+      input.addEventListener('change', () => { if (!pomo.isRunning) setPomoMode(pomo.mode); });
+    }
+
+    els.btnTodoAdd.addEventListener('click', addTodo);
+    els.todoInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); addTodo(); }
+    });
+    els.btnTodoClearDone.addEventListener('click', () => {
+      const next = loadTodos().filter(t => !t.done);
+      saveTodos(next);
+      renderTodos();
+    });
+    els.btnTodoClearAll.addEventListener('click', () => {
+      if (!confirm('确定清空今天的全部计划吗？')) return;
+      saveTodos([]);
+      renderTodos();
+    });
+
+    for (const el of [els.deadline, els.totalHours, els.doneHours, els.hoursPerDay, els.workdaysOnly]) {
+      el.addEventListener('input', computeSchedule);
+      el.addEventListener('change', computeSchedule);
+    }
+
+    // 启动
+    loadState();
+    setPomoMode('work');
+    setPomoDisplay();
+    renderTodos();
+    computeSchedule();
+    window.setInterval(computeSchedule, 1000);
+  </script>
+</body>
+</html>
+
