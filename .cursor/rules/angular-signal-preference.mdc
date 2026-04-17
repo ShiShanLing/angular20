@@ -1,0 +1,30 @@
+---
+description: Prefer Angular signals for local component state
+alwaysApply: true
+---
+
+# Angular Signal Preference
+
+- Prefer Angular `signal()` / `computed()` / `effect()` for local UI state in components.
+- Avoid introducing plain mutable class fields for reactive state unless there is a clear reason.
+- For template-facing state, prefer reading from signals rather than manually syncing duplicated fields.
+- For async streams that are naturally RxJS-based, keep RxJS where appropriate, then bridge to signals only at the component boundary if needed.
+
+## Quick Guidance
+
+- Use `signal` for local writable state.
+- Use `computed` for derived values.
+- Use `effect` for side effects tied to signal changes.
+
+## Example
+
+```typescript
+// Preferred
+count = signal(0);
+doubleCount = computed(() => this.count() * 2);
+
+increment(): void {
+  this.count.update(v => v + 1);
+}
+```
+

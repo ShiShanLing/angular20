@@ -1,0 +1,184 @@
+<div class="forms-page">
+  <h2>表单演示</h2>
+  <p class="subtitle">使用 Angular Reactive Forms + ng-zorro-antd 组件，包含完整的表单验证</p>
+
+  <div nz-row [nzGutter]="24">
+    <div nz-col [nzXs]="24" [nzLg]="14">
+      <nz-card nzTitle="用户信息表单" [nzBordered]="false">
+        <form nz-form [formGroup]="form" nzLayout="vertical" (ngSubmit)="submitForm()">
+
+          <!-- Username & Email -->
+          <div nz-row [nzGutter]="16">
+            <div nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label nzRequired>用户名</nz-form-label>
+                <nz-form-control nzErrorTip="请输入至少2个字符的用户名">
+                  <input nz-input formControlName="username" placeholder="请输入用户名" />
+                </nz-form-control>
+              </nz-form-item>
+            </div>
+            <div nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label nzRequired>邮箱</nz-form-label>
+                <nz-form-control nzErrorTip="请输入正确的邮箱格式">
+                  <input nz-input formControlName="email" placeholder="example@email.com" />
+                </nz-form-control>
+              </nz-form-item>
+            </div>
+          </div>
+
+          <!-- Password -->
+          <nz-form-item>
+            <nz-form-label nzRequired>密码</nz-form-label>
+            <nz-form-control nzErrorTip="密码至少6位">
+              <input nz-input type="password" formControlName="password" placeholder="请输入密码" />
+            </nz-form-control>
+          </nz-form-item>
+
+          <!-- Role Select -->
+          <nz-form-item>
+            <nz-form-label nzRequired>角色</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="role" nzPlaceHolder="请选择角色">
+                <nz-option nzValue="admin" nzLabel="管理员"></nz-option>
+                <nz-option nzValue="developer" nzLabel="开发者"></nz-option>
+                <nz-option nzValue="designer" nzLabel="设计师"></nz-option>
+                <nz-option nzValue="tester" nzLabel="测试工程师"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <!-- Skills Multi Select -->
+          <nz-form-item>
+            <nz-form-label>技术栈</nz-form-label>
+            <nz-form-control>
+              <nz-select
+                formControlName="skills"
+                nzMode="tags"
+                nzPlaceHolder="选择或输入技术栈"
+                (nzOnSearch)="addSkill($event)">
+                @for (skill of skills; track skill) {
+                  <nz-option [nzValue]="skill" [nzLabel]="skill"></nz-option>
+                }
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <!-- Birthday -->
+          <nz-form-item>
+            <nz-form-label>生日</nz-form-label>
+            <nz-form-control>
+              <nz-date-picker formControlName="birthday" style="width:100%"></nz-date-picker>
+            </nz-form-control>
+          </nz-form-item>
+
+          <!-- Gender Radio -->
+          <nz-form-item>
+            <nz-form-label>性别</nz-form-label>
+            <nz-form-control>
+              <nz-radio-group formControlName="gender">
+                <label nz-radio nzValue="male">男</label>
+                <label nz-radio nzValue="female">女</label>
+                <label nz-radio nzValue="other">其他</label>
+              </nz-radio-group>
+            </nz-form-control>
+          </nz-form-item>
+
+          <!-- Hobbies Checkbox -->
+          <nz-form-item>
+            <nz-form-label>爱好</nz-form-label>
+            <nz-form-control>
+              <nz-checkbox-group formControlName="hobbies"
+                [nzOptions]="checkboxOptions">
+              </nz-checkbox-group>
+            </nz-form-control>
+          </nz-form-item>
+
+          <!-- Level Slider -->
+          <nz-form-item>
+            <nz-form-label>技术水平: {{ form.get('level')?.value }}%</nz-form-label>
+            <nz-form-control>
+              <nz-slider formControlName="level" [nzTipFormatter]="formatter"></nz-slider>
+            </nz-form-control>
+          </nz-form-item>
+
+          <!-- Notifications Switch -->
+          <nz-form-item>
+            <nz-form-label>接收通知</nz-form-label>
+            <nz-form-control>
+              <nz-switch formControlName="notifications"
+                nzCheckedChildren="开" nzUnCheckedChildren="关">
+              </nz-switch>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-control>
+              <button nz-button nzType="primary" type="submit">提交</button>
+              <button nz-button type="button" style="margin-left:12px" (click)="resetForm()">重置</button>
+            </nz-form-control>
+          </nz-form-item>
+        </form>
+      </nz-card>
+    </div>
+
+    <!-- Result Panel -->
+    <div nz-col [nzXs]="24" [nzLg]="10">
+      <nz-card nzTitle="表单数据预览" [nzBordered]="false">
+        @if (submitted && formValues) {
+          <div class="result-panel">
+            <div class="result-item">
+              <span class="key">用户名：</span>
+              <nz-tag nzColor="blue">{{ formValues.username }}</nz-tag>
+            </div>
+            <div class="result-item">
+              <span class="key">邮箱：</span><span>{{ formValues.email }}</span>
+            </div>
+            <div class="result-item">
+              <span class="key">角色：</span>
+              <nz-tag nzColor="purple">{{ formValues.role }}</nz-tag>
+            </div>
+            <div class="result-item">
+              <span class="key">性别：</span><span>{{ formValues.gender }}</span>
+            </div>
+            <div class="result-item">
+              <span class="key">技术栈：</span>
+              @for (s of formValues.skills; track s) {
+                <nz-tag nzColor="cyan">{{ s }}</nz-tag>
+              }
+            </div>
+            <div class="result-item">
+              <span class="key">爱好：</span>
+              @for (h of formValues.hobbies; track h) {
+                <nz-tag nzColor="geekblue">{{ h.value || h }}</nz-tag>
+              }
+            </div>
+            <div class="result-item">
+              <span class="key">技术水平：</span><span>{{ formValues.level }}%</span>
+            </div>
+            <div class="result-item">
+              <span class="key">接收通知：</span>
+              <nz-tag [nzColor]="formValues.notifications ? 'green' : 'red'">
+                {{ formValues.notifications ? '是' : '否' }}
+              </nz-tag>
+            </div>
+          </div>
+        } @else {
+          <div class="empty-result">
+            <p>填写并提交表单后，数据预览将在此处显示 👆</p>
+          </div>
+        }
+      </nz-card>
+
+      <nz-card nzTitle="验证说明" [nzBordered]="false" style="margin-top:16px">
+        <ul class="tips">
+          <li>🔴 <strong>用户名</strong>：必填，至少2个字符</li>
+          <li>🔴 <strong>邮箱</strong>：必填，需要正确格式</li>
+          <li>🔴 <strong>密码</strong>：必填，至少6位</li>
+          <li>🟡 <strong>技术栈</strong>：可输入自定义标签</li>
+          <li>🟢 <strong>其他字段</strong>：可选</li>
+        </ul>
+      </nz-card>
+    </div>
+  </div>
+</div>

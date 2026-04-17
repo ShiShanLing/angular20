@@ -1,0 +1,75 @@
+<div class="game-wrapper">
+  <!-- Left Side: Status & Score -->
+  <div class="side-panel left">
+    <div class="panel-card">
+      <div class="panel-label">STATISTICS</div>
+      <div class="stat-item">
+        <span class="stat-label">SCORE</span>
+        <span class="stat-value">{{ state.score }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">LINES</span>
+        <span class="stat-value">{{ state.lines }}</span>
+      </div>
+      
+      <div class="status-tags">
+        @if (state.isPaused) {
+          <nz-tag nzColor="gold">PAUSED</nz-tag>
+        }
+        @if (state.isGameOver) {
+          <nz-tag nzColor="red">GAME OVER</nz-tag>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Center: Game Board -->
+  <div class="main-stage">
+    <div class="board" [style.--cols]="width" [style.--rows]="height">
+      @for (y of rows; track y) {
+        @for (x of cols; track x) {
+          <div class="cell" [style.background]="cellColors[y * width + x] ?? ''"
+            [style.border-color]="cellColors[y * width + x] ?? ''">
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- Right Side: Next & Controls -->
+  <div class="side-panel right">
+    <div class="panel-card next-panel">
+      <div class="panel-label">NEXT</div>
+      <div class="preview" [style.--cols]="previewSize" [style.--rows]="previewSize">
+        @for (y of previewRows; track y) {
+          @for (x of previewCols; track x) {
+            <div class="cell cell--preview" [style.background]="nextPreviewColors[y * previewSize + x] ?? ''"
+              [style.border-color]="nextPreviewColors[y * previewSize + x] ?? ''">
+            </div>
+          }
+        }
+      </div>
+    </div>
+
+    <div class="panel-card controls-panel">
+      <div class="panel-label">CONTROLS</div>
+      <div class="action-buttons">
+        <button nz-button nzBlock nzType="default" (click)="pauseResume()" [disabled]="state.isGameOver">
+          {{ state.isPaused ? 'Resume' : 'Pause' }}
+        </button>
+        <button nz-button nzBlock nzType="primary" (click)="restart()">Restart</button>
+      </div>
+
+      <div class="d-pad">
+        <div class="pad-row">
+          <button class="pad-btn" (click)="rotate()" [disabled]="state.isGameOver">⟳</button>
+        </div>
+        <div class="pad-row">
+          <button class="pad-btn" (click)="left()" [disabled]="state.isGameOver">←</button>
+          <button class="pad-btn" (click)="down()" [disabled]="state.isGameOver">↓</button>
+          <button class="pad-btn" (click)="right()" [disabled]="state.isGameOver">→</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

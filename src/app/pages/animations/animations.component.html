@@ -1,0 +1,95 @@
+<div class="anim-page">
+  <h2>动画演示</h2>
+  <p class="subtitle">基于 Angular Animations API 的各类动画效果，点击按钮触发</p>
+
+  <div nz-row [nzGutter]="[16, 16]">
+
+    <!-- Fade In/Out -->
+    <div nz-col [nzXs]="24" [nzSm]="12" [nzLg]="8">
+      <nz-card nzTitle="🌅 渐入 / 渐出" [nzBordered]="false">
+        <p class="desc">使用 <nz-tag nzColor="blue">opacity + scale</nz-tag> 动画</p>
+        <div class="demo-area">
+          <div class="fade-box" [@fadeInOut]="fadeState">
+            <span>Hello Angular!</span>
+          </div>
+        </div>
+        <button nz-button nzType="primary" (click)="toggleFade()">
+          {{ fadeActive ? '隐藏' : '显示' }}
+        </button>
+      </nz-card>
+    </div>
+
+    <!-- Slide -->
+    <div nz-col [nzXs]="24" [nzSm]="12" [nzLg]="8">
+      <nz-card nzTitle="➡️ 滑入 / 滑出" [nzBordered]="false">
+        <p class="desc">使用 <nz-tag nzColor="purple">translateX</nz-tag> 动画</p>
+        <div class="demo-area overflow-hidden">
+          <div class="slide-box" [@slideIn]="slideState">
+            <span>🚀 内容滑入</span>
+          </div>
+        </div>
+        <button nz-button nzType="primary" (click)="toggleSlide()">
+          {{ slideActive ? '滑出' : '滑入' }}
+        </button>
+      </nz-card>
+    </div>
+
+    <!-- Bounce -->
+    <div nz-col [nzXs]="24" [nzSm]="12" [nzLg]="8">
+      <nz-card nzTitle="🏀 弹跳动画" [nzBordered]="false">
+        <p class="desc">使用 <nz-tag nzColor="orange">keyframes</nz-tag> 动画</p>
+        <div class="demo-area center">
+          <div class="bounce-ball" [@bounce]="bounceState" (@bounce.done)="onBounceDone()">🏀</div>
+        </div>
+        <button nz-button nzType="primary" (click)="doBounce()">弹一下</button>
+      </nz-card>
+    </div>
+
+    <!-- Counter -->
+    <div nz-col [nzXs]="24" [nzSm]="12" [nzLg]="8">
+      <nz-card nzTitle="🔢 数字滚动" [nzBordered]="false">
+        <p class="desc">使用 <nz-tag nzColor="cyan">setInterval</nz-tag> 动画</p>
+        <div class="demo-area center">
+          <div class="counter-num">{{ counterValue | number }}</div>
+          <div class="counter-label">总下载量</div>
+        </div>
+        <button nz-button nzType="primary" (click)="runCounter()" [disabled]="counterRunning">
+          {{ counterRunning ? '滚动中...' : '开始滚动' }}
+        </button>
+      </nz-card>
+    </div>
+
+    <!-- Stagger List -->
+    <div nz-col [nzXs]="24" [nzSm]="12" [nzLg]="8">
+      <nz-card nzTitle="📋 交错列表" [nzBordered]="false">
+        <p class="desc">使用 <nz-tag nzColor="green">stagger + query</nz-tag> 动画</p>
+        <ul class="stagger-list" [@listAnim]="listItems.length">
+          @for (item of listItems; track item) {
+            <li>✅ {{ item }}</li>
+          }
+        </ul>
+        <button nz-button nzType="primary" (click)="toggleList()">
+          {{ listVisible ? '收起列表' : '展开列表' }}
+        </button>
+      </nz-card>
+    </div>
+
+    <!-- Spinner -->
+    <div nz-col [nzXs]="24" [nzSm]="12" [nzLg]="8">
+      <nz-card nzTitle="⚙️ 旋转动画" [nzBordered]="false">
+        <p class="desc">使用 <nz-tag nzColor="red">CSS transform</nz-tag> 动画</p>
+        <div class="demo-area center">
+          <div class="spinner-wheel"
+            [style.transform]="'rotate(' + spinnerAngle + 'deg)'">
+            ⚙️
+          </div>
+          <div class="spinner-label">{{ spinnerRunning ? '运转中...' : '已停止' }}</div>
+        </div>
+        <button nz-button nzType="primary" (click)="toggleSpinner()">
+          {{ spinnerRunning ? '停止' : '启动' }}
+        </button>
+      </nz-card>
+    </div>
+
+  </div>
+</div>

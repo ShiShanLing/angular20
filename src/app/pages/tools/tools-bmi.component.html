@@ -1,0 +1,71 @@
+<div class="tool-container">
+  <nz-row [nzGutter]="24">
+    <nz-col [nzXs]="24" [nzLg]="12">
+      <nz-card nzTitle="身体参数输入">
+        <form nz-form [formGroup]="form" nzLayout="vertical">
+          <nz-form-item>
+            <nz-form-label>身高 (cm)</nz-form-label>
+            <nz-form-control>
+              <nz-input-number formControlName="height" [nzMin]="50" [nzMax]="250" style="width: 100%"></nz-input-number>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>体重 (kg)</nz-form-label>
+            <nz-form-control>
+              <nz-input-number formControlName="weight" [nzMin]="10" [nzMax]="300" [nzStep]="0.1" style="width: 100%"></nz-input-number>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>年龄 (岁)</nz-form-label>
+            <nz-form-control>
+              <nz-input-number formControlName="age" [nzMin]="1" [nzMax]="120" style="width: 100%"></nz-input-number>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>性别</nz-form-label>
+            <nz-form-control>
+              <nz-radio-group formControlName="sex">
+                <label nz-radio nzValue="male">男</label>
+                <label nz-radio nzValue="female">女</label>
+              </nz-radio-group>
+            </nz-form-control>
+          </nz-form-item>
+        </form>
+      </nz-card>
+    </nz-col>
+
+    <nz-col [nzXs]="24" [nzLg]="12">
+      <nz-card nzTitle="分析结果">
+        <div class="result-box">
+          <nz-row [nzGutter]="16">
+            <nz-col [nzSpan]="12">
+              <nz-statistic [nzValue]="(result.bmi | number:'1.1-1')!" nzTitle="BMI 指数"></nz-statistic>
+            </nz-col>
+            <nz-col [nzSpan]="12">
+              <div class="stat-label">分类</div>
+              <nz-tag [nzColor]="result.categoryColor" style="font-size: 16px; padding: 4px 12px; margin-top: 4px;">
+                {{ result.category }}
+              </nz-tag>
+            </nz-col>
+          </nz-row>
+
+          <nz-divider></nz-divider>
+
+          <nz-row [nzGutter]="16">
+            <nz-col [nzSpan]="24">
+              <nz-statistic [nzValue]="(result.bodyFat | number:'1.1-1')!" [nzPrefix]="prefixBf" nzSuffix="%" nzTitle="体脂率估算 (Deurenberg)"></nz-statistic>
+              <ng-template #prefixBf><span nz-icon nzType="dashboard"></span> </ng-template>
+            </nz-col>
+          </nz-row>
+
+          <div class="info-note">
+            <p><strong>注意：</strong>体脂率采用 BMI 估算法，仅供参考。更准确的评估建议使用德克萨扫描 (DEXA) 或围度测量法。</p>
+          </div>
+        </div>
+      </nz-card>
+    </nz-col>
+  </nz-row>
+</div>

@@ -1,0 +1,77 @@
+<div class="tool-content anhui-pension-wrap">
+  <nz-row [nzGutter]="[16, 16]">
+    <nz-col [nzSpan]="24" [nzLg]="12">
+      <nz-card nzTitle="安徽农村养老金参数">
+        <form nz-form [formGroup]="form" nzLayout="vertical">
+          <nz-form-item>
+            <nz-form-label nzRequired>个人账户总额（元）</nz-form-label>
+            <nz-form-control nzErrorTip="请输入个人账户总额">
+              <nz-input-number
+                formControlName="personalAccountTotal"
+                [nzMin]="0"
+                [nzStep]="1000"
+                style="width: 100%"
+              ></nz-input-number>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label nzRequired>基础养老金（元）</nz-form-label>
+            <nz-form-control nzErrorTip="请输入基础养老金">
+              <nz-input-number
+                formControlName="basicPension"
+                [nzMin]="0"
+                [nzStep]="10"
+                style="width: 100%"
+              ></nz-input-number>
+            </nz-form-control>
+          </nz-form-item>
+        </form>
+
+        <nz-alert
+          nzType="info"
+          nzShowIcon
+          nzMessage="计算公式"
+          nzDescription="月养老金 = (个人账户总额 ÷ 139) + 基础养老金"
+        ></nz-alert>
+      </nz-card>
+    </nz-col>
+
+    <nz-col [nzSpan]="24" [nzLg]="12">
+      <nz-card nzTitle="计算结果" *ngIf="result as r; else emptyResult">
+        <nz-row [nzGutter]="[16, 16]">
+          <nz-col [nzSpan]="24">
+            <nz-statistic
+              nzTitle="每月养老金（元）"
+              [nzValue]="(r.monthlyPension | number : '1.2-2')!"
+            ></nz-statistic>
+          </nz-col>
+          <nz-col [nzSpan]="24">
+            <nz-statistic
+              nzTitle="其中个人账户部分（元/月）"
+              [nzValue]="(r.accountPart | number : '1.2-2')!"
+            ></nz-statistic>
+          </nz-col>
+          <nz-col [nzSpan]="12">
+            <nz-statistic
+              nzTitle="回本周期（月）"
+              [nzValue]="(r.paybackMonths | number : '1.1-1')!"
+            ></nz-statistic>
+          </nz-col>
+          <nz-col [nzSpan]="12">
+            <nz-statistic
+              nzTitle="回本周期（年）"
+              [nzValue]="(r.paybackYears | number : '1.2-2')!"
+            ></nz-statistic>
+          </nz-col>
+        </nz-row>
+      </nz-card>
+
+      <ng-template #emptyResult>
+        <nz-card nzTitle="计算结果">
+          <p class="empty-tip">请完整填写参数后查看结果。</p>
+        </nz-card>
+      </ng-template>
+    </nz-col>
+  </nz-row>
+</div>

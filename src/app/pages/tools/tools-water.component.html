@@ -1,0 +1,89 @@
+<div class="tool-container">
+  <nz-row [nzGutter]="24">
+    <nz-col [nzXs]="24" [nzLg]="14">
+      <nz-card nzTitle="饮水偏好设置">
+        <form nz-form [formGroup]="form" nzLayout="vertical">
+          <nz-row [nzGutter]="16">
+            <nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label>每日饮水目标 (ml)</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number formControlName="goal" [nzMin]="0" [nzStep]="50" style="width: 100%"></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+            <nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label>每次提醒饮水量 (ml)</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number formControlName="per" [nzMin]="0" [nzStep]="50" style="width: 100%"></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+          </nz-row>
+
+          <nz-row [nzGutter]="16">
+            <nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label>提醒开始日期</nz-form-label>
+                <nz-form-control>
+                  <nz-date-picker formControlName="startDate" style="width: 100%"></nz-date-picker>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+            <nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label>计划持续天数</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number formControlName="days" [nzMin]="1" [nzMax]="365" style="width: 100%"></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+          </nz-row>
+
+          <nz-form-item>
+            <nz-form-label>每天提醒时间点 (HH:MM，多行)</nz-form-label>
+            <nz-form-control>
+              <textarea nz-input formControlName="timeList" placeholder="e.g. 09:30" [nzAutosize]="{ minRows: 4, maxRows: 10 }"></textarea>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>时区标识 (TZID)</nz-form-label>
+            <nz-form-control>
+              <input nz-input formControlName="tzid" />
+            </nz-form-control>
+          </nz-form-item>
+        </form>
+      </nz-card>
+    </nz-col>
+
+    <nz-col [nzXs]="24" [nzLg]="10">
+      <nz-card nzTitle="分析与导出">
+        <div class="analysis-panel">
+          <nz-row [nzGutter]="16">
+            <nz-col [nzSpan]="12">
+              <nz-statistic [nzValue]="result.timesPerDay" nzTitle="每日提醒次数"></nz-statistic>
+            </nz-col>
+            <nz-col [nzSpan]="12">
+              <nz-statistic [nzValue]="result.plannedMl" nzTitle="每日计划饮水 (ml)"></nz-statistic>
+            </nz-col>
+          </nz-row>
+
+          <nz-divider></nz-divider>
+
+          <nz-alert [nzType]="result.status" [nzMessage]="result.hint" nzShowIcon></nz-alert>
+
+          <div class="actions">
+            <button nz-button nzType="primary" nzBlock (click)="downloadIcs()" style="height: 50px; margin-top: 24px;">
+              <span nz-icon nzType="download"></span> 下载 .ics 日历提醒文件
+            </button>
+            <p class="hint-text">
+              下载后的文件可直接导入手机或电脑系统日历。
+            </p>
+          </div>
+        </div>
+      </nz-card>
+    </nz-col>
+  </nz-row>
+</div>

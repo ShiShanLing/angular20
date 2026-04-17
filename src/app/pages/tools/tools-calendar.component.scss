@@ -1,0 +1,89 @@
+.tool-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 12px;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+
+  .current-month {
+    font-size: 16px;
+    font-weight: bold;
+    color: #1a1a1a;
+  }
+}
+
+.events {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  line-height: 1;
+}
+
+.lunar-date {
+  font-size: 10px;
+  color: #aaa;
+  margin-top: 2px;
+}
+
+.holiday-tag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  margin-top: 4px;
+
+  .status-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    &.is-holiday { background: #ff4d4f; }
+    &.is-work { background: #1890ff; }
+  }
+
+  .holiday-name {
+    font-size: 9px;
+    transform: scale(0.9);
+    color: #666;
+  }
+}
+
+.day-detail {
+  padding: 4px 8px;
+  h3 {
+    margin-bottom: 4px;
+    color: #1890ff;
+    font-size: 15px;
+  }
+  p {
+    margin-bottom: 2px;
+    font-size: 13px;
+  }
+}
+
+/* 适度压缩高度，平衡紧凑与间距 */
+:host ::ng-deep {
+  .ant-picker-calendar-date-content {
+    height: 60px !important; // 增加到约 60px
+    margin: 0 !important;
+  }
+  
+  .ant-picker-calendar-date-value {
+    line-height: 24px !important; // 相应调大
+    font-size: 16px !important;
+  }
+
+  .ant-picker-calendar-header {
+    display: none; /* 隐藏官方默认 Header，改用自定义的 */
+  }
+
+  .ant-card-body {
+    padding: 8px !important;
+  }
+}
+

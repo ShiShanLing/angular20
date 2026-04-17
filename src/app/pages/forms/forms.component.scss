@@ -1,0 +1,35 @@
+.forms-page {
+  h2 { margin: 0 0 4px; font-size: 20px; color: #1a1a1a; }
+  .subtitle { color: #888; margin-bottom: 20px; font-size: 13px; }
+
+  .result-panel {
+    .result-item {
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px;
+      .key { font-weight: 600; color: #555; min-width: 72px; }
+    }
+  }
+
+  .empty-result {
+    text-align: center;
+    padding: 40px 0;
+    color: #aaa;
+    font-size: 14px;
+  }
+
+  .tips {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    li {
+      padding: 6px 0;
+      font-size: 13px;
+      color: #555;
+      border-bottom: 1px solid #f0f0f0;
+      &:last-child { border-bottom: none; }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+<div class="tool-content">
+  <nz-card [nzTitle]="calendarHeader" class="compact-card">
+    <ng-template #calendarHeader>
+      <div class="calendar-header">
+        <button nz-button nzType="text" (click)="prevMonth()"><span nz-icon nzType="left"></span> 上一月</button>
+        <div class="current-month">{{ selectedDate | date:'yyyy年MM月' }}</div>
+        <button nz-button nzType="text" (click)="nextMonth()">下一月 <span nz-icon nzType="right"></span></button>
+      </div>
+    </ng-template>
+
+    <nz-calendar [(ngModel)]="selectedDate" [nzFullscreen]="false">
+      <ul *nzDateCell="let date" class="events">
+        <!-- 农历日期 -->
+        <li class="lunar-date">
+          {{ getLunarInfo(date).day === 1 ? getLunarInfo(date).monthStr : getLunarInfo(date).dayStr }}
+        </li>
+        
+        <!-- 节假日标记 -->
+        <li *ngIf="getHolidayInfo(date) as holiday" class="holiday-tag">
+          <span class="status-dot" [class.is-holiday]="holiday.type === 'holiday'" [class.is-work]="holiday.type === 'work'"></span>
+          <span class="holiday-name">{{ holiday.name }}</span>
+        </li>
+      </ul>
+    </nz-calendar>
+  </nz-card>
+  
+  <div style="margin-top: 16px;">
+    <nz-row [nzGutter]="16">
+      <nz-col [nzSpan]="24">
+        <nz-card nzType="inner" nzTitle="当日详情">
+          <div class="day-detail" *ngIf="selectedDate">
+            <h3>{{ selectedDate | date:'yyyy年MM月dd日' }}</h3>
+            <p>农历：{{ getLunarInfo(selectedDate).monthStr }}{{ getLunarInfo(selectedDate).dayStr }}</p>
+            <p *ngIf="getHolidayInfo(selectedDate) as holiday">
+              状态：<nz-tag [nzColor]="holiday.type === 'holiday' ? 'error' : 'processing'">{{ holiday.name }}</nz-tag>
+            </p>
+          </div>
+        </nz-card>
+      </nz-col>
+    </nz-row>
+  </div>
+</div>

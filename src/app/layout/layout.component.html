@@ -1,0 +1,68 @@
+<nz-layout class="app-layout">
+  <!-- Sider -->
+  <nz-sider
+    nzCollapsible
+    [(nzCollapsed)]="isCollapsed"
+    [nzTrigger]="null"
+    [nzWidth]="220"
+    [nzCollapsedWidth]="64"
+    class="sider">
+    <div class="logo" [class.collapsed]="isCollapsed">
+      <span class="logo-icon">⚡</span>
+      @if (!isCollapsed) {
+        <span class="logo-text">Angular Demo</span>
+      }
+    </div>
+    <ul nz-menu nzTheme="dark" nzMode="inline" [nzInlineCollapsed]="isCollapsed">
+      @for (item of menuItems; track item.label) {
+        @if (item.children) {
+          <li nz-submenu [nzTitle]="item.label" [nzIcon]="item.icon || ''" [nzOpen]="!isCollapsed">
+            <ul>
+              @for (child of item.children; track child.path) {
+                <li nz-menu-item nzMatchRouter>
+                  <a [routerLink]="child.path">{{ child.label }}</a>
+                </li>
+              }
+            </ul>
+          </li>
+        } @else {
+          <li nz-menu-item nzMatchRouter>
+            <a [routerLink]="item.path">
+              <span nz-icon [nzType]="item.icon || ''"></span>
+              <span>{{ item.label }}</span>
+            </a>
+          </li>
+        }
+      }
+    </ul>
+  </nz-sider>
+
+  <!-- Main Layout -->
+  <nz-layout>
+    <!-- Header -->
+    <nz-header class="app-header">
+      <span nz-icon
+        class="trigger"
+        [nzType]="isCollapsed ? 'menu-unfold' : 'menu-fold'"
+        (click)="isCollapsed = !isCollapsed">
+      </span>
+      <span class="header-title">Angular 19 功能演示</span>
+      <div class="header-right">
+        <span class="header-tag" nz-tooltip nzTooltipTitle="基于 Ant Design 的企业级 UI 组件库 (Angular v19)">ng-zorro-antd v19</span>
+        <span class="header-tag" nz-tooltip nzTooltipTitle="由百度开源的强大可视化图表库 (当前 v5.6+)">ECharts v5</span>
+      </div>
+    </nz-header>
+
+    <!-- Content -->
+    <nz-content class="app-content">
+      <div class="content-inner page-enter">
+        <router-outlet />
+      </div>
+    </nz-content>
+
+    <!-- Footer -->
+    <nz-footer class="app-footer">
+      Angular 19 + ng-zorro-antd + ECharts ©2026
+    </nz-footer>
+  </nz-layout>
+</nz-layout>

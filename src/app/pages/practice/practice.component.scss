@@ -1,0 +1,140 @@
+.practice-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.file-pick {
+  display: inline-block;
+  margin-right: 8px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+
+  input[type='file'] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    font-size: 0;
+  }
+}
+
+.toolbar {
+  margin-top: 16px;
+}
+
+.question-block {
+  padding: 8px 0 24px;
+}
+
+.question-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.progress-hint {
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 13px;
+  margin-left: auto;
+}
+
+.question-title {
+  margin: 0 0 16px;
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.88);
+}
+
+.think-hint {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 15px;
+}
+
+.answer-box {
+  margin-top: 8px;
+  padding: 16px;
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  border-radius: 8px;
+}
+
+.answer-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #389e0d;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+
+.answer-body {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.65;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.empty-hint {
+  color: rgba(0, 0, 0, 0.45);
+  margin: 0;
+}
+
+.stat-grid {
+  margin-bottom: 8px;
+}
+
+.cat-stats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 14px;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  .cat-name {
+    color: rgba(0, 0, 0, 0.65);
+  }
+
+  .cat-count {
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.88);
+  }
+}
+
+.sample-card {
+  margin-top: 16px;
+}
+
+.sample-pre {
+  margin: 0;
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.sample-note {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.45);
+}

@@ -1,0 +1,54 @@
+{
+  "name": "angular20",
+  "version": "0.0.0",
+  "scripts": {
+    "postinstall": "patch-package",
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "build:gh": "ng build --base-href /angular20/ && cp dist/angular20/browser/index.html dist/angular20/browser/404.html",
+    "publish:gh-pages": "npm run build:gh && npx -p angular-cli-ghpages ngh --dir dist/angular20/browser",
+    "publish:all": "git push -u origin HEAD && npm run publish:gh-pages",
+    "deploy": "npm run publish:gh-pages"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/animations": "19.2.0",
+    "@angular/common": "^19.2.0",
+    "@angular/compiler": "^19.2.0",
+    "@angular/core": "^19.2.0",
+    "@angular/forms": "^19.2.0",
+    "@angular/platform-browser": "^19.2.0",
+    "@angular/platform-browser-dynamic": "^19.2.0",
+    "@angular/router": "^19.2.0",
+    "echarts": "^5.6.0",
+    "echarts-china-provinces-js": "^1.0.0",
+    "echarts-gl": "^2.0.9",
+    "echarts-liquidfill": "^3.1.0",
+    "ng-zorro-antd": "^19.3.0",
+    "ngx-echarts": "^19.0.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "xlsx": "^0.18.5",
+    "zone.js": "~0.15.0"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^19.2.0",
+    "@angular/cli": "^19.2.0",
+    "@angular/compiler-cli": "^19.2.0",
+    "@types/jasmine": "~5.1.0",
+    "jasmine-core": "~5.6.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "patch-package": "^8.0.1",
+    "typescript": "~5.7.2"
+  },
+  "optionalDependencies": {
+    "@esbuild/darwin-arm64": "^0.27.4"
+  }
+}

@@ -1,0 +1,148 @@
+<div class="tool-container">
+  <nz-row [nzGutter]="24">
+    <!-- Step 1: Input -->
+    <nz-col [nzXs]="24" [nzLg]="14">
+      <nz-card nzTitle="第 1 步：贷款参数计算">
+        <form nz-form [formGroup]="form" nzLayout="vertical">
+          <nz-row [nzGutter]="16">
+            <nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label>房子价格 (元)</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number formControlName="housePrice" [nzMin]="0" [nzStep]="10000" style="width: 100%"></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+            <nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label>贷款年限 (年)</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number formControlName="years" [nzMin]="1" [nzMax]="40" style="width: 100%"></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+          </nz-row>
+
+          <nz-row [nzGutter]="16">
+            <nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label>公积金贷款上限 (元)</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number formControlName="gjjMax" [nzMin]="0" [nzStep]="10000" style="width: 100%"></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+            <nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label>首付比例 (%)</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number formControlName="downPct" [nzMin]="0" [nzMax]="100" style="width: 100%" [disabled]="form.get('plan')?.value === 'fullDown'"></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+          </nz-row>
+
+          <nz-row [nzGutter]="16">
+            <nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label>公积金利率 (%)</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number formControlName="gjjRate" [nzMin]="0" [nzStep]="0.01" style="width: 100%"></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+            <nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label>商贷利率 (%)</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number formControlName="bizRate" [nzMin]="0" [nzStep]="0.01" style="width: 100%"></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+          </nz-row>
+
+          <nz-form-item>
+            <nz-form-label>贷款方案</nz-form-label>
+            <nz-form-control>
+              <nz-radio-group formControlName="plan">
+                <label nz-radio nzValue="fullDown">方案 1：无商贷（首付由房价 - 公积金决定）</label>
+                <label nz-radio nzValue="combo">方案 2：组合贷（首付按比例计算）</label>
+              </nz-radio-group>
+            </nz-form-control>
+          </nz-form-item>
+        </form>
+      </nz-card>
+
+      <nz-card nzTitle="第 2 步：公积金对冲压力测试" style="margin-top: 16px;">
+        <form nz-form [formGroup]="form" nzLayout="vertical">
+          <nz-row [nzGutter]="16">
+            <nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label>公积金当前余额 (元)</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number formControlName="gjjBalance" [nzMin]="0" [nzStep]="1000" style="width: 100%"></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+            <nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label>每月公积金入账 (元)</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number formControlName="gjjMonthlyIn" [nzMin]="0" [nzStep]="100" style="width: 100%"></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+          </nz-row>
+        </form>
+      </nz-card>
+    </nz-col>
+
+    <!-- Result -->
+    <nz-col [nzXs]="24" [nzLg]="10">
+      <nz-card nzTitle="计算结果汇总">
+        <div class="result-panel">
+          <nz-row [nzGutter]="16">
+            <nz-col [nzSpan]="12">
+              <nz-statistic [nzValue]="(result.downPayment | number:'1.0-0')!" nzTitle="首付金额 (元)"></nz-statistic>
+            </nz-col>
+            <nz-col [nzSpan]="12">
+              <nz-statistic [nzValue]="(result.totalMonthly | number:'1.2-2')!" nzTitle="合计月供 (元)"></nz-statistic>
+            </nz-col>
+          </nz-row>
+          
+          <nz-divider></nz-divider>
+
+          <div class="detail-row">
+            <span class="label">公积金贷款额：</span>
+            <span class="value">{{ result.gjjPrincipal | number:'1.0-0' }} 元</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">商贷金额：</span>
+            <span class="value">{{ result.bizPrincipal | number:'1.0-0' }} 元</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">公积金月供：</span>
+            <span class="value">{{ result.gjjMonthly | number:'1.2-2' }} 元</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">商贷月供：</span>
+            <span class="value">{{ result.bizMonthly | number:'1.2-2' }} 元</span>
+          </div>
+
+          <nz-divider nzText="对冲支撑分析"></nz-divider>
+
+          <div class="support-panel">
+            <div class="support-stat">
+              <div class="main-val">{{ result.supportMonths }}</div>
+              <div class="sub-label">个持续月数</div>
+            </div>
+            <div class="support-info">
+              约合：<strong>{{ result.supportYearsStr }}</strong>
+            </div>
+            <p class="hint-text">依据简化模型：每月先存入公积金，再抵扣月供，直至余额归零。</p>
+          </div>
+        </div>
+      </nz-card>
+    </nz-col>
+  </nz-row>
+</div>

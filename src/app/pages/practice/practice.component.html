@@ -1,0 +1,113 @@
+<div class="practice-page">
+  <div nz-row [nzGutter]="[16, 16]">
+    <div nz-col [nzXs]="24" [nzXl]="16">
+      <nz-card nzTitle="模拟面试刷题" [nzExtra]="extraTpl">
+        <ng-template #extraTpl>
+          <label class="file-pick">
+            <input type="file" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" (change)="onFileSelected($event)" />
+            <button nz-button nzType="default">
+              <span nz-icon nzType="cloud-upload"></span>
+              导入表格
+            </button>
+          </label>
+          <button nz-button nzType="default" nzDanger (click)="confirmClear()" [disabled]="!statsTotal()">清空题库</button>
+        </ng-template>
+
+        <nz-alert
+          nzType="info"
+          nzShowIcon
+          nzMessage="表格格式说明"
+          nzDescription="第一行写表头。至少包含「题目」列；「分类」「答案」「标签」选填，列名可用中英文（见下方示例）。分类列请填：iOS、Android、Angular-TS、Angular-JS、Angular-CSS（也支持 TS/JS/CSS、安卓 等简写）。支持 .xlsx / .xls / 以及 Excel 另存为的 .csv。题目存在浏览器本地，重复题干会自动跳过。">
+        </nz-alert>
+
+        <div class="toolbar">
+          <nz-space [nzWrap]="true" nzSize="middle">
+            <span>筛选</span>
+            <nz-select
+              style="min-width: 200px"
+              [ngModel]="filterCategory()"
+              (ngModelChange)="setFilter($event)"
+              nzPlaceHolder="分类">
+              @for (opt of filterOptions; track opt.value) {
+                <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
+              }
+            </nz-select>
+            <button nz-button nzType="primary" (click)="randomOne()">
+              <span nz-icon nzType="thunderbolt"></span>
+              随机一题
+            </button>
+            <button nz-button (click)="prev()" [disabled]="!filteredItems().length">
+              <span nz-icon nzType="left"></span>
+              上一题
+            </button>
+            <button nz-button (click)="next()" [disabled]="!filteredItems().length">
+              下一题
+              <span nz-icon nzType="right"></span>
+            </button>
+            <button nz-button nzType="dashed" (click)="toggleAnswer()" [disabled]="!currentItem()">
+              {{ showAnswer() ? '隐藏参考答案' : '显示参考答案' }}
+            </button>
+          </nz-space>
+        </div>
+
+        <nz-divider></nz-divider>
+
+        @if (!filteredItems().length) {
+          <nz-empty nzNotFoundContent="暂无题目">
+            <ng-template nzNotFoundFooter>
+              <p class="empty-hint">请用 Excel 按说明准备表格后，点击右上角「导入表格」。</p>
+            </ng-template>
+          </nz-empty>
+        } @else {
+          @if (currentItem(); as item) {
+            <div class="question-block">
+              <div class="question-meta">
+                <nz-tag nzColor="blue">{{ categoryLabel(item.category) }}</nz-tag>
+                @if (item.tags) {
+                  <nz-tag>{{ item.tags }}</nz-tag>
+                }
+                <span class="progress-hint">第 {{ currentIndex() + 1 }} / {{ filteredItems().length }} 题（当前筛选）</span>
+              </div>
+              <h2 class="question-title">「{{ item.question }}」</h2>
+              @if (showAnswer()) {
+                <div class="answer-box">
+                  <div class="answer-label">参考答案</div>
+                  <pre class="answer-body">{{ item.answer || '（本题未录入答案，可在表格中补充「答案」列后重新导入。）' }}</pre>
+                </div>
+              } @else {
+                <p class="think-hint">先在心里作答，再点「显示参考答案」对照要点。</p>
+              }
+            </div>
+          }
+        }
+      </nz-card>
+    </div>
+
+    <div nz-col [nzXs]="24" [nzXl]="8">
+      <nz-card nzTitle="题库统计" [nzBodyStyle]="{ paddingTop: '12px' }">
+        <div class="stat-grid">
+          <nz-statistic nzTitle="题目总数" [nzValue]="statsTotal()"></nz-statistic>
+        </div>
+        <nz-divider nzPlain></nz-divider>
+        <ul class="cat-stats">
+          @for (c of categoryList; track c) {
+            <li>
+              <span class="cat-name">{{ categoryLabel(c) }}</span>
+              <span class="cat-count">{{ statsByCategory()[c] }}</span>
+            </li>
+          }
+        </ul>
+      </nz-card>
+
+      <nz-card nzTitle="Excel 示例（可复制表头）" class="sample-card">
+        <pre class="sample-pre">分类	题目	答案	标签
+iOS	简述 RunLoop 与线程的关系。	RunLoop 与线程一一对应…	基础
+Android	Activity 启动模式有哪些？	standard / singleTop…	基础
+Angular-TS	解释 Angular 里 signal 与变更检测的关系。	signal 更新会标记视图…	进阶
+Angular-JS	说明 NgZone 的典型用途。	把第三方异步桥进 Angular 变更检测…	进阶
+Angular-CSS	`:host` 与 `::ng-deep` 的使用注意。	:host 作用于组件宿主…	样式</pre>
+        <p class="sample-note">在 Excel 中：第一行为表头，列之间为制表符或单元格分列；「答案」可留空后再补。</p>
+      </nz-card>
+    </div>
+  </div>
+</div>

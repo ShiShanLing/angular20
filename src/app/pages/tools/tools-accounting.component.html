@@ -1,0 +1,75 @@
+<div class="tool-content">
+  <nz-row [nzGutter]="[16, 16]">
+    <nz-col [nzSpan]="24" [nzMd]="8">
+      <nz-card nzTitle="记账快记" [nzExtra]="exportTpl">
+        <form nz-form [formGroup]="form" nzLayout="vertical" (ngSubmit)="submitForm()">
+          <nz-form-item>
+            <nz-form-label nzRequired>金额</nz-form-label>
+            <nz-form-control nzErrorTip="请输入有效金额">
+              <nz-input-number formControlName="amount" [nzMin]="0.01" [nzStep]="1" style="width: 100%" nzPlaceHolder="0.00"></nz-input-number>
+            </nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-form-label nzRequired>分类</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="category" nzPlaceHolder="选择分类">
+                <nz-option *ngFor="let c of categories" [nzValue]="c" [nzLabel]="c"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-form-label>时间</nz-form-label>
+            <nz-form-control>
+              <nz-date-picker formControlName="date" style="width: 100%" nzShowTime></nz-date-picker>
+            </nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-form-label>备注</nz-form-label>
+            <nz-form-control>
+              <input nz-input formControlName="remarks" placeholder="可选备注" />
+            </nz-form-control>
+          </nz-form-item>
+          <button nz-button nzType="primary" nzBlock type="submit" [disabled]="form.invalid">记录</button>
+        </form>
+      </nz-card>
+      <ng-template #exportTpl>
+        <a (click)="exportCSV()">导出 CSV</a>
+      </ng-template>
+    </nz-col>
+
+    <nz-col [nzSpan]="24" [nzMd]="16">
+      <nz-card nzTitle="统计与记录">
+        <nz-tabset>
+          <nz-tab nzTitle="本周饼图" (nzClick)="buildChart('week')">
+             <div echarts [options]="chartOption" style="height: 350px;"></div>
+          </nz-tab>
+          <nz-tab nzTitle="本月饼图" (nzClick)="buildChart('month')">
+             <div echarts [options]="chartOption" style="height: 350px;"></div>
+          </nz-tab>
+          <nz-tab nzTitle="历史记录">
+            <nz-table #basicTable [nzData]="records" [nzPageSize]="5">
+              <thead>
+                <tr>
+                  <th>时间</th>
+                  <th>分类</th>
+                  <th>金额</th>
+                  <th>备注</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let data of basicTable.data">
+                  <td>{{ data.date | date:'MM-dd HH:mm' }}</td>
+                  <td><nz-tag>{{ data.category }}</nz-tag></td>
+                  <td style="color: #ff4d4f; font-weight: bold;">-¥{{ data.amount }}</td>
+                  <td>{{ data.remarks }}</td>
+                  <td><a (click)="deleteRecord(data.id)">删除</a></td>
+                </tr>
+              </tbody>
+            </nz-table>
+          </nz-tab>
+        </nz-tabset>
+      </nz-card>
+    </nz-col>
+  </nz-row>
+</div>

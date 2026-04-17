@@ -1,0 +1,38 @@
+<div class="dashboard">
+  <!-- Stats Row -->
+  <div nz-row [nzGutter]="[16, 16]" class="stats-row">
+    @for (stat of stats; track stat.title) {
+      <div nz-col [nzXs]="24" [nzSm]="12" [nzLg]="6">
+        <nz-card class="stat-card" [nzBordered]="false">
+          <div class="stat-content">
+            <div class="stat-icon" [style.color]="stat.color">{{ stat.prefix }}</div>
+            <div class="stat-info">
+              <nz-statistic
+                [nzValue]="stat.value"
+                [nzTitle]="stat.title"
+                [nzValueStyle]="{ color: stat.color, fontSize: '24px' }">
+              </nz-statistic>
+              <div class="stat-trend" [class.positive]="stat.trend.startsWith('+')" [class.negative]="stat.trend.startsWith('-')">
+                {{ stat.trend }} 较上月
+              </div>
+            </div>
+          </div>
+        </nz-card>
+      </div>
+    }
+  </div>
+
+  <!-- Charts Row -->
+  <div nz-row [nzGutter]="[16, 16]" class="charts-row">
+    <div nz-col [nzXs]="24" [nzLg]="16">
+      <nz-card nzTitle="年度趋势" [nzBordered]="false">
+        <div echarts [options]="lineOption" class="chart-container"></div>
+      </nz-card>
+    </div>
+    <div nz-col [nzXs]="24" [nzLg]="8">
+      <nz-card nzTitle="流量来源分布" [nzBordered]="false">
+        <div echarts [options]="pieOption" class="chart-container"></div>
+      </nz-card>
+    </div>
+  </div>
+</div>

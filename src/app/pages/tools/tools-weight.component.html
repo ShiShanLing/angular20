@@ -1,0 +1,60 @@
+<div class="tool-content">
+  <nz-row [nzGutter]="[16, 16]">
+    <nz-col [nzSpan]="24" [nzMd]="8">
+      <nz-card nzTitle="体重记录" [nzExtra]="exportTpl">
+        <form nz-form [formGroup]="form" nzLayout="vertical" (ngSubmit)="submitForm()">
+          <nz-form-item>
+            <nz-form-label nzRequired>日期</nz-form-label>
+            <nz-form-control>
+              <nz-date-picker formControlName="date" style="width: 100%"></nz-date-picker>
+            </nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-form-label nzRequired>体重 (kg)</nz-form-label>
+            <nz-form-control nzErrorTip="请输入合理体重(10~300kg)">
+              <nz-input-number formControlName="weight" [nzMin]="10" [nzMax]="300" [nzStep]="0.1" style="width: 100%" nzPlaceHolder="如 65.5"></nz-input-number>
+            </nz-form-control>
+          </nz-form-item>
+          <button nz-button nzType="primary" nzBlock type="submit" [disabled]="form.invalid">记录 / 更新</button>
+        </form>
+        <!-- 体重记录表格 -->
+
+        <div style="margin-top: 24px;">
+           <nz-table #basicTable [nzData]="reversedRecords" [nzPageSize]="5">
+              <thead>
+                <tr>
+                  <th>日期</th>
+                  <th>体重</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Show backwards so newest is on top in table -->
+                <tr *ngFor="let data of basicTable.data">
+                  <td>{{ data.date }}</td>
+                  <td>{{ data.weight | number:'1.1-1' }} kg</td>
+                  <td><a (click)="deleteRecord(data.id)">删除</a></td>
+                </tr>
+              </tbody>
+            </nz-table>
+        </div>
+      </nz-card>
+      <ng-template #exportTpl>
+        <a (click)="exportCSV()">导出 CSV</a>
+      </ng-template>
+    </nz-col>
+
+    <nz-col [nzSpan]="24" [nzMd]="16">
+      <nz-card nzTitle="趋势图 (7日均线)">
+        <div *ngIf="records.length > 0; else emptyTpl">
+           <div echarts [options]="chartOption" style="height: 400px;"></div>
+        </div>
+        <ng-template #emptyTpl>
+          <div style="height: 400px; display: flex; align-items: center; justify-content: center; color: #999;">
+            暂无数据，请在左侧录入体重
+          </div>
+        </ng-template>
+      </nz-card>
+    </nz-col>
+  </nz-row>
+</div>

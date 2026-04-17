@@ -1,0 +1,153 @@
+.tool-content {
+  padding: 16px;
+}
+
+.fire-wrap {
+  nz-card {
+    border-radius: 8px;
+  }
+
+  .intro {
+    margin-bottom: 16px;
+  }
+
+  .ref-dl {
+    margin: 0;
+
+    dt {
+      color: var(--text-secondary-color, #64748b);
+      font-size: 12px;
+      margin-top: 12px;
+    }
+
+    dd {
+      margin: 4px 0 0;
+    }
+  }
+
+  .tag-src {
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .footnote {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  .result-alert {
+    margin-top: 16px;
+  }
+
+  .fire-results {
+    margin-top: 8px;
+  }
+
+  .summary-line {
+    margin: 0 0 12px;
+    line-height: 1.65;
+    font-size: 15px;
+    color: var(--text-color, #1e293b);
+  }
+
+  .table-hint {
+    margin: 0 0 12px;
+    font-size: 13px;
+  }
+
+  /* 横向滚动 + 表头吸顶，适合列多、行多 */
+  .excel-table-wrap {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: min(70vh, 720px);
+    border: 1px solid #94a3b8;
+    border-radius: 2px;
+    background: #fff;
+  }
+
+  .excel-table {
+    width: 100%;
+    min-width: 960px;
+    border-collapse: collapse;
+    border-spacing: 0;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #e2e8f0;
+      color: #0f172a;
+      font-weight: 600;
+      text-align: center;
+      padding: 8px 10px;
+      border: 1px solid #94a3b8;
+      border-bottom: 2px solid #64748b;
+      white-space: nowrap;
+      box-shadow: 0 1px 0 #64748b;
+    }
+
+    tbody td {
+      padding: 6px 10px;
+      border: 1px solid #cbd5e1;
+      text-align: center;
+      color: #1e293b;
+      background: #fff;
+    }
+
+    tbody tr.row-zebra td {
+      background: #f8fafc;
+    }
+
+    tbody tr:hover td {
+      background: #e0f2fe;
+    }
+
+    tbody tr.row-depleted td {
+      background: #fff1f0;
+    }
+
+    tbody tr.row-depleted:hover td {
+      background: #ffe4e0;
+    }
+
+    .col-idx {
+      width: 44px;
+      text-align: center;
+      color: #64748b;
+    }
+
+    .col-num {
+      text-align: right;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12.5px;
+    }
+
+    .col-strong {
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .num-warn {
+      color: #cf1322;
+      font-weight: 600;
+    }
+
+    .col-remark {
+      text-align: left;
+      max-width: 220px;
+      font-size: 12px;
+      color: #334155;
+
+      .remark-span {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        cursor: default;
+      }
+    }
+  }
+}

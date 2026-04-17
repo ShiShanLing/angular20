@@ -1,0 +1,54 @@
+<div class="tool-content">
+  <nz-card nzTitle="订阅到期提醒" style="max-width: 600px; margin: 0 auto; border-radius: 8px;">
+    <p style="margin-bottom: 24px; color: #666;">
+      一键将订阅服务到期日导出为 <code>.ics</code> 格式，支持导入到苹果日历、Google Calendar 等主流日历应用中。
+    </p>
+    <form nz-form [formGroup]="form" [nzLayout]="'vertical'">
+      <nz-form-item>
+        <nz-form-label nzRequired>服务名称</nz-form-label>
+        <nz-form-control nzErrorTip="请输入服务名称，如 Netflix, Spotify">
+          <input nz-input formControlName="serviceName" placeholder="例如: Netflix, ChatGPT Plus" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <div nz-row [nzGutter]="16">
+        <div nz-col [nzSpan]="12">
+          <nz-form-item>
+            <nz-form-label nzRequired>金额</nz-form-label>
+            <nz-form-control nzErrorTip="请输入金额">
+              <nz-input-number formControlName="amount" [nzMin]="0" [nzStep]="1" style="width: 100%" nzPlaceHolder="0.00"></nz-input-number>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div nz-col [nzSpan]="12">
+          <nz-form-item>
+            <nz-form-label nzRequired>扣费周期</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="cycle">
+                <nz-option *ngFor="let c of cycles" [nzValue]="c.value" [nzLabel]="c.label"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+      </div>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>下次到期日</nz-form-label>
+        <nz-form-control nzErrorTip="请选择到期日">
+          <nz-date-picker formControlName="expiryDate" style="width: 100%"></nz-date-picker>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>备注</nz-form-label>
+        <nz-form-control>
+          <textarea nz-input formControlName="remarks" rows="2" placeholder="如账号信息或其他信息"></textarea>
+        </nz-form-control>
+      </nz-form-item>
+
+      <button nz-button nzType="primary" nzBlock nzSize="large" (click)="generateICS()">
+        <nz-icon nzType="download" /> 导出日历提醒 (.ics)
+      </button>
+    </form>
+  </nz-card>
+</div>

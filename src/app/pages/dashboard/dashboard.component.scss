@@ -1,0 +1,27 @@
+.dashboard {
+  .stats-row { margin-bottom: 8px; }
+
+  .stat-card {
+    border-radius: 12px;
+    .stat-content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .stat-icon {
+      font-size: 36px;
+      line-height: 1;
+    }
+    .stat-info { flex: 1; }
+    .stat-trend {
+      font-size: 12px;
+      margin-top: 4px;
+      &.positive { color: #52c41a; }
+      &.negative { color: #ff4d4f; }
+    }
+  }
+
+  .chart-container {
+    height: 320px;
+  }
+}

@@ -1,0 +1,63 @@
+<div class="game-wrapper">
+  <!-- Left Side: Status & Score -->
+  <div class="side-panel left">
+    <div class="panel-card">
+      <div class="panel-label">SCORE</div>
+      <div class="score-display">{{ state.score }}</div>
+      
+      <div class="status-tags">
+        @if (state.isPaused) {
+          <nz-tag nzColor="gold">PAUSED</nz-tag>
+        }
+        @if (state.isGameOver) {
+          <nz-tag nzColor="red">GAME OVER</nz-tag>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Center: Game Board -->
+  <div class="main-stage">
+    <div class="board" [style.--cols]="width" [style.--rows]="height">
+      @for (y of rows; track y) {
+        @for (x of cols; track x) {
+          <div
+            class="cell"
+            [class.snake]="isSnakeCell(x, y)"
+            [class.head]="isHeadCell(x, y)"
+            [class.food]="isFoodCell(x, y)">
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- Right Side: Controls -->
+  <div class="side-panel right">
+    <div class="panel-card">
+      <div class="panel-label">CONTROLS</div>
+      <div class="action-buttons">
+        <button nz-button nzBlock nzType="default" (click)="pauseResume()" [disabled]="state.isGameOver">
+          {{ state.isPaused ? 'Resume' : 'Pause' }}
+        </button>
+        <button nz-button nzBlock nzType="primary" (click)="restart()">Restart</button>
+      </div>
+
+      <div class="d-pad">
+        <div class="pad-row">
+          <button class="pad-btn" (click)="move('up')" [disabled]="state.isGameOver">↑</button>
+        </div>
+        <div class="pad-row">
+          <button class="pad-btn" (click)="move('left')" [disabled]="state.isGameOver">←</button>
+          <button class="pad-btn" (click)="move('down')" [disabled]="state.isGameOver">↓</button>
+          <button class="pad-btn" (click)="move('right')" [disabled]="state.isGameOver">→</button>
+        </div>
+      </div>
+      
+      <div class="keyboard-hint">
+        WASD / Arrows to move<br>
+        Space to Pause
+      </div>
+    </div>
+  </div>
+</div>

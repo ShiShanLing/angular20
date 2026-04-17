@@ -1,0 +1,60 @@
+<div class="charts-page">
+  <div class="page-header">
+    <h2>图表演示</h2>
+    <div class="theme-toggle">
+      <span>暗色主题</span>
+      <nz-switch [(ngModel)]="darkMode" (ngModelChange)="onThemeChange()"></nz-switch>
+    </div>
+  </div>
+
+  <nz-tabset nzType="card">
+    <nz-tab nzTitle="📈 折线图">
+      <nz-card [nzBordered]="false" class="chart-card" [class.dark]="darkMode">
+        <p class="chart-desc">多产品月度销量趋势对比，平滑曲线展示数据走向</p>
+        <div echarts [options]="lineOption" class="chart-area"></div>
+      </nz-card>
+    </nz-tab>
+
+    <nz-tab nzTitle="🌊 堆叠面积">
+      <nz-card [nzBordered]="false" class="chart-card" [class.dark]="darkMode">
+        <p class="chart-desc">新增/活跃/付费用户的堆叠面积趋势，适合看总体规模与结构变化</p>
+        <div echarts [options]="stackAreaOption" class="chart-area"></div>
+      </nz-card>
+    </nz-tab>
+
+    <nz-tab nzTitle="📊 柱状图">
+      <nz-card [nzBordered]="false" class="chart-card" [class.dark]="darkMode">
+        <p class="chart-desc">多维度渠道流量月度分布对比</p>
+        <div echarts [options]="barOption" class="chart-area"></div>
+      </nz-card>
+    </nz-tab>
+
+    <nz-tab nzTitle="🔵 散点图">
+      <nz-card [nzBordered]="false" class="chart-card" [class.dark]="darkMode">
+        <p class="chart-desc">两组随机数据点分布散点图，颜色区分分组</p>
+        <div echarts [options]="scatterOption" class="chart-area"></div>
+      </nz-card>
+    </nz-tab>
+
+    <nz-tab nzTitle="🕸 雷达图">
+      <nz-card [nzBordered]="false" class="chart-card" [class.dark]="darkMode">
+        <p class="chart-desc">预算分配与实际开销的多维度雷达对比图</p>
+        <div echarts [options]="radarOption" class="chart-area"></div>
+      </nz-card>
+    </nz-tab>
+
+    <nz-tab nzTitle="🧭 仪表盘">
+      <nz-card [nzBordered]="false" class="chart-card" [class.dark]="darkMode">
+        <p class="chart-desc">Gauge 适合展示单一指标的区间与当前值（示例：系统健康度）</p>
+        <div echarts [options]="gaugeOption" class="chart-area chart-area--gauge"></div>
+      </nz-card>
+    </nz-tab>
+
+    <nz-tab nzTitle="🔥 热力图">
+      <nz-card [nzBordered]="false" class="chart-card" [class.dark]="darkMode">
+        <p class="chart-desc">按“星期 x 小时”展示热度分布，适合看时段规律</p>
+        <div echarts [options]="heatmapOption" class="chart-area chart-area--heatmap"></div>
+      </nz-card>
+    </nz-tab>
+  </nz-tabset>
+</div>

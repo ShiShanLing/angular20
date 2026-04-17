@@ -1,0 +1,228 @@
+<div class="tool-content fire-wrap">
+  <form nz-form [formGroup]="form" nzLayout="vertical">
+    <nz-row [nzGutter]="[16, 16]">
+      <nz-col [nzSpan]="24" [nzLg]="15">
+        <nz-card nzTitle="FIRE / 退休后现金流模拟">
+          <p nz-typography nzType="secondary" class="intro">
+            按常见试算方式：<strong>从退休开始</strong>，每年先按通胀上调后提取年消费，再对<strong>剩余本金</strong>按名义年化计息；退休前按同一收益率复利当前存款至退休年龄。
+            下方以表格逐年列出结余、利息与寿命统计参考。仅供学习，非投资建议。
+          </p>
+          <nz-alert
+            *ngIf="form.value.retirementAge < form.value.currentAge"
+            nzType="info"
+            nzShowIcon
+            class="result-alert"
+            nzMessage="计划退休年龄小于当前年龄时，按「已处于退休状态」处理：不再做退休前复利，直接以当前存款为退休起点。"
+            style="margin-bottom: 16px"
+          ></nz-alert>
+
+          <nz-row [nzGutter]="[16, 8]">
+            <nz-col [nzSpan]="24" [nzSm]="8">
+              <nz-form-item>
+                <nz-form-label nzRequired>当前存款 / 可投资产（元）</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number
+                    formControlName="currentSavings"
+                    [nzMin]="0"
+                    [nzStep]="50000"
+                    style="width: 100%"
+                    (keydown.enter)="commitFocusedInput($event)"
+                  ></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+            <nz-col [nzSpan]="24" [nzSm]="8">
+              <nz-form-item>
+                <nz-form-label nzRequired>名义年化收益率（%）</nz-form-label>
+                <nz-form-control nzExtra="退休前复利、退休后结余计息（同一费率简化）">
+                  <nz-input-number
+                    formControlName="nominalReturnPct"
+                    [nzStep]="0.5"
+                    style="width: 100%"
+                    (keydown.enter)="commitFocusedInput($event)"
+                  ></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+            <nz-col [nzSpan]="24" [nzSm]="8">
+              <nz-form-item>
+                <nz-form-label nzRequired>年通胀（%）</nz-form-label>
+                <nz-form-control nzExtra="退休后每年消费 = 首年消费×(1+通胀)^年序号">
+                  <nz-input-number
+                    formControlName="inflationPct"
+                    [nzMin]="0"
+                    [nzStep]="0.25"
+                    style="width: 100%"
+                    (keydown.enter)="commitFocusedInput($event)"
+                  ></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+          </nz-row>
+
+          <nz-row [nzGutter]="[16, 8]">
+            <nz-col [nzSpan]="24" [nzSm]="8">
+              <nz-form-item>
+                <nz-form-label nzRequired>退休首年年消费（元）</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number
+                    formControlName="annualSpendingYear1"
+                    [nzMin]="1"
+                    [nzStep]="10000"
+                    style="width: 100%"
+                    (keydown.enter)="commitFocusedInput($event)"
+                  ></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+            <nz-col [nzSpan]="24" [nzSm]="8">
+              <nz-form-item>
+                <nz-form-label nzRequired>当前年龄</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number
+                    formControlName="currentAge"
+                    [nzMin]="18"
+                    [nzMax]="100"
+                    [nzStep]="1"
+                    style="width: 100%"
+                    (keydown.enter)="commitFocusedInput($event)"
+                  ></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+            <nz-col [nzSpan]="24" [nzSm]="8">
+              <nz-form-item>
+                <nz-form-label nzRequired>计划退休年龄</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number
+                    formControlName="retirementAge"
+                    [nzMin]="18"
+                    [nzMax]="100"
+                    [nzStep]="1"
+                    style="width: 100%"
+                    (keydown.enter)="commitFocusedInput($event)"
+                  ></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+          </nz-row>
+        </nz-card>
+      </nz-col>
+
+      <nz-col [nzSpan]="24" [nzLg]="9">
+        <nz-card nzTitle="寿命参考（中国七人普等口径）">
+          <nz-form-item>
+            <nz-form-label>分性别参考</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="gender" style="width: 100%">
+                <nz-option nzValue="male" nzLabel="男性"></nz-option>
+                <nz-option nzValue="female" nzLabel="女性"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+          <dl class="ref-dl">
+            <dt>出生时平均预期寿命（0 岁）</dt>
+            <dd>
+              <strong>{{ referenceExpectancy() | number : '1.2-2' }} 岁</strong>
+              <nz-tag nzColor="default" class="tag-src">{{ longevity.label }}</nz-tag>
+            </dd>
+            <dt>死亡年龄中位数（组中值示意）</dt>
+            <dd>
+              <strong>{{ referenceDeathMedian() | number : '1.1-1' }} 岁</strong>
+            </dd>
+          </dl>
+          <nz-divider></nz-divider>
+          <p nz-typography nzType="secondary" class="footnote">
+            自上而下某年首次达到参考年龄时，会在该年表格「备注」列提示（可悬停看全文）；预期寿命为生命表 0
+            岁口径，与「某年死亡人口年龄中位数」不同。
+          </p>
+        </nz-card>
+      </nz-col>
+    </nz-row>
+  </form>
+
+  <nz-row [nzGutter]="[16, 16]" class="fire-results" *ngIf="summary as s">
+    <nz-col [nzSpan]="24">
+      <nz-card nzTitle="模拟结论">
+        <p class="summary-line">
+          预计 <strong>{{ s.retirementCalendarYear }}</strong> 年退休（距今约
+          <strong>{{ s.yearsPreRetirement }}</strong> 年），退休当年可用于支出的账面本金约
+          <strong>¥{{ s.balanceAtRetirement | number : '1.0-0' }}</strong>（当前存款按年化复利推估）。
+        </p>
+        <nz-alert
+          *ngIf="s.depletionCalendarYear !== null"
+          nzType="warning"
+          nzShowIcon
+          class="result-alert"
+          [nzMessage]="depletionAlertMessage(s)"
+        ></nz-alert>
+        <nz-alert
+          *ngIf="s.depletionCalendarYear === null && s.finalBalanceIfNotDepleted !== null"
+          nzType="success"
+          nzShowIcon
+          class="result-alert"
+          [nzMessage]="successAlertMessage(s)"
+        ></nz-alert>
+      </nz-card>
+    </nz-col>
+    
+    <nz-col [nzSpan]="24">
+      <nz-card nzTitle="逐年明细表（退休日起，每年一行）">
+        <p nz-typography nzType="secondary" class="table-hint">
+          类 Excel 网格表：年初余额 → 年消费 → 取款后 → 当年利息 → 年末余额。备注列为短标签，悬停可看完整说明。
+        </p>
+        <div class="excel-table-wrap">
+          <table class="excel-table">
+            <thead>
+              <tr>
+                <th class="col-idx">#</th>
+                <th>年份</th>
+                <th>年龄</th>
+                <th>退休第几年</th>
+                <th class="col-num">年初余额</th>
+                <th class="col-num">年消费</th>
+                <th class="col-num">取款后余额</th>
+                <th class="col-num">当年利息</th>
+                <th class="col-num">年末余额</th>
+                <th class="col-remark">备注</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of rows; track row.calendarYear; let idx = $index) {
+                <tr
+                  [class.row-depleted]="row.depletedThisYear"
+                  [class.row-zebra]="idx % 2 === 1">
+                  <td class="col-idx">{{ idx + 1 }}</td>
+                  <td>{{ row.calendarYear }}</td>
+                  <td>{{ row.age }}</td>
+                  <td>{{ row.yearsSinceRetirement + 1 }}</td>
+                  <td class="col-num">{{ row.balanceStart | number : '1.2-2' }}</td>
+                  <td class="col-num">{{ row.annualSpending | number : '1.2-2' }}</td>
+                  <td class="col-num" [class.num-warn]="row.depletedThisYear">
+                    {{ row.balanceAfterWithdraw | number : '1.2-2' }}
+                  </td>
+                  <td class="col-num">{{ row.interestOnRemainder | number : '1.2-2' }}</td>
+                  <td class="col-num col-strong">{{ row.balanceEnd | number : '1.2-2' }}</td>
+                  <td class="col-remark">
+                    @if (row.milestoneNotes.length) {
+                      <span
+                        nz-tooltip
+                        [nzTooltipTitle]="remarkTooltip(row)"
+                        nzTooltipPlacement="topLeft"
+                        class="remark-span"
+                      >
+                        {{ remarkCellText(row) }}
+                      </span>
+                    } @else {
+                      <span class="remark-span">—</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </nz-card>
+    </nz-col>
+  </nz-row>
+</div>

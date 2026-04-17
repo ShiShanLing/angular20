@@ -1,0 +1,61 @@
+.tool-container {
+  padding: 12px;
+}
+
+.result-panel {
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 14px;
+    
+    .label {
+      color: rgba(0,0,0,0.45);
+    }
+    .value {
+      font-weight: 500;
+      color: rgba(0,0,0,0.85);
+    }
+  }
+}
+
+.support-panel {
+  text-align: center;
+  padding: 16px;
+  background: #f6faff;
+  border-radius: 8px;
+
+  .support-stat {
+    margin-bottom: 8px;
+    .main-val {
+      font-size: 32px;
+      font-weight: bold;
+      color: #1890ff;
+      line-height: 1;
+    }
+    .sub-label {
+      font-size: 12px;
+      color: #888;
+    }
+  }
+
+  .support-info {
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+
+  .hint-text {
+    font-size: 12px;
+    color: #999;
+    font-style: italic;
+    margin: 0;
+  }
+}
+
+:host ::ng-deep {
+  .ant-radio-wrapper {
+    display: flex;
+    margin-bottom: 8px;
+    white-space: normal;
+  }
+}

@@ -1,0 +1,129 @@
+<div class="tool-container">
+  <nz-row [nzGutter]="24">
+    <!-- Left: Pomodoro & Todo -->
+    <nz-col [nzXs]="24" [nzLg]="12">
+      <nz-card nzTitle="番茄钟" [nzExtra]="pomoExtra">
+        <div class="pomo-panel">
+          <div class="pomo-status">
+            <span class="mode-label">{{ pomoMode === 'work' ? '🔥 专注中' : '🧊 休息中' }}</span>
+            <span class="round-label">第 {{ pomoRound }} 轮</span>
+          </div>
+          <div class="pomo-time">{{ formatTime(pomoRemainingSec) }}</div>
+          <div class="pomo-actions">
+            <button nz-button nzType="primary" nzSize="large" (click)="togglePomo()">
+              <span nz-icon [nzType]="pomoIsRunning ? 'pause' : 'play-circle'"></span>
+              {{ pomoIsRunning ? '暂停' : '开始' }}
+            </button>
+            <button nz-button nzType="default" nzSize="large" (click)="resetPomo()">
+              <span nz-icon nzType="reload"></span> 重置
+            </button>
+            <button nz-button nzType="link" (click)="nextPomo()">直接入下一段</button>
+          </div>
+        </div>
+      </nz-card>
+      <ng-template #pomoExtra>
+        <span style="font-size: 12px; color: #999">25min / 5min</span>
+      </ng-template>
+
+      <nz-card nzTitle="今日计划" style="margin-top: 24px;">
+        <div class="todo-input-wrap">
+          <input nz-input placeholder="回车添加任务..." [(ngModel)]="newTodoText" (keyup.enter)="addTodo()" />
+          <button nz-button nzType="primary" (click)="addTodo()">添加</button>
+        </div>
+        <nz-list [nzDataSource]="todoList" nzBordered nzSize="small" style="margin-top: 16px;">
+          @for (item of todoList; track item.id) {
+            <nz-list-item [nzContent]="todoContent" class="todo-item-row" [class.done]="item.done">
+              <ng-template #todoContent>
+                <label nz-checkbox [nzChecked]="item.done" (nzCheckedChange)="toggleTodo(item)"></label>
+                <span class="todo-text">{{ item.text }}</span>
+                <button nz-button nzType="text" nzDanger (click)="deleteTodo(item.id)">
+                  <span nz-icon nzType="delete"></span>
+                </button>
+              </ng-template>
+            </nz-list-item>
+          }
+          @if (todoList.length === 0) {
+            <nz-list-empty></nz-list-empty>
+          }
+        </nz-list>
+        <div class="todo-footer" *ngIf="todoList.length > 0">
+          <button nz-button nzType="link" nzDanger (click)="clearDoneTodos()">清理已完成</button>
+        </div>
+      </nz-card>
+    </nz-col>
+
+    <!-- Right: Deadline & Breakdown -->
+    <nz-col [nzXs]="24" [nzLg]="12">
+      <nz-card nzTitle="工期分解与倒计时">
+        <form nz-form [formGroup]="deadlineForm" nzLayout="vertical">
+          <nz-form-item>
+            <nz-form-label>计划截止日期</nz-form-label>
+            <nz-form-control>
+              <nz-date-picker nzShowTime formControlName="deadline" style="width: 100%"></nz-date-picker>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-row [nzGutter]="16">
+            <nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label>总预估工时 (h)</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number formControlName="totalHours" [nzMin]="0" style="width:100%"></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+            <nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label>已投入工时 (h)</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number formControlName="doneHours" [nzMin]="0" style="width:100%"></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+          </nz-row>
+
+          <nz-row [nzGutter]="16">
+            <nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label>每日可投入 (h)</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number formControlName="hoursPerDay" [nzMin]="0" style="width:100%"></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+            <nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label>仅计工作日</nz-form-label>
+                <nz-form-control>
+                  <nz-select formControlName="workdaysOnly">
+                    <nz-option nzValue="no" nzLabel="自然日"></nz-option>
+                    <nz-option nzValue="yes" nzLabel="工作日(周一至五)"></nz-option>
+                  </nz-select>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+          </nz-row>
+        </form>
+
+        <nz-divider nzText="分析结论"></nz-divider>
+
+        <div class="deadline-results">
+          <div class="countdown-big">{{ scheduleResult.countdownStr }}</div>
+          
+          <nz-row [nzGutter]="16" style="margin-top: 16px;">
+            <nz-col [nzSpan]="12">
+              <nz-statistic [nzValue]="scheduleResult.remainDays" nzTitle="剩余可用天数"></nz-statistic>
+            </nz-col>
+            <nz-col [nzSpan]="12">
+              <nz-statistic [nzValue]="(scheduleResult.needPerHour | number:'1.1-1')!" nzSuffix="h/d" nzTitle="建议日均投入"></nz-statistic>
+            </nz-col>
+          </nz-row>
+
+          <div class="feasible-tag" [class.danger]="scheduleResult.feasible !== '来得及'">
+            {{ scheduleResult.feasible }}
+          </div>
+        </div>
+      </nz-card>
+    </nz-col>
+  </nz-row>
+</div>

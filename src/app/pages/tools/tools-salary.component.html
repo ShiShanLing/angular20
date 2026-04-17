@@ -1,0 +1,171 @@
+<div class="tool-content">
+  <nz-row [nzGutter]="[16, 16]">
+    <nz-col [nzSpan]="24" [nzMd]="10">
+      <nz-card nzTitle="薪资参数" [nzExtra]="saveTpl">
+        <form nz-form [formGroup]="form" nzLayout="vertical">
+          <nz-form-item>
+            <nz-form-label nzRequired>税前月薪 (元)</nz-form-label>
+            <nz-form-control>
+              <nz-input-number formControlName="grossPay" [nzMin]="0" [nzStep]="100" style="width: 100%"></nz-input-number>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-row [nzGutter]="16">
+            <nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label nzRequired>社保汇缴基数</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number formControlName="socialBase" [nzMin]="0" [nzStep]="100" style="width: 100%"></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+            <nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label nzRequired>公积金基数</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number formControlName="housingBase" [nzMin]="0" [nzStep]="100" style="width: 100%"></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+          </nz-row>
+
+          <nz-row [nzGutter]="16">
+            <nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label nzRequired>公积金比例 (%)</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number formControlName="housingRatio" [nzMin]="0" [nzMax]="100" [nzStep]="1" style="width: 100%"></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+            <nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label>专项附加扣除 (元)</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number formControlName="specialDeduction" [nzMin]="0" [nzStep]="100" style="width: 100%"></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+          </nz-row>
+
+          <nz-row [nzGutter]="16">
+            <nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label>年终奖 (月数)</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number formControlName="bonusMonths" [nzMin]="0" [nzMax]="24" [nzStep]="1" style="width: 100%"></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+            <nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label>每月其他支出 (元)</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number formControlName="monthlyExpense" [nzMin]="0" [nzStep]="100" style="width: 100%"></nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </nz-col>
+          </nz-row>
+        </form>
+      </nz-card>
+      <ng-template #saveTpl>
+        <a (click)="saveTemplate()">保存为默认</a>
+      </ng-template>
+    </nz-col>
+
+    <nz-col [nzSpan]="24" [nzMd]="14">
+      <nz-card nzTitle="计算结果" *ngIf="result">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h2 style="color: #666; font-weight: normal; margin-bottom: 8px;">本月预期到手薪资</h2>
+          <span style="font-size: 48px; color: #52c41a; font-weight: bold;">¥{{ result.netPay | number:'1.2-2' }}</span>
+          <div style="margin-top: 8px;">
+            <button nz-button nzType="link" (click)="showModal()">查看年度每月详情 (累计预扣预缴) ></button>
+          </div>
+        </div>
+        
+        <nz-divider nzText="五险一金明细"></nz-divider>
+        <nz-row [nzGutter]="[16, 16]">
+          <nz-col [nzSpan]="8">
+            <nz-statistic nzTitle="养老基数(8%)" [nzValue]="(result.pension | number:'1.2-2')!"></nz-statistic>
+          </nz-col>
+          <nz-col [nzSpan]="8">
+            <nz-statistic nzTitle="医疗金(2%)" [nzValue]="(result.medical | number:'1.2-2')!"></nz-statistic>
+          </nz-col>
+          <nz-col [nzSpan]="8">
+            <nz-statistic nzTitle="失业金(0.5%)" [nzValue]="(result.unemployment | number:'1.2-2')!"></nz-statistic>
+          </nz-col>
+          <nz-col [nzSpan]="8">
+            <nz-statistic nzTitle="公积金" [nzValue]="(result.housing | number:'1.2-2')!"></nz-statistic>
+          </nz-col>
+          <nz-col [nzSpan]="8">
+            <nz-statistic nzTitle="个人扣款合计" [nzValue]="(result.deductions | number:'1.2-2')!" [nzValueStyle]="{ color: '#ff4d4f' }"></nz-statistic>
+          </nz-col>
+        </nz-row>
+
+        <nz-divider nzText="个税明细"></nz-divider>
+        <nz-row [nzGutter]="[16, 16]">
+           <nz-col [nzSpan]="12">
+            <nz-statistic nzTitle="计税金额" [nzValue]="(result.taxable | number:'1.2-2')!"></nz-statistic>
+          </nz-col>
+          <nz-col [nzSpan]="12">
+            <nz-statistic nzTitle="应交个税" [nzValue]="(result.tax | number:'1.2-2')!" [nzValueStyle]="{ color: '#ff4d4f' }"></nz-statistic>
+          </nz-col>
+        </nz-row>
+
+        <nz-divider nzText="年度预估"></nz-divider>
+        <nz-row [nzGutter]="[16, 16]">
+          <nz-col [nzSpan]="12">
+            <nz-statistic nzTitle="年薪总额 (税前)" [nzValue]="(result.annualGross | number:'1.2-2')!"></nz-statistic>
+          </nz-col>
+          <nz-col [nzSpan]="12">
+            <nz-statistic nzTitle="年到手收入 (税后)" [nzValue]="(result.annualNetPay | number:'1.2-2')!" [nzValueStyle]="{ color: '#52c41a' }"></nz-statistic>
+          </nz-col>
+          <nz-col [nzSpan]="12">
+            <nz-statistic nzTitle="年固定支出总计" [nzValue]="(result.annualExpenses | number:'1.2-2')!" [nzValueStyle]="{ color: '#ff4d4f' }"></nz-statistic>
+          </nz-col>
+          <nz-col [nzSpan]="12">
+            <nz-statistic nzTitle="预计年度结余" [nzValue]="(result.annualSavings | number:'1.2-2')!" [nzValueStyle]="{ color: '#1890ff', 'font-weight': 'bold' }"></nz-statistic>
+          </nz-col>
+        </nz-row>
+        
+        <div style="margin-top: 24px;">
+          <p style="color: #999; font-size: 12px;">注：个税采用简易单月预扣预缴公式计算，实际情况可能因累计预扣预缴等政策存在细微差异。</p>
+        </div>
+      </nz-card>
+    </nz-col>
+  </nz-row>
+</div>
+
+<nz-modal
+  [(nzVisible)]="isModalVisible"
+  nzTitle="年度每月工资预估 (累计预扣预缴)"
+  (nzOnCancel)="handleCancel()"
+  [nzFooter]="null"
+  nzWidth="800px"
+>
+  <ng-container *nzModalContent>
+    <p style="margin-bottom: 16px; color: #666;">
+      说明：根据中国个税政策，工资采用“累计预扣预缴”算法。由于起征点和税率区间是按年度累计的，通常在月薪较高时，下半年的个税会因进入更高税率档位而增加，导致到手薪资逐渐减少。
+    </p>
+    <nz-table #basicTable [nzData]="monthlyProjection" [nzFrontPagination]="false" nzSize="small">
+      <thead>
+        <tr>
+          <th>月份</th>
+          <th>税前薪资</th>
+          <th>五险一金</th>
+          <th>月个税</th>
+          <th>税后到手</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let data of basicTable.data">
+          <td>{{ data.month }}</td>
+          <td>¥{{ data.gross | number:'1.0-0' }}</td>
+          <td>¥{{ data.deductions | number:'1.2-2' }}</td>
+          <td [style.color]="data.tax > 0 ? '#ff4d4f' : 'inherit'">¥{{ data.tax | number:'1.2-2' }}</td>
+          <td style="font-weight: bold; color: #52c41a;">¥{{ data.netPay | number:'1.2-2' }}</td>
+        </tr>
+      </tbody>
+    </nz-table>
+  </ng-container>
+</nz-modal>

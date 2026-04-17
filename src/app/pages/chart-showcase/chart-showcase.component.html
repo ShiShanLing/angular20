@@ -1,0 +1,266 @@
+<div class="showcase">
+  <header class="showcase-hero">
+    <h1 class="showcase-title">炫酷图表演示</h1>
+    <p class="showcase-sub">
+      独立模块 · ECharts 5 + ECharts-GL WebGL。含<strong>省域热力</strong>、<strong>直角 3D 曲面/立体柱</strong>、<strong>2D 飞线</strong>与<strong>3D 地球</strong>；另有象形柱、水球图、主题河流等示意。
+    </p>
+  </header>
+
+  <div nz-row [nzGutter]="[20, 20]">
+    <div nz-col [nzXs]="24">
+      <nz-card [nzBordered]="false" class="viz-card viz-card--wide viz-card--prov-heat">
+        <div class="viz-head">
+          <span nz-icon nzType="heat-map" class="viz-icon"></span>
+          <div>
+            <h3 class="viz-title">省域热力 · 迁徙弧线</h3>
+            <p class="viz-desc">
+              <code>map</code> + <code>visualMap</code> 分级着色；叠加少量暖色 <code>lines</code>（慢速 <code>pin</code> 尾迹、较高曲率），与下方青蓝飞线区分。示意数值由行政区名称哈希生成。
+            </p>
+          </div>
+        </div>
+        <div echarts [options]="geoProvinceHeatOption" class="echart echart--prov-heat"></div>
+      </nz-card>
+    </div>
+
+    <div nz-col [nzXs]="24">
+      <nz-card [nzBordered]="false" class="viz-card viz-card--wide viz-card--gl3d">
+        <div class="viz-head">
+          <span nz-icon nzType="block" class="viz-icon"></span>
+          <div>
+            <h3 class="viz-title">直角 3D · 曲面 + 立体柱 + 散点</h3>
+            <p class="viz-desc">
+              <code>grid3D</code>：<code>surface</code> 函数波面 + <code>bar3D</code> 栅格楼块 + <code>scatter3D</code>；可拖拽旋转、自动漫游。与 <code>globe</code> 球坐标场景不同。
+            </p>
+          </div>
+        </div>
+        <div echarts [options]="glCartesian3DOption" class="echart echart--gl3d"></div>
+      </nz-card>
+    </div>
+
+    <div nz-col [nzXs]="24">
+      <nz-card [nzBordered]="false" class="viz-card viz-card--wide viz-card--geo-flight">
+        <div class="viz-head">
+          <span nz-icon nzType="environment" class="viz-icon"></span>
+          <div>
+            <h3 class="viz-title">2D 中国底图 · 流光飞线</h3>
+            <p class="viz-desc">
+              <code>geo</code> + <code>lines</code>（<code>effect</code> 拖尾箭头）+ <code>effectScatter</code> 城市涟漪；数据为示意航线。国界 GeoJSON 来自阿里云 DataV（需联网）；亦可改为本地静态资源。
+            </p>
+          </div>
+        </div>
+        <div echarts [options]="geoFlightLinesOption" class="echart echart--geo-flight"></div>
+      </nz-card>
+    </div>
+
+    <div nz-col [nzXs]="24" [nzLg]="12">
+      <nz-card [nzBordered]="false" class="viz-card">
+        <div class="viz-head">
+          <span nz-icon nzType="picture" class="viz-icon"></span>
+          <div>
+            <h3 class="viz-title">象形柱图 · Pictorial Bar</h3>
+            <p class="viz-desc">
+              <code>pictorialBar</code>：<code>symbolRepeat</code> 堆叠 + 自定义 <code>path://</code> 象形符号（与底层满格对比）。
+            </p>
+          </div>
+        </div>
+        <div echarts [options]="pictorialBarsOption" class="echart echart--pictorial"></div>
+      </nz-card>
+    </div>
+
+    <div nz-col [nzXs]="24" [nzLg]="12">
+      <nz-card [nzBordered]="false" class="viz-card">
+        <div class="viz-head">
+          <span nz-icon nzType="experiment" class="viz-icon"></span>
+          <div>
+            <h3 class="viz-title">水球图 · Liquid Fill</h3>
+            <p class="viz-desc">
+              扩展 <code>echarts-liquidfill</code> + <code>type: 'liquidFill'</code>；双球多层波纹（示意百分比）。
+            </p>
+          </div>
+        </div>
+        <div echarts [options]="liquidFillOption" class="echart echart--liquid"></div>
+      </nz-card>
+    </div>
+
+    <div nz-col [nzXs]="24">
+      <nz-card [nzBordered]="false" class="viz-card viz-card--wide">
+        <div class="viz-head">
+          <span nz-icon nzType="area-chart" class="viz-icon"></span>
+          <div>
+            <h3 class="viz-title">主题河流 · Theme River</h3>
+            <p class="viz-desc">
+              <code>singleAxis</code> + <code>themeRiver</code>，多品类流量在时间上堆叠成「河带」，适合展示成分随时间的演变（示意数据）。
+            </p>
+          </div>
+        </div>
+        <div echarts [options]="themeRiverOption" class="echart echart--theme-river"></div>
+      </nz-card>
+    </div>
+
+    <div nz-col [nzXs]="24">
+      <nz-card [nzBordered]="false" class="viz-card viz-card--wide">
+        <div class="viz-head">
+          <span nz-icon nzType="bar-chart" class="viz-icon"></span>
+          <div>
+            <h3 class="viz-title">柱状排序竞速 · Bar Race</h3>
+            <p class="viz-desc">
+              <code>timeline</code> 自动播放 + <code>bar.realtimeSort</code>；每个时间节点重排横向柱状（示意框架热度，非真实排名）。
+            </p>
+          </div>
+        </div>
+        <div echarts [options]="barRaceOption" class="echart echart--bar-race"></div>
+      </nz-card>
+    </div>
+
+    <div nz-col [nzXs]="24">
+      <nz-card [nzBordered]="false" class="viz-card viz-card--wide">
+        <div class="viz-head">
+          <span nz-icon nzType="calendar" class="viz-icon"></span>
+          <div>
+            <h3 class="viz-title">日历热力图 · Calendar Heatmap</h3>
+            <p class="viz-desc">
+              <code>calendar</code> + <code>heatmap</code>，展示全年单日强度（示意 2026；可拖拽 visualMap 区间）。
+            </p>
+          </div>
+        </div>
+        <div echarts [options]="calendarHeatOption" class="echart echart--calendar-heat"></div>
+      </nz-card>
+    </div>
+
+    <div nz-col [nzXs]="24">
+      <nz-card [nzBordered]="false" class="viz-card viz-card--wide viz-card--globe">
+        <div class="viz-head">
+          <span nz-icon nzType="global" class="viz-icon"></span>
+          <div>
+            <h3 class="viz-title">3D 地球 · WebGL（可拖拽旋转）</h3>
+            <p class="viz-desc">
+              <code>GlobeComponent</code> + <code>scatter3D</code> / <code>lines3D</code>；星空全景 + 城市灯光 + 飞线；天球壳上另有<strong>日月与河外星系示意</strong>（非真实尺度与方位）。行星贴图 Three.js；星空 <code>starfield</code> 走 GitHub raw。
+            </p>
+          </div>
+        </div>
+        <app-globe-echart [options]="globeOption" />
+      </nz-card>
+    </div>
+
+    <div nz-col [nzXs]="24">
+      <nz-card [nzBordered]="false" class="viz-card viz-card--wide">
+        <div class="viz-head">
+          <span nz-icon nzType="line-chart" class="viz-icon"></span>
+          <div>
+            <h3 class="viz-title">霓虹流光 · 多层渐变面积折线</h3>
+            <p class="viz-desc">lineStyle <code>shadowBlur</code> + 纵向线性 <code>areaStyle</code>，模拟实时监控感</p>
+          </div>
+        </div>
+        <div echarts [options]="neonStreamOption" class="echart echart--stream"></div>
+      </nz-card>
+    </div>
+
+    <div nz-col [nzXs]="24" [nzLg]="12">
+      <nz-card [nzBordered]="false" class="viz-card">
+        <div class="viz-head">
+          <span nz-icon nzType="heat-map" class="viz-icon"></span>
+          <div>
+            <h3 class="viz-title">霓虹平行坐标</h3>
+            <p class="viz-desc">
+              <code>parallel</code> + <code>visualMap</code> 映射 line 颜色；多维折线束，悬停加粗单条（示意 profiling）。
+            </p>
+          </div>
+        </div>
+        <div echarts [options]="parallelCyberOption" class="echart"></div>
+      </nz-card>
+    </div>
+
+    <div nz-col [nzXs]="24" [nzLg]="12">
+      <nz-card [nzBordered]="false" class="viz-card">
+        <div class="viz-head">
+          <span nz-icon nzType="dashboard" class="viz-icon"></span>
+          <div>
+            <h3 class="viz-title">三联 HUD 仪表盘</h3>
+            <p class="viz-desc">
+              三个 <code>gauge</code> 并排：<code>progress</code> + <code>roundCap</code>，无指针圆角弧 + 数值动画。
+            </p>
+          </div>
+        </div>
+        <div echarts [options]="gaugeHudOption" class="echart echart--gauge"></div>
+      </nz-card>
+    </div>
+
+    <div nz-col [nzXs]="24" [nzLg]="12">
+      <nz-card [nzBordered]="false" class="viz-card">
+        <div class="viz-head">
+          <span nz-icon nzType="radar-chart" class="viz-icon"></span>
+          <div>
+            <h3 class="viz-title">涟漪散点</h3>
+            <p class="viz-desc"><code>effectScatter</code> + <code>visualMap</code> 映射粒子大小与色相</p>
+          </div>
+        </div>
+        <div echarts [options]="pulseScatterOption" class="echart"></div>
+      </nz-card>
+    </div>
+
+    <div nz-col [nzXs]="24" [nzLg]="12">
+      <nz-card [nzBordered]="false" class="viz-card">
+        <div class="viz-head">
+          <span nz-icon nzType="pie-chart" class="viz-icon"></span>
+          <div>
+            <h3 class="viz-title">南丁格尔玫瑰</h3>
+            <p class="viz-desc"><code>roseType: 'area'</code> + 径向渐变填色</p>
+          </div>
+        </div>
+        <div echarts [options]="nightRoseOption" class="echart"></div>
+      </nz-card>
+    </div>
+
+    <div nz-col [nzXs]="24" [nzLg]="12">
+      <nz-card [nzBordered]="false" class="viz-card">
+        <div class="viz-head">
+          <span nz-icon nzType="apartment" class="viz-icon"></span>
+          <div>
+            <h3 class="viz-title">旭日图 · 层级辐射</h3>
+            <p class="viz-desc"><code>sunburst</code> · 点击扇区可强调祖先链</p>
+          </div>
+        </div>
+        <div echarts [options]="sunburstOption" class="echart"></div>
+      </nz-card>
+    </div>
+
+    <div nz-col [nzXs]="24" [nzLg]="12">
+      <nz-card [nzBordered]="false" class="viz-card">
+        <div class="viz-head">
+          <span nz-icon nzType="deployment-unit" class="viz-icon"></span>
+          <div>
+            <h3 class="viz-title">力导向关系图</h3>
+            <p class="viz-desc"><code>graph</code> + <code>force</code>，节点可拖拽、可缩放平移画布</p>
+          </div>
+        </div>
+        <div echarts [options]="forceGraphOption" class="echart"></div>
+      </nz-card>
+    </div>
+
+    <div nz-col [nzXs]="24" [nzLg]="12">
+      <nz-card [nzBordered]="false" class="viz-card">
+        <div class="viz-head">
+          <span nz-icon nzType="node-index" class="viz-icon"></span>
+          <div>
+            <h3 class="viz-title">桑基图 · 流量分解</h3>
+            <p class="viz-desc"><code>lineStyle.color: 'gradient'</code> 沿线着色</p>
+          </div>
+        </div>
+        <div echarts [options]="sankeyOption" class="echart echart--sankey"></div>
+      </nz-card>
+    </div>
+
+    <div nz-col [nzXs]="24" [nzLg]="12">
+      <nz-card [nzBordered]="false" class="viz-card">
+        <div class="viz-head">
+          <span nz-icon nzType="appstore" class="viz-icon"></span>
+          <div>
+            <h3 class="viz-title">矩形树图</h3>
+            <p class="viz-desc"><code>treemap</code> 层级钻取 + 圆角分块</p>
+          </div>
+        </div>
+        <div echarts [options]="treemapOption" class="echart"></div>
+      </nz-card>
+    </div>
+  </div>
+</div>

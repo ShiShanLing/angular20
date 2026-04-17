@@ -1,0 +1,80 @@
+<div class="tool-content">
+  <nz-row [nzGutter]="16" style="margin-bottom: 16px;">
+    <nz-col [nzSpan]="18">
+      <nz-input-group nzSearch [nzAddOnAfter]="suffixButton">
+        <input type="text" nz-input [(ngModel)]="city" (keyup.enter)="searchWeather()" placeholder="输入城市名称（拼音或英文，如: Beijing, Shanghai）" />
+      </nz-input-group>
+      <ng-template #suffixButton>
+        <button nz-button nzType="primary" (click)="searchWeather()" [nzLoading]="loading">搜索</button>
+      </ng-template>
+    </nz-col>
+  </nz-row>
+
+  <nz-spin [nzSpinning]="loading">
+    <div *ngIf="weatherData">
+      <nz-row [nzGutter]="16">
+        <!-- 当前天气 -->
+        <nz-col [nzSpan]="24" [nzLg]="8">
+          <nz-card [nzTitle]="'当前天气: ' + (weatherData.location.name || city)" class="current-card">
+            <div class="current-weather">
+              <div class="temp-box">
+                <span class="condition-icon">{{ getConditionIcon(weatherData.current.weathercode) }}</span>
+                <span class="temp">{{ weatherData.current.temperature }}°C</span>
+              </div>
+              <div class="desc">{{ getConditionDesc(weatherData.current.weathercode) }}</div>
+              
+              <nz-divider></nz-divider>
+              
+              <div class="details">
+                <p>风速: {{ weatherData.current.windspeed }} km/h</p>
+                <p>位置: {{ weatherData.location.admin1 || '' }} {{ weatherData.location.country }}</p>
+                <p>经纬度: {{ weatherData.location.latitude | number:'1.2-2' }}, {{ weatherData.location.longitude | number:'1.2-2' }}</p>
+              </div>
+            </div>
+          </nz-card>
+        </nz-col>
+
+        <!-- 未来预报 -->
+        <nz-col [nzSpan]="24" [nzLg]="16">
+          <nz-card nzTitle="未来 7 日预报">
+            <div class="forecast-container">
+              <div class="forecast-day" *ngFor="let day of getForecastArray()">
+                <div class="date">{{ day.date | date:'MM-dd' }}</div>
+                <div class="icon">{{ getConditionIcon(day.weatherCode) }}</div>
+                <div class="range">
+                  <nz-tag nzColor="orange">{{ day.maxTemp }}°</nz-tag>
+                  <nz-tag nzColor="blue">{{ day.minTemp }}°</nz-tag>
+                </div>
+                <div class="f-desc">{{ getConditionDesc(day.weatherCode) }}</div>
+              </div>
+            </div>
+          </nz-card>
+        </nz-col>
+      </nz-row>
+
+      <!-- 逐小时预报 -->
+      <nz-row style="margin-top: 16px;">
+        <nz-col [nzSpan]="24">
+          <nz-card nzTitle="24 小时逐小时预报">
+            <div class="hourly-container">
+              <div class="hourly-list">
+                <div class="hourly-item" *ngFor="let h of getHourlyForecastArray()">
+                  <div class="h-time">{{ h.time | date:'HH:mm' }}</div>
+                  <div class="h-icon">{{ getConditionIcon(h.weatherCode) }}</div>
+                  <div class="h-temp">{{ h.temp }}°</div>
+                </div>
+              </div>
+              <div class="hourly-chart" *ngIf="chartOptions">
+                <div echarts [options]="chartOptions" style="height: 180px;"></div>
+              </div>
+            </div>
+          </nz-card>
+        </nz-col>
+      </nz-row>
+    </div>
+  </nz-spin>
+
+  <div style="margin-top: 16px;">
+    <p style="color: #999; font-size: 12px;">注：天气数据来自 Open-Meteo 免费 API。支持全球城市搜索，建议输入拼音或英文。</p>
+  </div>
+</div>

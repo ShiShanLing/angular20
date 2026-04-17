@@ -1,0 +1,82 @@
+.anim-page {
+  h2 { margin: 0 0 4px; font-size: 20px; color: #1a1a1a; }
+  .subtitle { color: #888; margin-bottom: 20px; font-size: 13px; }
+  .desc { color: #888; font-size: 12px; margin-bottom: 8px; }
+
+  .demo-area {
+    height: 100px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    background: #fafafa;
+    border-radius: 8px;
+    border: 1px dashed #e8e8e8;
+    padding: 12px;
+    overflow: visible;
+
+    &.center { justify-content: center; flex-direction: column; gap: 4px; }
+    &.overflow-hidden { overflow: hidden; }
+  }
+
+  .fade-box {
+    background: linear-gradient(135deg, #1890ff, #096dd9);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .slide-box {
+    background: linear-gradient(135deg, #722ed1, #531dab);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .bounce-ball {
+    font-size: 48px;
+    cursor: default;
+    user-select: none;
+  }
+
+  .counter-num {
+    font-size: 42px;
+    font-weight: 700;
+    color: #1890ff;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+  .counter-label {
+    font-size: 12px;
+    color: #aaa;
+    margin-top: 4px;
+  }
+
+  .stagger-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 12px;
+    min-height: 20px;
+    li {
+      padding: 4px 8px;
+      font-size: 13px;
+      color: #333;
+    }
+  }
+
+  .spinner-wheel {
+    font-size: 48px;
+    display: inline-block;
+    cursor: default;
+    user-select: none;
+  }
+  .spinner-label {
+    font-size: 12px;
+    color: #aaa;
+    margin-top: 4px;
+  }
+}

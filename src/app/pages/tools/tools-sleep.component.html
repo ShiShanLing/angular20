@@ -1,0 +1,78 @@
+<div class="tool-content">
+  <nz-row [nzGutter]="[16, 16]">
+    <nz-col [nzSpan]="24" [nzMd]="8">
+      <nz-card nzTitle="添加睡眠记录">
+        <form nz-form [formGroup]="form" nzLayout="vertical" (ngSubmit)="submitForm()">
+          <nz-form-item>
+            <nz-form-label nzRequired>记录归属日</nz-form-label>
+            <nz-form-control>
+              <nz-date-picker formControlName="recordDate" style="width: 100%"></nz-date-picker>
+            </nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-form-label nzRequired>入睡时间</nz-form-label>
+            <nz-form-control>
+              <nz-date-picker formControlName="sleepTime" nzShowTime nzFormat="yyyy-MM-dd HH:mm" style="width: 100%"></nz-date-picker>
+            </nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-form-label nzRequired>起床时间</nz-form-label>
+            <nz-form-control>
+              <nz-date-picker formControlName="wakeTime" nzShowTime nzFormat="yyyy-MM-dd HH:mm" style="width: 100%"></nz-date-picker>
+            </nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-form-label>午睡时长 (小时)</nz-form-label>
+            <nz-form-control>
+              <nz-input-number formControlName="napDuration" [nzMin]="0" [nzStep]="0.5" style="width: 100%"></nz-input-number>
+            </nz-form-control>
+          </nz-form-item>
+          <button nz-button nzType="primary" nzBlock type="submit" [disabled]="form.invalid">保存记录</button>
+        </form>
+      </nz-card>
+    </nz-col>
+
+    <nz-col [nzSpan]="24" [nzMd]="16">
+      <nz-row [nzGutter]="[16, 16]" style="margin-bottom: 16px;">
+        <nz-col [nzSpan]="24">
+          <nz-card nzTitle="近期统计（最近 {{ stats?.count || 0 }} 天）" *ngIf="stats">
+            <nz-row [nzGutter]="[16, 16]">
+               <nz-col [nzSpan]="8">
+                <nz-statistic nzTitle="日均总睡眠" [nzValue]="((stats.avgSleep | number:'1.1-1') || '0') + ' h'" [nzValueStyle]="{ color: stats.avgSleep >= 7 ? '#52c41a' : '#faad14' }"></nz-statistic>
+              </nz-col>
+              <nz-col [nzSpan]="8">
+                <nz-statistic nzTitle="最早入睡" [nzValue]="stats.earliestSleep"></nz-statistic>
+              </nz-col>
+              <nz-col [nzSpan]="8">
+                <nz-statistic nzTitle="最晚起床" [nzValue]="stats.latestWake"></nz-statistic>
+              </nz-col>
+            </nz-row>
+          </nz-card>
+        </nz-col>
+      </nz-row>
+
+      <nz-card nzTitle="历史记录">
+         <nz-table #basicTable [nzData]="records" [nzPageSize]="5">
+            <thead>
+              <tr>
+                <th>归属日</th>
+                <th>睡眠时段</th>
+                <th>午休</th>
+                <th>总计</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let data of basicTable.data">
+                <td>{{ data.dateStr }}</td>
+                <td>{{ data.sleepTime | date:'MM-dd HH:mm' }} ~ {{ data.wakeTime | date:'HH:mm' }}</td>
+                <td>{{ data.napDuration ? data.napDuration + 'h' : '-' }}</td>
+                <td><span style="font-weight: bold; color: #1890ff;">{{ data.totalSleep | number:'1.1-1' }}h</span></td>
+                <td><a (click)="deleteRecord(data.id)" style="color: #ff4d4f;">删除</a></td>
+              </tr>
+            </tbody>
+          </nz-table>
+      </nz-card>
+    </nz-col>
+  </nz-row>
+</div>

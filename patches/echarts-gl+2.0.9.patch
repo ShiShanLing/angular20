@@ -1,0 +1,13 @@
+diff --git a/node_modules/echarts-gl/package.json b/node_modules/echarts-gl/package.json
+index 1234567..89abcde 100644
+--- a/node_modules/echarts-gl/package.json
++++ b/node_modules/echarts-gl/package.json
+@@ -24,6 +24,8 @@
+   "module": "index.js",
+   "repository": "https://github.com/ecomfe/echarts-gl",
+   "sideEffects": [
++    "dist/echarts-gl.js",
++    "dist/echarts-gl.min.js",
+     "lib/chart/*.js",
+     "lib/component/*.js",
+     "lib/echarts-gl.js",

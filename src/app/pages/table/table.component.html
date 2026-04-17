@@ -1,0 +1,75 @@
+<div class="table-page">
+  <h2>数据表格</h2>
+  <p class="subtitle">支持搜索过滤、列排序、分页，以及查看/删除操作（含确认弹框）</p>
+
+  <nz-card [nzBordered]="false">
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <nz-input-group [nzPrefix]="searchIcon" style="max-width: 300px">
+        <input
+          nz-input
+          [(ngModel)]="searchText"
+          (ngModelChange)="applyFilter()"
+          placeholder="搜索姓名 / 邮箱 / 角色" />
+      </nz-input-group>
+      <ng-template #searchIcon><span nz-icon nzType="search"></span></ng-template>
+      <span class="record-count">共 {{ displayData.length }} 条记录</span>
+    </div>
+
+    <!-- Table -->
+    <nz-table
+      #basicTable
+      [nzData]="displayData"
+      [nzPageSize]="8"
+      [nzShowTotal]="totalTpl"
+      nzShowPagination>
+
+      <ng-template #totalTpl let-total>共 {{ total }} 条</ng-template>
+
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th [nzSortFn]="true" (nzSortOrderChange)="onSort({ key: 'name', value: $event || '' })">姓名</th>
+          <th>邮箱</th>
+          <th>角色</th>
+          <th>状态</th>
+          <th [nzSortFn]="true" (nzSortOrderChange)="onSort({ key: 'score', value: $event || '' })">评分</th>
+          <th>加入日期</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (row of basicTable.data; track row.id) {
+          <tr>
+            <td>{{ row.id }}</td>
+            <td><strong>{{ row.name }}</strong></td>
+            <td class="email">{{ row.email }}</td>
+            <td>{{ row.role }}</td>
+            <td>
+              <nz-tag [nzColor]="statusColorMap[row.status]">
+                {{ statusLabelMap[row.status] }}
+              </nz-tag>
+            </td>
+            <td>
+              <div class="score-bar">
+                <div class="score-fill"
+                  [style.width.%]="row.score"
+                  [class.high]="row.score >= 85"
+                  [class.mid]="row.score >= 70 && row.score < 85"
+                  [class.low]="row.score < 70">
+                </div>
+                <span class="score-num">{{ row.score }}</span>
+              </div>
+            </td>
+            <td>{{ row.joined }}</td>
+            <td>
+              <button nz-button nzType="link" nzSize="small" (click)="viewUser(row)">查看</button>
+              <button nz-button nzType="link" nzDanger nzSize="small" (click)="deleteUser(row)">删除</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </nz-table>
+  </nz-card>
+</div>

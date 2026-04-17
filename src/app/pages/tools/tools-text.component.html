@@ -1,0 +1,25 @@
+<div class="tool-content">
+  <nz-card nzTitle="文本处理工具" [nzExtra]="extraTpl">
+    <div style="margin-bottom: 16px;">
+      <nz-space [nzWrap]="true">
+        <button *nzSpaceItem nz-button (click)="replacePunctuation(true)">英文标点 -> 中文</button>
+        <button *nzSpaceItem nz-button (click)="replacePunctuation(false)">中文标点 -> 英文</button>
+        <nz-divider *nzSpaceItem nzType="vertical"></nz-divider>
+        <button *nzSpaceItem nz-button (click)="removeEmptyLines()">去除空行</button>
+        <button *nzSpaceItem nz-button (click)="addBatchNumbering()">批量编号</button>
+        <nz-divider *nzSpaceItem nzType="vertical"></nz-divider>
+        <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="按逗号、空格或Tab分隔的多行数据" (click)="generateMarkdownTable()">转
+          Markdown 表格</button>
+      </nz-space>
+    </div>
+
+    <textarea nz-input [(ngModel)]="sourceText" [nzAutosize]="{ minRows: 15, maxRows: 30 }"
+      placeholder="在此打字或粘贴文本，点击上方按钮进行处理..."></textarea>
+  </nz-card>
+  <ng-template #extraTpl>
+    <nz-space>
+      <a *nzSpaceItem (click)="copyToClipboard()"><nz-icon nzType="copy" /> 复制结果</a>
+      <a *nzSpaceItem (click)="clearText()" style="color: #ff4d4f"><nz-icon nzType="delete" /> 清空</a>
+    </nz-space>
+  </ng-template>
+</div>
