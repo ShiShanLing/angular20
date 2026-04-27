@@ -82,29 +82,29 @@
           ×
         </button>
       </div>
+      <!-- 搜索下拉放在 topbar 内，确保 sticky 后下拉不随内容滚走 -->
+      <div class="practice-search-dropdown">
+        @if (searchQuery().trim() && listForNav().length) {
+          <div class="search-results-host">
+            <div class="search-results__head">当前筛选下命中 {{ listForNav().length }} 题，点击跳转</div>
+            <ul class="search-results" role="listbox" aria-label="搜索结果">
+              @for (it of listForNav(); track it.id; let idx = $index) {
+                <li>
+                  <button
+                    type="button"
+                    class="search-results__item"
+                    [class.is-active]="idx === currentIndex()"
+                    (click)="pickSearchResult(idx)">
+                    <div class="search-results__preview">{{ it.question }}</div>
+                    <div class="search-results__meta">{{ categoryLabel(it.category) }} · {{ it.tags || '—' }}</div>
+                  </button>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      </div>
     </header>
-
-    <div class="practice-search-dropdown">
-      @if (searchQuery().trim() && listForNav().length) {
-        <div class="search-results-host">
-          <div class="search-results__head">当前筛选下命中 {{ listForNav().length }} 题，点击跳转</div>
-          <ul class="search-results" role="listbox" aria-label="搜索结果">
-            @for (it of listForNav(); track it.id; let idx = $index) {
-              <li>
-                <button
-                  type="button"
-                  class="search-results__item"
-                  [class.is-active]="idx === currentIndex()"
-                  (click)="pickSearchResult(idx)">
-                  <div class="search-results__preview">{{ it.question }}</div>
-                  <div class="search-results__meta">{{ categoryLabel(it.category) }} · {{ it.tags || '—' }}</div>
-                </button>
-              </li>
-            }
-          </ul>
-        </div>
-      }
-    </div>
 
     <div class="fab-rail practice-fab-block" (click)="$event.stopPropagation()" aria-label="练习设置">
       <div class="fab-block practice-fab-block">

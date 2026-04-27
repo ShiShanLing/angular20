@@ -1,41 +1,58 @@
+<!-- Shared menu content (used by both desktop sider and mobile drawer) -->
+<ng-template #menuTpl>
+  <div class="logo" [class.collapsed]="isCollapsed && !isMobile">
+    <span class="logo-icon">⚡</span>
+    @if (!isCollapsed || isMobile) {
+      <span class="logo-text">Angular Demo</span>
+    }
+  </div>
+  <ul nz-menu nzTheme="dark" nzMode="inline" [nzInlineCollapsed]="isCollapsed && !isMobile">
+    @for (item of menuItems; track item.label) {
+      @if (item.children) {
+        <li nz-submenu [nzTitle]="item.label" [nzIcon]="item.icon || ''" [nzOpen]="!isCollapsed || isMobile">
+          <ul>
+            @for (child of item.children; track child.path) {
+              <li nz-menu-item nzMatchRouter>
+                <a [routerLink]="child.path">{{ child.label }}</a>
+              </li>
+            }
+          </ul>
+        </li>
+      } @else {
+        <li nz-menu-item nzMatchRouter>
+          <a [routerLink]="item.path">
+            <span nz-icon [nzType]="item.icon || ''"></span>
+            <span>{{ item.label }}</span>
+          </a>
+        </li>
+      }
+    }
+  </ul>
+</ng-template>
+
 <nz-layout class="app-layout">
-  <!-- Sider -->
-  <nz-sider
-    nzCollapsible
-    [(nzCollapsed)]="isCollapsed"
-    [nzTrigger]="null"
-    [nzWidth]="220"
-    [nzCollapsedWidth]="64"
-    class="sider">
-    <div class="logo" [class.collapsed]="isCollapsed">
-      <span class="logo-icon">⚡</span>
-      @if (!isCollapsed) {
-        <span class="logo-text">Angular Demo</span>
-      }
+  <!-- Mobile: backdrop + slide-in drawer (nz-sider not rendered, so content fills full width) -->
+  @if (isMobile) {
+    @if (isMobileDrawerOpen) {
+      <div class="mobile-backdrop" (click)="isMobileDrawerOpen = false"></div>
+    }
+    <div class="mobile-drawer" [class.mobile-drawer--open]="isMobileDrawerOpen">
+      <ng-container [ngTemplateOutlet]="menuTpl"></ng-container>
     </div>
-    <ul nz-menu nzTheme="dark" nzMode="inline" [nzInlineCollapsed]="isCollapsed">
-      @for (item of menuItems; track item.label) {
-        @if (item.children) {
-          <li nz-submenu [nzTitle]="item.label" [nzIcon]="item.icon || ''" [nzOpen]="!isCollapsed">
-            <ul>
-              @for (child of item.children; track child.path) {
-                <li nz-menu-item nzMatchRouter>
-                  <a [routerLink]="child.path">{{ child.label }}</a>
-                </li>
-              }
-            </ul>
-          </li>
-        } @else {
-          <li nz-menu-item nzMatchRouter>
-            <a [routerLink]="item.path">
-              <span nz-icon [nzType]="item.icon || ''"></span>
-              <span>{{ item.label }}</span>
-            </a>
-          </li>
-        }
-      }
-    </ul>
-  </nz-sider>
+  }
+
+  <!-- Desktop: nz-sider (not rendered on mobile, so no flex space is reserved) -->
+  @if (!isMobile) {
+    <nz-sider
+      nzCollapsible
+      [(nzCollapsed)]="isCollapsed"
+      [nzTrigger]="null"
+      [nzWidth]="220"
+      [nzCollapsedWidth]="64"
+      class="sider">
+      <ng-container [ngTemplateOutlet]="menuTpl"></ng-container>
+    </nz-sider>
+  }
 
   <!-- Main Layout -->
   <nz-layout>
@@ -43,8 +60,8 @@
     <nz-header class="app-header">
       <span nz-icon
         class="trigger"
-        [nzType]="isCollapsed ? 'menu-unfold' : 'menu-fold'"
-        (click)="isCollapsed = !isCollapsed">
+        [nzType]="isMobile ? (isMobileDrawerOpen ? 'close' : 'menu') : (isCollapsed ? 'menu-unfold' : 'menu-fold')"
+        (click)="toggleMenu()">
       </span>
       <span class="header-title">Angular 19 功能演示</span>
       <div class="header-right">

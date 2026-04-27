@@ -1,10 +1,14 @@
-import { Component } from '@angular/core';
-import { RouterOutlet, RouterLink } from '@angular/router';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import { RouterOutlet, RouterLink, Router, NavigationEnd } from '@angular/router';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzBreadCrumbModule } from 'ng-zorro-antd/breadcrumb';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 interface MenuItem {
   label: string;
@@ -16,6 +20,7 @@ interface MenuItem {
 @Component({
   selector: 'app-layout',
   imports: [
+    NgTemplateOutlet,
     RouterOutlet,
     RouterLink,
     NzLayoutModule,
@@ -27,8 +32,50 @@ interface MenuItem {
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss'
 })
-export class LayoutComponent {
+export class LayoutComponent implements OnInit, OnDestroy {
   isCollapsed = false;
+  isMobile = false;
+  isMobileDrawerOpen = false;
+
+  private subs = new Subscription();
+
+  constructor(
+    private breakpointObserver: BreakpointObserver,
+    private router: Router,
+  ) {}
+
+  ngOnInit() {
+    this.subs.add(
+      this.breakpointObserver.observe(['(max-width: 768px)']).subscribe(result => {
+        this.isMobile = result.matches;
+        if (this.isMobile) {
+          this.isMobileDrawerOpen = false;
+        }
+      })
+    );
+
+    this.subs.add(
+      this.router.events
+        .pipe(filter(e => e instanceof NavigationEnd))
+        .subscribe(() => {
+          if (this.isMobile) {
+            this.isMobileDrawerOpen = false;
+          }
+        })
+    );
+  }
+
+  ngOnDestroy() {
+    this.subs.unsubscribe();
+  }
+
+  toggleMenu() {
+    if (this.isMobile) {
+      this.isMobileDrawerOpen = !this.isMobileDrawerOpen;
+    } else {
+      this.isCollapsed = !this.isCollapsed;
+    }
+  }
 
   menuItems: MenuItem[] = [
     {

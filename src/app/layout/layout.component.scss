@@ -8,22 +8,17 @@
   height: 100vh;
   overflow: auto;
 
-  // 隐藏 nz-menu 原本的边框
   [nz-menu] {
     border-right: none;
   }
 
-  // 菜单项内用 <a routerLink> 才能稳定触发导航；样式与整行可点一致
   .ant-menu-item a {
     color: inherit;
     text-decoration: none;
     display: block;
   }
 
-  // 美化滚动条
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
+  &::-webkit-scrollbar { width: 6px; }
   &::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.15);
     border-radius: 3px;
@@ -41,16 +36,13 @@
   overflow: hidden;
   white-space: nowrap;
   transition: padding 0.2s;
-  
+
   &.collapsed {
     padding: 0;
     justify-content: center;
   }
 
-  .logo-icon {
-    font-size: 22px;
-    flex-shrink: 0;
-  }
+  .logo-icon { font-size: 22px; flex-shrink: 0; }
   .logo-text {
     color: #fff;
     font-size: 16px;
@@ -82,10 +74,7 @@
     flex: 1;
   }
 
-  .header-right {
-    display: flex;
-    gap: 8px;
-  }
+  .header-right { display: flex; gap: 8px; }
 
   .header-tag {
     background: #fafafa;
@@ -110,9 +99,7 @@
   padding: 24px;
   overflow-y: auto;
 
-  .content-inner {
-    min-height: 100%;
-  }
+  .content-inner { min-height: 100%; }
 }
 
 .app-footer {
@@ -120,4 +107,67 @@
   font-size: 13px;
   color: #999;
   padding: 14px;
+}
+
+// ─── 移动端：nz-sider 不渲染，内容区自动铺满 ──────────────────────────────────
+
+// 半透明遮罩
+.mobile-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 999;
+  animation: backdrop-in 0.2s ease;
+}
+
+@keyframes backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+// 抽屉：默认滑出屏幕左侧
+.mobile-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 260px;
+  z-index: 1000;
+  background: #001529; // 与 nz-sider dark 主题一致
+  overflow-y: auto;
+  transform: translateX(-100%);
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.28s ease;
+
+  [nz-menu] { border-right: none; }
+
+  .ant-menu-item a {
+    color: inherit;
+    text-decoration: none;
+    display: block;
+  }
+
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+  }
+
+  &.mobile-drawer--open {
+    transform: translateX(0);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.35);
+  }
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    padding: 0 16px;
+
+    .header-title { font-size: 14px; }
+    .header-right { display: none; }
+  }
+
+  .app-content { padding: 12px; }
+
+  .app-footer { padding: 10px; font-size: 11px; }
 }
