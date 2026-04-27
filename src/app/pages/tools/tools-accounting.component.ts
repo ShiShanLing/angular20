@@ -81,6 +81,7 @@ export class ToolsAccountingComponent implements OnInit {
     setTimeout(() => this.buildChart(this.currentChartMode), 100);
   }
 
+  
   submitForm(): void {
     if (this.form.valid) {
       const val = this.form.value;

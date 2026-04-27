@@ -16,7 +16,7 @@ import {
   ApartmentOutline, DeploymentUnitOutline, NodeIndexOutline, GlobalOutline,
   EnvironmentOutline,
   BlockOutline,
-  PictureOutline, CalendarOutline,
+  PictureOutline, CalendarOutline, BookOutline,
 } from '@ant-design/icons-angular/icons';
 import { registerLocaleData } from '@angular/common';
 import zh from '@angular/common/locales/zh';
@@ -34,7 +34,7 @@ const icons = [
   ApartmentOutline, DeploymentUnitOutline, NodeIndexOutline, GlobalOutline,
   EnvironmentOutline,
   BlockOutline,
-  PictureOutline, CalendarOutline,
+  PictureOutline, CalendarOutline, BookOutline,
 ];
 
 

@@ -21,6 +21,9 @@ export const PRACTICE_CATEGORY_LIST: PracticeCategory[] = [
   'angular-css',
 ];
 
+/** 刷题页分类筛选：`全部` + 单一分类 */
+export type PracticeFilterCategory = PracticeCategory | 'all';
+
 export interface PracticeItem {
   id: string;
   category: PracticeCategory;
@@ -31,6 +34,10 @@ export interface PracticeItem {
   /** 可选：标签或备注 */
   tags: string;
   importedAt: number;
+  /** 为 true 时答案按 Markdown 渲染（代码块、加粗、表格等） */
+  markD?: boolean;
+  /** 面试口播一句（可选，内置 iOS 题库有） */
+  oralOneLiner?: string;
 }
 
 export interface PracticeItemDraft {
@@ -40,4 +47,7 @@ export interface PracticeItemDraft {
   tags: string;
   /** Excel 行号（从 2 开始，含表头时为数据行号） */
   sourceRow: number;
+  /** 为 true 时导入后答案按 Markdown 渲染 */
+  markD?: boolean;
+  oralOneLiner?: string;
 }

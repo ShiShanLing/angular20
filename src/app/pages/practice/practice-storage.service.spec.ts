@@ -1,7 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 
 import type { PracticeItemDraft } from './practice.types';
-import { PracticeStorageService } from './practice-storage.service';
+import {
+  PRACTICE_FILTER_CATEGORY_KEY,
+  PracticeStorageService,
+} from './practice-storage.service';
 
 describe('PracticeStorageService', () => {
   let service: PracticeStorageService;
@@ -68,6 +71,18 @@ describe('PracticeStorageService', () => {
 
     service.clearAll();
     expect(service.load()).toEqual([]);
+  });
+
+  it('persists and reads filter category', () => {
+    expect(service.readSavedFilterCategory()).toBe('all');
+    service.saveFilterCategory('ios');
+    expect(localStorage.getItem(PRACTICE_FILTER_CATEGORY_KEY)).toBe('ios');
+    expect(service.readSavedFilterCategory()).toBe('ios');
+  });
+
+  it('readSavedFilterCategory falls back for invalid value', () => {
+    localStorage.setItem(PRACTICE_FILTER_CATEGORY_KEY, 'not-a-category');
+    expect(service.readSavedFilterCategory()).toBe('all');
   });
 });
 

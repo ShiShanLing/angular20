@@ -1,113 +1,224 @@
-<div class="practice-page">
-  <div nz-row [nzGutter]="[16, 16]">
-    <div nz-col [nzXs]="24" [nzXl]="16">
-      <nz-card nzTitle="模拟面试刷题" [nzExtra]="extraTpl">
-        <ng-template #extraTpl>
-          <label class="file-pick">
-            <input type="file" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" (change)="onFileSelected($event)" />
-            <button nz-button nzType="default">
-              <span nz-icon nzType="cloud-upload"></span>
-              导入表格
-            </button>
+<div
+  class="practice-app"
+  [style.--practice-font-scale]="fontScale() / 100">
+  @if (!statsTotal()) {
+    <div class="practice-empty-fullpage">
+      <p class="practice-empty-title">暂无题目</p>
+      <p class="practice-empty-desc">
+        首次进入会自动加载内置 iOS 题库；若仍为空，请检查是否开启了跳过内置注入（调试键
+        <code>angular20_practice_skip_builtin_seed_v1</code>）。
+      </p>
+      <div class="practice-empty-actions">
+        <button nz-button nzType="primary" type="button" (click)="mergeBuiltinIosSeed()">
+          <span nz-icon nzType="book"></span>
+          加载内置 iOS 题库
+        </button>
+        <label class="file-pick">
+          <input
+            type="file"
+            accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            (change)="onFileSelected($event)" />
+          <button nz-button nzType="default" type="button">
+            <span nz-icon nzType="cloud-upload"></span>
+            导入表格
+          </button>
+        </label>
+        <button nz-button nzType="link" type="button" (click)="showImportHelp()">说明</button>
+      </div>
+    </div>
+  } @else {
+    <header class="practice-topbar">
+      <div class="practice-topbar__nav">
+        <button type="button" class="practice-btn" (click)="prev()" [disabled]="navDisabled() || !canPrev()">
+          上一题
+        </button>
+        <button type="button" class="practice-btn" (click)="next()" [disabled]="navDisabled() || !canNext()">
+          下一题
+        </button>
+        <button type="button" class="practice-btn" (click)="randomOne()" [disabled]="navDisabled()">
+          随机一题
+        </button>
+        <span class="progress">
+          {{ listForNav().length ? currentIndex() + 1 : 0 }} / {{ listForNav().length }}
+        </span>
+        <div class="practice-topbar__extras">
+          <span class="practice-stat-hint" title="全库各分类题量">共 {{ statsTotal() }} 题</span>
+          <label class="file-pick file-pick--inline">
+            <input
+              type="file"
+              accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              (change)="onFileSelected($event)" />
+            <button type="button" class="practice-btn practice-btn--ghost" title="导入 Excel / CSV">导入</button>
           </label>
-          <button nz-button nzType="default" nzDanger (click)="confirmClear()" [disabled]="!statsTotal()">清空题库</button>
-        </ng-template>
-
-        <nz-alert
-          nzType="info"
-          nzShowIcon
-          nzMessage="表格格式说明"
-          nzDescription="第一行写表头。至少包含「题目」列；「分类」「答案」「标签」选填，列名可用中英文（见下方示例）。分类列请填：iOS、Android、Angular-TS、Angular-JS、Angular-CSS（也支持 TS/JS/CSS、安卓 等简写）。支持 .xlsx / .xls / 以及 Excel 另存为的 .csv。题目存在浏览器本地，重复题干会自动跳过。">
-        </nz-alert>
-
-        <div class="toolbar">
-          <nz-space [nzWrap]="true" nzSize="middle">
-            <span>筛选</span>
-            <nz-select
-              style="min-width: 200px"
-              [ngModel]="filterCategory()"
-              (ngModelChange)="setFilter($event)"
-              nzPlaceHolder="分类">
-              @for (opt of filterOptions; track opt.value) {
-                <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
-              }
-            </nz-select>
-            <button nz-button nzType="primary" (click)="randomOne()">
-              <span nz-icon nzType="thunderbolt"></span>
-              随机一题
-            </button>
-            <button nz-button (click)="prev()" [disabled]="!filteredItems().length">
-              <span nz-icon nzType="left"></span>
-              上一题
-            </button>
-            <button nz-button (click)="next()" [disabled]="!filteredItems().length">
-              下一题
-              <span nz-icon nzType="right"></span>
-            </button>
-            <button nz-button nzType="dashed" (click)="toggleAnswer()" [disabled]="!currentItem()">
-              {{ showAnswer() ? '隐藏参考答案' : '显示参考答案' }}
-            </button>
-          </nz-space>
+          <button type="button" class="practice-btn practice-btn--ghost" (click)="mergeBuiltinIosSeed()">内置 iOS</button>
+          <button
+            type="button"
+            class="practice-btn practice-btn--ghost practice-btn--danger"
+            [disabled]="!statsTotal()"
+            (click)="confirmClear()">
+            清空
+          </button>
+          <button type="button" class="practice-btn practice-btn--ghost" (click)="showImportHelp()">说明</button>
         </div>
+      </div>
+      <div class="practice-search" role="search">
+        <label class="practice-search__label" for="practiceSearchInput">搜索</label>
+        <input
+          id="practiceSearchInput"
+          type="search"
+          class="practice-search__input"
+          placeholder="题干 / 标签 / 答案关键词…（多词空格分隔需同时包含）"
+          autocomplete="off"
+          spellcheck="false"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="onSearchInput($event)" />
+        <button
+          type="button"
+          class="practice-search__clear"
+          [class.is-visible]="searchQuery().trim().length > 0"
+          [disabled]="!searchQuery().trim().length"
+          title="清空搜索"
+          (click)="clearSearch()">
+          ×
+        </button>
+      </div>
+    </header>
 
-        <nz-divider></nz-divider>
+    <div class="practice-search-dropdown">
+      @if (searchQuery().trim() && listForNav().length) {
+        <div class="search-results-host">
+          <div class="search-results__head">当前筛选下命中 {{ listForNav().length }} 题，点击跳转</div>
+          <ul class="search-results" role="listbox" aria-label="搜索结果">
+            @for (it of listForNav(); track it.id; let idx = $index) {
+              <li>
+                <button
+                  type="button"
+                  class="search-results__item"
+                  [class.is-active]="idx === currentIndex()"
+                  (click)="pickSearchResult(idx)">
+                  <div class="search-results__preview">{{ it.question }}</div>
+                  <div class="search-results__meta">{{ categoryLabel(it.category) }} · {{ it.tags || '—' }}</div>
+                </button>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+    </div>
 
-        @if (!filteredItems().length) {
-          <nz-empty nzNotFoundContent="暂无题目">
-            <ng-template nzNotFoundFooter>
-              <p class="empty-hint">请用 Excel 按说明准备表格后，点击右上角「导入表格」。</p>
-            </ng-template>
-          </nz-empty>
-        } @else {
-          @if (currentItem(); as item) {
-            <div class="question-block">
-              <div class="question-meta">
-                <nz-tag nzColor="blue">{{ categoryLabel(item.category) }}</nz-tag>
-                @if (item.tags) {
-                  <nz-tag>{{ item.tags }}</nz-tag>
-                }
-                <span class="progress-hint">第 {{ currentIndex() + 1 }} / {{ filteredItems().length }} 题（当前筛选）</span>
-              </div>
-              <h2 class="question-title">「{{ item.question }}」</h2>
-              @if (showAnswer()) {
-                <div class="answer-box">
-                  <div class="answer-label">参考答案</div>
-                  <pre class="answer-body">{{ item.answer || '（本题未录入答案，可在表格中补充「答案」列后重新导入。）' }}</pre>
-                </div>
-              } @else {
-                <p class="think-hint">先在心里作答，再点「显示参考答案」对照要点。</p>
-              }
-            </div>
+    <div class="fab-rail practice-fab-block" (click)="$event.stopPropagation()" aria-label="练习设置">
+      <div class="fab-block practice-fab-block">
+        <button
+          type="button"
+          class="fab-btn fab-btn--category"
+          [title]="'当前：' + categoryFabLabel()"
+          (click)="toggleCategoryMenu($event)">
+          {{ categoryFabLabel() }}
+        </button>
+        <div
+          class="fab-menu"
+          [class.fab-menu--hidden]="!categoryMenuOpen()"
+          role="listbox"
+          [attr.aria-hidden]="!categoryMenuOpen()">
+          @for (opt of filterOptions; track opt.value) {
+            <button
+              type="button"
+              class="fab-menu-item"
+              [class.is-active]="filterCategory() === opt.value"
+              (click)="setFilter(opt.value)">
+              {{ opt.label }}
+            </button>
           }
+        </div>
+      </div>
+      <div class="fab-font-controls" title="文字大小">
+        <button
+          type="button"
+          class="fab-btn fab-btn--icon"
+          aria-label="缩小文字"
+          [disabled]="fontScale() <= 75"
+          (click)="fontSmaller($event)">
+          −
+        </button>
+        <span class="fab-font-pct">{{ fontScale() }}%</span>
+        <button
+          type="button"
+          class="fab-btn fab-btn--icon"
+          aria-label="放大文字"
+          [disabled]="fontScale() >= 135"
+          (click)="fontLarger($event)">
+          +
+        </button>
+      </div>
+    </div>
+
+    <main class="practice-scroll">
+      @if (!listForNav().length) {
+        <div class="practice-inline-empty">
+          <p>当前分类或搜索条件下没有题目。</p>
+          @if (searchQuery().trim()) {
+            <button type="button" class="practice-btn" (click)="clearSearch()">清空搜索</button>
+          }
+        </div>
+      } @else {
+        @if (currentItem(); as item) {
+        <div class="meta">
+          <span class="badge">{{ categoryLabel(item.category) }}</span>
+          @if (item.tags) {
+            <span class="tags">{{ item.tags }}</span>
+          }
+        </div>
+        <h1 class="q">{{ item.question }}</h1>
+        <label class="label" for="practiceUserAnswer">你的回答</label>
+        <textarea
+          id="practiceUserAnswer"
+          class="practice-textarea"
+          rows="4"
+          placeholder="先试着写出要点，再显示参考答案或对比自检…"
+          spellcheck="false"
+          [ngModel]="userAnswer()"
+          (ngModelChange)="onUserAnswerInput($event)"></textarea>
+        <p class="hint">参考答案默认隐藏；右侧可切换类型与字号。</p>
+
+        @if (item.oralOneLiner) {
+          <div class="oral-oneliner">
+            <div class="oral-oneliner__label">面试口播（一句）</div>
+            <p class="oral-oneliner__text">{{ item.oralOneLiner }}</p>
+          </div>
         }
-      </nz-card>
-    </div>
 
-    <div nz-col [nzXs]="24" [nzXl]="8">
-      <nz-card nzTitle="题库统计" [nzBodyStyle]="{ paddingTop: '12px' }">
-        <div class="stat-grid">
-          <nz-statistic nzTitle="题目总数" [nzValue]="statsTotal()"></nz-statistic>
+        <div class="reference-wrap" [class.reference--hidden]="!showAnswer()">
+          <button type="button" class="practice-btn" (click)="toggleAnswer()">
+            {{ showAnswer() ? '隐藏参考答案' : '显示参考答案' }}
+          </button>
+          <div
+            class="reference-body"
+            [class.reference-body--md]="item.markD"
+            [class.reference-body--plain]="!item.markD">
+            @if (item.markD) {
+              <div
+                [innerHTML]="
+                  (item.answer || '（本题未录入答案，可在表格中补充「答案」列后重新导入。）') | markd
+                "></div>
+            } @else {
+              {{ item.answer || '（本题未录入答案，可在表格中补充「答案」列后重新导入。）' }}
+            }
+          </div>
         </div>
-        <nz-divider nzPlain></nz-divider>
-        <ul class="cat-stats">
-          @for (c of categoryList; track c) {
-            <li>
-              <span class="cat-name">{{ categoryLabel(c) }}</span>
-              <span class="cat-count">{{ statsByCategory()[c] }}</span>
-            </li>
-          }
-        </ul>
-      </nz-card>
 
-      <nz-card nzTitle="Excel 示例（可复制表头）" class="sample-card">
-        <pre class="sample-pre">分类	题目	答案	标签
-iOS	简述 RunLoop 与线程的关系。	RunLoop 与线程一一对应…	基础
-Android	Activity 启动模式有哪些？	standard / singleTop…	基础
-Angular-TS	解释 Angular 里 signal 与变更检测的关系。	signal 更新会标记视图…	进阶
-Angular-JS	说明 NgZone 的典型用途。	把第三方异步桥进 Angular 变更检测…	进阶
-Angular-CSS	`:host` 与 `::ng-deep` 的使用注意。	:host 作用于组件宿主…	样式</pre>
-        <p class="sample-note">在 Excel 中：第一行为表头，列之间为制表符或单元格分列；「答案」可留空后再补。</p>
-      </nz-card>
-    </div>
-  </div>
+        <button type="button" class="practice-btn practice-btn--primary" (click)="compareAnswers()">对比我的答案</button>
+        @if (compareResult(); as cr) {
+          <div
+            class="compare-result is-visible"
+            [class.compare-result--ok]="cr.level === 'ok'"
+            [class.compare-result--mid]="cr.level === 'mid'"
+            [class.compare-result--low]="cr.level === 'low'"
+            role="status">
+            {{ cr.message }}
+          </div>
+        }
+        }
+      }
+    </main>
+  }
 </div>
