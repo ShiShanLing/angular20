@@ -47,3 +47,8 @@ Thumbs.db
 
 # Local agent / IDE
 .claude/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/

@@ -1,7 +1,10 @@
+// ── 桌面端基础布局 ────────────────────────────────────────────────────────────
+
 .app-layout {
   height: 100vh;
 }
 
+// 桌面端 nz-sider 样式（移动端不渲染此元素）
 .sider {
   box-shadow: 2px 0 8px rgba(0,0,0,0.15);
   z-index: 10;
@@ -25,6 +28,7 @@
   }
 }
 
+// logo 区域（桌面/移动端共用，背景色继承父容器的深色主题）
 .logo {
   display: flex;
   align-items: center;
@@ -37,6 +41,7 @@
   white-space: nowrap;
   transition: padding 0.2s;
 
+  // 桌面折叠时居中图标
   &.collapsed {
     padding: 0;
     justify-content: center;
@@ -109,9 +114,12 @@
   padding: 14px;
 }
 
-// ─── 移动端：nz-sider 不渲染，内容区自动铺满 ──────────────────────────────────
+// ── 移动端适配 ────────────────────────────────────────────────────────────────
+//
+// 核心思路：移动端不渲染 nz-sider，避免其内联 flex 样式占据布局空间。
+// 菜单改由 .mobile-drawer（普通 div）承载，通过 transform 实现滑入/滑出。
 
-// 半透明遮罩
+// 遮罩：覆盖全屏，点击后关闭抽屉；淡入动画提升体验
 .mobile-backdrop {
   position: fixed;
   inset: 0;
@@ -125,17 +133,17 @@
   to   { opacity: 1; }
 }
 
-// 抽屉：默认滑出屏幕左侧
+// 抽屉容器：固定在视口左侧，默认隐藏在屏幕外
 .mobile-drawer {
   position: fixed;
   top: 0;
   left: 0;
   height: 100vh;
   width: 260px;
-  z-index: 1000;
-  background: #001529; // 与 nz-sider dark 主题一致
+  z-index: 1000;                  // 高于遮罩（999），浮在页面内容之上
+  background: #001529;            // 与 nz-sider dark 主题色保持一致
   overflow-y: auto;
-  transform: translateX(-100%);
+  transform: translateX(-100%);   // 默认隐藏在左侧屏幕外
   transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
               box-shadow 0.28s ease;
 
@@ -153,21 +161,23 @@
     border-radius: 3px;
   }
 
+  // 打开状态：滑入并显示投影
   &.mobile-drawer--open {
     transform: translateX(0);
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.35);
   }
 }
 
+// 移动端（≤768px）全局布局微调
 @media (max-width: 768px) {
   .app-header {
-    padding: 0 16px;
+    padding: 0 16px;              // 减小内边距，适应窄屏
 
     .header-title { font-size: 14px; }
-    .header-right { display: none; }
+    .header-right { display: none; }  // 技术标签在移动端隐藏，节省 header 空间
   }
 
-  .app-content { padding: 12px; }
+  .app-content { padding: 12px; }    // 内容区减小内边距，扩大可用面积
 
   .app-footer { padding: 10px; font-size: 11px; }
 }

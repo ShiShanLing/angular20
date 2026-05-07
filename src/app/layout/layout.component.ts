@@ -6,6 +6,7 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzBreadCrumbModule } from 'ng-zorro-antd/breadcrumb';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
+// BreakpointObserver 来自 Angular CDK，用于监听媒体查询断点变化
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -20,7 +21,7 @@ interface MenuItem {
 @Component({
   selector: 'app-layout',
   imports: [
-    NgTemplateOutlet,
+    NgTemplateOutlet,   // 用于在模板中复用 ng-template（桌面 sider 与移动抽屉共享同一份菜单）
     RouterOutlet,
     RouterLink,
     NzLayoutModule,
@@ -33,10 +34,16 @@ interface MenuItem {
   styleUrl: './layout.component.scss'
 })
 export class LayoutComponent implements OnInit, OnDestroy {
+  // 桌面端侧边栏折叠状态（移动端不使用此状态）
   isCollapsed = false;
+
+  // 当前是否处于移动端视口（≤768px）
   isMobile = false;
+
+  // 移动端抽屉是否打开
   isMobileDrawerOpen = false;
 
+  // 统一管理所有订阅，在 ngOnDestroy 中一次性取消，防止内存泄漏
   private subs = new Subscription();
 
   constructor(
@@ -45,6 +52,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    // 监听视口宽度变化，切换移动/桌面模式
+    // 切换到移动端时同时关闭抽屉，避免残留打开状态
     this.subs.add(
       this.breakpointObserver.observe(['(max-width: 768px)']).subscribe(result => {
         this.isMobile = result.matches;
@@ -54,6 +63,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
       })
     );
 
+    // 路由跳转成功后自动关闭移动端抽屉，无需用户手动点击关闭
     this.subs.add(
       this.router.events
         .pipe(filter(e => e instanceof NavigationEnd))
@@ -69,6 +79,11 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.subs.unsubscribe();
   }
 
+  /**
+   * Header 触发按钮的统一入口：
+   * - 移动端：切换抽屉开/关
+   * - 桌面端：切换侧边栏折叠/展开
+   */
   toggleMenu() {
     if (this.isMobile) {
       this.isMobileDrawerOpen = !this.isMobileDrawerOpen;

@@ -43,7 +43,7 @@
         </span>
         <div class="practice-topbar__extras">
           <span class="practice-stat-hint" title="全库各分类题量">共 {{ statsTotal() }} 题</span>
-          <label class="file-pick file-pick--inline">
+          <label class="file-pick file-pick--inline"> 
             <input
               type="file"
               accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -56,7 +56,7 @@
             class="practice-btn practice-btn--ghost practice-btn--danger"
             [disabled]="!statsTotal()"
             (click)="confirmClear()">
-            清空
+            清空//GCD
           </button>
           <button type="button" class="practice-btn practice-btn--ghost" (click)="showImportHelp()">说明</button>
         </div>
@@ -205,7 +205,7 @@
             }
           </div>
         </div>
-
+        
         <button type="button" class="practice-btn practice-btn--primary" (click)="compareAnswers()">对比我的答案</button>
         @if (compareResult(); as cr) {
           <div

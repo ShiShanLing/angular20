@@ -1,17 +1,25 @@
-<!-- Shared menu content (used by both desktop sider and mobile drawer) -->
+<!--
+  菜单内容模板（桌面 nz-sider 与移动抽屉共用，避免重复代码）
+  - 桌面端：通过 ngTemplateOutlet 注入到 nz-sider 内
+  - 移动端：通过 ngTemplateOutlet 注入到 .mobile-drawer 内
+-->
 <ng-template #menuTpl>
+  <!-- logo 区域：桌面折叠时隐藏文字，移动端始终展示文字 -->
   <div class="logo" [class.collapsed]="isCollapsed && !isMobile">
     <span class="logo-icon">⚡</span>
     @if (!isCollapsed || isMobile) {
       <span class="logo-text">Angular Demo</span>
     }
   </div>
+  <!-- 菜单：桌面折叠时收起图标模式，移动端始终展开 -->
   <ul nz-menu nzTheme="dark" nzMode="inline" [nzInlineCollapsed]="isCollapsed && !isMobile">
     @for (item of menuItems; track item.label) {
       @if (item.children) {
+        <!-- 有子菜单：桌面折叠时收起，移动端始终展开 -->
         <li nz-submenu [nzTitle]="item.label" [nzIcon]="item.icon || ''" [nzOpen]="!isCollapsed || isMobile">
           <ul>
             @for (child of item.children; track child.path) {
+              <!-- 用 <a routerLink> 而非直接绑定 routerLink 到 li，确保导航稳定触发 -->
               <li nz-menu-item nzMatchRouter>
                 <a [routerLink]="child.path">{{ child.label }}</a>
               </li>
@@ -31,17 +39,29 @@
 </ng-template>
 
 <nz-layout class="app-layout">
-  <!-- Mobile: backdrop + slide-in drawer (nz-sider not rendered, so content fills full width) -->
+  
+  <!--
+    ── 移动端专属区域（≤768px）──────────────────────────────────────────
+    nz-sider 在移动端完全不渲染，原因：
+    ng-zorro 通过 HostBinding 将宽度以内联样式写入 nz-sider 宿主元素
+    （style="flex: 0 0 220px"），即使加 position:fixed 也会占据 flex 空间。
+    因此移动端改用普通 div 模拟抽屉，nz-sider 不渲染，内容区自然铺满全屏。
+  -->
   @if (isMobile) {
+    <!-- 点击遮罩关闭抽屉 -->
     @if (isMobileDrawerOpen) {
       <div class="mobile-backdrop" (click)="isMobileDrawerOpen = false"></div>
     }
+    <!-- 抽屉：默认 translateX(-100%) 隐藏，.mobile-drawer--open 时滑入 -->
     <div class="mobile-drawer" [class.mobile-drawer--open]="isMobileDrawerOpen">
       <ng-container [ngTemplateOutlet]="menuTpl"></ng-container>
     </div>
   }
 
-  <!-- Desktop: nz-sider (not rendered on mobile, so no flex space is reserved) -->
+  <!--
+    ── 桌面端专属区域（>768px）──────────────────────────────────────────
+    仅桌面端渲染 nz-sider，支持折叠/展开
+  -->
   @if (!isMobile) {
     <nz-sider
       nzCollapsible
@@ -54,30 +74,36 @@
     </nz-sider>
   }
 
-  <!-- Main Layout -->
+  <!-- 主体布局（header + content + footer） -->
   <nz-layout>
-    <!-- Header -->
     <nz-header class="app-header">
+      <!--
+        触发按钮图标根据端和状态动态切换：
+        - 移动端抽屉打开：close（×）
+        - 移动端抽屉关闭：menu（☰）
+        - 桌面端折叠：menu-unfold
+        - 桌面端展开：menu-fold
+      -->
       <span nz-icon
         class="trigger"
         [nzType]="isMobile ? (isMobileDrawerOpen ? 'close' : 'menu') : (isCollapsed ? 'menu-unfold' : 'menu-fold')"
         (click)="toggleMenu()">
       </span>
+      
       <span class="header-title">Angular 19 功能演示</span>
+      <!-- 技术标签在移动端通过 CSS 隐藏（节省空间） -->
       <div class="header-right">
         <span class="header-tag" nz-tooltip nzTooltipTitle="基于 Ant Design 的企业级 UI 组件库 (Angular v19)">ng-zorro-antd v19</span>
         <span class="header-tag" nz-tooltip nzTooltipTitle="由百度开源的强大可视化图表库 (当前 v5.6+)">ECharts v5</span>
       </div>
     </nz-header>
-
-    <!-- Content -->
+    //
     <nz-content class="app-content">
       <div class="content-inner page-enter">
         <router-outlet />
       </div>
     </nz-content>
 
-    <!-- Footer -->
     <nz-footer class="app-footer">
       Angular 19 + ng-zorro-antd + ECharts ©2026
     </nz-footer>
