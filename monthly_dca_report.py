@@ -16,6 +16,7 @@ python monthly_dca_report.py
 输出：
 - 默认写入本仓库 reports/monthly_dca_report.xlsx（与脚本同级目录下的 reports 文件夹）
 - 各工作表自动生成图表：汇总为各资产 5年/10年 XIRR 对比；基准参考为外部五年/十年年化；明细表为「起始日×年化XIRR」柱状图
+- 汇总表与「指数基准参考」表含估值列（Yahoo 当前PE、推算的十年平均PE、倍数百分比）；基准表需在 BENCHMARK_INDEX_PE_TICKER 配置拉取代码
 """
 
 from __future__ import annotations
@@ -94,6 +95,31 @@ BENCHMARK_TABLE: List[Dict[str, Any]] = [
     {"分类": "港股", "指数名称": "港股通", "外部参考表_五年年化": None, "外部参考表_十年年化": 0.182},
 ]
 
+# 「指数基准参考」表中指数名称 -> 用于拉 PE 的 Yahoo 代码（多为同名 ETF/指数基金，非官方指数 PE；可自行改）
+# 未列出的行不拉 PE，估值列为空
+BENCHMARK_INDEX_PE_TICKER: Dict[str, str] = {
+    "沪深300": "510300.SS",
+    "中证500": "510500.SS",
+    "中证1000": "512100.SS",
+    "创业板": "159915.SZ",
+    "上证50": "510050.SS",
+    # A 系列宽基常见 ETF（上交所一律用 .SS；Yahoo 不认 .SH）
+    # A500：563220 若雅虎无数据可改 512050.SS（同中证A500指数）
+    "A500": "512050.SS",
+    "A50": "560050.SS",
+    "红利100": "515100.SS",  # 示例：红利指数基金
+    "SPY (S&P 500)": "SPY",
+    "QQQ (Nasdaq 100)": "QQQ",
+    "SCHD": "SCHD",
+    "VT (Total World)": "VT",
+    "GLD (Gold)": "GLD",
+    "XLE (Energy)": "XLE",
+    "恒生ETF": "159920.SZ",
+    "中概互联": "513050.SS",
+    # 港股通与「中概互联」不同标的；示例：港股通50 ETF（可改为你用的港股通宽基代码）
+    "港股通": "513550.SS",
+}
+
 START_DATE = "2010-01-01"
 MONTHLY_INVEST = 1000
 
@@ -122,7 +148,27 @@ RUNS_DETAIL_COLUMNS_ZH: Dict[str, str] = {
 
 
 def benchmark_reference_frame() -> pd.DataFrame:
-    return pd.DataFrame(BENCHMARK_TABLE)
+    """指数基准表 + 对映射到的 Yahoo标 的拉取 PE（与汇总列名一致）。"""
+    rows_out: List[Dict[str, Any]] = []
+    for r in BENCHMARK_TABLE:
+        row = dict(r)
+        name = str(row["指数名称"])
+        ysym = BENCHMARK_INDEX_PE_TICKER.get(name)
+        row["估值_PE拉取用代码"] = ysym or ""
+        if not ysym:
+            row["估值_当前PE"] = None
+            row["估值_十年平均PE"] = None
+            row["估值_当前相对十年均值_百分比"] = None
+            row["估值_数据说明"] = "未配置PE代码(见脚本 BENCHMARK_INDEX_PE_TICKER)"
+        else:
+            vm = valuation_metrics_for_ticker(ysym)
+            row["估值_当前PE"] = vm["估值_当前PE"]
+            row["估值_十年平均PE"] = vm["估值_十年平均PE"]
+            row["估值_当前相对十年均值_百分比"] = vm["估值_当前相对十年均值_百分比"]
+            vn = vm.get("估值_数据说明") or ""
+            row["估值_数据说明"] = (f"PE标的:{ysym}" + ("；" + vn if vn else "")).strip("；")
+        rows_out.append(row)
+    return pd.DataFrame(rows_out)
 
 
 def benchmark_yield_lookup() -> Dict[str, Tuple[Optional[float], Optional[float]]]:
@@ -216,7 +262,7 @@ def xirr(cashflows: List[tuple[pd.Timestamp, float]], guess: float = 0.08) -> Op
 
 
 def download_monthly_price(ticker: str, start: str) -> pd.DataFrame:
-    raw = yf.download(ticker, start=start, progress=False, auto_adjust=True)
+    raw = yf.download(ticker, start=start, auto_adjust=True)
 
     if raw.empty:
         raise ValueError(f"下载失败或无数据：{ticker}")
@@ -231,6 +277,196 @@ def download_monthly_price(ticker: str, start: str) -> pd.DataFrame:
     df = df.resample("ME").last().dropna()
     df = df.reset_index().rename(columns={"Date": "date"})
     return df
+
+
+def _pick_quarterly_eps_series(q: pd.DataFrame) -> Optional[pd.Series]:
+    for label in q.index:
+        sl = str(label).lower()
+        if "diluted" in sl and "eps" in sl:
+            return q.loc[label]
+    for label in q.index:
+        sl = str(label).lower()
+        if "basic" in sl and "eps" in sl:
+            return q.loc[label]
+    for key in ("Diluted EPS", "Basic EPS"):
+        if key in q.index:
+            return q.loc[key]
+    return None
+
+
+def _rolling_avg_pe_from_quarterly_eps(tk: Any, hist: pd.DataFrame) -> Optional[float]:
+    """
+    用最近四个季度 Diluted EPS 之和近似 TTM EPS，对每个财报季末取价算 PE，
+    再对最近至多 40 个季度点取平均，作为「十年平均 PE」近似。
+    """
+    q = getattr(tk, "quarterly_income_stmt", None)
+    if q is None or q.empty:
+        return None
+    eps_row = _pick_quarterly_eps_series(q)
+    if eps_row is None:
+        return None
+    try:
+        cols = sorted(q.columns, key=lambda c: pd.Timestamp(c))
+    except Exception:
+        return None
+    pes: List[float] = []
+    for i in range(3, len(cols)):
+        try:
+            ttm = 0.0
+            ok = True
+            for j in range(i - 3, i + 1):
+                v = eps_row[cols[j]]
+                if v is None or pd.isna(v):
+                    ok = False
+                    break
+                ttm += float(v)
+            if not ok or ttm <= 0 or not math.isfinite(ttm):
+                continue
+            dt = pd.Timestamp(cols[i])
+            if pd.isna(dt):
+                continue
+            if dt.tzinfo is not None:
+                dt = dt.tz_localize(None)
+            window = hist.loc[: dt]
+            if window.empty:
+                continue
+            px = float(window["Close"].iloc[-1])
+            if px <= 0:
+                continue
+            pes.append(px / ttm)
+        except Exception:
+            continue
+    if len(pes) < 4:
+        return None
+    tail = pes[-40:] if len(pes) > 40 else pes
+    return float(np.mean(tail))
+
+
+def _pick_annual_eps_series(inc: pd.DataFrame) -> Optional[pd.Series]:
+    """从 yfinance 年报 income_stmt 中取 EPS 行（优先 Diluted）。"""
+    for label in inc.index:
+        sl = str(label).lower()
+        if "diluted" in sl and "eps" in sl:
+            return inc.loc[label]
+    for label in inc.index:
+        sl = str(label).lower()
+        if "basic" in sl and "eps" in sl:
+            return inc.loc[label]
+    for key in ("Diluted EPS", "Basic EPS"):
+        if key in inc.index:
+            return inc.loc[key]
+    return None
+
+
+def _valuation_fill_percentage_vs_avg(out: Dict[str, Any]) -> None:
+    """当前 PE / 十年平均 PE × 100；>100 表示高于十年简单均值。"""
+    c = out.get("估值_当前PE")
+    a = out.get("估值_十年平均PE")
+    if c is not None and a is not None and float(a) > 0:
+        out["估值_当前相对十年均值_百分比"] = round(float(c) / float(a) * 100.0, 2)
+
+
+def valuation_metrics_for_ticker(ticker: str) -> Dict[str, Any]:
+    """
+    Yahoo / yfinance 估值快照：
+    - 估值_当前PE：优先 trailingPE，否则 forwardPE（来自 Yahoo 快照，部分标的为空）
+    - 估值_十年平均PE：优先年报 EPS×历史价；不足时用季报近四季 EPS 之和近似 TTM 再滚动（仍为近似）
+    - 估值_当前相对十年均值_百分比：当前 / 十年平均 × 100
+    ETF、指数、黄金等若 Yahoo 不给 PE 或缺少季报，则相应为空——不是您理解错了，是数据源有限。
+    """
+    out: Dict[str, Any] = {
+        "估值_当前PE": None,
+        "估值_十年平均PE": None,
+        "估值_当前相对十年均值_百分比": None,
+        "估值_数据说明": "",
+    }
+    notes: List[str] = []
+    try:
+        tk = yf.Ticker(ticker)
+        info = getattr(tk, "info", None) or {}
+
+        cur: Optional[float] = None
+        for key in ("trailingPE", "forwardPE"):
+            raw = info.get(key)
+            if raw is None:
+                continue
+            try:
+                v = float(raw)
+                if math.isfinite(v) and v > 0:
+                    cur = v
+                    if key == "forwardPE":
+                        notes.append("当前PE为forwardPE")
+                    break
+            except (TypeError, ValueError):
+                continue
+        if cur is not None:
+            out["估值_当前PE"] = round(cur, 3)
+
+        hist = tk.history(period="12y", interval="1d", auto_adjust=True)
+        if hist.empty:
+            if notes:
+                out["估值_数据说明"] = "；".join(notes)
+            _valuation_fill_percentage_vs_avg(out)
+            return out
+
+        if getattr(hist.index, "tz", None) is not None:
+            hist = hist.copy()
+            hist.index = hist.index.tz_localize(None)
+
+        inc = getattr(tk, "income_stmt", None)
+        annual_pes: List[float] = []
+        if inc is not None and not inc.empty:
+            eps_series = _pick_annual_eps_series(inc)
+            if eps_series is None:
+                notes.append("年报无可用EPS行")
+            else:
+                for col in inc.columns:
+                    try:
+                        eps_val = eps_series[col]
+                        if eps_val is None or pd.isna(eps_val):
+                            continue
+                        eps_f = float(eps_val)
+                        if not math.isfinite(eps_f) or eps_f <= 0:
+                            continue
+                        dt = pd.Timestamp(col)
+                        if pd.isna(dt):
+                            continue
+                        if dt.tzinfo is not None:
+                            dt = dt.tz_localize(None)
+                        window = hist.loc[: dt]
+                        if window.empty:
+                            continue
+                        px = float(window["Close"].iloc[-1])
+                        if not math.isfinite(px) or px <= 0:
+                            continue
+                        annual_pes.append(px / eps_f)
+                    except Exception:
+                        continue
+
+        if len(annual_pes) >= 3:
+            take = annual_pes[-10:]
+            out["估值_十年平均PE"] = round(float(np.mean(take)), 3)
+        elif len(annual_pes) > 0:
+            notes.append(f"年报有效PE样本仅{len(annual_pes)}个，改试季报")
+
+        if out["估值_十年平均PE"] is None:
+            q_avg = _rolling_avg_pe_from_quarterly_eps(tk, hist)
+            if q_avg is not None:
+                out["估值_十年平均PE"] = round(q_avg, 3)
+                notes.append("十年均PE由季报TTM(EPS)滚动近似")
+            else:
+                if inc is None or inc.empty:
+                    notes.append("无年报；季报亦无法推算十年PE")
+                elif not any("样本" in n for n in notes):
+                    notes.append("年报样本不足且季报无法推算十年PE")
+
+        if notes:
+            out["估值_数据说明"] = "；".join(notes)
+        _valuation_fill_percentage_vs_avg(out)
+    except Exception as ex:
+        out["估值_数据说明"] = ("；".join(notes) + "；" if notes else "") + str(ex)[:140]
+        _valuation_fill_percentage_vs_avg(out)
+    return out
 
 
 def run_dca_to_now(df: pd.DataFrame, monthly_invest: float = 1000) -> pd.DataFrame:
@@ -605,6 +841,13 @@ def style_excel(path: str) -> None:
                     cell.number_format = "yyyy-mm-dd"
                     continue
 
+                if isinstance(val, float) and header.startswith("估值_"):
+                    if "百分比" in header:
+                        cell.number_format = "0.00"
+                    else:
+                        cell.number_format = "0.00"
+                    continue
+
                 if isinstance(val, float):
                     if any(
                         k in header
@@ -665,6 +908,7 @@ def _process_one_asset(
         "分类": category,
         "资产": name,
         "Ticker": ticker,
+        **valuation_metrics_for_ticker(ticker),
         **stats,
     }
     attach_benchmark_columns(row, info, bench_lookup)
@@ -704,6 +948,7 @@ def main() -> None:
                         "分类": info["category"],
                         "资产": name,
                         "Ticker": ticker,
+                        **valuation_metrics_for_ticker(ticker),
                         "错误": str(e),
                     }
                     attach_benchmark_columns(err_row, info, bench_lookup)

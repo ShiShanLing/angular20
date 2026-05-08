@@ -7,7 +7,7 @@ import { provideNzIcons } from 'ng-zorro-antd/icon';
 import {
   SearchOutline, CopyOutline, DeleteOutline, ArrowRightOutline, DownloadOutline,
   DashboardOutline, BarChartOutline, FormOutline, TableOutline, ExperimentOutline,
-  RocketOutline, AppstoreOutline, ToolOutline, MenuUnfoldOutline, MenuFoldOutline,
+  RocketOutline, AppstoreOutline, ToolOutline, MenuOutline, MenuUnfoldOutline, MenuFoldOutline,
   CheckCircleFill, CloseCircleFill, ExclamationCircleFill, InfoCircleFill,
   MoneyCollectOutline, HeartOutline, ThunderboltOutline, CustomerServiceOutline,
   LeftOutline, RightOutline, CloudUploadOutline,
@@ -25,7 +25,7 @@ import * as echarts from 'echarts/core';
 const icons = [
   SearchOutline, CopyOutline, DeleteOutline, ArrowRightOutline, DownloadOutline,
   DashboardOutline, BarChartOutline, FormOutline, TableOutline, ExperimentOutline,
-  RocketOutline, AppstoreOutline, ToolOutline, MenuUnfoldOutline, MenuFoldOutline,
+  RocketOutline, AppstoreOutline, ToolOutline, MenuOutline, MenuUnfoldOutline, MenuFoldOutline,
   CheckCircleFill, CloseCircleFill, ExclamationCircleFill, InfoCircleFill,
   MoneyCollectOutline, HeartOutline, ThunderboltOutline, CustomerServiceOutline,
   LeftOutline, RightOutline, CloudUploadOutline,

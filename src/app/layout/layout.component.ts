@@ -52,6 +52,15 @@ export class LayoutComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    // 首帧与 matchMedia 同步，避免仅依赖 observe 异步首包时 isMobile 仍为 false，
+    // 在窄屏硬刷新会先渲染桌面 nz-sider、移动抽屉菜单触发异常（见 layout 说明）。
+    if (typeof matchMedia !== 'undefined') {
+      this.isMobile = matchMedia('(max-width: 768px)').matches;
+      if (this.isMobile) {
+        this.isMobileDrawerOpen = false;
+      }
+    }
+
     // 监听视口宽度变化，切换移动/桌面模式
     // 切换到移动端时同时关闭抽屉，避免残留打开状态
     this.subs.add(

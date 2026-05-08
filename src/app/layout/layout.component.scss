@@ -64,11 +64,21 @@
   box-shadow: 0 1px 4px rgba(0,21,41,0.08);
   gap: 16px;
 
+  // 必须 flex-shrink: 0：否则窄屏下 .header-title(flex:1) 会把图标列压成 0 宽（anticon 宽度为 0 不可见）
   .trigger {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    min-height: 40px;
+    margin-right: -4px; // 与 gap 配合，视觉仍对齐标题
     font-size: 18px;
     cursor: pointer;
     color: #555;
     transition: color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
     &:hover { color: #1890ff; }
   }
 
@@ -77,6 +87,10 @@
     font-weight: 600;
     color: #1a1a1a;
     flex: 1;
+    min-width: 0; // 标题可收缩，避免挤压 sibling（配合 ellipsis）
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .header-right { display: flex; gap: 8px; }
@@ -140,10 +154,12 @@
   left: 0;
   height: 100vh;
   width: 260px;
-  z-index: 1000;                  // 高于遮罩（999），浮在页面内容之上
+  z-index: 1000;                  // 高于遮罩（999），浮在页面内容之上；须低于 .app-header（移动端）以免盖住菜单按钮
   background: #001529;            // 与 nz-sider dark 主题色保持一致
   overflow-y: auto;
   transform: translateX(-100%);   // 默认隐藏在左侧屏幕外
+  // 关闭时不参与命中检测：避免部分环境下 transform 后仍挡住顶栏左侧点击
+  pointer-events: none;
   transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
               box-shadow 0.28s ease;
 
@@ -165,6 +181,7 @@
   &.mobile-drawer--open {
     transform: translateX(0);
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.35);
+    pointer-events: auto;
   }
 }
 
@@ -172,6 +189,9 @@
 @media (max-width: 768px) {
   .app-header {
     padding: 0 16px;              // 减小内边距，适应窄屏
+    position: relative;
+    // 高于 .mobile-drawer(1000) 与 .mobile-backdrop(999)，保证菜单按钮始终可点、且不被抽屉层盖住
+    z-index: 1002;
 
     .header-title { font-size: 14px; }
     .header-right { display: none; }  // 技术标签在移动端隐藏，节省 header 空间

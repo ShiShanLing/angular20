@@ -78,15 +78,13 @@
   <nz-layout>
     <nz-header class="app-header">
       <!--
-        触发按钮图标根据端和状态动态切换：
-        - 移动端抽屉打开：close（×）
-        - 移动端抽屉关闭：menu（☰）
-        - 桌面端折叠：menu-unfold
-        - 桌面端展开：menu-fold
+        触发按钮图标：
+        - 移动端：固定 menu（☰），点击仍切换抽屉开/关（打开时再点一次可关，或点遮罩关闭）
+        - 桌面端折叠：menu-unfold / 展开：menu-fold
       -->
       <span nz-icon
         class="trigger"
-        [nzType]="isMobile ? (isMobileDrawerOpen ? 'close' : 'menu') : (isCollapsed ? 'menu-unfold' : 'menu-fold')"
+        [nzType]="isMobile ? 'menu' : (isCollapsed ? 'menu-unfold' : 'menu-fold')"
         (click)="toggleMenu()">
       </span>
       
@@ -97,7 +95,6 @@
         <span class="header-tag" nz-tooltip nzTooltipTitle="由百度开源的强大可视化图表库 (当前 v5.6+)">ECharts v5</span>
       </div>
     </nz-header>
-    //
     <nz-content class="app-content">
       <div class="content-inner page-enter">
         <router-outlet />
