@@ -601,7 +601,7 @@ def _fmt_pct_for_console(v: Any) -> str:
         return f"{x * 100:.2f}%"
     except (TypeError, ValueError):
         return "N/A"
-
+    
 
 def print_horizon_summary(name: str, ticker: str, stats: Dict[str, Any]) -> None:
     """边跑边打印：约 5 年 / 约 10 年持有期带内，年化 XIRR（平均）。"""

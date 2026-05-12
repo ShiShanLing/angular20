@@ -2,12 +2,25 @@ import { Injectable } from '@angular/core';
 import type { PracticeCategory, PracticeFilterCategory, PracticeItem, PracticeItemDraft } from './practice.types';
 
 const STORAGE_KEY = 'angular20_practice_v1';
+const DAILY_STATE_KEY = 'angular20_practice_daily_state_v1';
 
 /** E2E / 调试：设为 `1` 时不自动注入内置题库（见 PracticeComponent） */
 export const PRACTICE_SKIP_BUILTIN_SEED_KEY = 'angular20_practice_skip_builtin_seed_v1';
 
 /** 刷题页记住的分类筛选（与题库数据分开存） */
 export const PRACTICE_FILTER_CATEGORY_KEY = 'angular20_practice_filter_category_v1';
+
+export interface PracticeDayRecord {
+  date: string;
+  itemIds: string[];
+  rememberedIds: string[];
+  attempts: number;
+  completedAt?: number;
+}
+
+export interface PracticeDailyState {
+  records: Record<string, PracticeDayRecord>;
+}
 
 const VALID_CATEGORIES: PracticeCategory[] = [
   'ios',
@@ -121,6 +134,30 @@ export class PracticeStorageService {
 
   clearAll(): void {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(DAILY_STATE_KEY);
+  }
+
+  readDailyState(): PracticeDailyState {
+    try {
+      const raw = localStorage.getItem(DAILY_STATE_KEY);
+      if (!raw) return { records: {} };
+      const parsed = JSON.parse(raw) as unknown;
+      if (!parsed || typeof parsed !== 'object') return { records: {} };
+      const records = (parsed as Record<string, unknown>)['records'];
+      if (!records || typeof records !== 'object') return { records: {} };
+      const out: Record<string, PracticeDayRecord> = {};
+      for (const [date, value] of Object.entries(records as Record<string, unknown>)) {
+        const record = this.parseDayRecord(date, value);
+        if (record) out[date] = record;
+      }
+      return { records: out };
+    } catch {
+      return { records: {} };
+    }
+  }
+
+  saveDailyState(state: PracticeDailyState): void {
+    localStorage.setItem(DAILY_STATE_KEY, JSON.stringify(state));
   }
 
   readSavedFilterCategory(): PracticeFilterCategory {
@@ -172,6 +209,31 @@ export class PracticeStorageService {
       item.oralOneLiner = o['oralOneLiner'].trim();
     }
     return item;
+  }
+
+  private parseDayRecord(date: string, x: unknown): PracticeDayRecord | null {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+    if (!x || typeof x !== 'object') return null;
+    const o = x as Record<string, unknown>;
+    const itemIds = Array.isArray(o['itemIds'])
+      ? o['itemIds'].filter((id): id is string => typeof id === 'string')
+      : [];
+    const rememberedIds = Array.isArray(o['rememberedIds'])
+      ? o['rememberedIds'].filter((id): id is string => typeof id === 'string')
+      : [];
+    const attempts = typeof o['attempts'] === 'number' && Number.isFinite(o['attempts'])
+      ? Math.max(0, Math.floor(o['attempts']))
+      : 0;
+    const record: PracticeDayRecord = {
+      date,
+      itemIds: [...new Set(itemIds)],
+      rememberedIds: [...new Set(rememberedIds)],
+      attempts,
+    };
+    if (typeof o['completedAt'] === 'number' && Number.isFinite(o['completedAt'])) {
+      record.completedAt = o['completedAt'];
+    }
+    return record;
   }
 
   countByCategory(items: PracticeItem[]): Record<PracticeCategory, number> {

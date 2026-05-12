@@ -22,9 +22,10 @@ async function importCSV(page: Page): Promise<void> {
   await expect(page.getByText(/新增 \d+ 条/)).toBeVisible({ timeout: 10_000 });
 }
 
+//
 test.describe('练习题页面', () => {
   test.beforeEach(async ({ page }) => {
-    await page.addInitScript(
+    await page.addInitScript( 
       ([practiceKey, skipBuiltinKey, filterKey]: [string, string, string]) => {
         localStorage.removeItem(practiceKey);
         localStorage.removeItem(filterKey);
@@ -32,10 +33,10 @@ test.describe('练习题页面', () => {
       },
       [STORAGE_KEY, SKIP_BUILTIN_KEY, FILTER_CATEGORY_KEY] as [string, string, string]
     );
+
     await page.goto('/#/practice');
     await page.waitForSelector('.practice-app', { timeout: 15_000 });
   });
-
   // ── AC-PRAC-001 ───────────────────────────────────────────────────────────
   test('AC-PRAC-001 空题库基础状态', async ({ page }) => {
     await expect(page.getByText('暂无题目')).toBeVisible();
@@ -43,7 +44,7 @@ test.describe('练习题页面', () => {
     // 空库全屏态不展示顶栏导航
     await expect(page.locator('.practice-topbar')).toHaveCount(0);
   });
-
+  
   // ── AC-PRAC-002 ───────────────────────────────────────────────────────────
   test('AC-PRAC-002 导入有效题库后更新统计与题面', async ({ page }) => {
     await importCSV(page);

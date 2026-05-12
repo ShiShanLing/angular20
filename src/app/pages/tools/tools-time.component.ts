@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
 
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzFormModule } from 'ng-zorro-antd/form';
@@ -43,7 +44,10 @@ export class ToolsTimeComponent implements OnInit, OnDestroy {
   pomoRound = 1;
   pomoRemainingSec = 25 * 60;
   pomoIsRunning = false;
-  pomoTimerId: any = null;
+  pomoTimerId: ReturnType<typeof setInterval> | null = null;
+  private deadlineTimerId: ReturnType<typeof setInterval> | null = null;
+  private readonly subs = new Subscription();
+  private originalTitle = '';
 
   // Todo
   todoList: TodoItem[] = [];
@@ -66,6 +70,8 @@ export class ToolsTimeComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.originalTitle = document.title;
+
     this.deadlineForm = this.fb.group({
       deadline: [null],
       totalHours: [40, [Validators.min(0)]],
@@ -77,17 +83,22 @@ export class ToolsTimeComponent implements OnInit, OnDestroy {
     this.loadAllStates();
     this.setPomoMode('work');
 
-    this.deadlineForm.valueChanges.subscribe(() => {
-      this.saveDeadlineState();
-      this.computeSchedule();
-    });
+    this.subs.add(
+      this.deadlineForm.valueChanges.subscribe(() => {
+        this.saveDeadlineState();
+        this.computeSchedule();
+      })
+    );
 
     // Simple countdown timer for UI
-    setInterval(() => this.computeSchedule(), 1000);
+    this.deadlineTimerId = setInterval(() => this.computeSchedule(), 1000);
   }
 
   ngOnDestroy(): void {
-    if (this.pomoTimerId) clearInterval(this.pomoTimerId);
+    this.subs.unsubscribe();
+    if (this.pomoTimerId !== null) clearInterval(this.pomoTimerId);
+    if (this.deadlineTimerId !== null) clearInterval(this.deadlineTimerId);
+    document.title = this.originalTitle;
   }
 
   // --- Pomodoro Logic ---

@@ -38,8 +38,8 @@
         <button type="button" class="practice-btn" (click)="randomOne()" [disabled]="navDisabled()">
           随机一题
         </button>
-        <span class="progress">
-          {{ listForNav().length ? currentIndex() + 1 : 0 }} / {{ listForNav().length }}
+        <span class="progress" title="今日刷题进度">
+          今日 {{ dailyRememberedCount() }} / {{ dailyTotal() }}
         </span>
         <div class="practice-topbar__extras">
           <span class="practice-stat-hint" title="全库各分类题量">共 {{ statsTotal() }} 题</span>
@@ -56,7 +56,7 @@
             class="practice-btn practice-btn--ghost practice-btn--danger"
             [disabled]="!statsTotal()"
             (click)="confirmClear()">
-            清空//GCD
+            清空题目
           </button>
           <button type="button" class="practice-btn practice-btn--ghost" (click)="showImportHelp()">说明</button>
         </div>
@@ -153,9 +153,30 @@
     </div>
 
     <main class="practice-scroll">
+      <section class="daily-panel" aria-label="今日刷题">
+        <div>
+          <div class="daily-panel__eyebrow">今日 5 题</div>
+          <div class="daily-panel__title">
+            @if (dailyCompleted()) {
+              已完成，今天都记住了
+            } @else {
+              还剩 {{ pendingDailyItems().length }} 题需要循环
+            }
+          </div>
+        </div>
+        <div class="daily-meter" aria-hidden="true">
+          @for (it of dailyItems(); track it.id) {
+            <span
+              class="daily-meter__dot"
+              [class.is-done]="rememberedTodayIds().has(it.id)">
+            </span>
+          }
+        </div>
+      </section>
+
       @if (!listForNav().length) {
         <div class="practice-inline-empty">
-          <p>当前分类或搜索条件下没有题目。</p>
+          <p>{{ dailyCompleted() ? '今天的 5 道题已经刷完。' : '当前分类或搜索条件下没有题目。' }}</p>
           @if (searchQuery().trim()) {
             <button type="button" class="practice-btn" (click)="clearSearch()">清空搜索</button>
           }
@@ -206,7 +227,23 @@
           </div>
         </div>
         
-        <button type="button" class="practice-btn practice-btn--primary" (click)="compareAnswers()">对比我的答案</button>
+        <div class="daily-actions">
+          <button
+            type="button"
+            class="practice-btn practice-btn--primary"
+            [disabled]="!currentItemInDaily()"
+            (click)="markRemembered()">
+            记住了
+          </button>
+          <button
+            type="button"
+            class="practice-btn"
+            [disabled]="!currentItemInDaily()"
+            (click)="markForgotten()">
+            还没记住
+          </button>
+          <button type="button" class="practice-btn practice-btn--ghost" (click)="compareAnswers()">对比我的答案</button>
+        </div>
         @if (compareResult(); as cr) {
           <div
             class="compare-result is-visible"
@@ -219,6 +256,32 @@
         }
         }
       }
+
+      <section class="practice-calendar" aria-label="刷题日历">
+        <div class="practice-calendar__head">
+          <button type="button" class="practice-btn practice-btn--ghost" (click)="prevCalendarMonth()">‹</button>
+          <strong>{{ calendarTitle() }}</strong>
+          <button type="button" class="practice-btn practice-btn--ghost" (click)="nextCalendarMonth()">›</button>
+        </div>
+        <div class="practice-calendar__week">
+          <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+        </div>
+        <div class="practice-calendar__grid">
+          @for (day of calendarDays(); track day.date) {
+            <div
+              class="practice-calendar__day"
+              [class.is-muted]="!day.inMonth"
+              [class.is-today]="day.date === todayKey()"
+              [class.is-done]="day.done"
+              [title]="day.total ? day.remembered + ' / ' + day.total + ' 已记住' : '未练习'">
+              <span>{{ day.day }}</span>
+              @if (day.total) {
+                <small>{{ day.remembered }}/{{ day.total }}</small>
+              }
+            </div>
+          }
+        </div>
+      </section>
     </main>
   }
 </div>

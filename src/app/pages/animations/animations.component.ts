@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import {
   trigger, state, style, transition, animate, keyframes, query, stagger
@@ -56,7 +56,7 @@ import { NzDividerModule } from 'ng-zorro-antd/divider';
     ])
   ]
 })
-export class AnimationsComponent {
+export class AnimationsComponent implements OnDestroy {
   // Fade
   fadeState = 'hidden';
   fadeActive = false;
@@ -82,15 +82,16 @@ export class AnimationsComponent {
   counterValue = 0;
   counterTarget = 2568;
   counterRunning = false;
+  private counterInterval: ReturnType<typeof setInterval> | null = null;
   runCounter() {
     if (this.counterRunning) return;
     this.counterRunning = true;
     this.counterValue = 0;
     const step = Math.ceil(this.counterTarget / 60);
-    const timer = setInterval(() => {
+    this.counterInterval = setInterval(() => {
       this.counterValue = Math.min(this.counterValue + step, this.counterTarget);
       if (this.counterValue >= this.counterTarget) {
-        clearInterval(timer);
+        this.clearCounterInterval();
         this.counterRunning = false;
       }
     }, 16);
@@ -109,13 +110,30 @@ export class AnimationsComponent {
   // Spinner
   spinnerAngle = 0;
   spinnerRunning = false;
-  spinnerInterval: any;
+  private spinnerInterval: ReturnType<typeof setInterval> | null = null;
   toggleSpinner() {
     this.spinnerRunning = !this.spinnerRunning;
     if (this.spinnerRunning) {
       this.spinnerInterval = setInterval(() => this.spinnerAngle += 6, 16);
     } else {
-      clearInterval(this.spinnerInterval);
+      this.clearSpinnerInterval();
     }
+  }
+
+  ngOnDestroy(): void {
+    this.clearCounterInterval();
+    this.clearSpinnerInterval();
+  }
+
+  private clearCounterInterval(): void {
+    if (this.counterInterval === null) return;
+    clearInterval(this.counterInterval);
+    this.counterInterval = null;
+  }
+
+  private clearSpinnerInterval(): void {
+    if (this.spinnerInterval === null) return;
+    clearInterval(this.spinnerInterval);
+    this.spinnerInterval = null;
   }
 }

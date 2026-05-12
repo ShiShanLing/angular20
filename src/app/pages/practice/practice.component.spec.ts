@@ -127,4 +127,52 @@ describe('PracticeComponent', () => {
     component.items.set([makeItem(), makeItem(), makeItem()]);
     expect(component.statsTotal()).toBe(3);
   });
+
+  it('markForgotten keeps today item in the loop and advances', () => {
+    const items = [makeItem({ question: 'q1' }), makeItem({ question: 'q2' })];
+    const date = component.todayKey();
+    component.items.set(items);
+    component.searchQuery.set('');
+    component.currentIndex.set(0);
+    component.dailyState.set({
+      records: {
+        [date]: {
+          date,
+          itemIds: items.map((item) => item.id),
+          rememberedIds: [],
+          attempts: 0,
+        },
+      },
+    });
+
+    component.markForgotten();
+
+    expect(component.pendingDailyItems().length).toBe(2);
+    expect(component.currentItem()?.question).toBe('q2');
+    expect(component.todayRecord()?.attempts).toBe(1);
+  });
+
+  it('markRemembered removes today item and completes after all remembered', () => {
+    const item = makeItem({ question: 'q1' });
+    const date = component.todayKey();
+    component.items.set([item]);
+    component.searchQuery.set('');
+    component.currentIndex.set(0);
+    component.dailyState.set({
+      records: {
+        [date]: {
+          date,
+          itemIds: [item.id],
+          rememberedIds: [],
+          attempts: 0,
+        },
+      },
+    });
+
+    component.markRemembered();
+
+    expect(component.pendingDailyItems().length).toBe(0);
+    expect(component.dailyCompleted()).toBeTrue();
+    expect(component.todayRecord()?.completedAt).toEqual(jasmine.any(Number));
+  });
 });

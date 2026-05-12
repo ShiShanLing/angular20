@@ -82,6 +82,7 @@ _Note: These should have a "Arcade" layout on mobile (Play in Portrait/Landscape
     - **Logic**: Rotation, line clearing, scoring, "Next Piece" preview.
     - **Input**: Virtual buttons for Rotate, Left, Right, Soft Drop, Hard Drop.
 
+
 ---
 
 ## 3. Key Implementation Notes for the "Other Me"
