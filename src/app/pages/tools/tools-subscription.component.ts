@@ -12,6 +12,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 
+/** 周期性订阅记账：名称、金额与下次扣款日。 */
 @Component({
   selector: 'app-tools-subscription',
   standalone: true,

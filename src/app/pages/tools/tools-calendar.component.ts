@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
 
 import { LunarUtils } from './lunar.utils';
 
+/** 日历视图 + 农历 `LunarUtils` 标注演示。 */
 @Component({
   selector: 'app-tools-calendar',
   standalone: true,

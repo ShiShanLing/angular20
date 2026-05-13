@@ -9,6 +9,7 @@ import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzDividerModule } from 'ng-zorro-antd/divider';
 
+/** Angular Animations 演示：状态动画、关键帧、交错列表等。 */
 @Component({
   selector: 'app-animations',
   imports: [NzCardModule, NzButtonModule, NzGridModule, NzTagModule, NzDividerModule, DecimalPipe],

@@ -38,9 +38,22 @@
         <button type="button" class="practice-btn" (click)="randomOne()" [disabled]="navDisabled()">
           随机一题
         </button>
+        <button
+          type="button"
+          class="practice-btn practice-btn--listen"
+          [class.is-active]="chantMode()"
+          [disabled]="!speechAvailable() || !listenList().length"
+          (click)="toggleChantMode()">
+          {{ chantMode() ? '停止唱题' : '唱题模式' }}
+        </button>
         <span class="progress" title="今日刷题进度">
           今日 {{ dailyRememberedCount() }} / {{ dailyTotal() }}
         </span>
+        @if (chantMode()) {
+          <span class="progress progress--chant" title="唱题模式不计入学习统计">
+            唱题 {{ chantIndex() + 1 }} / {{ listenList().length }}
+          </span>
+        }
         <div class="practice-topbar__extras">
           <span class="practice-stat-hint" title="全库各分类题量">共 {{ statsTotal() }} 题</span>
           <label class="file-pick file-pick--inline"> 
@@ -106,6 +119,7 @@
       </div>
     </header>
 
+    @if (!chantMode()) {
     <div class="fab-rail practice-fab-block" (click)="$event.stopPropagation()" aria-label="练习设置">
       <div class="fab-block practice-fab-block">
         <button
@@ -151,7 +165,82 @@
         </button>
       </div>
     </div>
+    }
 
+    @if (chantMode()) {
+      <main class="practice-scroll practice-scroll--chant">
+        <section class="chant-view" aria-label="唱题模式">
+          <div class="chant-view__head">
+            <div>
+              <div class="chant-view__eyebrow">唱题模式 · 不计入学习统计</div>
+              <h1 class="chant-view__title">
+                {{ chantPhase() === 'answer' ? '正在播放答案' : '正在播放题目' }}
+              </h1>
+            </div>
+            <div class="chant-view__side">
+              <div class="chant-view__progress">{{ chantIndex() + 1 }} / {{ listenList().length }}</div>
+              <div class="speech-rate" aria-label="语速">
+                <button
+                  type="button"
+                  class="practice-btn practice-btn--ghost"
+                  [disabled]="speechRate() <= 0.7"
+                  (click)="speechSlower()">
+                  慢一点
+                </button>
+                <span class="speech-rate__value">{{ speechRate().toFixed(1) }}x</span>
+                <button
+                  type="button"
+                  class="practice-btn practice-btn--ghost"
+                  [disabled]="speechRate() >= 1.1"
+                  (click)="speechFaster()">
+                  快一点
+                </button>
+              </div>
+            </div>
+          </div>
+
+          @if (chantItem(); as item) {
+            <div class="meta">
+              <span class="badge">{{ categoryLabel(item.category) }}</span>
+              @if (item.tags) {
+                <span class="tags">{{ item.tags }}</span>
+              }
+            </div>
+            <h2 class="chant-question">{{ item.question }}</h2>
+
+            @if (item.oralOneLiner) {
+              <div class="oral-oneliner">
+                <div class="oral-oneliner__label">面试口播（一句）</div>
+                <p class="oral-oneliner__text">{{ item.oralOneLiner }}</p>
+              </div>
+            }
+
+            <div class="chant-answer" [class.chant-answer--visible]="chantAnswerVisible()">
+              <div class="chant-answer__label">参考答案</div>
+              <div
+                class="reference-body"
+                [class.reference-body--md]="item.markD"
+                [class.reference-body--plain]="!item.markD">
+                @if (item.markD) {
+                  <div
+                    [innerHTML]="
+                      (item.answer || '（本题未录入答案，可在表格中补充「答案」列后重新导入。）') | markd
+                    "></div>
+                } @else {
+                  {{ item.answer || '（本题未录入答案，可在表格中补充「答案」列后重新导入。）' }}
+                }
+              </div>
+            </div>
+
+            <div class="chant-view__actions">
+              <button type="button" class="practice-btn practice-btn--primary" (click)="stopSpeech()">
+                退出唱题
+              </button>
+            </div>
+          }
+        </section>
+      </main>
+    } @else {
     <main class="practice-scroll">
       <section class="daily-panel" aria-label="今日刷题">
         <div>
@@ -190,6 +279,23 @@
           }
         </div>
         <h1 class="q">{{ item.question }}</h1>
+        <div class="speech-actions" aria-label="语音播报">
+          <button
+            type="button"
+            class="practice-btn"
+            [disabled]="!speechAvailable() || chantMode()"
+            (click)="speakQuestion()">
+            播放题目
+          </button>
+          <button
+            type="button"
+            class="practice-btn practice-btn--ghost"
+            [disabled]="!isSpeaking()"
+            (click)="stopSpeech()">
+            停止播放
+          </button>
+          <span class="speech-rate__compact">语速 {{ speechRate().toFixed(1) }}x</span>
+        </div>
         <label class="label" for="practiceUserAnswer">你的回答</label>
         <textarea
           id="practiceUserAnswer"
@@ -209,9 +315,18 @@
         }
 
         <div class="reference-wrap" [class.reference--hidden]="!showAnswer()">
-          <button type="button" class="practice-btn" (click)="toggleAnswer()">
-            {{ showAnswer() ? '隐藏参考答案' : '显示参考答案' }}
-          </button>
+          <div class="reference-actions">
+            <button type="button" class="practice-btn" (click)="toggleAnswer()">
+              {{ showAnswer() ? '隐藏参考答案' : '显示参考答案' }}
+            </button>
+            <button
+              type="button"
+              class="practice-btn"
+              [disabled]="!speechAvailable() || chantMode()"
+              (click)="speakAnswer()">
+              播放答案
+            </button>
+          </div>
           <div
             class="reference-body"
             [class.reference-body--md]="item.markD"
@@ -283,5 +398,6 @@
         </div>
       </section>
     </main>
+    }
   }
 </div>

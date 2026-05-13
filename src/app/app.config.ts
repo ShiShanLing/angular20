@@ -42,6 +42,7 @@ import { routes } from './app.routes';
 
 registerLocaleData(zh);
 
+/** 全局 Angular providers：Hash 路由、动画、HTTP、Ng-Zorro 中文与按需图标、ECharts 核心。 */
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),

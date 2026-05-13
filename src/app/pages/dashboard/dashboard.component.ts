@@ -21,6 +21,7 @@ echarts.use([
   CanvasRenderer
 ]);
 
+/** 仪表盘示例：统计卡片 + ECharts 折线图 / 饼图。 */
 @Component({
   selector: 'app-dashboard',
   imports: [
@@ -46,6 +47,7 @@ export class DashboardComponent implements OnInit {
   lineOption: EChartsOption = {};
   pieOption: EChartsOption = {};
 
+  /** 组装示例折线图与环形饼图的 option。 */
   ngOnInit() {
     this.lineOption = {
       tooltip: { trigger: 'axis' },

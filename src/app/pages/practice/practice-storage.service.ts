@@ -45,8 +45,12 @@ function normQuestion(q: string): string {
   return q.trim().replace(/\s+/g, ' ').toLowerCase();
 }
 
+/**
+ * 面试刷题数据持久化：题库、每日练习记录与筛选分类写入 localStorage。
+ */
 @Injectable({ providedIn: 'root' })
 export class PracticeStorageService {
+  /** 读取本地题库；解析失败返回空数组。 */
   load(): PracticeItem[] {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -64,6 +68,7 @@ export class PracticeStorageService {
     }
   }
 
+  /** 全量覆盖保存题库。 */
   save(items: PracticeItem[]): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }
@@ -94,6 +99,7 @@ export class PracticeStorageService {
     return { added, skipped };
   }
 
+  /** 将表格导入行转为题目并入库；结构与 {@link mergeItems} 类似但接受草稿类型。 */
   importDrafts(drafts: PracticeItemDraft[]): { added: number; skipped: number } {
     const existing = this.load();
     const seen = new Set(
@@ -132,11 +138,13 @@ export class PracticeStorageService {
     return { added, skipped };
   }
 
+  /** 清除题库与每日状态键。 */
   clearAll(): void {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(DAILY_STATE_KEY);
   }
 
+  /** 读取每日刷题打卡记录。 */
   readDailyState(): PracticeDailyState {
     try {
       const raw = localStorage.getItem(DAILY_STATE_KEY);
@@ -156,10 +164,12 @@ export class PracticeStorageService {
     }
   }
 
+  /** 持久化每日刷题状态。 */
   saveDailyState(state: PracticeDailyState): void {
     localStorage.setItem(DAILY_STATE_KEY, JSON.stringify(state));
   }
 
+  /** 上次在 UI 中选中的分类筛选（与题库数据分开存）。 */
   readSavedFilterCategory(): PracticeFilterCategory {
     try {
       const raw = localStorage.getItem(PRACTICE_FILTER_CATEGORY_KEY);
@@ -171,6 +181,7 @@ export class PracticeStorageService {
     }
   }
 
+  /** 记住分类筛选供下次进入页面恢复。 */
   saveFilterCategory(f: PracticeFilterCategory): void {
     try {
       localStorage.setItem(PRACTICE_FILTER_CATEGORY_KEY, f);
@@ -179,6 +190,7 @@ export class PracticeStorageService {
     }
   }
 
+  /** 将 localStorage 中的未知 JSON 解析为 {@link PracticeItem}；字段不全则丢弃。 */
   private parseItem(x: unknown): PracticeItem | null {
     if (!x || typeof x !== 'object') return null;
     const o = x as Record<string, unknown>;
@@ -211,6 +223,7 @@ export class PracticeStorageService {
     return item;
   }
 
+  /** 解析单日打卡记录结构。 */
   private parseDayRecord(date: string, x: unknown): PracticeDayRecord | null {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
     if (!x || typeof x !== 'object') return null;
@@ -236,6 +249,7 @@ export class PracticeStorageService {
     return record;
   }
 
+  /** 统计各分类题目数量（用于 UI 徽章）。 */
   countByCategory(items: PracticeItem[]): Record<PracticeCategory, number> {
     const base: Record<PracticeCategory, number> = {
       ios: 0,

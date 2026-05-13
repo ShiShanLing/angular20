@@ -15,6 +15,7 @@ import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzDividerModule } from 'ng-zorro-antd/divider';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 
+/** 响应式表单示例：多种控件、校验与提交展示。 */
 @Component({
   selector: 'app-forms',
   imports: [
@@ -45,6 +46,8 @@ export class FormsComponent {
   hobbyOptions = ['阅读', '音乐', '旅行', '编程', '摄影'];
   checkboxOptions = this.hobbyOptions.map(h => ({ label: h, value: h }));
 
+  /** 模板中 `f.xxx` 访问各表单控件。 */
+  /** 滑块右侧百分比展示。 */
   formatter(value: number): string {
     return `${value}%`;
   }
@@ -64,14 +67,17 @@ export class FormsComponent {
     });
   }
 
+  /** 模板中 `f.xxx` 访问各 `AbstractControl`。 */
   get f() { return this.form.controls; }
 
+  /** 动态追加技能选项到下拉数据源。 */
   addSkill(skill: string) {
     if (!this.skills.includes(skill)) {
       this.skills = [...this.skills, skill];
     }
   }
 
+  /** 校验通过后展示表单快照并提示成功。 */
   submitForm() {
     if (this.form.invalid) {
       Object.values(this.form.controls).forEach(c => {
@@ -86,6 +92,7 @@ export class FormsComponent {
     this.msg.success('表单提交成功！🎉');
   }
 
+  /** 恢复默认值并清除提交状态。 */
   resetForm() {
     this.form.reset({
       role: 'developer', level: 50, notifications: true, gender: 'male',

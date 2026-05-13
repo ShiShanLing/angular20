@@ -32,6 +32,7 @@ interface AccountingRecord {
   date: string;
 }
 
+/** 记账表单、流水列表与支出分类饼图。 */
 @Component({
   selector: 'app-tools-accounting',
   standalone: true,

@@ -19,6 +19,7 @@ export interface User {
   joined: string;
 }
 
+/** 表格示例：本地模拟数据、关键词筛选、排序与删除/详情弹窗。 */
 @Component({
   selector: 'app-table',
   imports: [
@@ -54,6 +55,7 @@ export class TableComponent implements OnInit {
 
   constructor(private modal: NzModalService, private msg: NzMessageService) {}
 
+  /** 生成示例用户列表并应用当前筛选/排序。 */
   ngOnInit() {
     const names = ['张伟','李娜','王芳','刘洋','陈静','杨帆','赵磊','黄敏','吴浩','周婷',
                    '孙凯','徐梦','马超','朱玲','郭强','何秀','罗博','梁艺','宋涛','曾丽'];
@@ -72,6 +74,7 @@ export class TableComponent implements OnInit {
     this.applyFilter();
   }
 
+  /** 按搜索词与子段排序更新 `displayData`。 */
   applyFilter() {
     let data = [...this.allData];
     if (this.searchText.trim()) {
@@ -91,12 +94,14 @@ export class TableComponent implements OnInit {
     this.displayData = data;
   }
 
+  /** 表格列排序变更回调。 */
   onSort(sortInfo: { key: string; value: string }) {
     this.sortName = sortInfo.key;
     this.sortValue = sortInfo.value;
     this.applyFilter();
   }
 
+  /** 删除前弹出确认框，成功后更新列表并提示。 */
   deleteUser(user: User) {
     this.modal.confirm({
       nzTitle: `确定要删除用户「${user.name}」吗？`,
@@ -111,6 +116,7 @@ export class TableComponent implements OnInit {
     });
   }
 
+  /** 只读展示用户字段。 */
   viewUser(user: User) {
     this.modal.info({
       nzTitle: `用户详情 — ${user.name}`,

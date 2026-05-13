@@ -12,6 +12,7 @@ import { NzProgressModule } from 'ng-zorro-antd/progress';
 import { NzStatisticModule } from 'ng-zorro-antd/statistic';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 
+/** 存钱目标与定投进度条展示。 */
 @Component({
   selector: 'app-tools-saving',
   standalone: true,

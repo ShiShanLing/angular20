@@ -11,6 +11,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 
+/** 开发常用小工具：时间戳/编码解码等（多 Tab）。 */
 @Component({
   selector: 'app-tools-dev',
   standalone: true,

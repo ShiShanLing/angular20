@@ -56,6 +56,7 @@ export interface FireSimSummary {
 const LS_KEY = 'tools_fire_sim_v1';
 const MAX_RETIREMENT_YEARS = 85;
 
+/** FIRE 退休模拟：储蓄、提取率、通胀与长寿参数下的逐年资产负债表。 */
 @Component({
   selector: 'app-tools-fire',
   standalone: true,

@@ -11,6 +11,7 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzDividerModule } from 'ng-zorro-antd/divider';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 
+/** 文本工具箱：统计字数、Base64、哈希等快捷操作。 */
 @Component({
   selector: 'app-tools-text',
   standalone: true,

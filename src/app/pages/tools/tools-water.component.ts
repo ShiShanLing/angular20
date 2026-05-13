@@ -16,6 +16,7 @@ import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzMessageModule } from 'ng-zorro-antd/message';
 
+/** 每日饮水目标与喝水记录打卡。 */
 @Component({
   selector: 'app-tools-water',
   standalone: true,

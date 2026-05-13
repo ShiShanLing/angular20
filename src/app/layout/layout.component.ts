@@ -18,6 +18,7 @@ interface MenuItem {
   children?: MenuItem[];
 }
 
+/** 壳布局：顶栏、侧栏多级菜单、移动端抽屉与主区域 `<router-outlet>`。 */
 @Component({
   selector: 'app-layout',
   imports: [

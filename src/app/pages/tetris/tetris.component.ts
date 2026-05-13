@@ -18,6 +18,7 @@ import {
   type TetrisState
 } from './tetris-game';
 
+/** 俄罗斯方块：10×20 棋盘 DOM 渲染，逻辑在 `tetris-game.ts`。 */
 @Component({
   selector: 'app-tetris',
   imports: [NzCardModule, NzButtonModule, NzGridModule, NzTagModule],
@@ -69,13 +70,14 @@ export class TetrisComponent implements OnInit, OnDestroy {
     window.removeEventListener('keydown', this.onKeyDown);
   }
 
-  /** 重开（默认用当前时间作为 seed，保证每局颜色/方块序列不同）。 */
+  /** 重置游戏状态并刷新棋盘与预览。 */
   restart(): void {
     this.state = restart(this.state);
     this.rebuildCellColors();
     this.rebuildNextPreview();
   }
 
+  /** 暂停或恢复重力 tick。 */
   pauseResume(): void {
     this.state = togglePause(this.state);
   }
@@ -89,26 +91,32 @@ export class TetrisComponent implements OnInit, OnDestroy {
     this.rebuildNextPreview();
   }
 
+  /** 当前活动方块左移一格。 */
   left(): void {
     this.apply(moveLeft);
   }
 
+  /** 当前活动方块右移一格。 */
   right(): void {
     this.apply(moveRight);
   }
 
+  /** 顺时针旋转当前方块。 */
   rotate(): void {
     this.apply(rotateCW);
   }
 
+  /** 软降一格（加速下落）。 */
   down(): void {
     this.apply(softDrop);
   }
 
+  /** 硬降到底并锁定。 */
   drop(): void {
     this.apply(hardDrop);
   }
 
+  /** 应用纯函数状态迁移并刷新视图。 */
   private apply(fn: (s: TetrisState) => TetrisState): void {
     const next = fn(this.state);
     if (next === this.state) return;

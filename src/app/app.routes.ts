@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+/** 顶层路由：`layout` 为壳；默认进入房贷工具；`tools` 懒加载子路由。 */
 export const routes: Routes = [
   {
     path: '',

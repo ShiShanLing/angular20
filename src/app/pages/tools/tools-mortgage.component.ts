@@ -13,6 +13,7 @@ import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzStatisticModule } from 'ng-zorro-antd/statistic';
 
+/** 房贷月供试算：等额本息 / 等额本金、利率与期限。 */
 @Component({
   selector: 'app-tools-mortgage',
   standalone: true,

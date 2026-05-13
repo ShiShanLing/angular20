@@ -29,9 +29,16 @@ function makeItem(overrides: Partial<PracticeItem> = {}): PracticeItem {
 
 describe('PracticeComponent', () => {
   let component: PracticeComponent;
+  let speechSpeakSpy: jasmine.Spy;
+  let speechCancelSpy: jasmine.Spy;
 
   beforeEach(() => {
     localStorage.clear();
+    speechSpeakSpy = spyOn(window.speechSynthesis, 'speak').and.callFake((utterance: SpeechSynthesisUtterance) => {
+      utterance.onstart?.({} as SpeechSynthesisEvent);
+      utterance.onend?.({} as SpeechSynthesisEvent);
+    });
+    speechCancelSpy = spyOn(window.speechSynthesis, 'cancel').and.stub();
     // Provide only services — do NOT import PracticeComponent so heavy NZ Zorro
     // templates are never compiled, preventing browser OOM/crash in tests.
     TestBed.configureTestingModule({
@@ -174,5 +181,61 @@ describe('PracticeComponent', () => {
     expect(component.pendingDailyItems().length).toBe(0);
     expect(component.dailyCompleted()).toBeTrue();
     expect(component.todayRecord()?.completedAt).toEqual(jasmine.any(Number));
+  });
+
+  it('speakQuestion reads the current question', () => {
+    component.items.set([makeItem({ question: 'RunLoop 与线程关系？', tags: '基础' })]);
+    component.filterCategory.set('all');
+    component.searchQuery.set('');
+    component.currentIndex.set(0);
+
+    component.speakQuestion();
+
+    expect(speechCancelSpy).toHaveBeenCalled();
+    expect(speechSpeakSpy).toHaveBeenCalled();
+    const utterance = speechSpeakSpy.calls.mostRecent().args[0] as SpeechSynthesisUtterance;
+    expect(utterance.text).toContain('题目');
+    expect(utterance.text).toContain('RunLoop 与线程关系？');
+    expect(utterance.rate).toBeCloseTo(0.8, 2);
+  });
+
+  it('uses adjusted speech rate when speaking', () => {
+    component.items.set([makeItem({ question: 'q1' })]);
+    component.filterCategory.set('all');
+    component.searchQuery.set('');
+    component.currentIndex.set(0);
+
+    component.speechSlower();
+    component.speakQuestion();
+
+    const utterance = speechSpeakSpy.calls.mostRecent().args[0] as SpeechSynthesisUtterance;
+    expect(component.speechRate()).toBe(0.7);
+    expect(utterance.rate).toBeCloseTo(0.7, 2);
+  });
+
+  it('startChantMode does not update today practice attempts', () => {
+    const items = [makeItem({ question: 'q1' }), makeItem({ question: 'q2' })];
+    const date = component.todayKey();
+    component.items.set(items);
+    component.filterCategory.set('all');
+    component.searchQuery.set('');
+    component.currentIndex.set(0);
+    component.dailyState.set({
+      records: {
+        [date]: {
+          date,
+          itemIds: items.map((item) => item.id),
+          rememberedIds: [],
+          attempts: 0,
+        },
+      },
+    });
+
+    component.startChantMode();
+
+    expect(component.todayRecord()?.attempts).toBe(0);
+    expect(component.todayRecord()?.rememberedIds).toEqual([]);
+    expect(speechSpeakSpy).toHaveBeenCalled();
+    component.stopSpeech();
   });
 });

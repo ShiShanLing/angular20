@@ -15,6 +15,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzTableModule } from 'ng-zorro-antd/table';
 
+/** 工资个税试算：五险一金扣除与税率阶梯表格。 */
 @Component({
   selector: 'app-tools-salary',
   standalone: true,

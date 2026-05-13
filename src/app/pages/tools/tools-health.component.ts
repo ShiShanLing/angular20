@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
+/** 身体健康工具聚合页：iframe 嵌入 `public/health-tools.html`。 */
 @Component({
   selector: 'app-tools-health',
   templateUrl: './tools-health.component.html',

@@ -14,6 +14,7 @@ import { NzDividerModule } from 'ng-zorro-antd/divider';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NgxEchartsModule } from 'ngx-echarts';
 
+/** 调用天气 API：当前气象与 ECharts 趋势（需有效后端/密钥配置）。 */
 @Component({
   selector: 'app-tools-weather',
   standalone: true,

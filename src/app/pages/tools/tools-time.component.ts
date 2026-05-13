@@ -26,6 +26,7 @@ interface TodoItem {
   done: boolean;
 }
 
+/** 时间效率工具：待办清单、番茄钟相关能力与表单（见页面文案）。 */
 @Component({
   selector: 'app-tools-time',
   standalone: true,

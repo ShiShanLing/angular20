@@ -19,6 +19,7 @@ interface PensionResult {
 const LS_KEY = 'tools_anhui_rural_pension_v1';
 const DIVISOR = 139;
 
+/** 安徽城乡居民养老金粗算（个人账户与回本周期展示）。 */
 @Component({
   selector: 'app-tools-anhui-pension',
   standalone: true,

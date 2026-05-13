@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+/** 财务/健康/效率类小工具的懒加载路由表。 */
 export const TOOLS_ROUTES: Routes = [
   { path: '', redirectTo: 'mortgage', pathMatch: 'full' },
   {

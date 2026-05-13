@@ -12,6 +12,7 @@ import { NzDividerModule } from 'ng-zorro-antd/divider';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 
+/** BMI、体脂估算与健康区间提示（含本地草稿缓存）。 */
 @Component({
   selector: 'app-tools-bmi',
   standalone: true,

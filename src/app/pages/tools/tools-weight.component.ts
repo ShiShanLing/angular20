@@ -27,6 +27,7 @@ interface WeightRecord {
   weight: number;     // kg
 }
 
+/** 体重记录列表与折线图趋势（本地持久化）。 */
 @Component({
   selector: 'app-tools-weight',
   standalone: true,

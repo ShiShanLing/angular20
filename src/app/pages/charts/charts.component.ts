@@ -22,6 +22,7 @@ echarts.use([
   CanvasRenderer
 ]);
 
+/** ECharts 多图表演示页：折线/柱状/散点/雷达/堆叠面积/仪表盘/热力图，支持暗色开关。 */
 @Component({
   selector: 'app-charts',
   imports: [
@@ -52,6 +53,7 @@ export class ChartsComponent implements OnInit {
   days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
   hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
 
+  /** 首次构建全部图表 option。 */
   ngOnInit() {
     this.buildCharts();
   }
@@ -71,6 +73,7 @@ export class ChartsComponent implements OnInit {
     return data;
   }
 
+  /** 根据 `darkMode` 重建各 chart 的配色与背景。 */
   buildCharts() {
     const bg = this.darkMode ? '#1f1f1f' : 'transparent';
     const textColor = this.darkMode ? '#ccc' : '#333';
@@ -282,6 +285,7 @@ export class ChartsComponent implements OnInit {
     };
   }
 
+  /** 模板绑定：切换明暗后刷新图表。 */
   onThemeChange() {
     this.buildCharts();
   }

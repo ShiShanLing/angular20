@@ -37,6 +37,10 @@ const TITLE_C = '#1e293b';
 const AXIS_LINE = 'rgba(15, 23, 42, 0.12)';
 const SPLIT_LINE = 'rgba(15, 23, 42, 0.06)';
 
+/**
+ * 炫酷图表演示：依赖完整 echarts bundle + liquidfill / gl 等扩展，
+ * 汇总地球、飞线、3D、水球图等多种 option。
+ */
 @Component({
   selector: 'app-chart-showcase',
   standalone: true,

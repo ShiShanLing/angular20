@@ -21,6 +21,7 @@ interface SleepRecord {
   totalSleep: number; 
 }
 
+/** 睡眠记录：入睡/起床时间与时长汇总列表。 */
 @Component({
   selector: 'app-tools-sleep',
   standalone: true,
