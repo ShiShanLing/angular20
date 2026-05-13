@@ -701,13 +701,31 @@ export class PracticeComponent implements OnInit, OnDestroy {
     return '本题暂未录入参考答案。';
   }
 
-  /** 清理 Markdown、链接和多余符号，让 TTS 朗读更自然。 */
+  /** 清理 Markdown、代码片段、链接和多余符号，让 TTS 朗读更自然。 */
   private cleanSpeechText(text: string): string {
-    return stripMarkdownForSearch(text)
+    const withoutCodeBlocks = String(text ?? '')
+      .replace(/```[\s\S]*?```/g, ' ')
+      .replace(/~~~[\s\S]*?~~~/g, ' ')
+      .replace(/^(?: {4}|\t).+$/gm, ' ')
+      .replace(/`([^`]+)`/g, (_, code: string) => this.inlineCodeForSpeech(code));
+
+    return stripMarkdownForSearch(withoutCodeBlocks)
       .replace(/https?:\/\/\S+/g, '链接')
+      .replace(/\b[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)+\s*\([^)]*\)/g, ' ')
+      .replace(/\b[A-Za-z_$][\w$]*\s*\([^)]*\)/g, ' ')
+      .replace(/\b(?:func|function|const|let|var|class|struct|enum|interface|import|export)\s+\S+/gi, ' ')
       .replace(/[|*_>#~[\]{}]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
+  }
+
+  /** inline code 里普通术语保留，明显代码表达式跳过。 */
+  private inlineCodeForSpeech(code: string): string {
+    const raw = String(code ?? '').trim();
+    if (!raw) return ' ';
+    if (/[()[\]{}=;]|=>|^\W|[+\-*/%<>]/.test(raw)) return ' ';
+    if (/[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)+/.test(raw)) return ' ';
+    return raw;
   }
 
   /** 检测当前运行环境是否可用 Web Speech API。 */

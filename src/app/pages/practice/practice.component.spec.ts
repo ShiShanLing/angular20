@@ -213,6 +213,29 @@ describe('PracticeComponent', () => {
     expect(utterance.rate).toBeCloseTo(0.7, 2);
   });
 
+  it('skips code blocks and code calls while keeping technical terms in speech', () => {
+    component.items.set([
+      makeItem({
+        question: 'q1',
+        answer:
+          'runtime 会维护 block 的捕获。\n\n```ts\nconst value = foo(bar);\n```\n调用 `viewDidLoad()` 后进入 runtime，`RunLoop` 仍然要读。',
+      }),
+    ]);
+    component.filterCategory.set('all');
+    component.searchQuery.set('');
+    component.currentIndex.set(0);
+
+    component.speakAnswer();
+
+    const utterance = speechSpeakSpy.calls.mostRecent().args[0] as SpeechSynthesisUtterance;
+    expect(utterance.text).toContain('runtime');
+    expect(utterance.text).toContain('block');
+    expect(utterance.text).toContain('RunLoop');
+    expect(utterance.text).not.toContain('const value');
+    expect(utterance.text).not.toContain('foo');
+    expect(utterance.text).not.toContain('viewDidLoad');
+  });
+
   it('startChantMode does not update today practice attempts', () => {
     const items = [makeItem({ question: 'q1' }), makeItem({ question: 'q2' })];
     const date = component.todayKey();
