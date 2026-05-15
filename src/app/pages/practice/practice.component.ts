@@ -408,7 +408,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
   /** 将当前每日题目标记为已记住，并在今日题目完成时记录完成时间。 */
   markRemembered(): void {
     const item = this.currentItem();
-    if (!item || !this.dailyItems().some((daily) => daily.id === item.id)) return;
+    if (!item || !this.currentItemInDaily()) return;
     this.updateTodayRecord((record) => {
       const remembered = new Set(record.rememberedIds);
       remembered.add(item.id);
@@ -424,14 +424,15 @@ export class PracticeComponent implements OnInit, OnDestroy {
     });
     this.advanceAfterDailyAction();
     if (this.dailyCompleted()) {
-      this.msg.success('今天 5 题已全部记住了。');
+      const n = this.dailyTotal();
+      this.msg.success(`今天 ${n} 题已全部记住了。`);
     }
   }
 
   /** 将当前每日题目标记为还没记住，只增加尝试次数并进入下一道待练题。 */
   markForgotten(): void {
     const item = this.currentItem();
-    if (!item || !this.dailyItems().some((daily) => daily.id === item.id)) return;
+    if (!item || !this.currentItemInDaily()) return;
     this.updateTodayRecord((record) => ({ ...record, attempts: record.attempts + 1 }));
     const list = this.listForNav();
     this.currentIndex.set(list.length > 1 ? (this.currentIndex() + 1) % list.length : 0);
@@ -587,13 +588,14 @@ export class PracticeComponent implements OnInit, OnDestroy {
     const d = this.calendarMonth();
     this.calendarMonth.set(new Date(d.getFullYear(), d.getMonth() - 1, 1));
   }
+  
 
   /** 日历切到下一个月。 */
   nextCalendarMonth(): void {
     const d = this.calendarMonth();
     this.calendarMonth.set(new Date(d.getFullYear(), d.getMonth() + 1, 1));
   }
-
+  
   /** 停止所有语音播放，并退出唱题模式。 */
   stopSpeech(): void {
     this.speechRunId++;

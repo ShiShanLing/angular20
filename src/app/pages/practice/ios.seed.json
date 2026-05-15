@@ -40,7 +40,7 @@
     "category": "iOS",
     "topic": "Swift 语言",
     "question": "如何理解 Swift 的泛型？",
-    "answer": "**可先这样说（对齐题干口述）：**\n\n泛型=类型形参+可选约束，写一份逻辑给多种具体类型复用。\n\n---\n\n**追问再展开（原理、细节与代码）：**\n\n泛型让代码用**类型形参（如 `T`）占位**，写一份逻辑用于多种具体类型，调用处或编译器推断实际类型。`Array<T>`、`Optional<Wrapped>`、`Dictionary<K,V>` 都是泛型类型；函数可加 `T: Comparable` 等**协议约束**限定能力；协议里用 `associatedtype` 表达配套类型（如 `Sequence` 的 `Element`）。好处：**减少重复代码**、**编译期类型安全**（用错类型直接报错）。\n\n**（理解小例）**\n\n```swift\n// 泛型函数：一份实现用于多种类型\nfunc swap<T>(_ a: inout T, _ b: inout T) {\n    let tmp = a; a = b; b = tmp\n}\n\n// 泛型 + 约束\nfunc myMin<T: Comparable>(_ a: T, _ b: T) -> T { a < b ? a : b }\nmyMin(1, 2)       // Int\nmyMin(\"a\", \"b\")   // String\n\n// 泛型类型\nstruct Stack<Element> {\n    private var items: [Element] = []\n    mutating func push(_ e: Element) { items.append(e) }\n    mutating func pop() -> Element? { items.popLast() }\n}\n```",
+    "answer": "Swift 中的泛型是构建灵活、可重用代码的关键机制。 它允许开发者编写能处理多种数据类型的函数和类型，而无需重复实现逻辑。 通过使用类型参数，泛型在编译时保证类型安全，同时避免了运行时类型转换带来的风险",
     "difficulty": "Medium",
     "oralOneLiner": "泛型=类型形参+可选约束，写一份逻辑给多种具体类型复用。"
   },
@@ -256,7 +256,7 @@
     "category": "iOS",
     "topic": "Swift 语言",
     "question": "`@objc` / `dynamic` 在 Swift 里常用干啥？",
-    "answer": "**可先这样说（对齐题干口述）：**\n\n`@dynamic`+`@objc` 让方法走 ObjC 动态派发/供 Swizzle 等。\n\n---\n\n**追问再展开（原理、细节与代码）：**\n\n`dynamic` 将分发交给 ObjC 程序跑起来时（运行时）（消息派发），从而支持 KVO、部分 swizzle、与 ObjC 动态特性互通。`@objc` 暴露给 ObjC 程序跑起来时（运行时）（selector）。KVO 观察的属性常需 `dynamic`（或在合适继承链上）。静态派发是 Swift 默认优化路径，不需要动态时不要乱标。\n\n**（理解小例）** `@objc dynamic` 让属性走程序跑起来时（运行时）派发，支持 KVO：\n\n```swift\nimport Foundation\n\nclass Config: NSObject {\n    @objc dynamic var theme: String = \"light\"    // dynamic → KVO 可观察\n    @objc func applyTheme() { }                  // @objc → 可用 selector\n}\n\nlet cfg = Config()\n\n// KVO：需要 @objc dynamic 才能被观察\nlet token = cfg.observe(\\.theme, options: .new) { _, change in\n    print(\"主题变为：\\(change.newValue!)\")\n}\ncfg.theme = \"dark\"   // → 触发 KVO 回调\n\n// 静态派发（Swift 默认）无法 KVO：\n// class A { var x = 0 }  // x 没有 @objc dynamic → observe 无效\n// 加上 @objc dynamic 才让程序跑起来时（运行时）接管派发\n```",
+    "answer": "@objc：用于将 Swift 类、方法、属性等暴露给 Objective-C 运行时。它允许 Swift 代码与 Objective-C 代码进行互操作。\ndynamic：用于指示某个成员（如属性或方法）的动态调度行为。它告诉编译器不要对成员进行静态优化，而是通过 Objective-C 运行时进行动态调度。dynamic 用于指示成员的动态调度行为，通常与 @objc 结合使用以实现 KVO 和 KVC 等功能。",
     "difficulty": "Medium",
     "oralOneLiner": "`@dynamic`+`@objc` 让方法走 ObjC 动态派发/供 Swizzle 等。"
   },
@@ -391,9 +391,9 @@
     "category": "iOS",
     "topic": "Objective-C 语言",
     "question": "`id` 与 `instancetype` 有什么区别？",
-    "answer": "**可先这样说（对齐题干口述）：**\n\n工厂/类方法链式/子类用 `instancetype` 才得到准确子类类型，比 `id` 安全。\n\n---\n\n**追问再展开（原理、细节与代码）：**\n\n二者都能表示「某种 ObjC 对象」。**`id`**：写代码阶段（编译期）**不做具体类型检查**（除非显式转型），可作**变量类型、参数、返回值**。**`instancetype`**：表示「本类或子类的实例」，编译器会把它**收紧为接收者类型**（类方法里常为当前类），**只可出现在方法返回类型**，用于工厂/初始化方法时避免把子类实例当成父类名返回却仍被当成 `id` 失去类型提示。都可用于消息派发，差别主要在**类型安全与代码提示**。\n\n**（理解小例）** `instancetype` 在工厂方法里保留子类类型：\n\n```objc\n@interface Builder : NSObject\n+ (instancetype)make;   // 返回类型推断为接收者类本身\n+ (id)makeOld;          // 返回 id，写代码阶段（编译期）无具体类型\n@end\n@implementation Builder\n+ (instancetype)make    { return [[self alloc] init]; }\n+ (id)makeOld           { return [[self alloc] init]; }\n@end\n\n@interface SpecialBuilder : Builder @end\n\n// instancetype：子类工厂返回子类类型，IDE 有完整提示\nSpecialBuilder *a = [SpecialBuilder make];    // ✅ 类型正确\n// id 版本：丢失子类信息，需手动强转\nSpecialBuilder *b = (SpecialBuilder *)[SpecialBuilder makeOld]; // 手动转型\n```",
+    "answer": "id与instancetype都是Objective-C中的对象指针类型，但存在关键差异。 id是通用类型指针，运行时确定类型；instancetype在编译期进行类型检查，更适合用作初始化方法返回值，能提前发现类型不匹配问题，提升代码安全性。 正确使用instancetype可增强程序健壮性。",
     "difficulty": "Easy",
-    "oralOneLiner": "工厂/类方法链式/子类用 `instancetype` 才得到准确子类类型，比 `id` 安全。"
+    "oralOneLiner": "id是通用类型指针，运行时确定类型；instancetype在编译期进行类型检查，更适合用作初始化方法返回值，能提前发现类型不匹配问题，提升代码安全性\n，一般是覆写或者自定义一个类的实例对象的初始化方法的时候，才会用instancetype作为返回值类型，除此之外，在其他的地方根本不会用到instancetype"
   },
   {
     "id": "objc-self-vs-super",
@@ -408,10 +408,10 @@
     "id": "objc-synthesize-dynamic",
     "category": "iOS",
     "topic": "Objective-C 语言",
-    "question": "`@synthesize` 与 `@dynamic` 分别做什么？默认呢？",
-    "answer": "**可先这样说（对齐题干口述）：**\n\n`@synthesize` 生成存取+ivar；`@dynamic` 不自动生成、交给 CoreData/runtime。\n\n---\n\n**追问再展开（原理、细节与代码）：**\n\n仅写 `@property` 时，现代 Clang 会**自动合成** ivar（默认 `_属性名`）与 getter/setter（可配 `@synthesize foo = _foo;` 显式命名）。**`@synthesize`**：告诉编译器**生成访问器与 backing ivar**（若你自己没实现对应方法）。**`@dynamic`**：声明访问器**由程序跑起来时（运行时）提供**（Core Data、`resolveInstanceMethod:`、动态生成等），编译器**不生成**实现；若程序跑起来时（运行时）也从未挂上对应方法，访问属性会**程序跑起来时（运行时）才崩**。别把「能编译」当成「一定有 setter/getter」。\n\n**（理解小例）** 三种属性访问器的来源：\n\n```objc\n@interface Example : NSObject\n@property NSString *auto;      // 现代 clang 自动 synthesize\n@property NSString *custom;    // 显式指定 ivar 名\n@property NSString *managed;   // @dynamic：程序跑起来时（运行时）提供\n@end\n\n@implementation Example\n// 等价于隐含：@synthesize auto = _auto;   — 编译器自动生成\n@synthesize custom = _myCustomIvar;        // 显式：ivar 叫 _myCustomIvar\n@dynamic managed;   // 声明访问器由程序跑起来时（运行时）提供（如 Core Data NSManagedObject）\n                    // 写代码阶段（编译期）不生成实现；若程序跑起来时（运行时）也没挂，访问时崩溃\n@end\n\n// 在 Swift 里：@NSManaged 属性 ≈ @dynamic，Core Data 动态提供访问器\n```",
+    "question": ".@synthesize的语义是如果你没有手动实现setter和getter方法，那么编译器会自动为你加上这两个方法\n`@synthesize` 与 `@dynamic` 分别做什么？默认呢？",
+    "answer": "@dynamic告诉编译器，属性的setter和getter方法由用户自己实现，不自动生成，",
     "difficulty": "Easy",
-    "oralOneLiner": "`@synthesize` 生成存取+ivar；`@dynamic` 不自动生成、交给 CoreData/runtime。"
+    "oralOneLiner": "`@synthesize` 自动生成setter和getter方法；`@dynamic` 不自动生成 需要自己实现"
   },
   {
     "id": "objc-c-struct-vs-objc-class",
