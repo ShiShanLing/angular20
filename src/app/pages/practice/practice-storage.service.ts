@@ -76,15 +76,37 @@ export class PracticeStorageService {
   /**
    * 将内置/打包好的题目合并进本地（与导入表格相同：按「分类 + 规范化题干」去重）。
    */
-  mergeItems(incoming: PracticeItem[]): { added: number; skipped: number } {
+  mergeItems(incoming: PracticeItem[]): { added: number; updated: number; skipped: number } {
     const existing = this.load();
     const seen = new Set(
       existing.map((i) => `${i.category}::${normQuestion(i.question)}`)
     );
+    const byId = new Map(existing.map((i) => [i.id, i]));
     let added = 0;
+    let updated = 0;
     let skipped = 0;
 
     for (const item of incoming) {
+      const old = byId.get(item.id);
+      if (old) {
+        if (
+          old.category !== item.category ||
+          old.question !== item.question ||
+          old.answer !== item.answer ||
+          old.tags !== item.tags ||
+          old.markD !== item.markD ||
+          old.oralOneLiner !== item.oralOneLiner
+        ) {
+          old.category = item.category;
+          old.question = item.question;
+          old.answer = item.answer;
+          old.tags = item.tags;
+          old.markD = item.markD;
+          old.oralOneLiner = item.oralOneLiner;
+          updated++;
+        }
+        continue;
+      }
       const key = `${item.category}::${normQuestion(item.question)}`;
       if (seen.has(key)) {
         skipped++;
@@ -92,11 +114,12 @@ export class PracticeStorageService {
       }
       seen.add(key);
       existing.push({ ...item });
+      byId.set(item.id, existing[existing.length - 1]);
       added++;
     }
 
     this.save(existing);
-    return { added, skipped };
+    return { added, updated, skipped };
   }
 
   /** 将表格导入行转为题目并入库；结构与 {@link mergeItems} 类似但接受草稿类型。 */

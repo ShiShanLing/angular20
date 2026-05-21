@@ -288,6 +288,12 @@ export class PracticeComponent implements OnInit, OnDestroy {
       const seeded = iosSeedToPracticeItems(Date.now());
       this.storage.save(seeded);
       this.reloadFromStorage();
+    } else if (!skipBuiltin) {
+      const seeded = iosSeedToPracticeItems(Date.now());
+      const { added, updated } = this.storage.mergeItems(seeded);
+      if (added || updated) {
+        this.reloadFromStorage();
+      }
     }
     this.dailyState.set(this.storage.readDailyState());
     this.ensureTodayPractice();
@@ -310,16 +316,16 @@ export class PracticeComponent implements OnInit, OnDestroy {
   /** 合并内置 iOS 题库到本地题库，重复题目会跳过。 */
   mergeBuiltinIosSeed(): void {
     const seeded = iosSeedToPracticeItems(Date.now());
-    const { added, skipped } = this.storage.mergeItems(seeded);
+    const { added, updated, skipped } = this.storage.mergeItems(seeded);
     this.reloadFromStorage();
     this.ensureTodayPractice();
     this.clampIndex();
     this.resetQuestionUi();
-    if (!added && !skipped) {
+    if (!added && !updated && !skipped) {
       this.msg.warning('内置题库为空。');
       return;
     }
-    this.msg.success(`内置 iOS 题库：新增 ${added} 条，跳过已有 ${skipped} 条。`);
+    this.msg.success(`内置 iOS 题库：新增 ${added} 条，更新 ${updated} 条，跳过 ${skipped} 条。`);
   }
 
   /** 切换分类筛选，并重置当前题的答案、自检和播放状态。 */

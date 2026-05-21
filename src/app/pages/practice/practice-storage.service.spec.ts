@@ -50,6 +50,37 @@ describe('PracticeStorageService', () => {
     expect(service.load().length).toBe(2);
   });
 
+  it('updates existing built-in items by id when merging seed data', () => {
+    const first = {
+      id: 'builtin-1',
+      category: 'ios' as const,
+      question: 'q1',
+      answer: 'old',
+      tags: 'Foundation · Easy',
+      importedAt: 1,
+    };
+    service.save([first]);
+
+    const result = service.mergeItems([
+      {
+        ...first,
+        answer: '| A | B |\\n|---|---|\\n| 1 | 2 |',
+        markD: true,
+        oralOneLiner: 'new line',
+        importedAt: 2,
+      },
+    ]);
+
+    expect(result).toEqual({ added: 0, updated: 1, skipped: 0 });
+    expect(service.load()[0]).toEqual(
+      jasmine.objectContaining({
+        answer: '| A | B |\\n|---|---|\\n| 1 | 2 |',
+        markD: true,
+        oralOneLiner: 'new line',
+      })
+    );
+  });
+
   it('counts items by category', () => {
     service.importDrafts([
       { category: 'ios', question: 'q1', answer: '', tags: '', sourceRow: 2 },
@@ -85,4 +116,3 @@ describe('PracticeStorageService', () => {
     expect(service.readSavedFilterCategory()).toBe('all');
   });
 });
-
