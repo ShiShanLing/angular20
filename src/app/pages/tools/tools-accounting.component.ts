@@ -51,7 +51,7 @@ export class ToolsAccountingComponent implements OnInit {
   form!: FormGroup;
   categories = ['餐饮', '交通', '购物', '居住', '娱乐', '医疗', '其他'];
   records: AccountingRecord[] = [];
-  
+
   chartOption: EChartsOption = {};
   currentChartMode: 'week' | 'month' = 'week';
 
@@ -82,7 +82,7 @@ export class ToolsAccountingComponent implements OnInit {
     setTimeout(() => this.buildChart(this.currentChartMode), 100);
   }
 
-  
+
   submitForm(): void {
     if (this.form.valid) {
       const val = this.form.value;
@@ -96,7 +96,7 @@ export class ToolsAccountingComponent implements OnInit {
       this.records.unshift(newRecord);
       this.saveRecords();
       this.msg.success('记录成功');
-      
+
       this.form.patchValue({
         amount: null,
         remarks: '',
@@ -105,6 +105,7 @@ export class ToolsAccountingComponent implements OnInit {
       this.buildChart(this.currentChartMode);
     }
   }
+
 
   deleteRecord(id: string): void {
     this.records = this.records.filter(r => r.id !== id);
@@ -131,7 +132,7 @@ export class ToolsAccountingComponent implements OnInit {
   buildChart(mode: 'week' | 'month'): void {
     this.currentChartMode = mode;
     const now = new Date();
-    
+
     // Filter records based on mode
     const filteredRecords = this.records.filter(r => {
       const d = new Date(r.date);
@@ -179,6 +180,9 @@ export class ToolsAccountingComponent implements OnInit {
       ]
     };
   }
+
+
+
 
   exportCSV(): void {
     if (!this.records.length) {

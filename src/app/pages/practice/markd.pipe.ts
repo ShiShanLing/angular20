@@ -10,6 +10,7 @@ marked.use({ gfm: true, breaks: true });
   name: 'markd',
   standalone: true,
 })
+
 export class MarkdPipe implements PipeTransform {
   private readonly sanitizer = inject(DomSanitizer);
 
@@ -19,6 +20,8 @@ export class MarkdPipe implements PipeTransform {
     if (!raw) {
       return this.sanitizer.bypassSecurityTrustHtml('');
     }
+
+
     const html = marked.parse(raw, { async: false }) as string;
     const clean = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
     return this.sanitizer.bypassSecurityTrustHtml(clean);

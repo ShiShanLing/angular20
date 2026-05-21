@@ -36,6 +36,7 @@ describe('practice-import', () => {
       ['angular-css', '什么是 :host', '组件宿主', '样式'],
     ]);
 
+
     const { drafts, errors } = parsePracticeFile(buf);
     expect(errors.length).toBe(0);
     expect(drafts.length).toBe(2);

@@ -55,7 +55,7 @@ export interface FireSimSummary {
 
 const LS_KEY = 'tools_fire_sim_v1';
 const MAX_RETIREMENT_YEARS = 85;
-
+//
 /** FIRE 退休模拟：储蓄、提取率、通胀与长寿参数下的逐年资产负债表。 */
 @Component({
   selector: 'app-tools-fire',
@@ -87,7 +87,7 @@ export class ToolsFireComponent implements OnInit {
   readonly deathMedian = CHINA_CENSUS_7TH_DEATH_AGE_MEDIAN_GROUP_MIDPOINT;
   readonly currentCalendarYear = new Date().getFullYear();
   constructor(private fb: FormBuilder) {}
-  
+
   /**
    * * nz-input-number 在部分浏览器下按回车不会失焦，内部值可能尚未写回 FormControl，
    * 导致 valueChanges / run() 仍用旧值。失焦后会按设计同步并触发重算。

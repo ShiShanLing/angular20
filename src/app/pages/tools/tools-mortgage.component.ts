@@ -99,7 +99,6 @@ export class ToolsMortgageComponent implements OnInit {
 
     this.result = {
       downPayment,
-      gjjPrincipal,
       bizPrincipal,
       gjjMonthly,
       bizMonthly,

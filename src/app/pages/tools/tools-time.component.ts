@@ -72,7 +72,6 @@ export class ToolsTimeComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.originalTitle = document.title;
-
     this.deadlineForm = this.fb.group({
       deadline: [null],
       totalHours: [40, [Validators.min(0)]],
@@ -80,17 +79,15 @@ export class ToolsTimeComponent implements OnInit, OnDestroy {
       hoursPerDay: [2, [Validators.min(0)]],
       workdaysOnly: ['no']
     });
-
     this.loadAllStates();
     this.setPomoMode('work');
-
     this.subs.add(
       this.deadlineForm.valueChanges.subscribe(() => {
         this.saveDeadlineState();
         this.computeSchedule();
       })
     );
-
+    //
     // Simple countdown timer for UI
     this.deadlineTimerId = setInterval(() => this.computeSchedule(), 1000);
   }
@@ -222,7 +219,7 @@ export class ToolsTimeComponent implements OnInit, OnDestroy {
   computeSchedule(): void {
     const val = this.deadlineForm.value;
     const remain = Math.max(0, (val.totalHours || 0) - (val.doneHours || 0));
-    
+
     if (!val.deadline) {
       this.scheduleResult = { countdownStr: '-', remainHours: remain, remainDays: 0, needPerHour: 0, feasible: '-' };
       return;
@@ -231,7 +228,7 @@ export class ToolsTimeComponent implements OnInit, OnDestroy {
     const target = new Date(val.deadline);
     const now = new Date();
     const diffMs = target.getTime() - now.getTime();
-    
+
     if (diffMs < 0) {
       this.scheduleResult = { countdownStr: '已到期', remainHours: remain, remainDays: 0, needPerHour: remain > 0 ? 999 : 0, feasible: '来不及' };
       return;

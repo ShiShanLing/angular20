@@ -30,6 +30,7 @@
           <input nz-input placeholder="回车添加任务..." [(ngModel)]="newTodoText" (keyup.enter)="addTodo()" />
           <button nz-button nzType="primary" (click)="addTodo()">添加</button>
         </div>
+
         <nz-list [nzDataSource]="todoList" nzBordered nzSize="small" style="margin-top: 16px;">
           @for (item of todoList; track item.id) {
             <nz-list-item [nzContent]="todoContent" class="todo-item-row" [class.done]="item.done">
@@ -109,7 +110,7 @@
 
         <div class="deadline-results">
           <div class="countdown-big">{{ scheduleResult.countdownStr }}</div>
-          
+
           <nz-row [nzGutter]="16" style="margin-top: 16px;">
             <nz-col [nzSpan]="12">
               <nz-statistic [nzValue]="scheduleResult.remainDays" nzTitle="剩余可用天数"></nz-statistic>
