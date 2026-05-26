@@ -1,0 +1,1190 @@
+[
+  {
+    "id": "ios-swift-optional-basics",
+    "category": "iOS",
+    "topic": "Swift 基础",
+    "question": "Swift 中 Optional 的本质是什么？为什么 Swift 要设计 Optional？",
+    "answer": "Optional 本质是一个枚举，大致可以理解为 some(Wrapped) 或 none。它把“可能没有值”显式写进类型系统，避免 Objective-C 里 nil 随处传递导致的运行时问题。使用时要通过 if let、guard let、??、可选链等方式安全解包。面试要强调：Optional 不是普通值，也不是指针，它是类型层面的空值表达。",
+    "difficulty": "Easy",
+    "oralOneLiner": "Optional 是 Swift 用类型系统表达“可能为空”的方式，本质接近 some/none 枚举。"
+  },
+  {
+    "id": "ios-swift-iflet-guardlet",
+    "category": "iOS",
+    "topic": "Swift 基础",
+    "question": "`if let` 和 `guard let` 有什么区别？分别适合什么场景？",
+    "answer": "if let 适合在一个局部代码块里使用解包后的值；guard let 适合做前置校验，失败就提前 return/throw/break，成功后解包变量在后续作用域都可用。一般业务代码里，参数校验和失败早返回更推荐 guard let，可以减少嵌套。",
+    "difficulty": "Easy",
+    "oralOneLiner": "if let 管局部解包，guard let 管前置校验和提前退出。"
+  },
+  {
+    "id": "ios-swift-struct-class",
+    "category": "iOS",
+    "topic": "Swift 基础",
+    "question": "Struct 和 Class 有什么区别？为什么 Swift 推荐优先使用值类型？",
+    "answer": "Struct 是值类型，赋值和传参默认复制语义；Class 是引用类型，多个变量可以指向同一个实例。Class 支持继承、deinit 和身份比较，Struct 更安全、可预测，适合不可变数据模型。Swift 推荐优先值类型，是为了减少共享可变状态带来的副作用。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Struct 是值语义，Class 是引用语义；优先值类型能减少共享状态问题。"
+  },
+  {
+    "id": "ios-swift-value-reference",
+    "category": "iOS",
+    "topic": "Swift 基础",
+    "question": "值类型和引用类型在赋值、传参、内存管理上的差异是什么？",
+    "answer": "值类型赋值通常产生独立值，修改副本不影响原值；引用类型赋值复制的是引用，多个变量共享同一对象。传参时值类型更容易推理，引用类型适合需要身份、共享状态或继承的对象。内存上值类型可在栈或内联存储，引用类型实例通常在堆上由 ARC 管理。",
+    "difficulty": "Medium",
+    "oralOneLiner": "值类型复制值，引用类型复制引用；区别在共享状态和生命周期管理。"
+  },
+  {
+    "id": "ios-swift-copy-on-write",
+    "category": "iOS",
+    "topic": "Swift 基础",
+    "question": "什么是 Copy-on-Write？Swift 的 Array、Dictionary 为什么可以既像值类型又避免频繁拷贝？",
+    "answer": "Copy-on-Write 是写时复制。Array、Dictionary、String 表面是值类型，但底层共享存储；只有当某个副本发生修改且存储不唯一时，才真正复制一份。这样既保留值语义，又避免每次赋值都拷贝大块内存。自定义 COW 通常用 isKnownUniquelyReferenced 判断存储是否唯一。",
+    "difficulty": "Hard",
+    "oralOneLiner": "COW 是读共享、写时才复制，让值语义和性能兼得。"
+  },
+  {
+    "id": "ios-swift-enum-associated-values",
+    "category": "iOS",
+    "topic": "Swift 基础",
+    "question": "Swift Enum 的关联值和原始值有什么区别？适合用在哪些业务建模场景？",
+    "answer": "原始值是每个 case 绑定一个固定字面量，比如 Int 或 String；关联值是每次创建 enum case 时携带不同数据。原始值适合状态码、类型映射；关联值适合表达带数据的状态，比如 success(User)、failure(Error)。它能让业务状态建模更完整。",
+    "difficulty": "Medium",
+    "oralOneLiner": "原始值是固定映射，关联值是 case 携带动态数据。"
+  },
+  {
+    "id": "ios-swift-protocol-vs-inheritance",
+    "category": "iOS",
+    "topic": "Swift 基础",
+    "question": "Protocol 和 Class 继承有什么区别？为什么 Swift 强调面向协议编程？",
+    "answer": "继承表达“是什么”，协议表达“能做什么”。Class 继承只能单继承，协议可以多遵循；继承复用实现但耦合更强，协议更适合抽象能力、依赖倒置和测试替换。Swift 面向协议编程的重点是用协议定义边界，用扩展提供默认实现。",
+    "difficulty": "Medium",
+    "oralOneLiner": "继承表达类型层级，协议表达能力边界。"
+  },
+  {
+    "id": "ios-swift-protocol-extension-dispatch",
+    "category": "iOS",
+    "topic": "Swift 基础",
+    "question": "Protocol Extension 中的方法什么时候是静态派发，什么时候会动态派发？",
+    "answer": "如果方法是协议 requirement，通过协议类型调用时通常走 witness table 动态派发；如果只是 protocol extension 里的额外方法，不是 requirement，则更偏静态派发，取决于静态类型。坑点是：具体类型实现了同名方法，但变量被声明为协议类型时，非 requirement 方法可能调用扩展默认实现。",
+    "difficulty": "Hard",
+    "oralOneLiner": "协议 requirement 动态派发，扩展里的非 requirement 方法容易静态绑定。"
+  },
+  {
+    "id": "ios-swift-generics-basics",
+    "category": "iOS",
+    "topic": "Swift 基础",
+    "question": "Swift 泛型解决了什么问题？和协议作为类型使用有什么区别？",
+    "answer": "泛型让一套代码适配多种具体类型，同时保留静态类型信息，比如 Array<Element>。协议作为类型更强调运行时抽象和能力约束，可能带来 existential 开销。泛型适合类型在编译期确定、追求类型安全和性能；协议类型适合异构集合和运行时替换。",
+    "difficulty": "Medium",
+    "oralOneLiner": "泛型保留具体类型，协议类型隐藏具体类型。"
+  },
+  {
+    "id": "ios-swift-closure-capture",
+    "category": "iOS",
+    "topic": "Swift 基础",
+    "question": "Swift 闭包捕获变量的规则是什么？捕获值类型和引用类型有什么差异？",
+    "answer": "闭包会捕获它使用的外部变量。对引用类型通常捕获对象引用，容易和 self 形成循环引用；对值类型捕获表现要看是否显式捕获列表以及变量是否可变。捕获列表如 [weak self]、[unowned self]、[x] 可以控制捕获方式和值快照。",
+    "difficulty": "Medium",
+    "oralOneLiner": "闭包会捕获外部变量，重点小心 self 和捕获列表。"
+  },
+  {
+    "id": "ios-swift-escaping-closure",
+    "category": "iOS",
+    "topic": "Swift 基础",
+    "question": "`@escaping` 是什么？为什么异步回调通常需要标记为 escaping？",
+    "answer": "@escaping 表示闭包可能在函数返回后才执行，比如异步网络回调、DispatchQueue.async、保存到属性。非 escaping 闭包默认只在函数调用期间执行完。escaping 闭包需要显式写 self，是为了提醒可能延长对象生命周期并产生循环引用。",
+    "difficulty": "Easy",
+    "oralOneLiner": "escaping 闭包会逃出函数生命周期，所以异步回调通常需要它。"
+  },
+  {
+    "id": "ios-swift-autoclosure",
+    "category": "iOS",
+    "topic": "Swift 基础",
+    "question": "`@autoclosure` 是什么？它解决了什么可读性或延迟执行问题？",
+    "answer": "@autoclosure 会把一个表达式自动包装成无参闭包，让调用端看起来像传值，内部却可以延迟执行。常见例子是 assert 和 ??。它能提升可读性，但滥用会隐藏执行时机，尤其不要随便用于有副作用的表达式。",
+    "difficulty": "Medium",
+    "oralOneLiner": "@autoclosure 是把表达式自动包成延迟执行的闭包。"
+  },
+  {
+    "id": "ios-swift-access-control",
+    "category": "iOS",
+    "topic": "Swift 基础",
+    "question": "Swift 中 `private`、`fileprivate`、`internal`、`public`、`open` 有什么区别？",
+    "answer": "private 限当前声明作用域和同文件扩展，fileprivate 限同文件，internal 是模块内默认可见，public 模块外可见但不能被外部继承或重写，open 模块外可见且允许继承和重写。库设计里 public 暴露使用能力，open 暴露扩展能力。",
+    "difficulty": "Easy",
+    "oralOneLiner": "访问控制从小到大是 private、fileprivate、internal、public、open。"
+  },
+  {
+    "id": "ios-swift-codable-key-mapping",
+    "category": "iOS",
+    "topic": "Swift 基础",
+    "question": "`Codable` 如何处理 JSON 字段名和 Model 属性名不一致？如何处理可选字段？",
+    "answer": "字段名不一致用 CodingKeys 映射。可选字段声明成 Optional，缺失时 decodeIfPresent 返回 nil；必填字段缺失会抛错。复杂转换可以自定义 init(from:) 和 encode(to:)。真实项目还要处理日期格式、嵌套结构和后端类型不稳定。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Codable 字段映射靠 CodingKeys，复杂解析自定义 init(from:)。"
+  },
+  {
+    "id": "ios-swift-result-error-handling",
+    "category": "iOS",
+    "topic": "Swift 基础",
+    "question": "`Result`、`throws`、Optional 分别适合表达什么类型的失败？",
+    "answer": "Optional 适合只关心有无值、不关心失败原因；throws 适合同步或 async 流程中抛出详细错误；Result 适合把成功或失败作为一个值传递、保存或回调。现代 async API 常用 async throws，回调式 API 常见 Result。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Optional 表达有无，throws 表达流程错误，Result 把成功失败包装成值。"
+  },
+  {
+    "id": "ios-objc-msgsend-flow",
+    "category": "iOS",
+    "topic": "Objective-C / Runtime",
+    "question": "Objective-C 的消息发送流程是什么？`objc_msgSend` 大致做了什么？",
+    "answer": "Objective-C 调方法其实是发消息。objc_msgSend 根据对象 isa 找到类，先查方法缓存 cache，找不到再查当前类方法列表，再沿父类链查找；仍找不到会进入动态方法解析、快速转发和完整消息转发。缓存命中是性能关键。",
+    "difficulty": "Hard",
+    "oralOneLiner": "objc_msgSend 先查缓存，再查类和父类，最后走消息转发。"
+  },
+  {
+    "id": "ios-objc-class-metaclass",
+    "category": "iOS",
+    "topic": "Objective-C / Runtime",
+    "question": "Class 和 Meta Class 的关系是什么？实例方法和类方法分别存在哪里？",
+    "answer": "实例对象的 isa 指向 Class，Class 保存实例方法、属性和协议等信息；Class 的 isa 指向 Meta Class，Meta Class 保存类方法。Meta Class 最终也有继承链，根元类的 isa 指向自己。实例方法发给对象，类方法本质上发给类对象。",
+    "difficulty": "Hard",
+    "oralOneLiner": "对象找 Class，类对象找 Meta Class；实例方法在类，类方法在元类。"
+  },
+  {
+    "id": "ios-objc-isa-pointer",
+    "category": "iOS",
+    "topic": "Objective-C / Runtime",
+    "question": "`isa` 指针有什么作用？对象、类、元类之间如何通过 isa 串起来？",
+    "answer": "isa 用来从对象找到它所属的类，从类找到元类，是 Runtime 查找方法和识别类型的入口。实例对象 isa 指向类，类对象 isa 指向元类，元类继续指向根元类。现代 isa 可能是优化过的 non-pointer isa，里面还编码了引用计数等信息。",
+    "difficulty": "Hard",
+    "oralOneLiner": "isa 是对象进入 Runtime 类型系统和方法查找的入口。"
+  },
+  {
+    "id": "ios-objc-category-property",
+    "category": "iOS",
+    "topic": "Objective-C / Runtime",
+    "question": "Category 能不能添加属性？为什么？Associated Object 是如何补充存储能力的？",
+    "answer": "Category 可以声明属性，但不会自动生成实例变量。因为类的内存布局在编译期基本确定，Category 在运行期附加方法，不能直接扩展对象存储。要给 Category 属性保存值，通常用 Associated Object，以对象地址和 key 建立关联表。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Category 能声明属性但不加 ivar，存值靠 Associated Object。"
+  },
+  {
+    "id": "ios-objc-category-extension",
+    "category": "iOS",
+    "topic": "Objective-C / Runtime",
+    "question": "Category 和 Extension 有什么区别？它们分别在编译期和运行期有什么特点？",
+    "answer": "Extension 是类扩展，通常写在主实现文件里，编译期参与类定义，可以声明私有属性和方法；Category 是运行期把方法列表附加到已有类上，常用于拆分功能或给系统类加方法。Extension 更像匿名私有接口，Category 更像后期扩展。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Extension 参与类本体，Category 运行期扩展已有类。"
+  },
+  {
+    "id": "ios-objc-kvo-principle",
+    "category": "iOS",
+    "topic": "Objective-C / Runtime",
+    "question": "KVO 的实现原理是什么？为什么说它依赖 Runtime 动态子类？",
+    "answer": "KVO 通过 Runtime 动态创建被观察类的子类，重写 setter，在 setter 前后触发 willChange/didChange 通知，并把对象 isa 指向这个动态子类。因此 KVO 对直接改 ivar、绕过 setter 的场景可能无效。移除观察和生命周期也要谨慎。",
+    "difficulty": "Hard",
+    "oralOneLiner": "KVO 靠动态子类重写 setter 来发送变更通知。"
+  },
+  {
+    "id": "ios-objc-kvc-search-order",
+    "category": "iOS",
+    "topic": "Objective-C / Runtime",
+    "question": "KVC 的查找顺序是什么？访问不存在的 key 会发生什么？",
+    "answer": "KVC 取值通常先找 get<Key>、<key>、is<Key>、_<key> 等 getter，再按规则访问 ivar；找不到会调用 valueForUndefinedKey。赋值类似先找 setter，再找 ivar，找不到调用 setValue:forUndefinedKey。它绕过编译期检查，灵活但不够安全。",
+    "difficulty": "Medium",
+    "oralOneLiner": "KVC 先找访问器，再找 ivar，找不到走 undefinedKey。"
+  },
+  {
+    "id": "ios-objc-method-swizzling-risk",
+    "category": "iOS",
+    "topic": "Objective-C / Runtime",
+    "question": "Method Swizzling 的原理是什么？在业务中使用它有哪些风险？",
+    "answer": "Swizzling 通过 Runtime 交换两个 Method 的 IMP，让原调用走到新实现。风险是影响全局行为、调用顺序不确定、和其他库冲突、递归调用、难调试。使用时应在 +load 或明确初始化中只交换一次，并保留原实现调用路径。",
+    "difficulty": "Hard",
+    "oralOneLiner": "Swizzling 是换 IMP，强大但全局生效、顺序和冲突风险高。"
+  },
+  {
+    "id": "ios-objc-block-types",
+    "category": "iOS",
+    "topic": "Objective-C / Runtime",
+    "question": "Objective-C Block 有哪些类型？为什么 Block 通常需要 copy？",
+    "answer": "Block 常见有全局 Block、栈 Block、堆 Block。没有捕获自动变量的可能是全局 Block，捕获局部变量的初始在栈上，copy 后到堆上。异步或保存 Block 时要 copy，确保函数返回后 Block 仍然有效。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Block 捕获局部变量后要 copy 到堆上才能安全逃逸。"
+  },
+  {
+    "id": "ios-objc-arc-compile-runtime",
+    "category": "iOS",
+    "topic": "Objective-C / Runtime",
+    "question": "ARC 是编译期机制还是运行期机制？它和 Runtime 如何配合管理引用计数？",
+    "answer": "ARC 主要是编译器自动插入 retain、release、autorelease 等内存管理调用，但运行时也参与弱引用表、引用计数、autorelease pool 等机制。它不是垃圾回收，释放时机仍由引用计数决定。循环引用 ARC 无法自动解决。",
+    "difficulty": "Hard",
+    "oralOneLiner": "ARC 是编译器插入内存管理调用，Runtime 配合维护引用计数和 weak。"
+  },
+  {
+    "id": "ios-uikit-app-launch-basic",
+    "category": "iOS",
+    "topic": "UIKit / App 生命周期",
+    "question": "App 从点击图标到首屏展示大致经历了哪些阶段？",
+    "answer": "App 启动大致经历：系统创建进程，dyld 加载可执行文件和动态库，Runtime 初始化类和分类，进入 main，UIApplicationMain 创建应用对象，建立 AppDelegate/SceneDelegate、window、rootViewController，然后加载 view、布局并提交首帧。优化时按 main 前和 main 后拆。",
+    "difficulty": "Medium",
+    "oralOneLiner": "启动链路是 dyld、Runtime、main、Application、Scene、首屏。"
+  },
+  {
+    "id": "ios-uikit-appdelegate-scenedelegate",
+    "category": "iOS",
+    "topic": "UIKit / App 生命周期",
+    "question": "`AppDelegate` 和 `SceneDelegate` 分别负责什么？多 Scene 场景下生命周期有什么变化？",
+    "answer": "AppDelegate 负责应用级事件，比如启动、推送、后台任务和全局配置；SceneDelegate 负责一个 UI 场景的生命周期，比如创建 window、连接和断开 scene。iOS 13 后一个 App 可以有多个 Scene，所以 UI 生命周期从 AppDelegate 拆到了 SceneDelegate。",
+    "difficulty": "Medium",
+    "oralOneLiner": "AppDelegate 管应用级生命周期，SceneDelegate 管窗口场景生命周期。"
+  },
+  {
+    "id": "ios-uikit-vc-lifecycle",
+    "category": "iOS",
+    "topic": "UIKit / App 生命周期",
+    "question": "ViewController 生命周期方法的调用顺序是什么？每个方法适合做什么？",
+    "answer": "常见顺序是 init、loadView、viewDidLoad、viewWillAppear、viewWillLayoutSubviews、viewDidLayoutSubviews、viewDidAppear；离开时 viewWillDisappear、viewDidDisappear。viewDidLoad 适合一次性初始化，viewWillAppear 适合刷新即将展示的数据，布局相关放 layout 回调。",
+    "difficulty": "Easy",
+    "oralOneLiner": "VC 生命周期按加载、布局、出现、消失来记。"
+  },
+  {
+    "id": "ios-uikit-loadview-viewdidload",
+    "category": "iOS",
+    "topic": "UIKit / App 生命周期",
+    "question": "`loadView`、`viewDidLoad`、`viewWillAppear`、`viewDidAppear` 有什么区别？",
+    "answer": "loadView 负责创建 self.view，纯代码自定义根 view 时可重写；viewDidLoad 在 view 加载完成后调用一次，适合初始化子视图和绑定；viewWillAppear 每次即将显示都会调用，适合刷新数据或导航栏状态；viewDidAppear 表示已显示，适合开始动画或曝光。",
+    "difficulty": "Medium",
+    "oralOneLiner": "loadView 建 view，viewDidLoad 初始化一次，viewWillAppear 每次显示前刷新。"
+  },
+  {
+    "id": "ios-uikit-autolayout-principle",
+    "category": "iOS",
+    "topic": "UIKit / 布局",
+    "question": "Auto Layout 的基本原理是什么？约束冲突通常如何排查？",
+    "answer": "Auto Layout 用一组线性约束描述视图位置和大小，系统通过约束求解得到 frame。排查冲突看控制台日志、约束标识、优先级、缺失或重复约束，以及 translatesAutoresizingMaskIntoConstraints 是否关闭。复杂页面要减少约束数量和频繁更新。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Auto Layout 是约束求解，冲突从日志、优先级、缺失重复约束查。"
+  },
+  {
+    "id": "ios-uikit-tableview-reuse",
+    "category": "iOS",
+    "topic": "UIKit / 列表",
+    "question": "TableView Cell 复用机制是什么？如何避免复用导致的数据错乱？",
+    "answer": "TableView 复用 Cell 是为了避免频繁创建视图。滚出屏幕的 Cell 会进入复用池，新数据出现时取出重新配置。必须在配置方法里覆盖所有 UI 状态，在 prepareForReuse 中重置临时状态、取消图片请求，否则会出现错图、状态残留。",
+    "difficulty": "Easy",
+    "oralOneLiner": "Cell 会复用，所以配置要完整，复用前要清理异步和状态。"
+  },
+  {
+    "id": "ios-uikit-collectionview-layout",
+    "category": "iOS",
+    "topic": "UIKit / 列表",
+    "question": "CollectionView 和 TableView 的核心区别是什么？自定义 Layout 适合解决什么问题？",
+    "answer": "TableView 主要是一维列表，CollectionView 更通用，支持网格、瀑布流和复杂布局。自定义 Layout 适合 item 位置、大小、吸附、装饰视图等不规则场景。现代 iOS 也可以用 Compositional Layout 快速组合复杂布局。",
+    "difficulty": "Medium",
+    "oralOneLiner": "CollectionView 是更通用的列表容器，Layout 决定它的空间排列。"
+  },
+  {
+    "id": "ios-uikit-list-scroll-performance",
+    "category": "iOS",
+    "topic": "UIKit / 性能",
+    "question": "如何优化 TableView 或 CollectionView 的滚动性能？",
+    "answer": "列表优化重点是让主线程每帧工作足够少。做法包括复用 Cell、缓存高度、减少 Auto Layout 开销、异步加载和解码图片、取消无效请求、避免圆角阴影离屏渲染、减少透明混合，并用 Time Profiler/Core Animation 验证。",
+    "difficulty": "Medium",
+    "oralOneLiner": "列表流畅靠主线程减负、图片异步、状态复用干净。"
+  },
+  {
+    "id": "ios-uikit-uiview-calayer",
+    "category": "iOS",
+    "topic": "UIKit / 渲染",
+    "question": "`UIView` 和 `CALayer` 有什么关系？为什么 UIView 负责事件而 CALayer 负责显示？",
+    "answer": "UIView 是 UIResponder 子类，负责事件响应、手势、布局和管理视图层级；CALayer 负责内容显示、动画和合成。每个 UIView 默认有一个 backing layer，最终渲染由 Core Animation 处理。很多视觉属性本质设置在 layer 上。",
+    "difficulty": "Medium",
+    "oralOneLiner": "UIView 管交互和布局，CALayer 管显示和动画。"
+  },
+  {
+    "id": "ios-uikit-responder-chain",
+    "category": "iOS",
+    "topic": "UIKit / 事件响应",
+    "question": "响应链是什么？事件找不到处理者时会如何向上传递？",
+    "answer": "响应链是事件处理对象的传递链。触摸事件先通过 hit-test 找到目标 view，如果它不处理，就沿 superview、viewController、window、application 向上传递。它让事件可以从具体视图逐级交给更高层处理。",
+    "difficulty": "Medium",
+    "oralOneLiner": "响应链就是事件从命中的 view 一路向上传递的链。"
+  },
+  {
+    "id": "ios-uikit-hit-test",
+    "category": "iOS",
+    "topic": "UIKit / 事件响应",
+    "question": "`hitTest(_:with:)` 和 `point(inside:with:)` 的作用是什么？如何扩大按钮点击区域？",
+    "answer": "point(inside:with:) 判断触点是否在当前 view 内；hitTest(_:with:) 从当前 view 递归查找真正接收事件的最深子视图。扩大按钮点击区域可以重写 point(inside:) 扩大判断区域，或在父视图 hitTest 中转发。",
+    "difficulty": "Medium",
+    "oralOneLiner": "pointInside 判断在不在，hitTest 决定谁接收。"
+  },
+  {
+    "id": "ios-uikit-gesture-conflict",
+    "category": "iOS",
+    "topic": "UIKit / 事件响应",
+    "question": "手势和按钮点击冲突怎么处理？多个 Gesture Recognizer 如何协调？",
+    "answer": "手势冲突可以通过 UIGestureRecognizerDelegate 控制是否同时识别、是否接收 touch、或者设置 require(toFail:) 让一个手势失败后另一个再识别。按钮和手势冲突时，要判断事件归属，避免父视图手势吞掉子控件点击。",
+    "difficulty": "Medium",
+    "oralOneLiner": "手势冲突用 delegate 和失败依赖来协调识别顺序。"
+  },
+  {
+    "id": "ios-http-vs-https",
+    "category": "iOS",
+    "topic": "网络 / 安全",
+    "question": "HTTP 和 HTTPS 有什么区别？HTTPS 相比 HTTP 多了哪些安全能力？",
+    "answer": "HTTP 是明文传输，HTTPS 是 HTTP 加 TLS。TLS 提供三件事：加密防窃听、摘要/认证防篡改、证书链做服务器身份认证。HTTPS 保护传输链路，但不等于业务绝对安全，客户端存储、证书信任和服务端漏洞仍要处理。",
+    "difficulty": "Easy",
+    "oralOneLiner": "HTTPS = HTTP + TLS，核心是加密、防篡改和身份认证。"
+  },
+  {
+    "id": "ios-https-tls-basics",
+    "category": "iOS",
+    "topic": "网络 / 安全",
+    "question": "HTTPS 相比 HTTP 多了什么？TLS 握手大致解决什么问题？",
+    "answer": "HTTPS 比 HTTP 多了 TLS 层。TLS 握手主要解决三件事：确认服务器身份，协商加密算法，安全地产生后续通信使用的会话密钥。之后 HTTP 内容会用会话密钥加密传输，避免明文被窃听或篡改。",
+    "difficulty": "Medium",
+    "oralOneLiner": "TLS 握手是为了认证身份、协商算法、生成会话密钥。"
+  },
+  {
+    "id": "ios-https-is-always-safe",
+    "category": "iOS",
+    "topic": "网络 / 安全",
+    "question": "HTTPS 一定安全吗？还可能存在哪些安全风险？",
+    "answer": "HTTPS 不等于绝对安全。它保护传输过程，但如果用户安装了恶意根证书、客户端忽略证书校验、token 存储不安全、接口被重放、服务端有漏洞，仍然可能出问题。高安全场景还会做证书锁定、请求签名和敏感数据加密。",
+    "difficulty": "Medium",
+    "oralOneLiner": "HTTPS 保护链路，不保护所有业务和客户端风险。"
+  },
+  {
+    "id": "ios-tcp-handshake-wave",
+    "category": "iOS",
+    "topic": "网络 / TCP",
+    "question": "TCP 三次握手和四次挥手分别解决什么问题？",
+    "answer": "三次握手用于建立可靠连接，确认双方发送和接收能力正常，并同步初始序列号。四次挥手用于分别关闭两个方向的数据通道，因为 TCP 是全双工连接。面试重点是：握手建连接，挥手释放连接，序列号和确认号保证可靠有序。",
+    "difficulty": "Medium",
+    "oralOneLiner": "三次握手建连接，四次挥手关双向通道。"
+  },
+  {
+    "id": "ios-http-get-post",
+    "category": "iOS",
+    "topic": "网络 / HTTP",
+    "question": "GET 和 POST 有什么区别？幂等性、安全性、缓存方面如何理解？",
+    "answer": "GET 通常用于获取资源，参数常在 URL，适合缓存和幂等请求；POST 通常用于提交数据，参数在 body，常用于创建或修改资源。GET/POST 本身不决定安全，安全要靠 HTTPS、鉴权和服务端校验。",
+    "difficulty": "Easy",
+    "oralOneLiner": "GET 偏获取和幂等，POST 偏提交和修改。"
+  },
+  {
+    "id": "ios-cookie-vs-token",
+    "category": "iOS",
+    "topic": "网络 / 鉴权",
+    "question": "Cookie 和 Token 有什么区别？移动端登录态通常如何设计？",
+    "answer": "Cookie 通常由浏览器自动携带，偏 Web 会话；Token 是客户端主动放在请求头里，移动端更常见。移动端一般登录后保存 access token 和 refresh token，access token 用于接口鉴权，过期后用 refresh token 换新。敏感 token 应存 Keychain。",
+    "difficulty": "Medium",
+    "oralOneLiner": "移动端常用 Token，重点是携带、刷新和安全存储。"
+  },
+  {
+    "id": "ios-token-refresh",
+    "category": "iOS",
+    "topic": "网络 / 鉴权",
+    "question": "Token 过期如何刷新？如何避免多个请求同时触发重复刷新？",
+    "answer": "Token 过期后，客户端用 refresh token 请求新 access token，然后重试原请求。关键是避免多个接口同时 401 后重复刷新，可以用单飞机制：刷新中其他请求等待同一个刷新结果；也可以用 actor、锁或串行队列保护刷新状态。",
+    "difficulty": "Hard",
+    "oralOneLiner": "Token 刷新要合并并发请求，避免同时刷新多次。"
+  },
+  {
+    "id": "ios-urlsession-cancel-retry",
+    "category": "iOS",
+    "topic": "网络 / URLSession",
+    "question": "`URLSession` 请求如何取消、重试和设置超时？",
+    "answer": "URLSessionTask 可以调用 cancel 取消；超时可在 URLRequest 或 URLSessionConfiguration 设置；重试要判断错误类型、状态码、幂等性和重试次数。常见策略是指数退避，且不要盲目重试非幂等写操作。",
+    "difficulty": "Medium",
+    "oralOneLiner": "URLSession 管取消和超时，重试要看错误、次数和幂等性。"
+  },
+  {
+    "id": "ios-network-layer-design",
+    "category": "iOS",
+    "topic": "网络 / 架构",
+    "question": "如何设计一个可测试、可扩展的网络层？需要包含哪些模块？",
+    "answer": "网络层可以拆成 Endpoint、RequestBuilder、Transport、Decoder、Interceptor、Authenticator、ErrorMapper 和 Logger。通过 protocol 抽象传输层，测试时注入 Mock。业务层只关心 typed response 和业务错误，鉴权、重试、日志、取消统一收口。",
+    "difficulty": "Hard",
+    "oralOneLiner": "好网络层要统一请求、解析、鉴权、错误、取消和测试替身。"
+  },
+  {
+    "id": "ios-image-cache-design",
+    "category": "iOS",
+    "topic": "网络 / 缓存",
+    "question": "图片缓存如何设计？内存缓存、磁盘缓存、下载取消、解码分别如何处理？",
+    "answer": "图片缓存通常分内存和磁盘两级。内存用 NSCache 控容量，磁盘用 URL/key 映射文件并设置过期清理。还要支持下载去重、取消请求、后台解码、按目标尺寸缩放，避免复用错图和大图造成内存峰值。",
+    "difficulty": "Hard",
+    "oralOneLiner": "图片缓存要管内存、磁盘、去重、取消、解码和清理。"
+  },
+  {
+    "id": "ios-storage-userdefaults-keychain-file-db",
+    "category": "iOS",
+    "topic": "数据存储",
+    "question": "UserDefaults、Keychain、文件、SQLite/Core Data 分别适合存什么？",
+    "answer": "UserDefaults 适合少量非敏感配置；Keychain 适合 token、账号凭证等敏感数据；FileManager 适合图片、日志、离线文件；SQLite/Core Data/SwiftData 适合结构化数据、查询和关系管理。选择依据是敏感性、数据量、结构化程度和查询复杂度。",
+    "difficulty": "Medium",
+    "oralOneLiner": "存储选择看敏感性、数据量、结构化和查询需求。"
+  },
+  {
+    "id": "ios-keychain-sensitive-data",
+    "category": "iOS",
+    "topic": "数据存储 / 安全",
+    "question": "为什么 Token、密码类敏感信息不应该放在 UserDefaults？Keychain 的适用场景是什么？",
+    "answer": "UserDefaults 本质是偏好配置文件，不适合保存 token、密码等敏感信息。Keychain 由系统安全服务管理，支持访问控制和设备级保护，适合保存凭证。退出登录要清理，访问级别和备份迁移策略也要明确。",
+    "difficulty": "Medium",
+    "oralOneLiner": "敏感凭证放 Keychain，UserDefaults 只放非敏感配置。"
+  },
+  {
+    "id": "ios-coredata-core-objects",
+    "category": "iOS",
+    "topic": "数据存储 / Core Data",
+    "question": "Core Data 的核心对象有哪些？Context、Model、Persistent Store Coordinator 分别负责什么？",
+    "answer": "Core Data 核心包括 Managed Object Model、Managed Object Context、Persistent Store Coordinator 和 Persistent Store。Model 描述数据结构，Context 管理对象和变更，Coordinator 连接模型与底层存储，Store 是 SQLite 等实际持久化介质。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Core Data 是模型、上下文、协调器、持久化存储四块。"
+  },
+  {
+    "id": "ios-database-migration",
+    "category": "iOS",
+    "topic": "数据存储 / 迁移",
+    "question": "App 本地数据库结构升级时如何做数据迁移？如何降低迁移失败风险？",
+    "answer": "数据库迁移要先做版本管理，再根据变更选择轻量迁移或自定义迁移。新增字段、简单改名适合轻量迁移；复杂结构调整要写 mapping 或分阶段迁移。上线前必须用旧版本真实数据测试，并准备失败回滚或重建策略。",
+    "difficulty": "Hard",
+    "oralOneLiner": "迁移要有版本、兼容、测试、备份和失败策略。"
+  },
+  {
+    "id": "ios-thread-process",
+    "category": "iOS",
+    "topic": "并发 / 线程",
+    "question": "进程和线程的区别是什么？iOS App 中主线程承担哪些职责？",
+    "answer": "进程是系统分配资源的单位，线程是 CPU 调度执行的单位。一个 App 至少有主线程，主线程负责 UI、事件响应和主 RunLoop。多个线程共享进程内存，所以访问共享数据时需要同步。",
+    "difficulty": "Easy",
+    "oralOneLiner": "进程管资源，线程管执行，主线程管 UI 和事件。"
+  },
+  {
+    "id": "ios-main-thread-blocking",
+    "category": "iOS",
+    "topic": "并发 / 线程",
+    "question": "为什么主线程不能做耗时任务？哪些操作容易造成主线程卡顿？",
+    "answer": "主线程负责 UI 绘制、事件处理和 RunLoop 调度，如果做耗时任务，一帧内来不及提交就会卡顿。常见耗时包括同步网络、磁盘 IO、大量 JSON 解析、图片解码、复杂布局、锁等待和大循环计算。",
+    "difficulty": "Easy",
+    "oralOneLiner": "主线程被耗时任务占住，UI 就不能及时响应和绘制。"
+  },
+  {
+    "id": "ios-gcd-sync-async",
+    "category": "iOS",
+    "topic": "并发 / GCD",
+    "question": "GCD 中 `sync` 和 `async` 的区别是什么？它们和是否开新线程是一回事吗？",
+    "answer": "sync 会把任务提交到队列并等待执行完成后再返回；async 提交后立即返回。是否开新线程取决于队列和系统调度，不由 sync/async 直接决定。sync 主要影响等待关系，async 主要用于异步执行。",
+    "difficulty": "Medium",
+    "oralOneLiner": "sync 等结果，async 不等结果；它们不等于是否开线程。"
+  },
+  {
+    "id": "ios-gcd-serial-concurrent",
+    "category": "iOS",
+    "topic": "并发 / GCD",
+    "question": "串行队列和并发队列有什么区别？队列和线程之间是什么关系？",
+    "answer": "串行队列一次只执行一个任务，保证任务顺序；并发队列可以同时执行多个任务，但开始顺序和完成顺序不一定一致。队列是任务调度抽象，线程是实际执行资源，GCD 会管理线程池。",
+    "difficulty": "Medium",
+    "oralOneLiner": "队列管任务顺序，线程负责实际执行。"
+  },
+  {
+    "id": "ios-gcd-main-sync-deadlock",
+    "category": "iOS",
+    "topic": "并发 / GCD",
+    "question": "`dispatch_sync` 到主队列为什么可能死锁？请用执行流程解释。",
+    "answer": "如果当前就在主线程，再 dispatch_sync 到主队列，当前代码会等待主队列里的新任务执行完成；但主队列必须等当前任务结束才能执行新任务，于是互相等待造成死锁。本质是同一个串行队列同步等待自己。",
+    "difficulty": "Medium",
+    "oralOneLiner": "主线程同步派发到主队列，就是串行队列等待自己，必死锁。"
+  },
+  {
+    "id": "ios-gcd-dispatchgroup",
+    "category": "iOS",
+    "topic": "并发 / GCD",
+    "question": "如何用 DispatchGroup 等待多个异步任务全部完成？适合什么场景？",
+    "answer": "DispatchGroup 用来等待多个异步任务完成。可以 group.enter/leave 包裹异步回调，或 group.async 提交任务，最后 notify 在所有任务结束后回调。适合多个接口并行请求后合并结果。",
+    "difficulty": "Easy",
+    "oralOneLiner": "DispatchGroup 用来汇总多个异步任务的完成时机。"
+  },
+  {
+    "id": "ios-gcd-semaphore",
+    "category": "iOS",
+    "topic": "并发 / GCD",
+    "question": "Semaphore 可以解决什么问题？用它控制并发数时要注意什么？",
+    "answer": "Semaphore 是计数信号量，可以限制并发数或做线程同步。控制并发时先 wait，任务完成后 signal。要注意 wait/signal 成对出现，不要在主线程长时间 wait，否则容易卡顿或死锁。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Semaphore 能限流和同步，但主线程 wait 很危险。"
+  },
+  {
+    "id": "ios-operationqueue-vs-gcd",
+    "category": "iOS",
+    "topic": "并发 / OperationQueue",
+    "question": "OperationQueue 相比 GCD 有什么优势？依赖、取消、优先级如何体现？",
+    "answer": "OperationQueue 比 GCD 更面向任务对象，支持依赖关系、取消、优先级、最大并发数和状态观察。复杂任务编排、可取消任务适合 OperationQueue；简单派发、轻量异步适合 GCD。",
+    "difficulty": "Medium",
+    "oralOneLiner": "复杂任务编排用 OperationQueue，简单异步派发用 GCD。"
+  },
+  {
+    "id": "ios-runloop-basics",
+    "category": "iOS",
+    "topic": "并发 / RunLoop",
+    "question": "RunLoop 是什么？它和线程是什么关系？",
+    "answer": "RunLoop 是线程的事件循环，让线程有事件时处理、没事件时休眠。主线程默认启动 RunLoop，子线程默认没有。Source、Timer、Observer 都注册到 RunLoop 上，RunLoop 和线程是一一对应但懒创建的关系。",
+    "difficulty": "Hard",
+    "oralOneLiner": "RunLoop 是线程的事件循环，负责调度事件、Timer 和观察者。"
+  },
+  {
+    "id": "ios-runloop-timer-accuracy",
+    "category": "iOS",
+    "topic": "并发 / RunLoop",
+    "question": "Timer 为什么有时不准？RunLoop Mode 对 Timer 有什么影响？",
+    "answer": "Timer 依赖 RunLoop 触发，不是实时系统。主线程忙、RunLoop 没跑到对应 mode、或者系统调度延迟都会导致 Timer 不准。比如滚动时 RunLoop 进入 tracking mode，默认 mode 的 Timer 可能暂停；可加入 common modes 缓解。",
+    "difficulty": "Hard",
+    "oralOneLiner": "Timer 不准通常是 RunLoop 忙或 mode 不匹配。"
+  },
+  {
+    "id": "ios-runloop-persistent-thread",
+    "category": "iOS",
+    "topic": "并发 / RunLoop",
+    "question": "如何实现一个常驻线程？为什么需要给线程启动 RunLoop？",
+    "answer": "常驻线程需要创建子线程后启动 RunLoop，并添加一个 Source、Port 或 Timer 保持 RunLoop 不退出。否则线程执行完入口函数就结束。常驻线程适合需要长期串行处理任务的场景，但现在很多情况可用队列或 actor 替代。",
+    "difficulty": "Hard",
+    "oralOneLiner": "常驻线程的关键是给子线程启动并保活 RunLoop。"
+  },
+  {
+    "id": "ios-concurrency-async-await-vs-gcd",
+    "category": "iOS",
+    "topic": "Swift Concurrency",
+    "question": "`async/await` 和 GCD 如何选择？它们解决的问题有什么不同？",
+    "answer": "GCD 是底层任务调度工具，关注把闭包派发到队列；async/await 是语言级异步模型，关注把异步流程写得像同步代码，并和错误、取消、结构化并发集成。简单线程切换可用 GCD；现代异步业务流程、并发请求和可取消任务优先 async/await。",
+    "difficulty": "Medium",
+    "oralOneLiner": "GCD 管派发，async/await 管异步流程表达。"
+  },
+  {
+    "id": "ios-concurrency-async-await-advantage",
+    "category": "iOS",
+    "topic": "Swift Concurrency",
+    "question": "`async/await` 相比回调有什么优势？错误处理和取消如何表达？",
+    "answer": "async/await 最大优势是消除回调嵌套，让异步代码按顺序书写；错误可用 throws 统一处理，取消可通过 Task 协作检查。它还配合结构化并发管理子任务生命周期，比散落回调更可读、更可维护。",
+    "difficulty": "Medium",
+    "oralOneLiner": "async/await 让异步代码像同步代码，并统一错误和取消。"
+  },
+  {
+    "id": "ios-concurrency-task-basics",
+    "category": "iOS",
+    "topic": "Swift Concurrency",
+    "question": "`Task` 是什么？什么时候需要用 `Task {}` 创建异步上下文？",
+    "answer": "Task 是 Swift Concurrency 中异步任务的执行单元。同步上下文里不能直接 await async 方法，所以常用 Task { await work() } 创建异步上下文。Task 也用于启动非结构化任务，但要注意生命周期、取消和对 self 的捕获。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Task 是异步任务；同步代码要调用 async 时常用 Task 开上下文。"
+  },
+  {
+    "id": "ios-concurrency-structured-unstructured",
+    "category": "iOS",
+    "topic": "Swift Concurrency",
+    "question": "Structured Concurrency 和 Unstructured Task 有什么区别？为什么结构化并发更容易管理生命周期？",
+    "answer": "结构化并发中子任务有明确父子关系，父任务会等待、取消和传播错误，比如 async let、TaskGroup。Unstructured Task 用 Task {} 创建，生命周期更独立，不自动受当前作用域管理。优先结构化并发，只有跨作用域任务才考虑非结构化。",
+    "difficulty": "Hard",
+    "oralOneLiner": "结构化并发有父子生命周期，Task {} 更独立要谨慎。"
+  },
+  {
+    "id": "ios-concurrency-asynclet-taskgroup",
+    "category": "iOS",
+    "topic": "Swift Concurrency",
+    "question": "`async let` 和 `TaskGroup` 分别适合什么场景？如何选择？",
+    "answer": "async let 适合数量固定、写法简单的并发任务，比如同时请求用户和配置；TaskGroup 适合数量动态、循环创建、需要收集多个结果的任务。二者都是结构化并发，父作用域会等待子任务完成。",
+    "difficulty": "Medium",
+    "oralOneLiner": "固定少量并发用 async let，动态批量并发用 TaskGroup。"
+  },
+  {
+    "id": "ios-concurrency-actor-basics",
+    "category": "iOS",
+    "topic": "Swift Concurrency",
+    "question": "`actor` 解决了什么问题？它和用锁保护共享状态有什么区别？",
+    "answer": "actor 是并发安全的引用类型，用 actor isolation 保护内部可变状态，外部访问隔离方法或属性通常需要 await。它能替代一部分锁和串行队列，让共享状态的访问串行化。actor 保护的是内部状态，不代表所有传入对象都自动线程安全。",
+    "difficulty": "Medium",
+    "oralOneLiner": "actor 用隔离机制保护共享可变状态。"
+  },
+  {
+    "id": "ios-concurrency-mainactor",
+    "category": "iOS",
+    "topic": "Swift Concurrency",
+    "question": "`MainActor` 的作用是什么？为什么 UI 更新通常需要放在 MainActor 上？",
+    "answer": "MainActor 是全局 actor，代表主线程执行上下文。UI 状态和 UIKit/SwiftUI 更新通常要在 MainActor 上执行。可以把类、方法或闭包标记 @MainActor，编译器会帮助检查跨线程 UI 访问，并在需要时通过 await 切回主执行器。",
+    "difficulty": "Medium",
+    "oralOneLiner": "MainActor 是主线程隔离，主要保护 UI 更新。"
+  },
+  {
+    "id": "ios-concurrency-sendable",
+    "category": "iOS",
+    "topic": "Swift Concurrency",
+    "question": "`Sendable` 是什么？它能保证线程安全吗？什么时候需要 `@unchecked Sendable`？",
+    "answer": "Sendable 表示一个类型的值可以安全跨并发边界传递。值类型且成员都 Sendable 通常自动满足；含可变共享状态的 class 默认不安全。Sendable 本身不加锁、不保证逻辑线程安全；@unchecked Sendable 是开发者向编译器承诺自己保证安全。",
+    "difficulty": "Hard",
+    "oralOneLiner": "Sendable 是并发传递安全标记，不是自动加锁。"
+  },
+  {
+    "id": "ios-concurrency-sendable-closure",
+    "category": "iOS",
+    "topic": "Swift Concurrency",
+    "question": "`@Sendable` 闭包和普通闭包有什么区别？为什么捕获非线程安全对象可能报警？",
+    "answer": "@Sendable 表示闭包可能跨并发域执行，编译器会限制它捕获非 Sendable 或可变共享状态。普通闭包没有这种并发安全约束。它能帮你发现潜在数据竞争，但不能自动让捕获对象线程安全，真正安全仍要靠 actor、锁或不可变数据。",
+    "difficulty": "Hard",
+    "oralOneLiner": "@Sendable 检查闭包跨并发执行时的捕获安全。"
+  },
+  {
+    "id": "ios-concurrency-task-cancellation",
+    "category": "iOS",
+    "topic": "Swift Concurrency",
+    "question": "Task 取消是强制取消还是协作式取消？业务代码如何正确响应取消？",
+    "answer": "Task 取消是协作式的，不会强制杀掉正在执行的代码。调用 cancel 只是设置取消标记，任务内部需要检查 Task.isCancelled、try Task.checkCancellation()，或调用支持取消的 async API。业务要在取消时停止后续工作并释放资源。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Task 取消是协作式，代码要主动检查和响应。"
+  },
+  {
+    "id": "ios-concurrency-actor-isolation",
+    "category": "iOS",
+    "topic": "Swift Concurrency",
+    "question": "Actor Isolation 是什么？为什么外部访问 actor 隔离状态通常需要 `await`？",
+    "answer": "Actor Isolation 是 actor 对自身状态的隔离规则：actor 内部可以直接访问自己的隔离状态，外部必须通过 await 排队进入 actor 执行。这样保证同一时间只有一个任务操作隔离状态，避免数据竞争。nonisolated 成员不受隔离保护。",
+    "difficulty": "Hard",
+    "oralOneLiner": "Actor Isolation 让外部访问 actor 状态必须排队 await。"
+  },
+  {
+    "id": "ios-memory-arc-principle",
+    "category": "iOS",
+    "topic": "内存管理",
+    "question": "ARC 的基本原理是什么？引用计数在对象生命周期中如何变化？",
+    "answer": "ARC 通过引用计数管理对象生命周期。强引用增加计数，引用释放时计数减少，计数为 0 时对象 deinit。ARC 会在编译期插入 retain/release 等调用，运行时配合维护引用计数和 weak 表。循环引用会让计数无法归零。",
+    "difficulty": "Medium",
+    "oralOneLiner": "ARC 靠引用计数释放对象，但解决不了循环引用。"
+  },
+  {
+    "id": "ios-memory-property-semantics",
+    "category": "iOS",
+    "topic": "内存管理",
+    "question": "`strong`、`weak`、`assign`、`copy` 的区别是什么？分别适合什么属性？",
+    "answer": "strong 持有对象，引用计数加一；weak 不持有对象，对象释放后自动置 nil；assign 用于基本类型或不管理生命周期的引用，容易悬垂；copy 会复制对象，常用于 NSString、NSArray 和闭包，保证不可变语义或把栈 Block 拷到堆。",
+    "difficulty": "Easy",
+    "oralOneLiner": "strong 持有，weak 不持有，assign 不管理，copy 复制语义。"
+  },
+  {
+    "id": "ios-memory-weak-nil",
+    "category": "iOS",
+    "topic": "内存管理",
+    "question": "`weak` 为什么能在对象释放后自动置 nil？大致依赖什么机制？",
+    "answer": "weak 引用不会增加对象引用计数。Runtime 维护 weak 表，记录哪些 weak 指针指向某个对象；对象释放时，Runtime 会遍历对应 weak 指针并置 nil。因此 weak 能避免悬垂指针，但只能用于 class 类型。",
+    "difficulty": "Hard",
+    "oralOneLiner": "weak 自动置 nil 依赖 Runtime 的 weak 引用表。"
+  },
+  {
+    "id": "ios-memory-retain-cycle",
+    "category": "iOS",
+    "topic": "内存管理",
+    "question": "什么情况下会发生循环引用？ViewController 中最常见的循环引用有哪些？",
+    "answer": "循环引用是两个或多个对象互相强持有，导致引用计数无法归零。常见场景有 VC 强持有闭包，闭包强捕获 self；Timer 强持有 target；delegate 用 strong；对象之间互相 strong。解决方式是 weak/unowned、invalidate、解除观察或重新设计所有权。",
+    "difficulty": "Easy",
+    "oralOneLiner": "循环引用就是强引用形成闭环，ARC 无法释放。"
+  },
+  {
+    "id": "ios-memory-closure-retain-cycle",
+    "category": "iOS",
+    "topic": "内存管理",
+    "question": "闭包如何避免循环引用？`weak self` 和 `unowned self` 如何选择？",
+    "answer": "闭包被对象持有，同时闭包内部强捕获 self，就会循环引用。通常用 [weak self] 避免，适合 self 可能先释放的异步场景；unowned 不增加引用但对象释放后再访问会崩溃，只适合生命周期明确长于闭包的场景。",
+    "difficulty": "Medium",
+    "oralOneLiner": "异步闭包默认用 weak self，unowned 只在生命周期绝对确定时用。"
+  },
+  {
+    "id": "ios-memory-delegate-weak",
+    "category": "iOS",
+    "topic": "内存管理",
+    "question": "Delegate 为什么通常用 weak？什么时候 delegate 不能用 weak？",
+    "answer": "delegate 通常用 weak，因为被代理对象一般不应该拥有代理者，否则 owner 持有 child，child 又 strong 持有 owner 会循环引用。不能用 weak 的情况包括协议未限制 AnyObject、代理是值类型，或确实需要强持有的 delegate-like 对象，此时要明确所有权。",
+    "difficulty": "Medium",
+    "oralOneLiner": "delegate 通常 weak，是为了避免反向强持有造成循环引用。"
+  },
+  {
+    "id": "ios-memory-timer-cycle",
+    "category": "iOS",
+    "topic": "内存管理",
+    "question": "Timer 为什么容易造成循环引用？如何修复 Timer 持有 target 的问题？",
+    "answer": "Timer 会被 RunLoop 持有，Timer 又强持有 target，如果 target 也强持有 Timer，就形成循环。修复方式包括 invalidate、使用 block timer 并 weak self、代理对象转发、或用 GCD timer/Task 并管理取消。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Timer 循环来自 RunLoop 持有 Timer，Timer 持有 target。"
+  },
+  {
+    "id": "ios-memory-autoreleasepool",
+    "category": "iOS",
+    "topic": "内存管理",
+    "question": "Autorelease Pool 的作用是什么？在循环创建大量临时对象时为什么要手动加 autoreleasepool？",
+    "answer": "Autorelease Pool 保存延迟释放对象，池子 drain 时统一发送 release。主线程 RunLoop 每轮会管理池子。循环中创建大量临时 Objective-C 对象时，手动加 autoreleasepool 可以让对象更早释放，降低内存峰值。",
+    "difficulty": "Hard",
+    "oralOneLiner": "autoreleasepool 用来提前释放一批临时对象，降低峰值。"
+  },
+  {
+    "id": "ios-memory-leak-debug",
+    "category": "iOS",
+    "topic": "内存管理 / 调试",
+    "question": "如何定位内存泄漏？Memory Graph、Leaks、Allocations 分别能看什么？",
+    "answer": "先确认对象是否执行 deinit，再用 Xcode Memory Graph 查看强引用链，用 Instruments Leaks 找泄漏对象，用 Allocations 看对象数量是否持续增长。定位后修复循环引用、未移除观察、Timer 未释放等问题，并重复进出页面验证对象回落。",
+    "difficulty": "Medium",
+    "oralOneLiner": "泄漏定位看 deinit、强引用链、Leaks 和对象增长趋势。"
+  },
+  {
+    "id": "ios-architecture-mvc-problem",
+    "category": "iOS",
+    "topic": "架构 / MVC",
+    "question": "MVC 在 iOS 项目里常见的问题是什么？为什么容易变成 Massive View Controller？",
+    "answer": "MVC 的问题不是模式本身，而是 iOS 里 ViewController 很容易同时承担 UI、网络、状态、跳转和业务逻辑，变成 Massive View Controller。解决思路是拆分职责：网络放 Service，状态转换放 ViewModel，跳转放 Coordinator，数据访问放 Repository。",
+    "difficulty": "Easy",
+    "oralOneLiner": "MVC 变胖是职责混在 VC，优化就是拆职责。"
+  },
+  {
+    "id": "ios-architecture-mvvm-purpose",
+    "category": "iOS",
+    "topic": "架构 / MVVM",
+    "question": "MVVM 解决了什么问题？ViewModel 应该承担哪些职责？",
+    "answer": "MVVM 把页面展示状态和业务转换放到 ViewModel，View/VC 只负责展示和用户事件。它让业务逻辑脱离 UIKit，便于单元测试，也能减少 VC 代码。关键是 ViewModel 输入输出清晰，不直接操作具体 View。",
+    "difficulty": "Medium",
+    "oralOneLiner": "MVVM 让 VC 变薄，让状态转换更可测试。"
+  },
+  {
+    "id": "ios-architecture-viewmodel-boundary",
+    "category": "iOS",
+    "topic": "架构 / MVVM",
+    "question": "ViewModel 应该做什么，不应该做什么？如何避免 ViewModel 变胖？",
+    "answer": "ViewModel 应该处理展示状态、用户动作到业务调用的转换、错误和 loading 状态；不应该直接持有 UIKit 控件、做页面跳转或承担过多业务规则。变胖时可继续拆 UseCase、Service、Repository 或子 ViewModel。",
+    "difficulty": "Medium",
+    "oralOneLiner": "ViewModel 管状态转换，不管具体 UI 和导航。"
+  },
+  {
+    "id": "ios-architecture-coordinator",
+    "category": "iOS",
+    "topic": "架构 / Coordinator",
+    "question": "Coordinator 的作用是什么？它如何降低 ViewController 之间的跳转耦合？",
+    "answer": "Coordinator 负责页面创建、依赖组装和导航流程，把 push、present、deep link 从 ViewController 中抽离。这样 VC 不需要知道下一个页面是谁，模块之间更解耦，也方便复用登录流程、支付流程等复杂导航。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Coordinator 管导航流程，让页面不互相硬依赖。"
+  },
+  {
+    "id": "ios-architecture-dependency-injection",
+    "category": "iOS",
+    "topic": "架构 / 依赖注入",
+    "question": "依赖注入解决什么问题？构造器注入、属性注入、服务定位器有什么区别？",
+    "answer": "依赖注入是把对象需要的依赖从外部传入，而不是内部 new 或直接用单例。构造器注入最明确，属性注入更灵活但可能不完整，服务定位器使用方便但依赖隐藏。DI 的核心价值是可替换、可测试、低耦合。",
+    "difficulty": "Medium",
+    "oralOneLiner": "依赖注入让依赖显式、可替换、可测试。"
+  },
+  {
+    "id": "ios-architecture-testable-network",
+    "category": "iOS",
+    "topic": "架构 / 可测试性",
+    "question": "如何设计一个可测试的网络层？Mock、Stub、Protocol 抽象如何使用？",
+    "answer": "可测试网络层要依赖协议而不是 URLSession 具体实现。业务层注入 NetworkClient 协议，测试时换成 Mock 返回固定数据或错误。还要把请求构建、解析、错误映射拆开测试，避免真实网络影响单元测试稳定性。",
+    "difficulty": "Hard",
+    "oralOneLiner": "可测试网络层靠协议抽象和 Mock 注入。"
+  },
+  {
+    "id": "ios-architecture-modularization",
+    "category": "iOS",
+    "topic": "架构 / 模块化",
+    "question": "iOS 项目如何做模块化？模块之间依赖方向应该如何设计？",
+    "answer": "模块化要先划边界：基础能力、业务模块、公共接口和宿主 App。依赖方向通常是业务依赖基础，不允许业务互相乱依赖。跨模块调用可通过协议、路由或事件。目标是降低耦合、提升编译效率和团队协作效率。",
+    "difficulty": "Hard",
+    "oralOneLiner": "模块化重点是边界清楚、依赖单向、跨模块靠接口。"
+  },
+  {
+    "id": "ios-architecture-component-vs-module",
+    "category": "iOS",
+    "topic": "架构 / 模块化",
+    "question": "组件化和模块化有什么区别？它们分别解决什么工程问题？",
+    "answer": "模块化更强调按边界拆分代码和依赖，组件化更强调可复用、可独立交付的功能单元。实际项目里二者会结合：基础组件提供能力，业务模块组合能力。核心都是控制依赖和提升复用。",
+    "difficulty": "Medium",
+    "oralOneLiner": "模块化控边界，组件化重复用。"
+  },
+  {
+    "id": "ios-architecture-circular-dependency",
+    "category": "iOS",
+    "topic": "架构 / 模块化",
+    "question": "如何避免模块之间循环依赖？路由、协议下沉、依赖倒置可以怎么用？",
+    "answer": "避免循环依赖的办法是依赖倒置和接口下沉。把双方都需要的协议放到更底层接口模块，具体实现由上层注入；页面跳转用路由或 Coordinator；共享数据用服务接口或事件，而不是模块互相 import。",
+    "difficulty": "Hard",
+    "oralOneLiner": "破循环依赖靠协议下沉、依赖倒置和路由解耦。"
+  },
+  {
+    "id": "ios-architecture-multi-env",
+    "category": "iOS",
+    "topic": "工程化 / 配置",
+    "question": "iOS 项目如何做 Dev、Staging、Production 多环境配置？",
+    "answer": "多环境通常用 Scheme、Build Configuration、xcconfig 和 Info.plist 区分域名、证书、开关、日志级别。环境配置应集中管理，业务代码只读取配置对象，避免到处 if debug 或硬编码 URL。",
+    "difficulty": "Medium",
+    "oralOneLiner": "多环境靠 Scheme 和配置文件，业务只读统一配置。"
+  },
+  {
+    "id": "ios-architecture-cicd",
+    "category": "iOS",
+    "topic": "工程化 / CI/CD",
+    "question": "iOS 项目的 CI/CD 通常包含哪些步骤？证书、打包、测试、分发如何处理？",
+    "answer": "iOS CI/CD 通常包括拉代码、安装依赖、lint、跑测试、管理证书和 provisioning profile、archive、export ipa、上传 TestFlight 或内部分发。关键是构建可重复、证书安全、失败可追踪、产物可回溯。",
+    "difficulty": "Hard",
+    "oralOneLiner": "CI/CD 是把检查、测试、签名、打包、分发自动化。"
+  },
+  {
+    "id": "ios-architecture-unit-test-scope",
+    "category": "iOS",
+    "topic": "工程化 / 测试",
+    "question": "单元测试应该测什么？哪些逻辑不适合直接放在 UI 层里测试？",
+    "answer": "单元测试应该覆盖纯逻辑、状态转换、边界条件、错误处理和历史 bug。UI 细节不适合大量单测，应该把业务逻辑放到 ViewModel、UseCase、Service 等层，通过 Mock 依赖验证输入输出。",
+    "difficulty": "Medium",
+    "oralOneLiner": "单测测逻辑和边界，业务别绑死 UI。"
+  },
+  {
+    "id": "ios-performance-launch-stages",
+    "category": "iOS",
+    "topic": "性能 / 启动优化",
+    "question": "App 启动分为哪些阶段？冷启动和热启动有什么区别？",
+    "answer": "启动可分为冷启动和热启动，也可按 main 前和 main 后拆。main 前包括 dyld 加载、符号绑定、Runtime 初始化；main 后包括 UIApplicationMain、App/Scene 初始化、根页面加载、首屏渲染。优化要看首屏可见时间。",
+    "difficulty": "Medium",
+    "oralOneLiner": "启动按 main 前、main 后和首屏链路拆。"
+  },
+  {
+    "id": "ios-performance-launch-optimization",
+    "category": "iOS",
+    "topic": "性能 / 启动优化",
+    "question": "启动优化可以从哪些方向做？如何区分 main 前和 main 后耗时？",
+    "answer": "main 前优化包括减少动态库、减少 +load、减少类和符号数量；main 后优化包括延迟初始化、异步 IO、懒加载、减少首屏网络依赖和复杂布局。原则是先测量，再把非首屏必要工作后移。",
+    "difficulty": "Hard",
+    "oralOneLiner": "启动优化就是减少 main 前成本，把非首屏工作延后。"
+  },
+  {
+    "id": "ios-performance-launch-measure",
+    "category": "iOS",
+    "topic": "性能 / 启动优化",
+    "question": "如何统计启动耗时？埋点、MetricKit、Instruments 各有什么作用？",
+    "answer": "启动耗时可以用埋点记录进程启动、main、首屏展示等节点，也可以用 Instruments 和 MetricKit 看系统统计。关键是统一口径，比如冷启动到首帧或首屏可交互，并做多次采样取稳定数据。",
+    "difficulty": "Medium",
+    "oralOneLiner": "启动统计要先定义口径，再用埋点和工具验证。"
+  },
+  {
+    "id": "ios-performance-lag-monitor",
+    "category": "iOS",
+    "topic": "性能 / 卡顿优化",
+    "question": "如何监控卡顿？RunLoop 监控、FPS、主线程堆栈采样分别有什么思路？",
+    "answer": "卡顿监控常见三种：FPS 监控看帧率，RunLoop 监控看主线程是否长时间停在某状态，主线程堆栈采样记录卡顿时调用栈。线上监控要控制开销，并结合阈值、场景和设备信息分析。",
+    "difficulty": "Hard",
+    "oralOneLiner": "卡顿监控看 FPS、RunLoop 状态和主线程堆栈。"
+  },
+  {
+    "id": "ios-performance-list-lag-debug",
+    "category": "iOS",
+    "topic": "性能 / 列表优化",
+    "question": "列表滚动卡顿怎么排查？布局、图片解码、主线程任务、离屏渲染如何分析？",
+    "answer": "列表卡顿先用 Time Profiler 看主线程耗时，再查布局、图片解码、同步 IO、锁等待、复杂绘制和离屏渲染。解决方式包括缓存高度、预计算、异步解码、取消无效请求、减少透明混合和圆角阴影开销。",
+    "difficulty": "Hard",
+    "oralOneLiner": "列表卡顿从主线程耗时、图片、布局和渲染查。"
+  },
+  {
+    "id": "ios-performance-image-decode",
+    "category": "iOS",
+    "topic": "性能 / 图片优化",
+    "question": "图片加载为什么会卡？图片解码应该放在哪个线程？",
+    "answer": "图片从压缩格式变成位图需要解码，若在主线程首次显示时解码，会造成卡顿。优化是按展示尺寸缩放，在后台提前解码，使用合适缓存策略，并避免加载远大于显示尺寸的大图。",
+    "difficulty": "Medium",
+    "oralOneLiner": "图片卡顿常因主线程解码，解决是后台解码和按需缩放。"
+  },
+  {
+    "id": "ios-performance-memory-peak",
+    "category": "iOS",
+    "topic": "性能 / 内存优化",
+    "question": "如何降低内存峰值？大图、大数组、缓存、临时对象分别如何处理？",
+    "answer": "降低内存峰值要控制大对象生命周期：大图按需缩放，数组分批处理，缓存设置容量和清理策略，循环临时对象用 autoreleasepool，页面消失释放不必要资源。优化前后要用 Allocations 或内存曲线验证。",
+    "difficulty": "Hard",
+    "oralOneLiner": "内存峰值优化靠缩小大对象、分批、限缓存和及时释放。"
+  },
+  {
+    "id": "ios-performance-oom-debug",
+    "category": "iOS",
+    "topic": "性能 / 内存优化",
+    "question": "OOM 怎么排查？它和普通 crash 的定位方式有什么不同？",
+    "answer": "OOM 是系统因内存压力杀掉进程，通常没有普通 crash 堆栈。排查要结合内存曲线、场景日志、MetricKit、Jetsam 日志、最近页面和大对象操作。重点看内存峰值、缓存失控、大图和循环增长。",
+    "difficulty": "Hard",
+    "oralOneLiner": "OOM 没普通堆栈，要靠内存曲线、日志和场景还原。"
+  },
+  {
+    "id": "ios-performance-binary-size",
+    "category": "iOS",
+    "topic": "性能 / 包体积",
+    "question": "App 包体积怎么优化？资源、架构切片、无用代码、Link Map 分析如何使用？",
+    "answer": "包体积优化分资源和二进制。资源侧压缩图片、删除无用资源、按需下载；二进制侧移除无用代码和依赖、控制架构切片、减少重复库、用 Link Map 找大符号。优化要避免影响启动和功能完整性。",
+    "difficulty": "Medium",
+    "oralOneLiner": "包体积看资源、依赖、架构切片和 Link Map。"
+  },
+  {
+    "id": "ios-performance-network-slow",
+    "category": "iOS",
+    "topic": "性能 / 网络优化",
+    "question": "网络请求慢怎么排查？DNS、连接、TLS、服务端、弱网、缓存分别如何分析？",
+    "answer": "网络慢要分段看：DNS、TCP 连接、TLS 握手、请求排队、服务端耗时、响应体大小、弱网丢包和缓存命中。优化方式包括连接复用、缓存、压缩、分页、超时重试、降级和接口合并。",
+    "difficulty": "Hard",
+    "oralOneLiner": "网络慢按 DNS、连接、TLS、服务端、传输和缓存拆。"
+  },
+  {
+    "id": "ios-instruments-common-tools",
+    "category": "iOS",
+    "topic": "性能 / Instruments",
+    "question": "Instruments 常用哪些工具？Time Profiler、Allocations、Leaks、Core Animation 分别看什么？",
+    "answer": "Time Profiler 看 CPU 热点，Allocations 看对象分配和增长，Leaks 看内存泄漏，Core Animation 看 FPS 和渲染问题，Network 看请求，Energy Log 看耗电。使用时要有复现场景、指标和优化前后对比。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Instruments 要带着场景和指标看前后对比。"
+  },
+  {
+    "id": "ios-mach-o-basics",
+    "category": "iOS",
+    "topic": "Mach-O / dyld",
+    "question": "Mach-O 是什么？它大致由 Header、Load Commands、Segment、Section 哪些部分组成？",
+    "answer": "Mach-O 是 Apple 平台的可执行文件、动态库和目标文件格式。Header 描述文件类型和架构，Load Commands 告诉系统如何加载，Segment 是运行时内存映射区域，Section 是更细的数据或代码区，比如 __text、__data。",
+    "difficulty": "Hard",
+    "oralOneLiner": "Mach-O 是 Apple 可执行文件格式，由 Header、Load Commands、Segment、Section 组成。"
+  },
+  {
+    "id": "ios-mach-o-static-dynamic-lib",
+    "category": "iOS",
+    "topic": "Mach-O / dyld",
+    "question": "静态库和动态库有什么区别？它们对包体积、启动速度、链接方式有什么影响？",
+    "answer": "静态库在链接期被拷贝进最终二进制，运行时不需要单独加载；动态库在运行时由 dyld 加载和链接。静态库可能增大主包但启动少一次动态加载，动态库利于共享和模块边界，但数量过多会增加启动成本。",
+    "difficulty": "Hard",
+    "oralOneLiner": "静态库编进包里，动态库运行时加载。"
+  },
+  {
+    "id": "ios-mach-o-framework",
+    "category": "iOS",
+    "topic": "Mach-O / dyld",
+    "question": "Framework 是什么？Static Framework 和 Dynamic Framework 有什么区别？",
+    "answer": "Framework 是一种打包形式，可以包含二进制、头文件、资源和模块信息。Static Framework 内部是静态库，链接进主二进制；Dynamic Framework 是动态库，运行时加载。不要把 Framework 简单等同于动态库。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Framework 是打包形式，里面可以是静态也可以是动态。"
+  },
+  {
+    "id": "ios-dyld-launch-flow",
+    "category": "iOS",
+    "topic": "Mach-O / dyld",
+    "question": "dyld 在 App 启动时做了什么？加载动态库、符号绑定、Runtime 初始化分别在哪个阶段？",
+    "answer": "dyld 负责加载主程序和依赖动态库，完成地址重定位 rebase、符号绑定 bind，执行初始化函数，触发 Objective-C Runtime 注册类和分类，然后进入 main。动态库数量、符号数量和初始化工作都会影响 main 前启动时间。",
+    "difficulty": "Hard",
+    "oralOneLiner": "dyld 负责加载动态库、重定位、符号绑定、初始化，然后进 main。"
+  },
+  {
+    "id": "ios-dyld-rebase-bind",
+    "category": "iOS",
+    "topic": "Mach-O / dyld",
+    "question": "Rebase 和 Bind 是什么？它们为什么会影响启动耗时？",
+    "answer": "Rebase 是因为 ASLR 导致加载地址变化，需要修正内部指针地址；Bind 是把外部符号引用绑定到实际动态库地址。二者都发生在启动加载阶段，指针和符号越多，处理成本越高，可能影响启动。",
+    "difficulty": "Hard",
+    "oralOneLiner": "Rebase 修内部地址，Bind 绑定外部符号。"
+  },
+  {
+    "id": "ios-dyld-too-many-dylibs",
+    "category": "iOS",
+    "topic": "Mach-O / dyld",
+    "question": "为什么动态库过多会影响启动？大型项目如何控制动态库数量？",
+    "answer": "动态库越多，dyld 需要加载、校验、映射、绑定的工作越多，也会增加依赖关系复杂度。大型项目要控制动态库数量，能静态化的静态化，合并小库，减少无用依赖，并避免每个业务都拆成动态库。",
+    "difficulty": "Hard",
+    "oralOneLiner": "动态库多会增加 dyld 加载和绑定成本。"
+  },
+  {
+    "id": "ios-objc-load-initialize",
+    "category": "iOS",
+    "topic": "Mach-O / Runtime 初始化",
+    "question": "`+load` 和 `+initialize` 有什么区别？它们对启动性能有什么影响？",
+    "answer": "+load 在类或分类被加载到 Runtime 时调用，早于 main，且每个类和分类都会调用，容易拖慢启动。+initialize 在类第一次收到消息前懒执行，只调用一次。启动优化中应尽量避免在 +load 做重活。",
+    "difficulty": "Hard",
+    "oralOneLiner": "+load 早于 main 且影响启动，+initialize 首次消息前懒执行。"
+  },
+  {
+    "id": "ios-linkmap-usage",
+    "category": "iOS",
+    "topic": "Mach-O / 包体积",
+    "question": "Link Map 能看什么？如何用它分析二进制体积和大符号？",
+    "answer": "Link Map 记录最终二进制里目标文件、段和符号的大小分布。通过它可以找出大库、大函数、重复依赖和异常增长的符号。它常用于包体积分析，也能辅助判断哪些模块对二进制体积贡献最大。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Link Map 用来看二进制里谁占空间。"
+  },
+  {
+    "id": "ios-project-three-minute-intro",
+    "category": "iOS",
+    "topic": "项目表达",
+    "question": "请用 3 分钟介绍一个你最熟悉的 iOS 项目：背景、职责、技术栈、难点、结果。",
+    "answer": "3 分钟项目介绍按五步讲：项目背景和用户价值、你的职责、技术栈和架构、一个代表性难点、解决结果和指标。不要流水账，也不要只说“我参与了”，要突出你负责、你决策、你验证的内容。",
+    "difficulty": "Medium",
+    "oralOneLiner": "三分钟项目介绍讲背景、职责、技术、难点和结果。"
+  },
+  {
+    "id": "ios-project-architecture-design",
+    "category": "iOS",
+    "topic": "项目表达 / 架构",
+    "question": "你负责的项目架构是如何设计的？模块划分、依赖方向、数据流分别是什么？",
+    "answer": "架构设计要讲业务边界、模块划分、依赖方向、数据流和扩展点。再解释为什么这样设计，解决了什么痛点，比如降低耦合、提升测试性、缩短编译或支持多人协作。最后说不足和后续演进。",
+    "difficulty": "Hard",
+    "oralOneLiner": "架构项目题讲边界、依赖、数据流、取舍和演进。"
+  },
+  {
+    "id": "ios-project-hardest-bug",
+    "category": "iOS",
+    "topic": "项目表达 / Bug 定位",
+    "question": "讲一个你定位过的复杂线上 Bug：现象、复现、定位过程、根因、修复和预防。",
+    "answer": "复杂 Bug 按证据链讲：现象是什么，如何稳定复现，怎么缩小范围，用了哪些工具，最终根因是什么，如何修复，如何防止复发。要体现排查方法，比如日志、堆栈、抓包、Instruments、灰度数据和测试。",
+    "difficulty": "Hard",
+    "oralOneLiner": "Bug 案例要讲清现象、证据链、根因、修复和预防。"
+  },
+  {
+    "id": "ios-project-performance-case",
+    "category": "iOS",
+    "topic": "项目表达 / 性能",
+    "question": "讲一个你做过的性能优化案例：指标、工具、瓶颈、方案、优化结果。",
+    "answer": "性能案例必须有指标。说明优化前的耗时、FPS、内存或包体积，用什么工具定位到瓶颈，采用什么方案，优化后提升多少，以及有没有副作用。没有量化结果，面试官很难相信优化价值。",
+    "difficulty": "Hard",
+    "oralOneLiner": "性能案例要有指标、工具、瓶颈、方案和前后对比。"
+  },
+  {
+    "id": "ios-project-network-layer-case",
+    "category": "iOS",
+    "topic": "项目表达 / 网络层",
+    "question": "你项目中的网络层是怎么设计的？鉴权、错误处理、重试、取消和测试如何支持？",
+    "answer": "网络层案例要讲统一请求模型、Endpoint 设计、鉴权刷新、错误映射、重试取消、日志监控和 Mock 测试。亮点不是“封装了 URLSession”，而是减少重复代码、统一错误处理、提升稳定性和可测试性。",
+    "difficulty": "Hard",
+    "oralOneLiner": "网络层亮点是统一、可测、可观测和可扩展。"
+  },
+  {
+    "id": "ios-project-cache-case",
+    "category": "iOS",
+    "topic": "项目表达 / 缓存",
+    "question": "讲一个缓存设计案例：缓存对象、过期策略、一致性、内存和磁盘如何平衡？",
+    "answer": "缓存案例按缓存对象、key 设计、内存/磁盘层级、过期策略、容量控制、一致性和并发安全讲。最好补充效果，比如接口请求减少、首屏更快、弱网体验更好或内存峰值受控。",
+    "difficulty": "Hard",
+    "oralOneLiner": "缓存案例讲对象、key、层级、过期、容量、一致性和效果。"
+  },
+  {
+    "id": "ios-project-refactor-case",
+    "category": "iOS",
+    "topic": "项目表达 / 重构",
+    "question": "讲一个架构重构案例：为什么重构、怎么分阶段推进、如何验证没有引入回归？",
+    "answer": "重构案例要先说痛点，如 VC 过胖、依赖混乱、难测试；再说目标和分阶段方案；然后讲兼容旧逻辑、测试保障、灰度发布和结果。好的重构是在不中断业务交付的前提下逐步降低风险。",
+    "difficulty": "Hard",
+    "oralOneLiner": "重构案例讲痛点、目标、阶段、测试和收益。"
+  },
+  {
+    "id": "ios-project-tradeoff",
+    "category": "iOS",
+    "topic": "项目表达 / 技术取舍",
+    "question": "讲一次技术选型或方案取舍：候选方案、约束条件、最终选择和代价是什么？",
+    "answer": "技术取舍题要先列约束：时间、人力、性能、稳定性、团队熟悉度和长期维护。再比较候选方案，说明为什么选当前方案，以及它的缺点和补救措施。高级回答不是“这个最好”，而是“在约束下最合适”。",
+    "difficulty": "Hard",
+    "oralOneLiner": "取舍题讲约束、备选、选择理由、代价和补救。"
+  },
+  {
+    "id": "ios-project-scale-ten-times",
+    "category": "iOS",
+    "topic": "项目表达 / 扩展性",
+    "question": "如果你的项目用户量或数据量扩大 10 倍，当前架构有哪些风险？你会怎么改？",
+    "answer": "用户量或数据量扩大 10 倍时，要从接口压力、缓存、分页、数据库、内存、启动、日志监控和模块协作看风险。改进可以是分页懒加载、缓存分层、异步化、降级、监控告警、模块边界和服务端配合。",
+    "difficulty": "Hard",
+    "oralOneLiner": "扩展性看数据、流量、缓存、监控、降级和模块边界。"
+  },
+  {
+    "id": "ios-algo-two-sum",
+    "category": "iOS",
+    "topic": "算法 / 哈希表",
+    "question": "两数之和如何实现？为什么哈希表可以把时间复杂度降到 O(n)？",
+    "answer": "遍历数组，用哈希表保存已经见过的值和下标。对当前值 x，检查 target - x 是否在表里；如果在就返回两个下标，不在就把 x 放入表。时间复杂度 O(n)，空间复杂度 O(n)。",
+    "difficulty": "Easy",
+    "oralOneLiner": "两数之和用哈希表保存补数，时间 O(n)。"
+  },
+  {
+    "id": "ios-algo-reverse-linked-list",
+    "category": "iOS",
+    "topic": "算法 / 链表",
+    "question": "如何反转单链表？迭代和递归写法分别如何理解？",
+    "answer": "迭代写法用 prev、cur、next 三个指针。每轮先保存 next，再把 cur.next 指向 prev，然后 prev 和 cur 向前移动。最后 prev 就是新头结点。时间 O(n)，空间 O(1)。",
+    "difficulty": "Easy",
+    "oralOneLiner": "反转链表记住 prev、cur、next 三指针。"
+  },
+  {
+    "id": "ios-algo-merge-two-lists",
+    "category": "iOS",
+    "topic": "算法 / 链表",
+    "question": "如何合并两个有序链表？时间复杂度和空间复杂度是多少？",
+    "answer": "用 dummy 虚拟头结点和 tail 指针。比较两个链表当前节点，把较小的接到 tail 后面并前进，直到一边为空，再把剩余链表接上。时间 O(m+n)，额外空间 O(1)。",
+    "difficulty": "Easy",
+    "oralOneLiner": "合并有序链表用 dummy 节点减少边界判断。"
+  },
+  {
+    "id": "ios-algo-valid-parentheses",
+    "category": "iOS",
+    "topic": "算法 / 栈",
+    "question": "有效括号如何判断？为什么栈适合解决这个问题？",
+    "answer": "遍历字符串，遇到左括号入栈，遇到右括号检查栈顶是否是匹配的左括号；不匹配直接失败。遍历结束后栈为空才合法。时间 O(n)，空间 O(n)。",
+    "difficulty": "Easy",
+    "oralOneLiner": "括号匹配就是右括号必须匹配当前栈顶。"
+  },
+  {
+    "id": "ios-algo-longest-substring",
+    "category": "iOS",
+    "topic": "算法 / 滑动窗口",
+    "question": "最长无重复子串如何用滑动窗口解决？窗口左右边界如何移动？",
+    "answer": "用滑动窗口维护无重复区间。右指针遍历字符，用字典记录字符最近位置；如果字符已在窗口内出现，就把左指针移动到上次位置后一位。每步更新最大长度，时间 O(n)。",
+    "difficulty": "Medium",
+    "oralOneLiner": "最长无重复子串是右边扩、重复时左边跳。"
+  },
+  {
+    "id": "ios-algo-binary-tree-level-order",
+    "category": "iOS",
+    "topic": "算法 / 二叉树",
+    "question": "二叉树层序遍历如何实现？为什么队列适合 BFS？",
+    "answer": "层序遍历用队列。先把根节点入队，每轮记录当前队列数量作为这一层大小，依次弹出节点并加入左右孩子。每轮收集一个数组，最终得到按层结果。时间 O(n)。",
+    "difficulty": "Medium",
+    "oralOneLiner": "层序遍历就是队列 BFS，一次处理一层。"
+  },
+  {
+    "id": "ios-algo-binary-tree-max-depth",
+    "category": "iOS",
+    "topic": "算法 / 二叉树",
+    "question": "二叉树最大深度如何计算？递归和迭代分别怎么写？",
+    "answer": "递归写法：空节点深度为 0，非空节点深度等于 max(左深度, 右深度) + 1。也可以用 BFS 层序遍历，每处理完一层深度加一。时间 O(n)，递归空间取决于树高。",
+    "difficulty": "Easy",
+    "oralOneLiner": "最大深度 = 左右子树最大深度 + 1。"
+  },
+  {
+    "id": "ios-algo-binary-search",
+    "category": "iOS",
+    "topic": "算法 / 二分查找",
+    "question": "二分查找如何避免死循环和边界错误？左闭右闭、左闭右开写法有什么区别？",
+    "answer": "二分查找关键是区间定义一致。左闭右闭用 while left <= right，目标小于 mid 时 right = mid - 1；左闭右开用 while left < right，right = mid。mid 用 left + (right-left)/2 避免溢出。",
+    "difficulty": "Medium",
+    "oralOneLiner": "二分查找最重要的是区间定义始终一致。"
+  },
+  {
+    "id": "ios-algo-quick-sort",
+    "category": "iOS",
+    "topic": "算法 / 排序",
+    "question": "快速排序的核心思想是什么？平均和最坏时间复杂度分别是多少？",
+    "answer": "快速排序选一个 pivot，把数组分成小于 pivot 和大于 pivot 的两部分，再递归排序左右区间。平均时间 O(n log n)，最坏 O(n^2)，空间通常 O(log n)。随机 pivot 或三数取中可以降低退化概率。",
+    "difficulty": "Medium",
+    "oralOneLiner": "快排核心是分区，性能关键是 pivot 选择。"
+  },
+  {
+    "id": "ios-algo-lru-cache",
+    "category": "iOS",
+    "topic": "算法 / 缓存",
+    "question": "LRU Cache 如何设计？为什么通常用哈希表加双向链表？",
+    "answer": "LRU 要 O(1) get 和 put，通常用哈希表加双向链表。哈希表按 key 找节点，双向链表维护最近使用顺序；访问或更新节点移到头部，容量超限淘汰尾部节点。",
+    "difficulty": "Hard",
+    "oralOneLiner": "LRU = 哈希表快速查找 + 双向链表维护新旧顺序。"
+  }
+]

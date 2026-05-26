@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -25,11 +26,12 @@ import {
 import { parsePracticeFile } from './practice-import';
 import {
   PracticeStorageService,
+  type PracticeStorageScope,
   type PracticeDailyState,
   type PracticeDayRecord,
   PRACTICE_SKIP_BUILTIN_SEED_KEY,
 } from './practice-storage.service';
-import { iosSeedToPracticeItems } from './ios-seed';
+import { iosJobSeedToPracticeItems, iosSeedToPracticeItems } from './ios-seed';
 import { MarkdPipe } from './markd.pipe';
 import { applyPracticeSearchFilter } from './practice-search.util';
 import {
@@ -90,15 +92,22 @@ function hashString(s: string): number {
   styleUrl: './practice.component.scss',
 })
 export class PracticeComponent implements OnInit, OnDestroy {
+  private readonly route = inject(ActivatedRoute);
   private readonly storage = inject(PracticeStorageService);
   private readonly msg = inject(NzMessageService);
   private readonly modal = inject(NzModalService);
+  private readonly storageScope: PracticeStorageScope =
+    this.route.snapshot.data['practiceScope'] === 'ios-learning' ? 'ios-learning' : 'practice';
   /** 唱题模式中题目与答案之间、答案与下一题之间的短暂停顿。 */
   private chantTimer: ReturnType<typeof setTimeout> | null = null;
   /** 每次播放递增，防止已取消的语音回调继续推进唱题流程。 */
   private speechRunId = 0;
 
   readonly categoryList = PRACTICE_CATEGORY_LIST;
+  readonly isIosLearning = this.storageScope === 'ios-learning';
+  readonly pageName = this.isIosLearning ? 'iOS 学习' : '面试刷题';
+  readonly builtinSeedLabel = this.isIosLearning ? 'iOS 学习题库' : '内置 iOS 题库';
+  readonly builtinSeedButtonText = this.isIosLearning ? '加载 iOS 学习题库' : '加载内置 iOS 题库';
 
   // 页面核心状态：题库、筛选、当前题、答案显隐、搜索与自检结果。
   readonly items = signal<PracticeItem[]>([]);
@@ -205,7 +214,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
     const item = this.currentItem();
     return !!item && this.dailyItems().some((daily) => daily.id === item.id);
   });
-
+  
   /** 日历面板标题。 */
   readonly calendarTitle = computed(() => {
     const d = this.calendarMonth();
@@ -238,19 +247,23 @@ export class PracticeComponent implements OnInit, OnDestroy {
         done: total > 0 && remembered >= total,
       });
     }
+
     return days;
   });
-
+  
   /** 分类浮层的选项。 */
   readonly filterOptions: { value: FilterValue; label: string }[] = [
     { value: 'all', label: '全部题目' },
     ...PRACTICE_CATEGORY_LIST.map((c) => ({ value: c, label: PRACTICE_CATEGORY_LABELS[c] })),
   ];
-
-  /** 导航按钮是否禁用。 */
+  /** 添加分类*/
+  readonly addCategory = signal<PracticeCategory | null>(null);
+  /**以我现在的能力,能照顾好自己就成,不要考虑怎么多,130万左右基本就可以了.给老爹开个账户,买点纳指和红利*/
+  
+  /** 导航按钮是否禁用。*/
   readonly navDisabled = computed(() => !this.listForNav().length);
 
-  /** 是否可以前往上一题。 */
+  /** 是否可以前往上一题。*/
   readonly canPrev = computed(() => this.currentIndex() > 0);
 
   /** 是否可以前往下一题。 */
@@ -285,19 +298,19 @@ export class PracticeComponent implements OnInit, OnDestroy {
       typeof localStorage !== 'undefined' &&
       localStorage.getItem(PRACTICE_SKIP_BUILTIN_SEED_KEY) === '1';
     if (!this.items().length && !skipBuiltin) {
-      const seeded = iosSeedToPracticeItems(Date.now());
-      this.storage.save(seeded);
+      const seeded = this.builtinSeedItems(Date.now());
+      this.storage.save(seeded, this.storageScope);
       this.reloadFromStorage();
     } else if (!skipBuiltin) {
-      const seeded = iosSeedToPracticeItems(Date.now());
-      const { added, updated } = this.storage.mergeItems(seeded);
+      const seeded = this.builtinSeedItems(Date.now());
+      const { added, updated } = this.storage.mergeItems(seeded, this.storageScope);
       if (added || updated) {
         this.reloadFromStorage();
       }
     }
-    this.dailyState.set(this.storage.readDailyState());
+    this.dailyState.set(this.storage.readDailyState(this.storageScope));
     this.ensureTodayPractice();
-    this.setFilter(this.storage.readSavedFilterCategory());
+    this.setFilter(this.storage.readSavedFilterCategory(this.storageScope));
   }
 
   /** 组件销毁时停止浏览器语音，避免离开页面后仍继续播放。 */
@@ -312,11 +325,10 @@ export class PracticeComponent implements OnInit, OnDestroy {
     if (t?.closest?.('.practice-fab-block')) return;
     this.categoryMenuOpen.set(false);
   }
-
   /** 合并内置 iOS 题库到本地题库，重复题目会跳过。 */
   mergeBuiltinIosSeed(): void {
-    const seeded = iosSeedToPracticeItems(Date.now());
-    const { added, updated, skipped } = this.storage.mergeItems(seeded);
+    const seeded = this.builtinSeedItems(Date.now());
+    const { added, updated, skipped } = this.storage.mergeItems(seeded, this.storageScope);
     this.reloadFromStorage();
     this.ensureTodayPractice();
     this.clampIndex();
@@ -325,13 +337,14 @@ export class PracticeComponent implements OnInit, OnDestroy {
       this.msg.warning('内置题库为空。');
       return;
     }
-    this.msg.success(`内置 iOS 题库：新增 ${added} 条，更新 ${updated} 条，跳过 ${skipped} 条。`);
+    this.msg.success(`${this.builtinSeedLabel}：新增 ${added} 条，更新 ${updated} 条，跳过 ${skipped} 条。`);
+    
   }
-
-  /** 切换分类筛选，并重置当前题的答案、自检和播放状态。 */
+  
+  /** 切换分类筛选，并重置当前题的答案、自检和播放状态。*/
   setFilter(value: FilterValue): void {
     this.filterCategory.set(value);
-    this.storage.saveFilterCategory(value);
+    this.storage.saveFilterCategory(value, this.storageScope);
     this.categoryMenuOpen.set(false);
     this.clampIndex();
     this.resetQuestionUi();
@@ -350,6 +363,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.clampIndex();
     this.resetQuestionUi();
   }
+  
 
   /** 在当前导航列表中随机切到另一题。 */
   randomOne(): void {
@@ -358,6 +372,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
       this.msg.warning('当前筛选下没有题目，请先导入或换一个分类。');
       return;
     }
+    
     if (list.length < 2) return;
     let j = this.currentIndex();
     let guard = 0;
@@ -520,6 +535,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.compareResult.set(compareUserAnswerToReference(this.userAnswer(), ref));
   }
 
+
   /** 处理 Excel/CSV 文件选择、解析、导入与错误提示。 */
   onFileSelected(ev: Event): void {
     const input = ev.target as HTMLInputElement;
@@ -543,7 +559,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
         this.msg.warning('没有找到可导入的题目。');
         return;
       }
-      const { added, skipped } = this.storage.importDrafts(drafts);
+      const { added, skipped } = this.storage.importDrafts(drafts, this.storageScope);
       this.reloadFromStorage();
       this.ensureTodayPractice();
       this.clampIndex();
@@ -570,9 +586,9 @@ export class PracticeComponent implements OnInit, OnDestroy {
       nzOkDanger: true,
       nzCancelText: '取消',
       nzOnOk: () => {
-        this.storage.clearAll();
+        this.storage.clearAll(this.storageScope);
         this.reloadFromStorage();
-        this.dailyState.set(this.storage.readDailyState());
+        this.dailyState.set(this.storage.readDailyState(this.storageScope));
         this.currentIndex.set(0);
         this.resetQuestionUi();
         this.msg.info('已清空题库。');
@@ -585,7 +601,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.modal.info({
       nzTitle: '导入与内置题库',
       nzContent:
-        '首次进入且本地无题时会自动写入 ios.seed.json。也可点「加载内置 iOS」合并。Excel 第一行为表头，至少含「题目」列；支持 .xlsx / .xls / .csv。题目存在本机 localStorage，重复题干会跳过。',
+        `首次进入且本地无题时会自动写入${this.builtinSeedLabel}。也可点「${this.builtinSeedButtonText}」合并。Excel 第一行为表头，至少含「题目」列；支持 .xlsx / .xls / .csv。题目存在本机 localStorage，重复题干会跳过。`,
     });
   }
 
@@ -811,7 +827,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
 
   /** 从本地存储重新载入题库。 */
   private reloadFromStorage(): void {
-    this.items.set(this.storage.load());
+    this.items.set(this.storage.load(this.storageScope));
     this.clampIndex();
   }
 
@@ -819,7 +835,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
   private ensureTodayPractice(): void {
     const items = this.items();
     if (!items.length) return;
-    const state = this.storage.readDailyState();
+    const state = this.storage.readDailyState(this.storageScope);
     const date = this.todayKey();
     const existing = state.records[date];
     const validIds = new Set(items.map((item) => item.id));
@@ -839,7 +855,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
       delete state.records[date].completedAt;
     }
     this.dailyState.set(state);
-    this.storage.saveDailyState(state);
+    this.storage.saveDailyState(state, this.storageScope);
     this.clampIndex();
   }
 
@@ -858,7 +874,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
     const state = { records: { ...this.dailyState().records } };
     state.records[this.todayKey()] = updater(record);
     this.dailyState.set(state);
-    this.storage.saveDailyState(state);
+    this.storage.saveDailyState(state, this.storageScope);
   }
 
   /** 每日题目标记后调整当前索引，并重置题目交互状态。 */
@@ -895,5 +911,11 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.showAnswer.set(false);
     this.userAnswer.set('');
     this.compareResult.set(null);
+  }
+
+  private builtinSeedItems(importedAt: number): PracticeItem[] {
+    return this.isIosLearning
+      ? iosJobSeedToPracticeItems(importedAt)
+      : iosSeedToPracticeItems(importedAt);
   }
 }

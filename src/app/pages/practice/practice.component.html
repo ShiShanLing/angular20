@@ -3,16 +3,16 @@
   [style.--practice-font-scale]="fontScale() / 100">
   @if (!statsTotal()) {
     <div class="practice-empty-fullpage">
-      <p class="practice-empty-title">暂无题目</p>
+      <p class="practice-empty-title">{{ pageName }} · 暂无题目</p>
       <p class="practice-empty-desc">
 
-        首次进入会自动加载内置 iOS 题库；若仍为空，请检查是否开启了跳过内置注入（调试键
+        首次进入会自动加载{{ builtinSeedLabel }}；若仍为空，请检查是否开启了跳过内置注入（调试键
         <code>angular20_practice_skip_builtin_seed_v1</code>）。
       </p>
       <div class="practice-empty-actions">
         <button nz-button nzType="primary" type="button" (click)="mergeBuiltinIosSeed()">
           <span nz-icon nzType="book"></span>
-          加载内置 iOS 题库
+          {{ builtinSeedButtonText }}
         </button>
         <label class="file-pick">
           <input
@@ -57,7 +57,7 @@
           </span>
         }
         <div class="practice-topbar__extras">
-          <span class="practice-stat-hint" title="全库各分类题量">共 {{ statsTotal() }} 题</span>
+          <span class="practice-stat-hint" title="全库各分类题量">{{ pageName }} · 共 {{ statsTotal() }} 题</span>
           <label class="file-pick file-pick--inline"> 
             <input
               type="file"
@@ -65,7 +65,9 @@
               (change)="onFileSelected($event)" />
             <button type="button" class="practice-btn practice-btn--ghost" title="导入 Excel / CSV">导入</button>
           </label>
-          <button type="button" class="practice-btn practice-btn--ghost" (click)="mergeBuiltinIosSeed()">内置 iOS</button>
+          <button type="button" class="practice-btn practice-btn--ghost" (click)="mergeBuiltinIosSeed()">
+            {{ isIosLearning ? 'iOS题库' : '内置 iOS' }}
+          </button>
           <button
             type="button"
             class="practice-btn practice-btn--ghost practice-btn--danger"

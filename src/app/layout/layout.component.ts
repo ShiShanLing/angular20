@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { RouterOutlet, RouterLink, Router, NavigationEnd } from '@angular/router';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
@@ -10,12 +10,15 @@ import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
+import { PermissionService } from '../core/permission.service';
+import { MenuVisibilityService } from '../core/menu-visibility.service';
+import { FEATURE_MENU_ITEMS, type FeatureMenuItem } from '../core/feature-menu';
 
-interface MenuItem {
+type MenuItem = FeatureMenuItem;
+
+interface MenuSettingsGroup {
   label: string;
-  icon?: string;
-  path?: string;
-  children?: MenuItem[];
+  children: Array<{ path: string; label: string }>;
 }
 
 /** 壳布局：顶栏、侧栏多级菜单、移动端抽屉与主区域 `<router-outlet>`。 */
@@ -44,12 +47,17 @@ export class LayoutComponent implements OnInit, OnDestroy {
   // 移动端抽屉是否打开
   isMobileDrawerOpen = false;
 
+  // 菜单显示设置面板是否打开
+  isMenuSettingsOpen = false;
+
   // 统一管理所有订阅，在 ngOnDestroy 中一次性取消，防止内存泄漏
   private subs = new Subscription();
 
   constructor(
     private breakpointObserver: BreakpointObserver,
     private router: Router,
+    private permissionService: PermissionService,
+    private menuVisibilityService: MenuVisibilityService,
   ) {}
 
   ngOnInit() {
@@ -81,8 +89,13 @@ export class LayoutComponent implements OnInit, OnDestroy {
           if (this.isMobile) {
             this.isMobileDrawerOpen = false;
           }
+          this.isMenuSettingsOpen = false;
+          this.ensureCurrentRouteVisible();
         })
     );
+
+    // 首次进入页面时，若命中默认重定向到已隐藏项，则立即校正到首个可见菜单。
+    this.ensureCurrentRouteVisible();
   }
 
   ngOnDestroy() {
@@ -102,55 +115,140 @@ export class LayoutComponent implements OnInit, OnDestroy {
     }
   }
 
-  menuItems: MenuItem[] = [
-    {
-      label: '财务工具',
-      icon: 'money-collect',
-      children: [
-        { path: '/tools/mortgage', label: '房贷计算' },
-        { path: '/tools/salary', label: '个税计算' },
-        { path: '/tools/accounting', label: '记账分期' },
-        { path: '/tools/subscription', label: '订阅管理' },
-        { path: '/tools/saving', label: '攒钱计划' },
-        { path: '/tools/fire', label: 'FIRE 计算器' },
-        { path: '/tools/anhui-pension', label: '安徽农村养老金' },
-      ]
-    },
-    {
-      label: '身体健康',
-      icon: 'heart',
-      children: [
-        { path: '/tools/bmi', label: 'BMI/体脂' },
-        { path: '/tools/water', label: '饮水提醒' },
-        { path: '/tools/weight', label: '体重追踪' },
-        { path: '/tools/sleep', label: '睡眠分析' },
-      ]
-    },
-    {
-      label: '效率工具',
-      icon: 'thunderbolt',
-      children: [
-        { path: '/tools/time', label: '时间效率' },
-        { path: '/tools/weather', label: '天气预报' },
-        { path: '/tools/calendar', label: '万年历' },
-        { path: '/tools/text', label: '文本处理' },
-        { path: '/tools/dev', label: '开发助手' },
-        { path: '/practice', label: '面试刷题' },
-      ]
-    },
-    
-    {
-      label: '休闲游戏',
-      icon: 'customer-service',
-      children: [
-        { path: '/snake', label: '贪吃蛇' },
-        { path: '/tetris', label: '俄罗斯方块' },
-      ]
-    },
-    {
-      label: '数据演示',
-      icon: 'bar-chart',
-      children: [{ path: '/chart-showcase', label: '炫酷图表' }]
+  toggleMenuSettings(): void {
+    this.isMenuSettingsOpen = !this.isMenuSettingsOpen;
+  }
+
+  closeMenuSettings(): void {
+    this.isMenuSettingsOpen = false;
+  }
+
+  onMenuVisibleChange(path: string, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    this.menuVisibilityService.setVisible(path, checked);
+    this.ensureCurrentRouteVisible();
+  }
+
+  isMenuPathVisible(path: string): boolean {
+    return this.menuVisibilityService.isVisible(path);
+  }
+
+  resetMenuVisibility(): void {
+    this.menuVisibilityService.reset();
+    this.ensureCurrentRouteVisible();
+  }
+
+  readonly menuItems: MenuItem[] = FEATURE_MENU_ITEMS;
+
+  /**
+   * 先做权限过滤（用于设置面板，保证无权限项不会出现在设置里）
+   * 再叠加本地显示/隐藏设置（用于最终菜单展示）
+   */
+  private readonly permissionMenuItems = computed(() => this.filterByPermission(this.menuItems));
+  readonly visibleMenuItems = computed(() => this.filterByVisibility(this.permissionMenuItems()));
+  readonly menuSettingsGroups = computed<MenuSettingsGroup[]>(() =>
+    this.permissionMenuItems()
+      .map((item) => ({
+        label: item.label,
+        children: (item.children ?? [])
+          .filter((child): child is MenuItem & { path: string } => typeof child.path === 'string')
+          .map((child) => ({ path: child.path, label: child.label })),
+      }))
+      .filter((group) => group.children.length > 0)
+  );
+
+  private filterByPermission(items: MenuItem[]): MenuItem[] {
+    return items
+      .map((item) => {
+        const hasSelfPermission = this.permissionService.hasPermission(item.permission);
+        const filteredChildren = item.children ? this.filterByPermission(item.children) : undefined;
+
+        if (filteredChildren) {
+          if (!hasSelfPermission || filteredChildren.length === 0) {
+            return null;
+          }
+          return { ...item, children: filteredChildren };
+        }
+
+        if (!hasSelfPermission) {
+          return null;
+        }
+        return item;
+      })
+      .filter((item): item is MenuItem => item !== null);
+  }
+
+  private filterByVisibility(items: MenuItem[]): MenuItem[] {
+    return items
+      .map((item) => {
+        const visibleBySetting = this.menuVisibilityService.isVisible(item.path);
+        const filteredChildren = item.children ? this.filterByVisibility(item.children) : undefined;
+
+        if (filteredChildren) {
+          if (filteredChildren.length === 0) {
+            return null;
+          }
+          return { ...item, children: filteredChildren };
+        }
+
+        if (!visibleBySetting) {
+          return null;
+        }
+        return item;
+      })
+      .filter((item): item is MenuItem => item !== null);
+  }
+
+  private ensureCurrentRouteVisible(): void {
+    const currentPath = this.normalizePath(this.router.url);
+    const managedPaths = this.collectLeafPaths(this.permissionMenuItems());
+    const visiblePaths = this.collectLeafPaths(this.visibleMenuItems());
+    const firstVisiblePath = visiblePaths[0];
+    if (!firstVisiblePath) {
+      if (
+        currentPath !== '/no-access' &&
+        (currentPath === '' ||
+          currentPath === '/' ||
+          currentPath === '/tools' ||
+          managedPaths.includes(currentPath))
+      ) {
+        void this.router.navigateByUrl('/no-access', { replaceUrl: true });
+      }
+      return;
     }
-  ];
+
+    // 根路径、tools 根路径，或当前路径不在可见菜单里时，跳到第一个可见页面。
+    if (
+      currentPath === '' ||
+      currentPath === '/' ||
+      currentPath === '/tools' ||
+      !visiblePaths.includes(currentPath)
+    ) {
+      if (currentPath !== firstVisiblePath) {
+        void this.router.navigateByUrl(firstVisiblePath, { replaceUrl: true });
+      }
+    }
+  }
+
+  private collectLeafPaths(items: MenuItem[]): string[] {
+    const paths: string[] = [];
+    for (const item of items) {
+      if (item.children?.length) {
+        paths.push(...this.collectLeafPaths(item.children));
+      } else if (item.path) {
+        paths.push(item.path);
+      }
+    }
+    return paths;
+  }
+
+  private normalizePath(url: string): string {
+    const withoutQuery = url.split('?')[0] ?? '';
+    const withoutFragment = withoutQuery.split('#')[0] ?? '';
+    const trimmed = withoutFragment.trim();
+    if (!trimmed) {
+      return '/';
+    }
+    return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  }
 }

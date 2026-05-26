@@ -13,7 +13,7 @@
   </div>
   <!-- 菜单：桌面折叠时收起图标模式，移动端始终展开 -->
   <ul nz-menu nzTheme="dark" nzMode="inline" [nzInlineCollapsed]="isCollapsed && !isMobile">
-    @for (item of menuItems; track item.label) {
+    @for (item of visibleMenuItems(); track item.label) {
       @if (item.children) {
         <!-- 有子菜单：桌面折叠时收起，移动端始终展开 -->
         <li nz-submenu [nzTitle]="item.label" [nzIcon]="item.icon || ''" [nzOpen]="!isCollapsed || isMobile">
@@ -58,6 +58,40 @@
     </div>
   }
 
+  @if (isMenuSettingsOpen) {
+    <div class="settings-backdrop" (click)="closeMenuSettings()"></div>
+    <aside class="menu-settings-panel" (click)="$event.stopPropagation()">
+      <div class="menu-settings-header">
+        <h3>功能显示设置</h3>
+        <button type="button" class="menu-settings-close" (click)="closeMenuSettings()">×</button>
+      </div>
+
+      <div class="menu-settings-body">
+        @for (group of menuSettingsGroups(); track group.label) {
+          <section class="menu-settings-group">
+            <h4>{{ group.label }}</h4>
+            @for (child of group.children; track child.path) {
+              <label class="menu-settings-item">
+                <input
+                  type="checkbox"
+                  [checked]="isMenuPathVisible(child.path)"
+                  (change)="onMenuVisibleChange(child.path, $event)"
+                />
+                <span>{{ child.label }}</span>
+              </label>
+            }
+          </section>
+        }
+      </div>
+
+      <div class="menu-settings-footer">
+        <button type="button" class="menu-settings-reset" (click)="resetMenuVisibility()">
+          恢复默认显示
+        </button>
+      </div>
+    </aside>
+  }
+
   <!--
     ── 桌面端专属区域（>768px）──────────────────────────────────────────
     仅桌面端渲染 nz-sider，支持折叠/展开
@@ -87,6 +121,10 @@
         [nzType]="isMobile ? 'menu' : (isCollapsed ? 'menu-unfold' : 'menu-fold')"
         (click)="toggleMenu()">
       </span>
+
+      <button type="button" class="settings-trigger" (click)="toggleMenuSettings()">
+        功能设置
+      </button>
       
       <span class="header-title">Angular 19 功能演示</span>
       <!-- 技术标签在移动端通过 CSS 隐藏（节省空间） -->

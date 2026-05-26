@@ -72,6 +72,78 @@
     "oralOneLiner": "默认用 `weak` 更安全；只有能确定对方不会先释放才用 `unowned`，闭包里拿不准就 `[weak self]`。"
   },
   {
+    "id": "swift-escaping-closure",
+    "category": "iOS",
+    "topic": "Swift 语言 / 闭包",
+    "question": "Swift 逃逸闭包（`@escaping`）与非逃逸闭包（默认 non-escaping）是什么？为何要区分二者？常见场景有哪些？",
+    "answer": "**可先这样说（对齐题干口述）：**\n\n逃逸闭包：传给函数的闭包**可能在函数 return 之后才执行**，逃出当前函数作用域，典型是异步回调、网络、`DispatchQueue.async`（若闭包延后执行）等——参数类型需标 `@escaping`。\n\n非逃逸闭包：闭包保证在** callee 函数返回之前**就会被同步调用完（或至少生命周期被约束在 callee 体内），不传出去存起来；默认不写就是 non-escaping。\n\n**为何要区分：**方便编译器推断生命周期 → 能做更强优化（见下）；同时提醒你用 `@escaping` 时要考虑**延后执行**，强引用捕获 `self` 容易形成闭环。\n\n---\n\n**追问再展开（原理、细节与代码）：**\n\n**1 · 生命周期与语义**\n\n- `@escaping`：闭包可被保存到属性、扔进队列稍后执行，`self`/`闭包持有者`可能被长期持有。**类实例成员**常以显式 **`self.`** 书写，提醒你注意捕获关系（再配合 `[weak self]` / `[unowned self]`）。\n- 非逃逸：闭包**不会逃出**函数帧，语义上常与同步调用对齐，捕获关系更易分析。\n\n**⚠️ 辨析**：`**@escaping` ≠ 「闭包里必须写 self」**。是否写 `self` 与语言版本、`weak` 解包等规则有关；口试强调「逃逸 + 延后 + 捕获 self →**重点防循环引用**」即可。\n\n**2 · 循环引用**\n\n- 闭包**强引用**其捕获变量；若在逃逸闭包里强捕获正在持有该闭包的 `self`，常见 **`self ←闭包← self`**。**非逃逸不在 return 后继续活**，一般不出现「调用已结束还把双方吊着」的同类问题。\n\n**3 · 编译器优化（面试常考点）**\n\n- **非逃逸**生命周期固定在 callee 一侧，LLVM/SIL 可以更激进地做**逃逸分析、内联、减少不必要的 retain/release**。\n\n**4 · 分配（口语层）**\n\n- Swift 闭包常为 **引用语义**；**非逃逸**更可能被优化到**更少堆分配或不逃逸到堆**。具体实现随时版本变化，口述用「可按非逃逸做更强生命周期优化」而非背死栈/堆。\n\n```swift\nfunc syncWork(_ fn: () -> Void) {\n    fn()   // 默认 nonescaping：return 前就执行完\n}\n\nfinal class Demo {\n    var completionHandlers: [() -> Void] = []\n\n    func request(completion: @escaping () -> Void) {\n        DispatchQueue.global().async {\n            // 异步延后 → completion 必须从 @escaping\n            DispatchQueue.main.async {\n                completion()\n            }\n        }\n    }\n\n    func stash(_ completion: @escaping () -> Void) {\n        completionHandlers.append(completion)\n    }\n}\n```\n\n面试收口：**`@escaping` = 可能被延后执行的闭包 · 要写清捕获与闭环；默认 non-escaping =  callee 结束前就用完 · 语义更窄、编译器更好优化。**",
+    "difficulty": "Medium",
+    "oralOneLiner": "逃逸闭包能在函数返回后执行 → 标记 `@escaping`，注意延后捕获与闭环；非逃逸只在函数结束前同步用完，语义更窄、更易优化。"
+  },
+  {
+    "id": "swift-task-async-await",
+    "category": "iOS",
+    "topic": "Swift 并发",
+    "question": "Swift 并发中的 `Task`、`async`、`await` 分别是什么？和 GCD 的 `DispatchQueue.async` 有什么区别？",
+    "answer": "**可先这样说（对齐题干口述）：**\n\n`async` 标在函数上，表示函数可能挂起；`await` 写在调用处，表示这里可能等待异步结果或等待进入 actor；`Task {}` 创建一个 Swift 并发任务，让同步代码可以启动异步流程。它们可以替代很多 GCD 异步回调写法，但 `Task` 不等于后台线程。\n\n---\n\n**追问再展开（原理、细节与代码）：**\n\n`async` 是函数能力声明：这个函数可能需要等待网络、文件、计时器，或者等待某个 actor 空闲。调用它时通常要写 `await`。\n\n```swift\nfunc fetchName() async -> String {\n    try? await Task.sleep(nanoseconds: 1_000_000_000)\n    return \"Tom\"\n}\n```\n\n`await` 是调用点标记：这里可能挂起当前任务。挂起不是阻塞线程，而是当前任务先暂停，线程可以去执行别的任务，等结果回来后再继续往下跑。\n\n```swift\nTask {\n    let name = await fetchName()\n    print(name)\n}\n```\n\n`Task {}` 是创建异步任务，常用于从同步方法进入 async 世界。比如 `viewDidLoad()`、按钮点击回调这类同步入口里，不能直接写 `await`，就可以开一个 `Task`。\n\n```swift\noverride func viewDidLoad() {\n    super.viewDidLoad()\n\n    Task {\n        let name = await fetchName()\n        await MainActor.run {\n            titleLabel.text = name\n        }\n    }\n}\n```\n\n它和 GCD 看起来都能异步执行代码：\n\n```swift\nDispatchQueue.global().async {\n    // GCD block\n}\n\nTask {\n    // Swift concurrency task\n}\n```\n\n但本质不同：`DispatchQueue.global().async` 是把 block 丢到全局队列；`Task {}` 是创建 Swift 并发运行时管理的任务。`Task` 能直接使用 `await`，能配合 `actor` / `MainActor`，有取消机制，也可以有返回值。\n\n```swift\nlet task = Task {\n    await fetchName()\n}\n\nlet name = await task.value\n```\n\n还要注意：`Task {}` 不一定等于后台。如果在 `@MainActor` 环境里创建，它可能继承当前 MainActor；这适合 UI 流程，但不适合把大计算直接塞进去。\n\n```swift\n@MainActor\nfunc buttonTapped() {\n    Task {\n        // 可能仍在 MainActor 上，不要在这里做很重的同步计算\n        let name = await fetchName()\n        titleLabel.text = name\n    }\n}\n```\n\n如果是 CPU 重计算，要避免卡 UI，可以把重活放进非 MainActor 的异步函数、专门的 actor，或者谨慎使用 `Task.detached`。`detached` 不继承当前 actor，上下文更独立，捕获数据时更要注意 `Sendable`。\n\n面试收口：**`Task` 是 Swift 并发任务，不是线程；`async` 表示函数可挂起；`await` 表示这里可能等待。新代码优先用 Task/async-await/MainActor/actor，只有明确需要队列、DispatchSource、semaphore、barrier 等底层能力时再用 GCD。**",
+    "difficulty": "Medium",
+    "oralOneLiner": "`Task` 创建 Swift 并发任务，`async` 表示函数可挂起，`await` 表示调用点可能等待；它能替代很多 GCD 异步流程，但不等于后台线程。"
+  },
+  {
+    "id": "swift-concurrency-overview",
+    "category": "iOS",
+    "topic": "Swift 并发",
+    "question": "Swift Concurrency 这一套相对 GCD 主要强在哪里？`Task`、`await`、`MainActor`、`actor`、`Sendable` 分别解决什么问题？",
+    "answer": "**可先这样说（对齐题干口述）：**\n\nSwift Concurrency 不是只提供一个新的异步 API，而是把异步流程、UI 隔离、共享状态保护、跨并发传值和任务取消都纳入语言模型，让编译器能帮忙检查很多以前靠约定和手写队列维护的规则。\n\n---\n\n**追问再展开（总览记忆）：**\n\n- `await` 让异步流程变得可读：代码还是从上往下写，但遇到异步操作时可以挂起当前任务，等结果回来再继续。\n- `MainActor` 让 UI 线程规则变得可检查：UI 更新不再只是约定“记得回主线程”，而是可以用 `@MainActor` 或 `MainActor.run` 交给编译器检查。\n- `actor` 让共享可变状态不用手写锁：同一时刻只有一个任务进入 actor 修改它的内部状态，适合替代很多串行队列、锁、信号量的状态保护场景。\n- `Sendable` / `@Sendable` 让跨并发传递更安全：`Sendable` 约束类型能否安全跨任务/actor 传递，`@Sendable` 约束闭包被并发执行时捕获的内容是否安全。\n- Task cancellation 让取消变成一等能力：`Task` 可以被保存、等待结果、取消，任务内部也能通过 `Task.isCancelled` 或抛出取消错误来配合结束。\n\n```swift\nTask {\n    let user = await loadUser()\n\n    await MainActor.run {\n        nameLabel.text = user.name\n    }\n}\n```\n\n这段代码看起来像同步流程，但底层是异步任务；`await` 表示等待，`MainActor` 表示 UI 更新回主 actor。再结合 `actor` 保护状态、`Sendable` 检查跨并发传值，整套模型比单纯 `DispatchQueue.async` 更容易维护。\n\n也要注意：Swift Concurrency 不是彻底废掉 GCD。老接口、`DispatchSource`、semaphore、barrier queue、已有 GCD 架构仍然会用到。新 Swift 业务代码通常优先考虑 `Task` / `async-await` / `MainActor` / `actor`。\n\n面试收口：**GCD 主要是队列调度工具；Swift Concurrency 是语言级并发模型，既能组织异步流程，也能表达隔离、取消和跨并发安全。**",
+    "difficulty": "Medium",
+    "oralOneLiner": "`await` 管异步可读性，`MainActor` 管 UI，`actor` 管共享状态，`Sendable` 管跨并发传值，`Task` cancellation 管取消。"
+  },
+  {
+    "id": "swift-sendable-closure",
+    "category": "iOS",
+    "topic": "Swift 并发",
+    "question": "Swift 并发里的 `Sendable` 和 `@Sendable` 分别是什么？它们解决什么问题？",
+    "answer": "**可先这样说（对齐题干口述）：**\n\n`Sendable` 修饰类型，表示这个类型的值可以安全跨并发边界传递；`@Sendable` 修饰闭包，表示这个闭包可能会被送到并发环境里执行，所以它捕获的东西也必须并发安全。\n\n---\n\n**追问再展开（原理、细节与代码）：**\n\nSwift 并发里常有跨边界传值：从一个 `Task` 到另一个 `Task`、从普通代码到 `actor`、从后台任务回到 `MainActor`。`Sendable` 就是在告诉编译器：这个类型被这样传递时，不会因为共享可变状态而产生数据竞争。\n\n最推荐的形态是不可变值类型：\n\n```swift\nstruct UserSnapshot: Sendable {\n    let id: Int\n    let name: String\n}\n```\n\n因为 `struct` 是值语义，`let` 属性初始化后不能改，而且 `Int`、`String` 自身也是 `Sendable`。多个任务拿到它，基本只是读一份快照。\n\n要警惕 `class + var`：\n\n```swift\nfinal class Counter {\n    var value = 0\n}\n\n// 不推荐随便写成 Sendable：多个 Task 可能同时改同一个 value\n```\n\n如果确实要共享并修改同一份状态，优先用 `actor`：\n\n```swift\nactor SafeCounter {\n    private var value = 0\n\n    func increase() -> Int {\n        value += 1\n        return value\n    }\n}\n```\n\n`@Sendable` 是闭包层面的标记。它的重点不是“闭包一定异步”，而是：**这个闭包可能被并发执行，所以它捕获的值也要安全**。\n\n```swift\nfunc runJob(_ job: @escaping @Sendable () async -> Void) {\n    Task {\n        await job()\n    }\n}\n\nlet user = UserSnapshot(id: 1, name: \"Tom\")\nrunJob {\n    print(user.name) // 安全：user 是 Sendable\n}\n```\n\n危险例子是捕获普通可变引用类型：\n\n```swift\nlet counter = Counter()\nrunJob {\n    counter.value += 1 // 严格并发检查下应警惕：捕获了非 Sendable 的可变引用对象\n}\n```\n\n另外要知道，`Sendable` 诊断会受 actor isolation 影响。比如类型被 `@MainActor` 或项目的 Default Actor Isolation 保护时，编译器提示可能和纯 `nonisolated` 场景不同。面试里不用纠缠配置细节，主线是：**跨并发传递的数据要么不可变，要么由 actor/锁等机制保护。**\n\n面试收口：**`Sendable` 管“类型能不能安全传过去”；`@Sendable` 管“闭包被并发执行时捕获是否安全”。**",
+    "difficulty": "Medium",
+    "oralOneLiner": "`Sendable` 表示类型可安全跨并发边界传递；`@Sendable` 表示闭包可能并发执行，捕获内容也必须并发安全。"
+  },
+  {
+    "id": "swift-trailing-closure",
+    "category": "iOS",
+    "topic": "Swift 语言 / 闭包",
+    "question": "什么是尾随闭包（Trailing Closure）？多尾随闭包（multiple trailing closures）怎么用？有什么好处？",
+    "answer": "**可先这样说（对齐题干口述）：**\n\n**尾随闭包**：若函数的**最后一个参数**是闭包类型，调用时可以把花括号 `{}` **写在括号外面**，读起来像 DSL；若**整次调用只剩这一个参数**，外层 `(...)` **常可整块省略**。\n\n**多尾随闭包**：从 Swift 5.3 起，若函数末尾有**多个闭包参数**，可连续写多块 `{}`，中间的用 **参数标签**分段（常见于 `UIKit`/`SwiftUI` 动画、按钮等）。\n\n好处：**嵌套变浅**、读起来像配置块代码，可读性更接近「外层 API + 两段 body」。\n\n---\n\n**追问再展开（原理、细节与代码）：**\n\n```swift\n// 单尾随：最后一个参数是闭包 → 提出来\nfunc fetch(_ url: URL, completion: (Data?, Error?) -> Void) {}\nfetch(URL(string: \"https://a\")!) { data, error in }\n\n// 括号也可完全省略时的经典形态\n UIView.animate(withDuration: 0.25, animations: {\n    v.alpha = 0\n})\n// 尾随写法（animations 正好是最后一个闭包时）:\n UIView.animate(withDuration: 0.25) {\n    v.alpha = 0\n}\n\n// 多尾随：第一段常无标签对应第一个闭参，其后各段带标签\n UIView.animate(withDuration: 0.2, delay: 0, options: []) {\n    v.frame = target\n} completion: { _ in\n    print(\"done\")\n}\n```\n\n**SwiftUI 常见**：第二个大块往往是 `Label`/`content`。\n\n**注意**\n\n- 尾随闭包**不改变**逃逸/非逃逸语义，只是把语法挪到外面。\n- 若闭包是第一个参数又想尾随，仍可写，但整体规则以**「从最后一个闭包参数往回」贴尾随**为最熟记套路；多尾随时第一段对应**第一个尾随闭参**、其后按标签。\n\n面试收口：**尾随 = 把最后的闭参 `{}` 提出括号外加可选省略括号；多个闭参可分多段尾随 + 中段标签。**",
+    "difficulty": "Easy",
+    "oralOneLiner": "最后一个闭包参数可以写在调用括号外面；Swift 5.3+ 多闭参可多块尾随并用标签分段。"
+  },
+  {
+    "id": "swift-autoclosure",
+    "category": "iOS",
+    "topic": "Swift 语言 / 闭包",
+    "question": "`@autoclosure` 是什么？和「自动创建的闭包」有什么关系？有何注意点？",
+    "answer": "**可先这样说（对齐题干口述）：**\n\n`@autoclosure` 标在形如 `() -> T` 的参数上：调用点写**普通表达式**，编译器**自动把它包成一个闭包**；往往用于**延后求值**，只有 callee 真要这个值时才执行表达式。\n\n典型动机：**短路**、日志、断言——避免没用的昂贵计算。\n\n---\n\n**追问再展开（原理、细节与代码）：**\n\n**口述模型**：\n\n`func log(_ msg: @autoclosure () -> String) { if debug { print(msg()) } }`  \n调用 `log(\"count=\\(expensive())\")` 时，`expensive()` **未必**会被执行，取决 callee 要不要调用 `msg()`。\n\n**默认非逃逸**：和普通闭包一样，`@autoclosure` **默认 `@nonescaping`**；若要把「包好的闭包」存起来以后再估，必须写 **`@autoclosure(escaping)`**（少见，需心里有数闭环与求值次序）。\n\n```swift\nfunc assertWrapper(_ condition: Bool, _ message: @autoclosure () -> String = \"\") {\n    guard !condition else { return }\n    fatalError(message())  // 只有失败才叫 message()\n}\n\n// ⚠️ 副作用：表达式可能完全不执行 —— 别把必须发生的副作用塞进 autoclosure\n```\n\n**与运算符短路**：逻辑 `&&`/`||` 的右操作数本来就像「有条件的延后」；`assert`/`precondition` 等 API 大量使用 `@autoclosure`。\n\n面试收口：**`@autoclosure` = 调用处写表达式、内部包成闭包再按需执行；默认非逃逸，逃逸要标 `(escaping)`。**",
+    "difficulty": "Medium",
+    "oralOneLiner": "`@autoclosure` 把实参表达式包成延后执行的 `() -> T`，默认 non-escaping；求值仅在 callee 调用该闭包时发生。"
+  },
+  {
+    "id": "swift-closure-capture-list",
+    "category": "iOS",
+    "topic": "Swift 语言 / 闭包",
+    "question": "闭包里 `[weak self]`、`[unowned self]`、`[x = x]` 等捕获列表（capture list）语义是什么？和循环变量有什么坑？",
+    "answer": "**可先这样说（对齐题干口述）：**\n\n**捕获列表**写在闭包开头的 `[...]`：**在创建闭包那一刻**决定要捕获哪些名字的**哪种引用语义**——`weak`/`unowned`、或把当时的值拷贝进 **`x`** 等。\n\n和循环引用：**`weak`/`unowned` 打在列表里最干净**；单靠闭包体内的隐式捕获 `self`，容易强引用闭环（另见本题库的 `swift-unowned-weak`/`swift-escaping-closure`）。\n\n---\n\n**追问再展开（原理、细节与代码）：**\n\n```swift\nclass C {\n    var value = 1\n\n    func demo() {\n        Task { [weak self] in\n            guard let self else { return }\n            await self.perform()\n        }\n    }\n}\n```\n\n**`[x = x]` / 显式绑定「当时」**\n\n- **`[copy = expr]`**：在创建闭包时求值 **`expr`** 一次，拷贝进常量 **`copy`**，闭包体内用 **`copy`**，避免误以为引用的是之后会变的变量。\n\n```swift\n// 异步 / 延后执行时不要指望「看得见」外层 var 最后一刻\nvar ticket = Ticket(id: 1)\nenqueue {\n    [t = ticket] in   // t 是当前 ticket 快照（值语义则拷贝）\n    process(t)\n}\nticket = Ticket(id: 2) // 闭包里仍是创建时那份\n```\n\n**常见误判**：延后闭包里没有捕获列表、却依赖**之后会改**的外层 **`var`** 或共享可变集合 —— **用列表显式快照**或改设计。\n\n面试收口：**列表在闭包创建时定稿捕获；`weak`/`unowned` 防环；`=` 可复制「当时」的快照。**",
+    "difficulty": "Medium",
+    "oralOneLiner": "捕获列表在开闭包时决定 weak/unowned 与「当时值」快照；循环与异步要结合 capture 语义避免看错变量。"
+  },
+  {
+    "id": "swift-closure-types-overview",
+    "category": "iOS",
+    "topic": "Swift 语言 / 闭包",
+    "question": "Swift 里「函数类型」「可选闭包」「`Void`」「`@Sendable`」与类型擦除闭包在面试里怎么简单说？",
+    "answer": "**可先这样说（对齐题干口述）：**\n\n- **函数类型**：`(Int, String) -> Bool` —— 「入参个数与类型 → 返回类型」，与 `Closure`/`func` 可互换赋值（签名匹配时）。\n- **`Void`**：即空元组 `()`；`() -> Void` 最常见「无参无返回值闭包」，别和「无返回值」语义搞混：`Void` 仍是类型名。\n- **可选闭包**：`((_ data: Data) -> Void)?` —— 整个闭包可能没有；调用前要 `completion?(data)` **或** `guard let ...`。**不要**误以为可选的是返回值。\n\n---\n\n**追问再展开（兼容并发口语）：**\n\n- **`@Sendable`**：若在并发边界传递闭包，有时要在参数上加 **`@Sendable`**，配合捕获满足 `Sendable` 的检查。口试一句：**跨执行域要少捕获、尽量 `Sendable`。**\n- **类型擦除**：签名复杂时用 **`typealias`** 或小包装可读性更好。\n\n**与 ObjC**：与 block 互操作另有 `@convention(block)`（混编时再记）。\n\n```swift\nvar onDone: (() -> Void)?\nonDone?()                    // optional invoke：nil 则不执行\nfunc invokeOptional(_ cb: (() -> Void)?) {\n    cb?()\n}\n```\n\n面试收口：**会写函数类型、`Void`/`()`、可选 `opt?(…)`；并发题点到 `@Sendable`。**",
+    "difficulty": "Medium",
+    "oralOneLiner": "`(A)->B` 是函数类型；`() -> Void` 很常见；可选闭包用 `completion?(…)`；跨并发可提 `@Sendable`。"
+  },
+  {
     "id": "ios-lib-static-dynamic",
     "category": "iOS",
     "topic": "构建 / 链接",
@@ -697,9 +769,9 @@
     "category": "iOS",
     "topic": "内存 / 定时器",
     "question": "NSTimer 为什么容易循环引用？怎么解决？",
-    "answer": "**可先这样说（对齐题干口述）：**\n\nTimer 会强持有 target，RunLoop 又强持有 Timer；如果 VC 强持有 Timer，就容易形成 VC、Timer、target 之间的循环引用。\n\n---\n\n**追问再展开（原理、细节与代码）：**\n\n常见写法是 VC 持有一个 `Timer` 属性，Timer 的 target 又是 VC，Timer 被加到 RunLoop 后会被 RunLoop 持有。这样 VC -> Timer -> VC 形成环，页面退出时 VC 不释放，Timer 还会继续触发。\n\n解决方式包括：在合适时机 `invalidate`；使用 block timer 时用 `[weak self]`；使用中间 weak proxy；或者用 GCD timer、CADisplayLink 时同样注意持有关系。\n\n注意：`invalidate` 后 Timer 才会从 RunLoop 移除并释放相关持有。只把 `timer = nil` 不一定够。\n\n面试收口：**Timer 循环引用的关键是 RunLoop 持有 Timer，Timer 又持有 target；解决靠 invalidate 和弱引用。**",
+    "answer": "**可先这样说（对齐题干口述）：**\n\n`Timer` 加入 `RunLoop` 后会被 `RunLoop` 持有；`Timer` 又会强持有 `target`。如果 `ViewController` 强持有 `Timer`，同时 `target` 传的是 `self`，就形成 `VC -> Timer -> VC` 的循环引用，页面退出后 VC 不释放，Timer 还会继续触发。\n\n---\n\n**追问再展开（原理、细节与代码）：**\n\n经典问题出在这种写法：\n\n```swift\ntimer = Timer.scheduledTimer(\n    timeInterval: 1,\n    target: self,\n    selector: #selector(tick),\n    userInfo: nil,\n    repeats: true\n)\n```\n\n这里 `target: self` 通常就是当前 `ViewController`。引用关系是：\n\n```text\nViewController -> Timer\nTimer -> target，也就是 ViewController\nRunLoop -> Timer\n```\n\n真正的循环是 `ViewController -> Timer -> ViewController`；`RunLoop -> Timer` 会让 Timer 持续存活。如果是重复定时器，不主动停止，就容易导致页面无法释放。\n\n解决方式主要有三类：\n\n1. 在合适生命周期主动调用 `invalidate`，比如页面消失、任务结束或不再需要定时器时。\n2. 使用 block timer，并在闭包里 `[weak self]`。\n3. 使用 weak proxy，让 Timer 强持有代理对象，代理对象弱引用真正的 target。\n\n```swift\ntimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] timer in\n    guard let self else {\n        timer.invalidate()\n        return\n    }\n\n    self.tick()\n}\n```\n\n注意：`invalidate` 后，Timer 才会从 RunLoop 移除并释放相关持有。只写 `timer = nil` 不一定够；只在 `deinit` 里 `invalidate` 也可能太晚，因为循环引用会导致 `deinit` 根本不执行。\n\n`CADisplayLink` 和 GCD timer 也要注意类似问题：只要闭包或 target 强持有 `self`，就仍然可能形成循环引用。\n\n面试收口：**Timer 循环引用的关键是 Timer 强持有 target；当 target 是 VC 且 VC 又强持有 Timer 时就成环。解决靠主动 `invalidate`、`weak self` 或 weak proxy。**",
     "difficulty": "Medium",
-    "oralOneLiner": "Timer 会被 RunLoop 持有，又可能强持有 target；解决靠 `invalidate`、弱引用或 weak proxy。"
+    "oralOneLiner": "Timer 强持有 target；当 target 是 VC 且 VC 又强持有 Timer 时形成 `VC -> Timer -> VC`，解决靠 `invalidate`、`weak self` 或 weak proxy。"
   },
   {
     "id": "ios-urlsession-basics",

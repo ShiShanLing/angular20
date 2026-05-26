@@ -20,10 +20,14 @@ export const PRACTICE_CATEGORY_LIST: PracticeCategory[] = [
   'angular-js',
   'angular-css',
 ];
+//NSTimer 被 RunLoop 持有，Timer 又会强持有 target；如果 target 再强持有 Timer，就形成循环引用。解决方式是 invalidate、block 中 weak self、弱代理，或改用 DispatchSourceTimer 并注意弱捕获。
+
+
+
+
 
 /** 刷题页分类筛选：`全部` + 单一分类 */
 export type PracticeFilterCategory = PracticeCategory | 'all';
-
 export interface PracticeItem {
   id: string;
   category: PracticeCategory;

@@ -3,6 +3,7 @@ import type { PracticeCategory, PracticeFilterCategory, PracticeItem, PracticeIt
 
 const STORAGE_KEY = 'angular20_practice_v1';
 const DAILY_STATE_KEY = 'angular20_practice_daily_state_v1';
+export type PracticeStorageScope = 'practice' | 'ios-learning';
 
 /** E2E / 调试：设为 `1` 时不自动注入内置题库（见 PracticeComponent） */
 export const PRACTICE_SKIP_BUILTIN_SEED_KEY = 'angular20_practice_skip_builtin_seed_v1';
@@ -45,15 +46,19 @@ function normQuestion(q: string): string {
   return q.trim().replace(/\s+/g, ' ').toLowerCase();
 }
 
+function scopedKey(key: string, scope: PracticeStorageScope): string {
+  return scope === 'practice' ? key : `${key}_${scope}`;
+}
+
 /**
  * 面试刷题数据持久化：题库、每日练习记录与筛选分类写入 localStorage。
  */
 @Injectable({ providedIn: 'root' })
 export class PracticeStorageService {
   /** 读取本地题库；解析失败返回空数组。 */
-  load(): PracticeItem[] {
+  load(scope: PracticeStorageScope = 'practice'): PracticeItem[] {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(scopedKey(STORAGE_KEY, scope));
       if (!raw) return [];
       const parsed = JSON.parse(raw) as unknown;
       if (!Array.isArray(parsed)) return [];
@@ -69,15 +74,18 @@ export class PracticeStorageService {
   }
 
   /** 全量覆盖保存题库。 */
-  save(items: PracticeItem[]): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  save(items: PracticeItem[], scope: PracticeStorageScope = 'practice'): void {
+    localStorage.setItem(scopedKey(STORAGE_KEY, scope), JSON.stringify(items));
   }
 
   /**
    * 将内置/打包好的题目合并进本地（与导入表格相同：按「分类 + 规范化题干」去重）。
    */
-  mergeItems(incoming: PracticeItem[]): { added: number; updated: number; skipped: number } {
-    const existing = this.load();
+  mergeItems(
+    incoming: PracticeItem[],
+    scope: PracticeStorageScope = 'practice'
+  ): { added: number; updated: number; skipped: number } {
+    const existing = this.load(scope);
     const seen = new Set(
       existing.map((i) => `${i.category}::${normQuestion(i.question)}`)
     );
@@ -118,13 +126,16 @@ export class PracticeStorageService {
       added++;
     }
 
-    this.save(existing);
+    this.save(existing, scope);
     return { added, updated, skipped };
   }
 
   /** 将表格导入行转为题目并入库；结构与 {@link mergeItems} 类似但接受草稿类型。 */
-  importDrafts(drafts: PracticeItemDraft[]): { added: number; skipped: number } {
-    const existing = this.load();
+  importDrafts(
+    drafts: PracticeItemDraft[],
+    scope: PracticeStorageScope = 'practice'
+  ): { added: number; skipped: number } {
+    const existing = this.load(scope);
     const seen = new Set(
       existing.map((i) => `${i.category}::${normQuestion(i.question)}`)
     );
@@ -157,20 +168,20 @@ export class PracticeStorageService {
       added++;
     }
 
-    this.save(existing);
+    this.save(existing, scope);
     return { added, skipped };
   }
 
   /** 清除题库与每日状态键。 */
-  clearAll(): void {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(DAILY_STATE_KEY);
+  clearAll(scope: PracticeStorageScope = 'practice'): void {
+    localStorage.removeItem(scopedKey(STORAGE_KEY, scope));
+    localStorage.removeItem(scopedKey(DAILY_STATE_KEY, scope));
   }
 
   /** 读取每日刷题打卡记录。 */
-  readDailyState(): PracticeDailyState {
+  readDailyState(scope: PracticeStorageScope = 'practice'): PracticeDailyState {
     try {
-      const raw = localStorage.getItem(DAILY_STATE_KEY);
+      const raw = localStorage.getItem(scopedKey(DAILY_STATE_KEY, scope));
       if (!raw) return { records: {} };
       const parsed = JSON.parse(raw) as unknown;
       if (!parsed || typeof parsed !== 'object') return { records: {} };
@@ -188,14 +199,14 @@ export class PracticeStorageService {
   }
 
   /** 持久化每日刷题状态。 */
-  saveDailyState(state: PracticeDailyState): void {
-    localStorage.setItem(DAILY_STATE_KEY, JSON.stringify(state));
+  saveDailyState(state: PracticeDailyState, scope: PracticeStorageScope = 'practice'): void {
+    localStorage.setItem(scopedKey(DAILY_STATE_KEY, scope), JSON.stringify(state));
   }
 
   /** 上次在 UI 中选中的分类筛选（与题库数据分开存）。 */
-  readSavedFilterCategory(): PracticeFilterCategory {
+  readSavedFilterCategory(scope: PracticeStorageScope = 'practice'): PracticeFilterCategory {
     try {
-      const raw = localStorage.getItem(PRACTICE_FILTER_CATEGORY_KEY);
+      const raw = localStorage.getItem(scopedKey(PRACTICE_FILTER_CATEGORY_KEY, scope));
       if (raw === null || raw === '' || raw === 'all') return 'all';
       if (isPracticeCategory(raw)) return raw;
       return 'all';
@@ -205,14 +216,14 @@ export class PracticeStorageService {
   }
 
   /** 记住分类筛选供下次进入页面恢复。 */
-  saveFilterCategory(f: PracticeFilterCategory): void {
+  saveFilterCategory(f: PracticeFilterCategory, scope: PracticeStorageScope = 'practice'): void {
     try {
-      localStorage.setItem(PRACTICE_FILTER_CATEGORY_KEY, f);
+      localStorage.setItem(scopedKey(PRACTICE_FILTER_CATEGORY_KEY, scope), f);
     } catch {
       /* quota / 隐私模式 */
     }
   }
-
+  
   /** 将 localStorage 中的未知 JSON 解析为 {@link PracticeItem}；字段不全则丢弃。 */
   private parseItem(x: unknown): PracticeItem | null {
     if (!x || typeof x !== 'object') return null;
@@ -226,6 +237,7 @@ export class PracticeStorageService {
     ) {
       return null;
     }
+    
     const tags = typeof o['tags'] === 'string' ? o['tags'] : '';
     const cat = o['category'];
     if (!isPracticeCategory(cat)) return null;
@@ -235,6 +247,7 @@ export class PracticeStorageService {
       question: o['question'],
       answer: o['answer'],
       tags,
+      
       importedAt: o['importedAt'],
     };
     if (o['markD'] === true) {
@@ -245,7 +258,7 @@ export class PracticeStorageService {
     }
     return item;
   }
-
+  
   /** 解析单日打卡记录结构。 */
   private parseDayRecord(date: string, x: unknown): PracticeDayRecord | null {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
@@ -266,6 +279,7 @@ export class PracticeStorageService {
       rememberedIds: [...new Set(rememberedIds)],
       attempts,
     };
+    
     if (typeof o['completedAt'] === 'number' && Number.isFinite(o['completedAt'])) {
       record.completedAt = o['completedAt'];
     }
