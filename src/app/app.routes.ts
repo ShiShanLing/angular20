@@ -32,6 +32,11 @@ export const routes: Routes = [
         data: { practiceScope: 'ios-learning' }
       },
       {
+        path: 'angular-learning',
+        loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
+        data: { practiceScope: 'angular-learning' }
+      },
+      {
         path: 'chart-showcase',
         loadComponent: () =>
           import('./pages/chart-showcase/chart-showcase.component').then(m => m.ChartShowcaseComponent)

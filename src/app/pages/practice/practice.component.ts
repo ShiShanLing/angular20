@@ -31,7 +31,7 @@ import {
   type PracticeDayRecord,
   PRACTICE_SKIP_BUILTIN_SEED_KEY,
 } from './practice-storage.service';
-import { iosJobSeedToPracticeItems, iosSeedToPracticeItems } from './ios-seed';
+import { angularJobSeedToPracticeItems, iosJobSeedToPracticeItems, iosSeedToPracticeItems } from './ios-seed';
 import { MarkdPipe } from './markd.pipe';
 import { applyPracticeSearchFilter } from './practice-search.util';
 import {
@@ -96,8 +96,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
   private readonly storage = inject(PracticeStorageService);
   private readonly msg = inject(NzMessageService);
   private readonly modal = inject(NzModalService);
-  private readonly storageScope: PracticeStorageScope =
-    this.route.snapshot.data['practiceScope'] === 'ios-learning' ? 'ios-learning' : 'practice';
+  private readonly storageScope = this.readPracticeScope();
   /** 唱题模式中题目与答案之间、答案与下一题之间的短暂停顿。 */
   private chantTimer: ReturnType<typeof setTimeout> | null = null;
   /** 每次播放递增，防止已取消的语音回调继续推进唱题流程。 */
@@ -105,9 +104,19 @@ export class PracticeComponent implements OnInit, OnDestroy {
 
   readonly categoryList = PRACTICE_CATEGORY_LIST;
   readonly isIosLearning = this.storageScope === 'ios-learning';
-  readonly pageName = this.isIosLearning ? 'iOS 学习' : '面试刷题';
-  readonly builtinSeedLabel = this.isIosLearning ? 'iOS 学习题库' : '内置 iOS 题库';
-  readonly builtinSeedButtonText = this.isIosLearning ? '加载 iOS 学习题库' : '加载内置 iOS 题库';
+  readonly isAngularLearning = this.storageScope === 'angular-learning';
+  readonly pageName = this.isIosLearning ? 'iOS 学习' : this.isAngularLearning ? 'Angular 学习' : '面试刷题';
+  readonly builtinSeedLabel = this.isIosLearning
+    ? 'iOS 学习题库'
+    : this.isAngularLearning
+      ? 'Angular 学习题库'
+      : '内置 iOS 题库';
+  readonly builtinSeedButtonText = this.isIosLearning
+    ? '加载 iOS 学习题库'
+    : this.isAngularLearning
+      ? '加载 Angular 学习题库'
+      : '加载内置 iOS 题库';
+  readonly builtinSeedShortLabel = this.isIosLearning ? 'iOS题库' : this.isAngularLearning ? 'Angular题库' : '内置 iOS';
 
   // 页面核心状态：题库、筛选、当前题、答案显隐、搜索与自检结果。
   readonly items = signal<PracticeItem[]>([]);
@@ -914,8 +923,13 @@ export class PracticeComponent implements OnInit, OnDestroy {
   }
 
   private builtinSeedItems(importedAt: number): PracticeItem[] {
-    return this.isIosLearning
-      ? iosJobSeedToPracticeItems(importedAt)
-      : iosSeedToPracticeItems(importedAt);
+    if (this.isIosLearning) return iosJobSeedToPracticeItems(importedAt);
+    if (this.isAngularLearning) return angularJobSeedToPracticeItems(importedAt);
+    return iosSeedToPracticeItems(importedAt);
+  }
+
+  private readPracticeScope(): PracticeStorageScope {
+    const scope = this.route.snapshot.data['practiceScope'];
+    return scope === 'ios-learning' || scope === 'angular-learning' ? scope : 'practice';
   }
 }

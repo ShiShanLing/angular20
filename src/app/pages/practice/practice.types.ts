@@ -1,5 +1,6 @@
 export type PracticeCategory =
   | 'ios'
+  | 'angular'
   | 'android'
   | 'angular-ts'
   | 'angular-js'
@@ -7,6 +8,7 @@ export type PracticeCategory =
 
 export const PRACTICE_CATEGORY_LABELS: Record<PracticeCategory, string> = {
   ios: 'iOS',
+  angular: 'Angular',
   android: 'Android',
   'angular-ts': 'Angular · TypeScript',
   'angular-js': 'Angular · JavaScript',
@@ -15,6 +17,7 @@ export const PRACTICE_CATEGORY_LABELS: Record<PracticeCategory, string> = {
 
 export const PRACTICE_CATEGORY_LIST: PracticeCategory[] = [
   'ios',
+  'angular',
   'android',
   'angular-ts',
   'angular-js',

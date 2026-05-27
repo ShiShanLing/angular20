@@ -3,7 +3,7 @@ import type { PracticeCategory, PracticeFilterCategory, PracticeItem, PracticeIt
 
 const STORAGE_KEY = 'angular20_practice_v1';
 const DAILY_STATE_KEY = 'angular20_practice_daily_state_v1';
-export type PracticeStorageScope = 'practice' | 'ios-learning';
+export type PracticeStorageScope = 'practice' | 'ios-learning' | 'angular-learning';
 
 /** E2E / 调试：设为 `1` 时不自动注入内置题库（见 PracticeComponent） */
 export const PRACTICE_SKIP_BUILTIN_SEED_KEY = 'angular20_practice_skip_builtin_seed_v1';
@@ -25,6 +25,7 @@ export interface PracticeDailyState {
 
 const VALID_CATEGORIES: PracticeCategory[] = [
   'ios',
+  'angular',
   'android',
   'angular-ts',
   'angular-js',
@@ -290,6 +291,7 @@ export class PracticeStorageService {
   countByCategory(items: PracticeItem[]): Record<PracticeCategory, number> {
     const base: Record<PracticeCategory, number> = {
       ios: 0,
+      angular: 0,
       android: 0,
       'angular-ts': 0,
       'angular-js': 0,
