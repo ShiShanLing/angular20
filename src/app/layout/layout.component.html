@@ -67,6 +67,25 @@
       </div>
 
       <div class="menu-settings-body">
+        <section class="menu-activation">
+          <form class="menu-activation-form" (submit)="activateFeatures(); $event.preventDefault()">
+            <input
+              type="password"
+              autocomplete="off"
+              inputmode="numeric"
+              placeholder="输入激活码"
+              [(ngModel)]="activationCode"
+              name="activationCode"
+            />
+            <button type="submit">激活</button>
+          </form>
+          @if (activationMessage) {
+            <p class="menu-activation-message" [class.success]="activationMessageType === 'success'" [class.error]="activationMessageType === 'error'">
+              {{ activationMessage }}
+            </p>
+          }
+        </section>
+
         @for (group of menuSettingsGroups(); track group.label) {
           <section class="menu-settings-group">
             <h4>{{ group.label }}</h4>

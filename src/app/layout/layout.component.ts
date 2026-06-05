@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, computed } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterOutlet, RouterLink, Router, NavigationEnd } from '@angular/router';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
@@ -11,6 +12,7 @@ import { BreakpointObserver } from '@angular/cdk/layout';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { PermissionService } from '../core/permission.service';
+import { FeatureActivationService } from '../core/feature-activation.service';
 import { MenuVisibilityService } from '../core/menu-visibility.service';
 import { FEATURE_MENU_ITEMS, type FeatureMenuItem } from '../core/feature-menu';
 
@@ -26,6 +28,7 @@ interface MenuSettingsGroup {
   selector: 'app-layout',
   imports: [
     NgTemplateOutlet,   // 用于在模板中复用 ng-template（桌面 sider 与移动抽屉共享同一份菜单）
+    FormsModule,
     RouterOutlet,
     RouterLink,
     NzLayoutModule,
@@ -50,6 +53,10 @@ export class LayoutComponent implements OnInit, OnDestroy {
   // 菜单显示设置面板是否打开
   isMenuSettingsOpen = false;
 
+  activationCode = '';
+  activationMessage = '';
+  activationMessageType: 'success' | 'error' | '' = '';
+
   // 统一管理所有订阅，在 ngOnDestroy 中一次性取消，防止内存泄漏
   private subs = new Subscription();
 
@@ -57,6 +64,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     private breakpointObserver: BreakpointObserver,
     private router: Router,
     private permissionService: PermissionService,
+    private featureActivationService: FeatureActivationService,
     private menuVisibilityService: MenuVisibilityService,
   ) {}
 
@@ -138,16 +146,31 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.ensureCurrentRouteVisible();
   }
 
+  activateFeatures(): void {
+    const code = this.activationCode.trim();
+    if (code !== '999') {
+      this.activationMessage = '激活码不正确';
+      this.activationMessageType = 'error';
+      return;
+    }
+
+    this.featureActivationService.activate(code);
+    this.activationCode = '';
+    this.activationMessage = '已解锁知识刷题、iOS学习、Angular学习';
+    this.activationMessageType = 'success';
+    this.ensureCurrentRouteVisible();
+  }
+
   readonly menuItems: MenuItem[] = FEATURE_MENU_ITEMS;
 
   /**
-   * 先做权限过滤（用于设置面板，保证无权限项不会出现在设置里）
+   * 先做权限 + 激活过滤（用于设置面板，保证未解锁项不会出现在设置里）
    * 再叠加本地显示/隐藏设置（用于最终菜单展示）
    */
-  private readonly permissionMenuItems = computed(() => this.filterByPermission(this.menuItems));
-  readonly visibleMenuItems = computed(() => this.filterByVisibility(this.permissionMenuItems()));
+  private readonly availableMenuItems = computed(() => this.filterByPermissionAndActivation(this.menuItems));
+  readonly visibleMenuItems = computed(() => this.filterByVisibility(this.availableMenuItems()));
   readonly menuSettingsGroups = computed<MenuSettingsGroup[]>(() =>
-    this.permissionMenuItems()
+    this.availableMenuItems()
       .map((item) => ({
         label: item.label,
         children: (item.children ?? [])
@@ -157,20 +180,21 @@ export class LayoutComponent implements OnInit, OnDestroy {
       .filter((group) => group.children.length > 0)
   );
 
-  private filterByPermission(items: MenuItem[]): MenuItem[] {
+  private filterByPermissionAndActivation(items: MenuItem[]): MenuItem[] {
     return items
       .map((item) => {
         const hasSelfPermission = this.permissionService.hasPermission(item.permission);
-        const filteredChildren = item.children ? this.filterByPermission(item.children) : undefined;
+        const isActivated = this.featureActivationService.isActive(item.activationCode);
+        const filteredChildren = item.children ? this.filterByPermissionAndActivation(item.children) : undefined;
 
         if (filteredChildren) {
-          if (!hasSelfPermission || filteredChildren.length === 0) {
+          if (!hasSelfPermission || !isActivated || filteredChildren.length === 0) {
             return null;
           }
           return { ...item, children: filteredChildren };
         }
 
-        if (!hasSelfPermission) {
+        if (!hasSelfPermission || !isActivated) {
           return null;
         }
         return item;
@@ -201,7 +225,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   private ensureCurrentRouteVisible(): void {
     const currentPath = this.normalizePath(this.router.url);
-    const managedPaths = this.collectLeafPaths(this.permissionMenuItems());
+    const managedPaths = this.collectLeafPaths(this.availableMenuItems());
     const visiblePaths = this.collectLeafPaths(this.visibleMenuItems());
     const firstVisiblePath = visiblePaths[0];
     if (!firstVisiblePath) {

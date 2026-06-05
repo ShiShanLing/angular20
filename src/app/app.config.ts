@@ -17,6 +17,7 @@ import {
   EnvironmentOutline,
   BlockOutline,
   PictureOutline, CalendarOutline, BookOutline,
+  QrcodeOutline, UploadOutline, VideoCameraOutline, StopOutline,
 } from '@ant-design/icons-angular/icons';
 import { registerLocaleData } from '@angular/common';
 import zh from '@angular/common/locales/zh';
@@ -35,6 +36,7 @@ const icons = [
   EnvironmentOutline,
   BlockOutline,
   PictureOutline, CalendarOutline, BookOutline,
+  QrcodeOutline, UploadOutline, VideoCameraOutline, StopOutline,
 ];
 
 

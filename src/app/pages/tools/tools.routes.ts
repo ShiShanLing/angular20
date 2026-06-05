@@ -68,6 +68,10 @@ export const TOOLS_ROUTES: Routes = [
     path: 'calendar',
     loadComponent: () => import('./tools-calendar.component').then(m => m.ToolsCalendarComponent)
   },
+  {
+    path: 'qrcode',
+    loadComponent: () => import('./tools-qrcode.component').then(m => m.ToolsQrcodeComponent)
+  },
   // 兼容旧链接：之前的“健康与时间”页面
   { path: 'health', redirectTo: 'bmi', pathMatch: 'full' }
 ];

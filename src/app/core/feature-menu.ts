@@ -3,6 +3,7 @@ export interface FeatureMenuItem {
   icon?: string;
   path?: string;
   permission?: string;
+  activationCode?: string;
   children?: FeatureMenuItem[];
 }
 
@@ -39,10 +40,11 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
       { path: '/tools/weather', label: '天气预报', permission: 'tools.weather' },
       { path: '/tools/calendar', label: '万年历', permission: 'tools.calendar' },
       { path: '/tools/text', label: '文本处理', permission: 'tools.text' },
+      { path: '/tools/qrcode', label: '二维码', permission: 'tools.qrcode' },
       { path: '/tools/dev', label: '开发助手', permission: 'tools.dev' },
-      { path: '/practice', label: '面试刷题', permission: 'practice.view' },
-      { path: '/ios-learning', label: 'iOS学习', permission: 'practice.view' },
-      { path: '/angular-learning', label: 'Angular学习', permission: 'practice.view' },
+      { path: '/practice', label: '知识刷题', permission: 'practice.view', activationCode: '999' },
+      { path: '/ios-learning', label: 'iOS学习', permission: 'practice.view', activationCode: '999' },
+      { path: '/angular-learning', label: 'Angular学习', permission: 'practice.view', activationCode: '999' },
     ]
   },
   {

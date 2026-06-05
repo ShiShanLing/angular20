@@ -1,11 +1,13 @@
 import { Injectable } from '@angular/core';
 import { FEATURE_MENU_ITEMS, type FeatureMenuItem } from './feature-menu';
+import { FeatureActivationService } from './feature-activation.service';
 import { MenuVisibilityService } from './menu-visibility.service';
 import { PermissionService } from './permission.service';
 
 interface FeatureLeafRoute {
   path: string;
   permission?: string;
+  activationCode?: string;
 }
 
 /**
@@ -19,6 +21,7 @@ export class MenuAccessService {
 
   constructor(
     private readonly permissionService: PermissionService,
+    private readonly featureActivationService: FeatureActivationService,
     private readonly menuVisibilityService: MenuVisibilityService,
   ) {}
 
@@ -33,6 +36,7 @@ export class MenuAccessService {
     }
     return (
       this.permissionService.hasPermission(route.permission) &&
+      this.featureActivationService.isActive(route.activationCode) &&
       this.menuVisibilityService.isVisible(route.path)
     );
   }
@@ -48,10 +52,13 @@ export class MenuAccessService {
       if (item.children?.length) {
         result.push(...this.collectLeafRoutes(item.children));
       } else if (item.path) {
-        result.push({ path: item.path, permission: item.permission });
+        result.push({
+          path: item.path,
+          permission: item.permission,
+          activationCode: item.activationCode,
+        });
       }
     }
     return result;
   }
 }
-

@@ -1,0 +1,131 @@
+<div class="tool-content">
+  <nz-card nzTitle="二维码工具" [nzBodyStyle]="{ padding: '0px' }">
+    <nz-tabset nzSize="large" [nzTabPosition]="'top'" class="qrcode-tabs">
+      <!-- 生成 -->
+      <nz-tab nzTitle="生成二维码">
+        <div class="tab-panel">
+          <textarea
+            nz-input
+            [ngModel]="generateText()"
+            (ngModelChange)="onGenerateTextChange($event)"
+            [nzAutosize]="{ minRows: 4, maxRows: 10 }"
+            placeholder="输入文本、链接或其他内容，点击生成二维码..."
+          ></textarea>
+
+          <div class="options-row">
+            <div class="option-field">
+              <span>尺寸</span>
+              <nz-select [ngModel]="qrSize()" (ngModelChange)="qrSize.set($event)" style="width: 100px;">
+                @for (size of sizeOptions; track size) {
+                  <nz-option [nzValue]="size" [nzLabel]="size + ' px'"></nz-option>
+                }
+              </nz-select>
+            </div>
+            <div class="option-field">
+              <span>容错</span>
+              <nz-select [ngModel]="errorLevel()" (ngModelChange)="errorLevel.set($event)" style="width: 120px;">
+                @for (opt of levelOptions; track opt.value) {
+                  <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
+                }
+              </nz-select>
+            </div>
+            <button nz-button nzType="primary" type="button" [nzLoading]="generating()" (click)="generateQrCode()">
+              <nz-icon nzType="qrcode" /> 生成
+            </button>
+          </div>
+          <div class="option-help">
+            <span>尺寸表示导出图片的宽高像素。</span>
+            <span>容错越高，二维码被遮挡或磨损后越容易识别，但图案会更密。</span>
+          </div>
+
+          @if (qrDataUrl(); as dataUrl) {
+            <div class="qr-preview">
+              <img [src]="dataUrl" alt="生成的二维码" />
+              <nz-space>
+                <button *nzSpaceItem nz-button (click)="downloadQrCode()">
+                  <nz-icon nzType="download" /> 下载 PNG
+                </button>
+                <button *nzSpaceItem nz-button (click)="copyText(generateText(), '暂无内容可复制')">
+                  <nz-icon nzType="copy" /> 复制原文
+                </button>
+              </nz-space>
+            </div>
+          } @else {
+            <nz-alert nzType="info" nzMessage="输入内容后点击「生成」，二维码将显示在这里" nzShowIcon></nz-alert>
+          }
+        </div>
+      </nz-tab>
+
+      <!-- 图片解码 -->
+      <nz-tab nzTitle="图片解码">
+        <div class="tab-panel">
+          <nz-space [nzWrap]="true" style="margin-bottom: 16px;">
+            <input #imageInput type="file" accept="image/*" (change)="onImageSelected($event)" hidden />
+            <button *nzSpaceItem nz-button nzType="primary" type="button" [nzLoading]="decoding()" (click)="openImagePicker()">
+              <nz-icon nzType="upload" /> 选择图片
+            </button>
+            <button *nzSpaceItem nz-button [disabled]="!decodeResult()" (click)="copyText(decodeResult(), '暂无解码结果')">
+              <nz-icon nzType="copy" /> 复制结果
+            </button>
+          </nz-space>
+
+          @if (imagePreview(); as preview) {
+            <div class="image-preview">
+              <img [src]="preview" alt="待解码图片预览" />
+            </div>
+          }
+
+          <textarea
+            nz-input
+            [ngModel]="decodeResult()"
+            (ngModelChange)="decodeResult.set($event)"
+            [nzAutosize]="{ minRows: 4, maxRows: 12 }"
+            [readOnly]="decoding()"
+            placeholder="解码结果将显示在这里..."
+          ></textarea>
+        </div>
+      </nz-tab>
+
+      <!-- 摄像头扫描 -->
+      <nz-tab nzTitle="摄像头扫描">
+        <div class="tab-panel">
+          <nz-space [nzWrap]="true" style="margin-bottom: 16px;">
+            @if (!cameraActive()) {
+              <button *nzSpaceItem nz-button nzType="primary" type="button" (click)="startCamera()">
+                <nz-icon nzType="video-camera" /> 开启摄像头
+              </button>
+            } @else {
+              <button *nzSpaceItem nz-button nzDanger type="button" (click)="stopCamera()">
+                <nz-icon nzType="stop" /> 关闭摄像头
+              </button>
+            }
+            <button *nzSpaceItem nz-button [disabled]="!decodeResult()" (click)="copyText(decodeResult(), '暂无扫描结果')">
+              <nz-icon nzType="copy" /> 复制结果
+            </button>
+          </nz-space>
+
+          @if (cameraError()) {
+            <nz-alert nzType="error" [nzMessage]="cameraError()" nzShowIcon style="margin-bottom: 16px;"></nz-alert>
+          }
+
+          <div class="camera-wrap" [class.active]="cameraActive()">
+            <video #scanVideo playsinline muted></video>
+            <canvas #scanCanvas hidden></canvas>
+            @if (!cameraActive()) {
+              <div class="camera-placeholder">点击「开启摄像头」对准二维码进行扫描</div>
+            }
+          </div>
+
+          <textarea
+            nz-input
+            [ngModel]="decodeResult()"
+            (ngModelChange)="decodeResult.set($event)"
+            [nzAutosize]="{ minRows: 3, maxRows: 8 }"
+            placeholder="扫描结果将显示在这里..."
+            style="margin-top: 16px;"
+          ></textarea>
+        </div>
+      </nz-tab>
+    </nz-tabset>
+  </nz-card>
+</div>
