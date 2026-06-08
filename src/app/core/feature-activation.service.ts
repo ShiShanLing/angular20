@@ -27,6 +27,19 @@ export class FeatureActivationService {
     return true;
   }
 
+  deactivate(code: string): boolean {
+    const normalized = code.trim();
+    if (!normalized || !this.activeCodes().has(normalized)) {
+      return false;
+    }
+
+    const next = new Set(this.activeCodes());
+    next.delete(normalized);
+    this.activeCodes.set(next);
+    this.saveActiveCodes(next);
+    return true;
+  }
+
   private loadActiveCodes(): string[] {
     if (typeof localStorage === 'undefined') {
       return [];

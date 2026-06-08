@@ -148,17 +148,25 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   activateFeatures(): void {
     const code = this.activationCode.trim();
-    if (code !== '999') {
-      this.activationMessage = '激活码不正确';
-      this.activationMessageType = 'error';
+    if (code === '999') {
+      this.featureActivationService.activate(code);
+      this.activationCode = '';
+      this.activationMessage = '已解锁知识刷题、iOS学习、Angular学习';
+      this.activationMessageType = 'success';
+      this.ensureCurrentRouteVisible();
+      return;
+    }
+    if (code === '888') {
+      this.featureActivationService.deactivate('999');
+      this.activationCode = '';
+      this.activationMessage = '';
+      this.activationMessageType = '';
+      this.ensureCurrentRouteVisible();
       return;
     }
 
-    this.featureActivationService.activate(code);
-    this.activationCode = '';
-    this.activationMessage = '已解锁知识刷题、iOS学习、Angular学习';
-    this.activationMessageType = 'success';
-    this.ensureCurrentRouteVisible();
+    this.activationMessage = '激活码不正确';
+    this.activationMessageType = 'error';
   }
 
   readonly menuItems: MenuItem[] = FEATURE_MENU_ITEMS;

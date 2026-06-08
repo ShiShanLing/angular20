@@ -36,4 +36,16 @@ describe('FeatureActivationService', () => {
 
     expect(service.isActive('999')).toBeTrue();
   });
+
+  it('removes active codes when deactivated', () => {
+    const service = TestBed.inject(FeatureActivationService);
+
+    service.activate('999');
+    expect(service.isActive('999')).toBeTrue();
+
+    service.deactivate('999');
+
+    expect(service.isActive('999')).toBeFalse();
+    expect(localStorage.getItem(storageKey)).toBe('[]');
+  });
 });

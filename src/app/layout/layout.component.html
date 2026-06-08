@@ -73,11 +73,11 @@
               type="password"
               autocomplete="off"
               inputmode="numeric"
-              placeholder="输入激活码"
+              placeholder="请输入"
               [(ngModel)]="activationCode"
               name="activationCode"
             />
-            <button type="submit">激活</button>
+            <button type="submit">确认</button>
           </form>
           @if (activationMessage) {
             <p class="menu-activation-message" [class.success]="activationMessageType === 'success'" [class.error]="activationMessageType === 'error'">

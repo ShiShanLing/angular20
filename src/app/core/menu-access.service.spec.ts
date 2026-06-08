@@ -33,6 +33,18 @@ describe('MenuAccessService activation gate', () => {
     expect(service.hasAccessToPath('/angular-learning')).toBeTrue();
   });
 
+  it('blocks practice routes again after deactivating code 999', () => {
+    const activation = TestBed.inject(FeatureActivationService);
+    const service = TestBed.inject(MenuAccessService);
+
+    activation.activate('999');
+    activation.deactivate('999');
+
+    expect(service.hasAccessToPath('/practice')).toBeFalse();
+    expect(service.hasAccessToPath('/ios-learning')).toBeFalse();
+    expect(service.hasAccessToPath('/angular-learning')).toBeFalse();
+  });
+
   it('keeps unrelated routes accessible without activation', () => {
     const service = TestBed.inject(MenuAccessService);
 
