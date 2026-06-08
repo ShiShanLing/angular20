@@ -69,6 +69,17 @@
             </button>
           </nz-space>
 
+          <div
+            class="paste-target"
+            tabindex="0"
+            role="button"
+            aria-label="粘贴图片识别二维码"
+            (paste)="onImagePasted($event)"
+          >
+            <strong>粘贴图片识别</strong>
+            <span>点击这里后按 Ctrl/⌘ + V，可直接识别截图或复制的二维码图片。</span>
+          </div>
+
           @if (imagePreview(); as preview) {
             <div class="image-preview">
               <img [src]="preview" alt="待解码图片预览" />

@@ -74,6 +74,39 @@
   }
 }
 
+.paste-target {
+  width: min(100%, 720px);
+  min-height: 78px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px dashed #bfbfbf;
+  border-radius: 8px;
+  background: #fafafa;
+  color: rgba(0, 0, 0, 0.65);
+  outline: none;
+  cursor: text;
+  transition: all 0.2s;
+
+  strong {
+    color: rgba(0, 0, 0, 0.85);
+    font-size: 14px;
+  }
+
+  span {
+    font-size: 12px;
+    line-height: 18px;
+  }
+
+  &:focus,
+  &:hover {
+    border-color: #4096ff;
+    background: #f0f7ff;
+  }
+}
+
 .decode-result {
   max-width: 720px;
 }

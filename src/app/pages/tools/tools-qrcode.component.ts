@@ -150,8 +150,24 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     if (!file) {
       return;
     }
+
+    this.readAndDecodeImageFile(file, '请选择图片文件');
+  }
+
+  onImagePasted(event: ClipboardEvent): void {
+    const imageFile = this.getPastedImageFile(event);
+    if (!imageFile) {
+      this.msg.warning('剪贴板中没有图片，请先复制截图或二维码图片');
+      return;
+    }
+
+    event.preventDefault();
+    this.readAndDecodeImageFile(imageFile, '剪贴板内容不是图片');
+  }
+
+  private readAndDecodeImageFile(file: File, invalidTip: string): void {
     if (!file.type.startsWith('image/')) {
-      this.msg.warning('请选择图片文件');
+      this.msg.warning(invalidTip);
       return;
     }
 
@@ -163,6 +179,18 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     };
     reader.onerror = () => this.msg.error('读取图片失败');
     reader.readAsDataURL(file);
+  }
+
+  private getPastedImageFile(event: ClipboardEvent): File | null {
+    const items = Array.from(event.clipboardData?.items ?? []);
+    for (const item of items) {
+      if (item.kind === 'file' && item.type.startsWith('image/')) {
+        return item.getAsFile();
+      }
+    }
+
+    const files = Array.from(event.clipboardData?.files ?? []);
+    return files.find((file) => file.type.startsWith('image/')) ?? null;
   }
 
   async decodeFromDataUrl(dataUrl: string): Promise<void> {
