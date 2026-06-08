@@ -4,6 +4,7 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { provideHttpClient } from '@angular/common/http';
 import { zh_CN, provideNzI18n } from 'ng-zorro-antd/i18n';
 import { provideNzIcons } from 'ng-zorro-antd/icon';
+import { provideNzConfig } from 'ng-zorro-antd/core/config';
 import {
   SearchOutline, CopyOutline, DeleteOutline, ArrowRightOutline, DownloadOutline,
   DashboardOutline, BarChartOutline, FormOutline, TableOutline, ExperimentOutline,
@@ -52,6 +53,9 @@ export const appConfig: ApplicationConfig = {
     provideAnimationsAsync(),
     provideHttpClient(),
     provideNzI18n(zh_CN),
+    provideNzConfig({
+      message: { nzTop: 80 }
+    }),
     provideNzIcons(icons),
     provideEchartsCore({ echarts })
   ]

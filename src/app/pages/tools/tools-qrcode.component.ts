@@ -18,6 +18,8 @@ import { NzAlertModule } from 'ng-zorro-antd/alert';
 type ErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H';
 
 const STORAGE_KEY = 'tools_qrcode_text';
+const MAX_DECODE_SIDE = 1800;
+const DECODE_SCALES = [1, 1.5, 2, 0.75];
 
 /** 二维码工具：文本生成二维码、图片解码、摄像头扫描。 */
 @Component({
@@ -255,26 +257,184 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     this.scanFrameId = requestAnimationFrame(() => this.scanLoop());
   }
 
-  private decodeImageDataUrl(dataUrl: string): Promise<string | null> {
+  private async decodeImageDataUrl(dataUrl: string): Promise<string | null> {
+    const image = await this.loadImage(dataUrl);
+    const nativeResult = await this.decodeWithBarcodeDetector(image);
+    if (nativeResult) {
+      return nativeResult;
+    }
+
+    for (const scale of DECODE_SCALES) {
+      const canvas = this.createDecodeCanvas(image, scale);
+      const directResult = this.decodeCanvasWithJsQr(canvas);
+      if (directResult) {
+        return directResult;
+      }
+
+      const enhancedResult = this.decodeEnhancedCanvas(canvas);
+      if (enhancedResult) {
+        return enhancedResult;
+      }
+
+      const tiledResult = this.decodeCanvasTiles(canvas);
+      if (tiledResult) {
+        return tiledResult;
+      }
+    }
+
+    return null;
+  }
+
+  private loadImage(dataUrl: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
       const image = new Image();
       image.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = image.naturalWidth;
-        canvas.height = image.naturalHeight;
-        const context = canvas.getContext('2d', { willReadFrequently: true });
-        if (!context) {
-          reject(new Error('canvas unavailable'));
-          return;
-        }
-        context.drawImage(image, 0, 0);
-        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
-        resolve(code?.data ?? null);
+        resolve(image);
       };
       image.onerror = () => reject(new Error('image load failed'));
       image.src = dataUrl;
     });
+  }
+
+  private async decodeWithBarcodeDetector(image: HTMLImageElement): Promise<string | null> {
+    const Detector = (globalThis as { BarcodeDetector?: new (options: { formats: string[] }) => { detect(source: CanvasImageSource): Promise<Array<{ rawValue?: string }>> } }).BarcodeDetector;
+    if (!Detector) {
+      return null;
+    }
+
+    try {
+      const detector = new Detector({ formats: ['qr_code'] });
+      const results = await detector.detect(image);
+      return results.find((item) => item.rawValue)?.rawValue ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  private createDecodeCanvas(image: HTMLImageElement, scale: number): HTMLCanvasElement {
+    const baseScale = Math.min(1, MAX_DECODE_SIDE / Math.max(image.naturalWidth, image.naturalHeight));
+    const finalScale = baseScale * scale;
+    const width = Math.max(1, Math.round(image.naturalWidth * finalScale));
+    const height = Math.max(1, Math.round(image.naturalHeight * finalScale));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (!context) {
+      throw new Error('canvas unavailable');
+    }
+    context.imageSmoothingEnabled = false;
+    context.drawImage(image, 0, 0, width, height);
+    return canvas;
+  }
+
+  private decodeCanvasWithJsQr(canvas: HTMLCanvasElement): string | null {
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (!context) {
+      return null;
+    }
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
+    return code?.data ?? null;
+  }
+
+  private decodeEnhancedCanvas(canvas: HTMLCanvasElement): string | null {
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (!context) {
+      return null;
+    }
+
+    const original = context.getImageData(0, 0, canvas.width, canvas.height);
+    const highContrast = this.createHighContrastImageData(original);
+    let code = jsQR(highContrast.data, highContrast.width, highContrast.height, { inversionAttempts: 'attemptBoth' });
+    if (code?.data) {
+      return code.data;
+    }
+
+    const thresholded = this.createThresholdImageData(original);
+    code = jsQR(thresholded.data, thresholded.width, thresholded.height, { inversionAttempts: 'attemptBoth' });
+    return code?.data ?? null;
+  }
+
+  private decodeCanvasTiles(canvas: HTMLCanvasElement): string | null {
+    const tileSize = Math.min(Math.max(Math.round(Math.min(canvas.width, canvas.height) * 0.9), 360), 900);
+    const step = Math.max(180, Math.round(tileSize * 0.55));
+
+    for (let y = 0; y < canvas.height; y += step) {
+      for (let x = 0; x < canvas.width; x += step) {
+        const sourceWidth = Math.min(tileSize, canvas.width - x);
+        const sourceHeight = Math.min(tileSize, canvas.height - y);
+        if (sourceWidth < 160 || sourceHeight < 160) {
+          continue;
+        }
+
+        const tile = document.createElement('canvas');
+        tile.width = sourceWidth;
+        tile.height = sourceHeight;
+        const tileContext = tile.getContext('2d', { willReadFrequently: true });
+        if (!tileContext) {
+          continue;
+        }
+        tileContext.drawImage(canvas, x, y, sourceWidth, sourceHeight, 0, 0, sourceWidth, sourceHeight);
+
+        const directResult = this.decodeCanvasWithJsQr(tile);
+        if (directResult) {
+          return directResult;
+        }
+
+        const enhancedResult = this.decodeEnhancedCanvas(tile);
+        if (enhancedResult) {
+          return enhancedResult;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  private createHighContrastImageData(source: ImageData): ImageData {
+    const output = new ImageData(new Uint8ClampedArray(source.data), source.width, source.height);
+    const data = output.data;
+    const contrast = 1.35;
+    const brightness = 8;
+
+    for (let i = 0; i < data.length; i += 4) {
+      data[i] = this.clampColor((data[i] - 128) * contrast + 128 + brightness);
+      data[i + 1] = this.clampColor((data[i + 1] - 128) * contrast + 128 + brightness);
+      data[i + 2] = this.clampColor((data[i + 2] - 128) * contrast + 128 + brightness);
+    }
+
+    return output;
+  }
+
+  private createThresholdImageData(source: ImageData): ImageData {
+    const output = new ImageData(new Uint8ClampedArray(source.data), source.width, source.height);
+    const data = output.data;
+    let total = 0;
+    const pixelCount = source.width * source.height;
+
+    for (let i = 0; i < data.length; i += 4) {
+      total += this.luminance(data[i], data[i + 1], data[i + 2]);
+    }
+
+    const threshold = total / pixelCount;
+    for (let i = 0; i < data.length; i += 4) {
+      const value = this.luminance(data[i], data[i + 1], data[i + 2]) >= threshold ? 255 : 0;
+      data[i] = value;
+      data[i + 1] = value;
+      data[i + 2] = value;
+    }
+
+    return output;
+  }
+
+  private luminance(red: number, green: number, blue: number): number {
+    return 0.299 * red + 0.587 * green + 0.114 * blue;
+  }
+
+  private clampColor(value: number): number {
+    return Math.max(0, Math.min(255, Math.round(value)));
   }
 
   private async openCameraStream(): Promise<MediaStream> {

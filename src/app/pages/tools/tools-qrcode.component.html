@@ -81,6 +81,7 @@
             (ngModelChange)="decodeResult.set($event)"
             [nzAutosize]="{ minRows: 4, maxRows: 12 }"
             [readOnly]="decoding()"
+            class="decode-result"
             placeholder="解码结果将显示在这里..."
           ></textarea>
         </div>
