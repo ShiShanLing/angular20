@@ -22,18 +22,27 @@
     "category": "iOS",
     "topic": "Swift 基础",
     "question": "Struct 和 Class 有什么区别？为什么 Swift 推荐优先使用值类型？",
-    "answer": "Struct 是值类型，赋值和传参默认复制语义；Class 是引用类型，多个变量可以指向同一个实例。Class 支持继承、deinit 和身份比较，Struct 更安全、可预测，适合不可变数据模型。Swift 推荐优先值类型，是为了减少共享可变状态带来的副作用。",
+    "answer": "Struct 是值类型，赋值和传参更像复制一份值，修改副本通常不影响原值；Class 是引用类型，多个变量可能指向同一个实例，修改对象状态会互相影响。\n\nSwift 推荐优先使用 Struct，主要是因为值语义更安全、更容易推理，能减少共享可变状态带来的副作用，也更适合并发场景。性能上，Struct 在普通局部变量、临时值这类常见场景下通常在栈上或内联存储，能减少堆分配和 ARC 引用计数开销，所以可能更轻量。\n\n如果需要继承、身份比较、deinit、共享状态，或者需要和 Objective-C 深度交互，再选择 Class。注意不要绝对说 Struct 一定在栈上，实际存储位置由编译器和使用场景决定。",
     "difficulty": "Medium",
-    "oralOneLiner": "Struct 是值语义，Class 是引用语义；优先值类型能减少共享状态问题。"
+    "oralOneLiner": "Struct 是值语义，Class 是引用语义；优先用 Struct 能减少共享状态，也常能减少堆分配和 ARC 成本。"
+  },
+  {
+    "id": "ios-swift-struct-class-performance-stack-heap",
+    "category": "iOS",
+    "topic": "Swift 基础 / 值类型与引用类型",
+    "question": "Struct 相比 Class 在性能上有什么优势？为什么不能简单说 Struct 一定在栈上？",
+    "answer": "Struct 的优势不能只理解成“存在栈上所以快”，更准确地说，它是值语义，数据通常更独立，减少共享可变状态，代码更容易推理。性能上，Struct 在普通局部变量、临时值这类常见场景下，通常会直接存储在栈上，或者作为其他对象/容器的一部分内联存储，因此能减少堆分配、指针间接访问和 ARC 引用计数开销，所以在轻量数据模型、临时值、不可变数据传递等场景下可能更快。\n\nClass 是引用类型，实例通常分配在堆上，由 ARC 管理生命周期。变量里保存的是对象引用，多个变量可以指向同一个对象。它适合需要继承、身份标识、共享状态、deinit 或 Objective-C 互操作的场景，但堆分配、引用计数和共享状态会带来额外成本。\n\n但不能绝对说 Struct 一定在栈上。实际放栈还是堆由编译器和使用场景决定，例如 Struct 被 class 持有时会存在堆对象内部；被逃逸闭包捕获、放进某些容器、发生装箱、使用协议 existential 或泛型时，也可能涉及堆存储。面试时更稳的表达是：Struct 在常见局部使用场景下通常在栈上或内联存储，更容易减少堆分配和 ARC 成本；但 Struct 和 Class 的根本区别仍然是值语义和引用语义。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Struct 在常见局部场景下通常栈上或内联存储，减少堆分配和 ARC 成本；但不保证一定在栈上，本质区别仍是值语义和引用语义。"
   },
   {
     "id": "ios-swift-value-reference",
     "category": "iOS",
     "topic": "Swift 基础",
     "question": "值类型和引用类型在赋值、传参、内存管理上的差异是什么？",
-    "answer": "值类型赋值通常产生独立值，修改副本不影响原值；引用类型赋值复制的是引用，多个变量共享同一对象。传参时值类型更容易推理，引用类型适合需要身份、共享状态或继承的对象。内存上值类型可在栈或内联存储，引用类型实例通常在堆上由 ARC 管理。",
+    "answer": "值类型赋值和传参时，更像复制一份独立的值，修改副本通常不影响原值；引用类型赋值和传参时，复制的是对象引用，多个变量可能指向同一个对象，修改对象内部状态会互相影响。\n\n内存上可以这样理解：值类型在普通局部变量、临时值这类常见场景下通常在栈上或内联存储；Class 实例通常在堆上，由 ARC 管理生命周期。\n\n但不要绝对说值类型一定在栈上。实际存储位置由编译器和使用场景决定。面试收口可以说：值类型重点是值语义和独立性，引用类型重点是引用语义和共享对象。",
     "difficulty": "Medium",
-    "oralOneLiner": "值类型复制值，引用类型复制引用；区别在共享状态和生命周期管理。"
+    "oralOneLiner": "值类型复制值，引用类型复制引用；值类型更独立，引用类型适合共享对象。"
   },
   {
     "id": "ios-swift-copy-on-write",
@@ -67,9 +76,9 @@
     "category": "iOS",
     "topic": "Swift 基础",
     "question": "Protocol Extension 中的方法什么时候是静态派发，什么时候会动态派发？",
-    "answer": "如果方法是协议 requirement，通过协议类型调用时通常走 witness table 动态派发；如果只是 protocol extension 里的额外方法，不是 requirement，则更偏静态派发，取决于静态类型。坑点是：具体类型实现了同名方法，但变量被声明为协议类型时，非 requirement 方法可能调用扩展默认实现。",
+    "answer": "协议要求的方法，也就是写在 protocol 声明里的 requirement，通过协议类型调用时通常走 witness table 动态派发，所以能调用到具体类型的实现。\n\n如果方法只是写在 protocol extension 里的额外方法，不是 requirement，那么它更偏静态派发，调用哪个实现取决于变量的静态类型，容易调用到扩展默认实现。\n\n面试可以这样收口：协议要求的方法，通过协议类型调用通常走动态派发；协议扩展里的非要求方法，更偏静态派发，容易调用到扩展默认实现。",
     "difficulty": "Hard",
-    "oralOneLiner": "协议 requirement 动态派发，扩展里的非 requirement 方法容易静态绑定。"
+    "oralOneLiner": "协议要求的方法，通过协议类型调用通常走动态派发；协议扩展里的非要求方法，更偏静态派发。"
   },
   {
     "id": "ios-swift-generics-basics",
@@ -85,9 +94,9 @@
     "category": "iOS",
     "topic": "Swift 基础",
     "question": "Swift 闭包捕获变量的规则是什么？捕获值类型和引用类型有什么差异？",
-    "answer": "闭包会捕获它使用的外部变量。对引用类型通常捕获对象引用，容易和 self 形成循环引用；对值类型捕获表现要看是否显式捕获列表以及变量是否可变。捕获列表如 [weak self]、[unowned self]、[x] 可以控制捕获方式和值快照。",
+    "answer": "闭包捕获变量可以先记三点：\n\n1. 闭包默认会捕获它用到的外部变量。\n2. 引用类型要小心强引用，常用 [weak self] 打破循环引用。\n3. 值类型如果想固定创建闭包那一刻的值，用 [x] 捕获快照。\n\n引用类型通常捕获的是对象引用，所以闭包里使用 self 时，如果 self 又持有这个闭包，就容易形成循环引用。常见解决方式是使用 [weak self]，让闭包不要强持有 self；如果能保证 self 一定比闭包活得久，也可以用 [unowned self]，但 self 已释放后再访问会崩溃。\n\n值类型默认捕获外部变量时，闭包执行时可能看到变量后续的新值；如果写成 [x]，表示在创建闭包那一刻把 x 的值保存一份快照，后面外部变量再修改，也不会影响闭包内部的 x。",
     "difficulty": "Medium",
-    "oralOneLiner": "闭包会捕获外部变量，重点小心 self 和捕获列表。"
+    "oralOneLiner": "闭包默认捕获外部变量；引用类型小心 weak self；值类型可用 [x] 固定快照。"
   },
   {
     "id": "ios-swift-escaping-closure",
@@ -139,9 +148,9 @@
     "category": "iOS",
     "topic": "Objective-C / Runtime",
     "question": "Objective-C 的消息发送流程是什么？`objc_msgSend` 大致做了什么？",
-    "answer": "Objective-C 调方法其实是发消息。objc_msgSend 根据对象 isa 找到类，先查方法缓存 cache，找不到再查当前类方法列表，再沿父类链查找；仍找不到会进入动态方法解析、快速转发和完整消息转发。缓存命中是性能关键。",
+    "answer": "Objective-C 调方法本质是发消息。objc_msgSend 会根据对象的 isa 找到类，先查方法缓存 cache，缓存没有再查当前类的方法列表，然后沿父类链继续查找。缓存命中是性能关键。\n\n如果一直找不到方法，不会马上崩溃，而是进入消息转发流程，有三次补救机会：第一步是动态方法解析，可以在 +resolveInstanceMethod: 或 +resolveClassMethod: 里动态添加方法；第二步是快速转发，可以在 -forwardingTargetForSelector: 里把消息转给另一个对象；第三步是完整消息转发，通过 -methodSignatureForSelector: 和 -forwardInvocation: 拿到 invocation 后手动处理或转发。\n\n如果这三步都没有处理，最后才会触发 doesNotRecognizeSelector，也就是常见的 unrecognized selector 崩溃。",
     "difficulty": "Hard",
-    "oralOneLiner": "objc_msgSend 先查缓存，再查类和父类，最后走消息转发。"
+    "oralOneLiner": "objc_msgSend 先查缓存，再查类和父类；找不到时可在动态解析、快速转发、完整转发中补救。"
   },
   {
     "id": "ios-objc-class-metaclass",
@@ -184,9 +193,9 @@
     "category": "iOS",
     "topic": "Objective-C / Runtime",
     "question": "KVO 的实现原理是什么？为什么说它依赖 Runtime 动态子类？",
-    "answer": "KVO 通过 Runtime 动态创建被观察类的子类，重写 setter，在 setter 前后触发 willChange/didChange 通知，并把对象 isa 指向这个动态子类。因此 KVO 对直接改 ivar、绕过 setter 的场景可能无效。移除观察和生命周期也要谨慎。",
+    "answer": "KVO 通过 Runtime 动态创建被观察类的子类，把对象的 isa 指向这个动态子类，并在子类里重写 setter。属性变化时，重写后的 setter 会在修改前后触发 willChange/didChange 通知，所以观察者能收到变化。\n\nOC 老式 KVO 要手动 add/remove，生命周期处理不好容易崩。Swift block KVO 用 NSKeyValueObservation token 管理观察关系，相对安全，但本质仍然是 Runtime KVO。",
     "difficulty": "Hard",
-    "oralOneLiner": "KVO 靠动态子类重写 setter 来发送变更通知。"
+    "oralOneLiner": "KVO 靠 Runtime 动态子类重写 setter；OC 老式 KVO 手动移除，Swift block KVO 用 token 管理。"
   },
   {
     "id": "ios-objc-kvc-search-order",
@@ -211,9 +220,36 @@
     "category": "iOS",
     "topic": "Objective-C / Runtime",
     "question": "Objective-C Block 有哪些类型？为什么 Block 通常需要 copy？",
-    "answer": "Block 常见有全局 Block、栈 Block、堆 Block。没有捕获自动变量的可能是全局 Block，捕获局部变量的初始在栈上，copy 后到堆上。异步或保存 Block 时要 copy，确保函数返回后 Block 仍然有效。",
+    "answer": "Block 常见有全局 Block、栈 Block、堆 Block。没有捕获外部自动变量的 Block 通常是全局 Block；捕获局部变量的 Block 初始可能在栈上；对栈 Block 执行 copy 后会移动到堆上，变成堆 Block。\n\n保存 Block 或异步执行 Block 时通常需要 copy，因为函数返回后栈空间会失效，copy 到堆上才能保证 Block 之后仍然可用。ARC 下很多场景编译器会自动 copy，但 Block 属性仍推荐声明为 copy，这是 Objective-C 的标准写法。",
     "difficulty": "Medium",
-    "oralOneLiner": "Block 捕获局部变量后要 copy 到堆上才能安全逃逸。"
+    "oralOneLiner": "Block 有全局、栈、堆三类；保存或异步使用时 copy 到堆上更安全。"
+  },
+  {
+    "id": "ios-objc-block-capture-rules",
+    "category": "iOS",
+    "topic": "Objective-C / Runtime",
+    "question": "Objective-C Block 捕获变量、`__block` 和 `__weak` 分别怎么理解？",
+    "answer": "Block 会捕获它内部使用到的外部变量。普通局部变量默认不能在 Block 内直接修改，如果要修改这个外部变量，需要用 __block；如果 Block 被 self 持有，同时 Block 内又使用 self，就要用 __weak 弱化 self，避免形成 self 和 Block 的循环引用。\n\n可以这样记：__block 解决“能不能在 Block 内修改外部局部变量”的问题；__weak 解决“Block 会不会强持有 self 导致循环引用”的问题。",
+    "difficulty": "Hard",
+    "oralOneLiner": "Block 捕获外部变量；修改外部局部变量用 __block，避免 self 循环引用用 __weak。"
+  },
+  {
+    "id": "ios-objc-block-property-copy",
+    "category": "iOS",
+    "topic": "Objective-C / Runtime",
+    "question": "Block 属性为什么通常用 copy，而不是 strong？",
+    "answer": "Block 属性推荐用 copy，是因为捕获局部变量的 Block 初始可能在栈上。栈 Block 随着函数返回可能失效，如果要把 Block 保存到属性里，必须 copy 到堆上，才能保证之后调用仍然安全。\n\nARC 下很多赋值场景编译器会自动帮忙 copy，但属性写 copy 仍然是标准写法，语义更明确：这个对象要保存这个 Block，并保证它能在当前作用域结束后继续使用。\n\n常见写法：\n\n```objc\n@property (nonatomic, copy) void (^completion)(void);\n```",
+    "difficulty": "Medium",
+    "oralOneLiner": "Block 属性用 copy，是为了把可能在栈上的 Block 复制到堆上，保证保存后还能安全执行。"
+  },
+  {
+    "id": "ios-objc-block-under-the-hood",
+    "category": "iOS",
+    "topic": "Objective-C / Runtime",
+    "question": "Objective-C Block 底层结构大概是什么？为什么说 Block 也是对象？",
+    "answer": "Block 在底层可以理解成一个 Objective-C 对象。它通常包含 isa、flags、invoke 函数指针、descriptor，以及捕获到的变量。\n\n其中 invoke 指向 Block 真正要执行的函数实现，descriptor 保存 Block 大小、copy/dispose 辅助函数等元信息。如果 Block 捕获了变量，这些捕获内容也会作为 Block 结构的一部分保存。\n\n所以 Block 既能像函数一样调用，又能像对象一样 copy、release，并参与 ARC 内存管理。面试不用死背结构体字段，重点记：Block = 代码 + 捕获上下文 + 对象语义。",
+    "difficulty": "Hard",
+    "oralOneLiner": "Block 底层像对象，里面有 invoke 函数指针、descriptor 和捕获变量；可以理解为代码加上下文。"
   },
   {
     "id": "ios-objc-arc-compile-runtime",
@@ -292,9 +328,9 @@
     "category": "iOS",
     "topic": "UIKit / 性能",
     "question": "如何优化 TableView 或 CollectionView 的滚动性能？",
-    "answer": "列表优化重点是让主线程每帧工作足够少。做法包括复用 Cell、缓存高度、减少 Auto Layout 开销、异步加载和解码图片、取消无效请求、避免圆角阴影离屏渲染、减少透明混合，并用 Time Profiler/Core Animation 验证。",
+    "answer": "列表优化重点是让主线程每帧工作足够少。常见做法包括复用 Cell、缓存高度、减少 Auto Layout 开销、异步加载和解码图片、取消无效图片请求、配置时覆盖所有 UI 状态，避免复用状态残留。\n\n离屏渲染也是列表滚动里常见的渲染问题。它可以简单理解为：系统不能直接把图层画到屏幕上，而是要先在屏幕外开一块缓冲区，把圆角、阴影、mask、透明等效果处理完，再合成到屏幕上。这个过程会增加 GPU/渲染管线成本，Cell 数量一多、快速滚动时就可能掉帧。\n\n常见触发场景包括圆角配合 masksToBounds、复杂阴影、mask、模糊效果、透明图层叠加等。优化方式是：圆角和阴影尽量不要放在同一个图层上；阴影设置 shadowPath；图片圆角可以提前裁剪或让图片服务端处理；减少透明重叠；复杂背景可以预渲染。最后用 Time Profiler 和 Core Animation 检查主线程耗时、FPS、Color Offscreen-Rendered 等渲染问题。",
     "difficulty": "Medium",
-    "oralOneLiner": "列表流畅靠主线程减负、图片异步、状态复用干净。"
+    "oralOneLiner": "列表流畅靠主线程减负、图片异步、复用干净，并控制离屏渲染和透明混合。"
   },
   {
     "id": "ios-uikit-uiview-calayer",
@@ -304,6 +340,15 @@
     "answer": "UIView 是 UIResponder 子类，负责事件响应、手势、布局和管理视图层级；CALayer 负责内容显示、动画和合成。每个 UIView 默认有一个 backing layer，最终渲染由 Core Animation 处理。很多视觉属性本质设置在 layer 上。",
     "difficulty": "Medium",
     "oralOneLiner": "UIView 管交互和布局，CALayer 管显示和动画。"
+  },
+  {
+    "id": "ios-uikit-offscreen-rendering",
+    "category": "iOS",
+    "topic": "UIKit / 渲染",
+    "question": "什么是离屏渲染？它出现在屏幕渲染流程的哪一步？如何优化？",
+    "answer": "离屏渲染可以理解为：本来图层可以直接参与屏幕合成，但因为某些效果需要先拿到“这个图层完整渲染后的结果”，系统就必须先在屏幕外开一块缓冲区，把这个图层单独画好，再把结果拿回来和其他图层合成到屏幕上。\n\n屏幕渲染的大致流程可以这样理解：CPU 先负责业务逻辑、布局计算、生成视图和图层树；然后把图层信息提交给渲染服务；GPU 根据图层树做纹理处理、混合和合成；最后把最终帧显示到屏幕。正常情况下，图层可以直接作为纹理参与最终合成。\n\n离屏渲染发生在 GPU 渲染/合成之前或过程中。原因不是“因为耗时所以离屏”，而是某些效果无法在普通的一次合成里直接完成。比如 masksToBounds 圆角裁剪需要先知道图层最终内容再裁掉圆角外的部分；复杂阴影需要根据图层形状生成阴影；mask 蒙版需要先得到内容再按蒙版裁剪；模糊效果也需要先拿到一块已经渲染好的内容再处理。这些场景都可能要求 GPU 先渲染到离屏缓冲纹理，再把这张纹理放回主渲染流程参与最终合成。\n\n它的问题是多了一次额外的渲染目标切换和缓冲区读写，增加 GPU/渲染管线成本。列表快速滚动时，如果大量 Cell 同时触发离屏渲染，就容易掉帧。\n\n常见触发场景包括：圆角配合 masksToBounds、clipsToBounds 裁剪、复杂阴影、mask、模糊效果、透明图层叠加、shouldRasterize 使用不当等。\n\n优化方式可以这样记：第一，减少 masksToBounds / clipsToBounds 的使用，能通过布局约束避免内容溢出的，就不要到处开裁剪。第二，圆角和阴影尽量拆成不同图层，避免同一个图层既裁剪又做阴影。第三，阴影设置 shadowPath，让系统不用动态推算阴影形状。第四，头像、封面这类固定圆角图片可以提前裁剪、客户端预处理，或者让服务端直接返回合适尺寸和圆角效果。第五，少用复杂 mask 和实时模糊，复杂背景可以预渲染成图片。第六，减少透明重叠和 alpha 混合。第七，谨慎使用 shouldRasterize，它适合内容复杂但不频繁变化的图层；如果内容一直变化，缓存会频繁失效，反而更耗。\n\n排查时可以用 Instruments 的 Core Animation，或者 Xcode 的 Debug View Hierarchy / Color Offscreen-Rendered 观察哪些图层触发了离屏渲染。面试收口：离屏渲染不是一定有问题，问题在于列表、动画这类高频场景大量触发，导致每帧渲染成本变高。",
+    "difficulty": "Hard",
+    "oralOneLiner": "离屏渲染是先画到屏幕外缓冲区再合成回屏幕；优化重点是少裁剪、拆圆角阴影、设 shadowPath、少 mask 和模糊。"
   },
   {
     "id": "ios-uikit-responder-chain",
@@ -337,9 +382,9 @@
     "category": "iOS",
     "topic": "网络 / 安全",
     "question": "HTTP 和 HTTPS 有什么区别？HTTPS 相比 HTTP 多了哪些安全能力？",
-    "answer": "HTTP 是明文传输，HTTPS 是 HTTP 加 TLS。TLS 提供三件事：加密防窃听、摘要/认证防篡改、证书链做服务器身份认证。HTTPS 保护传输链路，但不等于业务绝对安全，客户端存储、证书信任和服务端漏洞仍要处理。",
+    "answer": "HTTP 和 HTTPS 最大的区别，可以从握手过程看出来：HTTP 建立 TCP 连接后，直接传 HTTP 明文数据；HTTPS 建立 TCP 连接后，还要先完成 TLS 握手，确认服务器身份、协商加密算法和会话密钥，然后才传 HTTP 数据。\n\nHTTP 的流程大概是：\n\n```text\n1. 客户端和服务器建立 TCP 三次握手\n2. TCP 连接建立成功\n3. 客户端直接发送 HTTP 请求\n4. 服务器返回 HTTP 响应\n```\n\n例如：\n\n```text\nGET /user/info HTTP/1.1\nHost: example.com\nToken: abc123\n```\n\n这些内容在 HTTP 中都是明文传输，所以 HTTP 不防窃听、不防篡改，也不能可靠确认对方是不是真的服务器。\n\nHTTPS = HTTP + TLS。它不是换了一套 HTTP 业务协议，而是在 HTTP 外面包了一层 TLS。HTTPS 的流程大概是：\n\n```text\n1. 客户端和服务器先建立 TCP 三次握手\n2. 开始 TLS 握手\n3. 客户端校验证书，确认服务器身份\n4. 双方协商加密算法和会话密钥\n5. TLS 握手完成\n6. 后续 HTTP 请求/响应都通过 TLS 加密传输\n```\n\n也就是：\n\n```text\nTCP 连接 -> TLS 握手 -> 加密后的 HTTP 数据\n```\n\nTLS 握手简化理解包括：ClientHello，客户端告诉服务器自己支持的 TLS 版本、加密套件和随机数；ServerHello，服务器选择 TLS 版本和加密套件，并返回服务器随机数；Certificate，服务器发送证书；客户端验证证书链、证书是否过期、域名是否匹配、是否由可信 CA 签发；之后双方通过密钥协商生成会话密钥；最后 Finished 确认握手完成。\n\n握手完成后，真正的 HTTP 请求和响应会使用协商出的会话密钥加密传输。中间人即使抓到包，也很难直接看到请求路径、Header、Token、响应 JSON 等明文内容。\n\n所以两者核心区别是：\n\n```text\nHTTP:  TCP 握手 -> 直接传明文 HTTP\nHTTPS: TCP 握手 -> TLS 握手 -> 传加密 HTTP\n```\n\nHTTPS 相比 HTTP 多了三类安全能力：第一，加密，防止内容被窃听；第二，完整性校验，防止内容被篡改；第三，身份认证，通过证书链确认服务器身份。\n\n但 HTTPS 不等于业务绝对安全。它主要保护传输链路，客户端 token 存储、证书信任策略、服务端漏洞、重放攻击、业务参数校验、用户安装恶意根证书等问题仍然要单独处理。\n\n面试收口：HTTP 建立 TCP 连接后直接明文传输请求和响应；HTTPS 是 HTTP 加 TLS，TCP 三次握手后还会进行 TLS 握手，客户端通过证书链验证服务器身份，双方协商会话密钥，之后 HTTP 数据加密传输。HTTPS 提供加密、防篡改和服务器身份认证，但只保护传输链路，不代表业务绝对安全。",
     "difficulty": "Easy",
-    "oralOneLiner": "HTTPS = HTTP + TLS，核心是加密、防篡改和身份认证。"
+    "oralOneLiner": "HTTP 是 TCP 上直接跑明文 HTTP；HTTPS 是 TCP 上先做 TLS 握手，验证证书并协商密钥，再加密传输 HTTP。"
   },
   {
     "id": "ios-https-tls-basics",
@@ -616,9 +661,9 @@
     "category": "iOS",
     "topic": "Swift Concurrency",
     "question": "`MainActor` 的作用是什么？为什么 UI 更新通常需要放在 MainActor 上？",
-    "answer": "MainActor 是全局 actor，代表主线程执行上下文。UI 状态和 UIKit/SwiftUI 更新通常要在 MainActor 上执行。可以把类、方法或闭包标记 @MainActor，编译器会帮助检查跨线程 UI 访问，并在需要时通过 await 切回主执行器。",
+    "answer": "@MainActor 可以标记 UI 相关代码，让它们固定在主线程相关的执行上下文中执行。跨并发环境调用时用 await，Swift 会帮你切回主线程，并检查不安全的 UI 访问。",
     "difficulty": "Medium",
-    "oralOneLiner": "MainActor 是主线程隔离，主要保护 UI 更新。"
+    "oralOneLiner": "@MainActor 让 UI 相关代码回到主线程执行，并让编译器检查不安全访问。"
   },
   {
     "id": "ios-concurrency-sendable",
@@ -1186,5 +1231,140 @@
     "answer": "LRU 要 O(1) get 和 put，通常用哈希表加双向链表。哈希表按 key 找节点，双向链表维护最近使用顺序；访问或更新节点移到头部，容量超限淘汰尾部节点。",
     "difficulty": "Hard",
     "oralOneLiner": "LRU = 哈希表快速查找 + 双向链表维护新旧顺序。"
+  },
+  {
+    "id": "ios-observability-logging-system",
+    "category": "iOS",
+    "topic": "工程化 / 线上质量",
+    "question": "iOS 项目中的日志系统是做什么的？实际项目中应该如何设计？",
+    "answer": "日志系统主要用来回答：App 运行过程中发生了什么。它记录的是过程信息，比如进入页面、点击按钮、接口请求开始、接口返回结果、缓存命中、状态变化、关键分支判断等。\n\n可以先这样说：日志系统是 App 的运行记录，用来复盘问题发生前后的上下文。它不一定代表错误，更多是帮助开发者理解线上行为。\n\n常见日志等级包括 debug、info、warning、error。debug 适合开发调试，Release 环境通常关闭或降采样；info 记录正常关键流程；warning 表示可疑但不影响主流程的问题；error 表示明确失败但 App 没有崩溃。\n\n实际项目中，日志系统一般要做几件事：第一，统一封装 Logger，不要到处直接 print；第二，日志要带时间、等级、模块、文件、行号、线程、用户状态、页面信息；第三，敏感信息要脱敏，比如 token、手机号、身份证号、支付信息不能明文输出；第四，线上日志量要控制，避免影响性能和磁盘；第五，重要日志可以写入本地文件，必要时由用户反馈或错误上报一起上传。\n\n简单示例：\n\n```swift\nLogger.info(\"进入首页\", module: \"Home\")\nLogger.debug(\"请求用户信息 userId=123\", module: \"User\")\nLogger.error(\"登录失败 error=timeout\", module: \"Login\")\n```\n\n常见实现方式：小项目可以自己封装 `os.Logger` 或 `print`；正式项目可以使用 CocoaLumberjack、SwiftyBeaver，也可以接入 Sentry、Datadog、Firebase 等平台的日志能力。iOS 系统层推荐了解 `os.Logger`，它比普通 print 更适合系统日志和性能分析。\n\n注意点：日志不是越多越好。日志太少排查不了问题，日志太多会影响性能、磁盘和隐私合规。关键是记录关键路径和异常上下文。\n\n面试收口：日志系统负责记录过程，帮助还原现场；设计重点是统一入口、分级、脱敏、按环境控制和必要时上传本地日志。",
+    "difficulty": "Medium",
+    "oralOneLiner": "日志系统记录 App 运行过程，重点是统一封装、分级、脱敏、控制日志量，并能辅助线上排查。"
+  },
+  {
+    "id": "ios-observability-error-reporting",
+    "category": "iOS",
+    "topic": "工程化 / 线上质量",
+    "question": "iOS 项目中的错误上报是什么？它和日志、崩溃收集有什么区别？",
+    "answer": "错误上报主要用来回答：App 没有崩溃，但业务哪里失败了。比如接口失败、JSON 解析失败、支付失败、图片上传失败、数据库写入失败、权限申请失败、状态机异常等，这些问题可能不会让 App 闪退，但会真实影响用户体验。\n\n可以先这样说：错误上报记录的是非崩溃异常，重点是把业务失败和可恢复错误带着上下文传到后台。\n\n常见需要上报的错误包括：网络请求失败、服务端业务码异常、关键接口超时、数据解析失败、CoreData/SQLite 写入失败、图片下载失败、登录态失效、支付流程异常、重要页面加载失败。\n\n错误上报和日志的区别是：日志偏过程，错误上报偏结果和异常事件。日志可能有很多条，错误上报通常是筛选后的重要失败。错误上报和崩溃收集的区别是：错误上报发生时 App 还活着，崩溃收集发生在 App 闪退或卡死等严重问题上。\n\n实际项目中，上报时最好带上下文：错误类型、错误信息、接口地址、业务 code、当前页面、用户 ID 或匿名 ID、App 版本、系统版本、设备型号、网络状态、环境 Dev/Staging/Production、Feature Flag 状态、最近关键操作。\n\n简单示例：\n\n```swift\ndo {\n    let model = try JSONDecoder().decode(User.self, from: data)\n} catch {\n    Logger.error(\"用户信息解析失败: \\(error)\", module: \"User\")\n    ErrorReporter.report(error, context: [\n        \"module\": \"User\",\n        \"api\": \"/user/profile\",\n        \"page\": \"ProfileViewController\"\n    ])\n}\n```\n\n常用工具包括 Sentry、Firebase Crashlytics 的 non-fatal error、Bugly 的自定义错误上报、友盟+、阿里 ARMS、Datadog、New Relic。大厂或复杂业务也可能自建埋点和错误监控平台。\n\n注意点：不是所有 error 都要上报。比如用户主动取消请求、弱网导致的普通失败，如果全部上报会产生噪音。要区分业务严重程度，设置采样、去重、限频和告警规则。敏感参数同样要脱敏。\n\n面试收口：错误上报记录没崩但失败的问题，核心价值是发现业务异常；它要带上下文、能聚合统计、能告警，并且要控制噪音。",
+    "difficulty": "Medium",
+    "oralOneLiner": "错误上报记录非崩溃异常，比如接口失败、解析失败、数据库失败；关键是带上下文、去重限频和告警。"
+  },
+  {
+    "id": "ios-observability-crash-reporting",
+    "category": "iOS",
+    "topic": "工程化 / 线上质量",
+    "question": "iOS 崩溃收集是做什么的？常用第三方工具有哪些？",
+    "answer": "崩溃收集主要用来回答：App 为什么闪退、卡死或被系统杀掉。它关注的是比普通业务错误更严重的问题，比如数组越界、强制解包 nil、unrecognized selector、KVO/KVC 使用错误、多线程访问崩溃、内存问题、主线程卡死、OOM/Jetsam 等。\n\n可以先这样说：崩溃收集负责自动采集线上 crash 堆栈、设备信息、版本信息和影响范围，帮助开发者定位闪退原因和优先级。\n\n崩溃平台一般会收集：崩溃堆栈、崩溃线程、异常类型、信号类型、设备型号、iOS 版本、App 版本、构建号、发生时间、影响用户数、崩溃次数、最近日志、面包屑 breadcrumbs、自定义用户标识、自定义 key/value。\n\n常用第三方工具包括：Firebase Crashlytics、Bugly、Sentry、友盟+、阿里 ARMS、Datadog、New Relic、Bugsnag、Instabug。国内项目常见 Bugly、友盟+、阿里 ARMS；海外或跨平台项目常见 Firebase Crashlytics、Sentry、Datadog、Bugsnag。\n\n崩溃收集的关键流程一般是：集成 SDK；启动时初始化；Release 包上传 dSYM；平台收到崩溃后用 dSYM 符号化；开发者根据崩溃堆栈、版本、设备和最近行为定位问题。没有 dSYM 时，崩溃堆栈通常只有地址，定位价值会大幅下降。\n\n简单示例：\n\n```swift\n// 示意：真实初始化代码以具体 SDK 文档为准\nCrashReporter.start()\nCrashReporter.setUserId(user.id)\nCrashReporter.setCustomValue(\"Production\", forKey: \"environment\")\nCrashReporter.leaveBreadcrumb(\"进入订单详情页\")\n```\n\n需要注意：普通 crash 有堆栈，但 OOM/Jetsam 往往没有普通崩溃堆栈，需要结合 MetricKit、内存曲线、系统 Jetsam 日志、业务日志和最近页面还原。主线程卡死也可能需要卡顿监控或 watchdog 监控。\n\n崩溃收集和错误上报的区别是：崩溃收集主要处理 App 已经异常退出或严重不可用的问题；错误上报处理 App 仍然运行但业务失败的问题。成熟项目通常三者配合：日志还原过程，错误上报发现业务失败，崩溃收集定位闪退和卡死。\n\n面试收口：崩溃收集的核心是自动采集 crash、符号化堆栈、统计影响范围并辅助定位；常用工具有 Firebase Crashlytics、Bugly、Sentry、友盟+、阿里 ARMS、Datadog、Bugsnag 等。",
+    "difficulty": "Medium",
+    "oralOneLiner": "崩溃收集负责采集闪退堆栈和影响范围，关键是集成 SDK、上传 dSYM、符号化和结合日志定位。"
+  },
+  {
+    "id": "ios-xcode-debugger-breakpoint-types",
+    "category": "iOS",
+    "topic": "调试 / Xcode Debugger",
+    "question": "Xcode Debugger 中常见断点类型有哪些？Swift Error、Exception、Symbolic、Runtime Issue、Constraint Error、Test Failure 分别用来做什么？",
+    "answer": "Xcode 的断点不只是普通行断点，还可以按错误类型、异常类型、函数符号、运行时问题、约束冲突和测试失败来自动暂停程序。面试或实际排查时，可以按“它们各自抓什么问题”来记。\n\n1. Swift Error Breakpoint：用来抓 Swift 的 `throw`。当代码执行到 `throw` 时，Xcode 可能会暂停，适合排查为什么进入 `catch`、Codable 为什么解析失败、文件读写为什么失败、某个 `try` 到底在哪里抛错。注意它抓的是 Swift 错误，不一定是崩溃；很多业务错误本来就是正常流程，所以可能停得比较频繁。\n\n2. Exception Breakpoint：用来抓 Objective-C / NSException 异常，也是日常开发最建议打开的断点之一。它常用于定位数组越界、KVC key 写错、unrecognized selector、NSInvalidArgumentException、NSRangeException 等问题。它的价值是让程序尽量停在真正抛异常的位置，而不是最后只停在 `main` 或 `UIApplicationMain`。\n\n3. Symbolic Breakpoint：符号断点，不按具体代码行停，而是按函数名、方法名或符号名停。比如 Auto Layout 冲突常用 `UIViewAlertForUnsatisfiableConstraints`；Objective-C 异常抛出点可以用 `objc_exception_throw`；也可以监听 `-[UIViewController viewDidLoad]`、`-[UIView layoutSubviews]` 这类系统方法。它适合查某个系统函数什么时候被调用、谁触发了布局、谁抛出了异常。\n\n4. Runtime Issue Breakpoint：用来抓 Xcode 运行时检测到的问题，通常和 Main Thread Checker、Thread Sanitizer、Address Sanitizer、Undefined Behavior Sanitizer 等工具配合。比如子线程更新 UI、数据竞争、内存访问异常、潜在未定义行为，都可能以 Runtime Issue 的形式出现。\n\n5. Constraint Error Breakpoint：专门用来抓 Auto Layout 约束错误，比如控制台出现 `Unable to simultaneously satisfy constraints`。它和给 `UIViewAlertForUnsatisfiableConstraints` 加 Symbolic Breakpoint 的目标类似，但这是 Xcode 提供的更直接入口。适合排查约束冲突、约束优先级不合理、某个 view 宽高或位置约束互相打架。\n\n6. Test Failure Breakpoint：用来抓 XCTest 测试失败。当 `XCTAssertEqual`、`XCTAssertTrue`、UI 测试断言或 Snapshot Testing 失败时，可以让 Xcode 停在失败位置，方便查看当时变量、页面状态和调用栈。\n\n日常建议：默认可以打开 Exception Breakpoint 和 Constraint Error Breakpoint；调试 Codable、文件读写、Swift `throw` 时再打开 Swift Error Breakpoint；写单元测试、UI 测试、Snapshot Testing 时打开 Test Failure Breakpoint；遇到系统方法调用、Auto Layout 深层问题或异常抛出点时再用 Symbolic Breakpoint；遇到线程和内存运行时问题时再用 Runtime Issue Breakpoint。\n\n面试收口：Exception 抓常见崩溃和 NSException，Constraint 抓 Auto Layout 冲突，Swift Error 抓 Swift throw，Symbolic 抓指定函数调用，Runtime Issue 抓运行时检查问题，Test Failure 抓测试断言失败。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Xcode 断点可以按问题类型来记：Exception 抓崩溃，Constraint 抓约束，Swift Error 抓 throw，Symbolic 抓函数，Runtime Issue 抓运行时问题，Test Failure 抓测试失败。"
+  },
+  {
+    "id": "ios-lldb-common-commands",
+    "category": "iOS",
+    "topic": "调试 / LLDB",
+    "question": "LLDB 常用命令有哪些？po、p、expr、bt、thread backtrace all、continue、next、step、finish 分别怎么用？",
+    "answer": "LLDB 是 Xcode Debugger 背后的命令行调试器。程序停在断点、异常点或崩溃点时，可以在 Xcode 底部控制台输入 LLDB 命令，查看变量、修改状态、执行表达式、查看调用栈和控制程序继续运行。\n\n常用命令可以这样记：\n\n| 命令 | 常用简写/写法 | 作用 | 例子 |\n|---|---|---|---|\n| `po` | `po 对象` | print object，打印对象描述，Swift/Objective-C 对象最常用 | `po self`、`po user.name`、`po self.view` |\n| `p` | `p 值` | print，打印基础值或表达式结果 | `p index`、`p count`、`p isLogin` |\n| `expr` | `expr 表达式` | 在暂停时执行表达式，可以读值、改值、调用方法 | `expr isLogin = true`、`expr self.title = \"Debug\"` |\n| `bt` | `bt` | backtrace，查看当前线程调用栈 | 崩溃或断点停住后输入 `bt` |\n| `thread backtrace all` | `thread backtrace all` | 查看所有线程调用栈，适合排查卡死、死锁、主线程阻塞 | App 卡住时点暂停后输入 |\n| `continue` | `continue` 或 `c` | 继续运行程序，直到下一个断点或结束 | `c` |\n| `next` | `next` 或 `n` | 单步执行下一行，不进入函数内部 | 想跳过当前函数调用时用 |\n| `step` | `step` 或 `s` | 单步进入函数内部 | 怀疑某个函数内部有问题时用 |\n| `finish` | `finish` | 跳出当前函数，回到调用方 | 已经进入函数但不想继续看内部时用 |\n\n`po` 和 `p` 的区别可以简单理解：`po` 更适合打印对象，会调用对象描述，输出更友好；`p` 更适合打印基础类型或表达式结果。Swift 调试里很多时候会优先试 `po`。\n\n`expr` 很有用，因为它可以在不改代码、不重新编译的情况下临时改变运行状态。例如：\n\n```lldb\nexpr self.view.backgroundColor = UIColor.red\nexpr isLogin = true\nexpr UserDefaults.standard.set(true, forKey: \"isLogin\")\nexpr self.reloadData()\n```\n\n调用栈相关命令重点记两个：`bt` 看当前线程；`thread backtrace all` 看所有线程。崩溃时先看当前崩溃线程调用栈，卡死时更应该看所有线程，尤其是主线程是否卡在锁、信号量、同步 I/O、数据库查询或大图处理上。\n\n单步调试时可以这样选择：`next` 表示我不关心这个函数内部，执行下一行；`step` 表示我要进去看函数内部；`finish` 表示当前函数看够了，跳出去；`continue` 表示继续跑程序。\n\n面试收口：LLDB 常用命令分四类：看变量用 `po/p`，改状态和执行代码用 `expr`，看调用栈用 `bt/thread backtrace all`，控制执行流程用 `continue/next/step/finish`。",
+    "difficulty": "Medium",
+    "oralOneLiner": "LLDB 常用命令：po/p 看变量，expr 改状态或执行表达式，bt 看当前线程栈，thread backtrace all 看所有线程，continue/next/step/finish 控制执行。"
+  },
+  {
+    "id": "ios-xcode-view-debugger",
+    "category": "iOS",
+    "topic": "调试 / Xcode Debugger",
+    "question": "Xcode View Debugger 是什么？适合排查哪些 UI 问题？",
+    "answer": "View Debugger 是 Xcode 提供的 UI 层级调试工具。它可以在 App 运行时捕获当前页面的 View Hierarchy，把界面拆成可视化的层级结构，帮助开发者查看每个 view 的位置、大小、层级、约束、显示状态和遮挡关系。\n\n可以先这样说：View Debugger 就是给当前页面做一次运行时 UI 拆解，用来确认 view 到底加在哪里、frame 是多少、谁盖住了谁、约束是否正确。\n\n打开方式通常是：App 运行后点击 Xcode 调试栏里的 Debug View Hierarchy 按钮，或者通过菜单 Debug -> View Debugging -> Capture View Hierarchy。打开后 Xcode 会暂停当前界面，并展示一个可旋转、可展开的 UI 层级视图。\n\n它常用于排查这些问题：\n\n1. 控件不显示：检查 view 有没有加到父视图、frame 是否为 0、是否跑到屏幕外、isHidden 是否为 true、alpha 是否为 0、是否被其他 view 遮挡。\n\n2. 点击无效：检查按钮上方是否盖了透明 view、按钮真实 frame 是否和看到的不一致、父 view 的 userInteractionEnabled 是否关闭、按钮是否超出父 view bounds。\n\n3. 布局错乱：查看 Auto Layout 约束、safe area、StackView 布局、content hugging 和 compression resistance 等是否符合预期。\n\n4. Cell 高度异常：查看 UITableViewCell / UICollectionViewCell 内部 contentView、label、imageView、button 的层级和约束，判断是哪个控件撑开或压缩了布局。\n\n5. 层级复杂或遮挡问题：查看页面是否嵌套过深，是否有不该存在的遮罩 view、透明 view、全屏 view 盖在上面。\n\nView Debugger 能看到的信息包括：UIView 层级、UIViewController 结构、frame、bounds、center、hidden、alpha、backgroundColor、约束关系、safe area、层级前后关系等。它和普通断点互补：断点看代码执行和变量，View Debugger 看最终 UI 结果。\n\n一个常见排查顺序是：控件不显示时，先看是否存在于层级里；再看 frame/bounds 是否正常；再看 hidden/alpha；再看是否被遮挡；最后看约束和父视图裁剪。点击无效时，重点看遮挡、frame、父视图交互开关和超出父视图区域的问题。\n\n注意：View Debugger 捕获的是某一刻的 UI 状态，不是实时编辑器；复杂页面打开可能较慢；它能帮你看到现象，但具体是哪段代码导致的，还要结合断点、LLDB、日志和约束代码继续定位。\n\n面试收口：View Debugger 用来可视化查看当前 UI 层级、frame、约束和遮挡关系，最适合排查控件不显示、点击无效、布局错乱、Cell 高度异常和页面层级过深。",
+    "difficulty": "Medium",
+    "oralOneLiner": "View Debugger 是 Xcode 的 UI 层级调试工具，用来看 view 层级、frame、约束和遮挡，常用于排查不显示、点不到和布局错乱。"
+  },
+  {
+    "id": "ios-launch-optimization-detailed",
+    "category": "iOS",
+    "topic": "性能 / 启动优化",
+    "question": "iOS 启动优化应该怎么做？冷启动、main 前、main 后分别要关注什么？",
+    "answer": "iOS 启动优化本质是在优化用户点击 App 图标后，到首页可见、可操作之间的时间。面试里可以先说：启动优化的核心是减少启动阶段主线程工作、减少动态库和类加载成本、延迟非必要初始化，让首屏尽快可见可操作。\n\n首先要区分冷启动和热启动。冷启动是 App 进程不存在，用户点击图标后系统重新创建进程；热启动是 App 已经在后台，用户重新切回前台。启动优化重点通常是冷启动，因为冷启动需要创建进程、加载可执行文件、加载动态库、Runtime 初始化、执行 main、创建 UI 和渲染首屏。\n\n启动阶段可以粗略拆成 main 前和 main 后。\n\nmain 前主要是系统和运行时做的事，包括加载 Mach-O、加载动态库、dyld 链接、地址重定位 rebase、符号绑定 bind、Objective-C 类和分类注册、执行 +load、C/C++ 静态初始化、Swift 全局初始化等。这里常见问题是动态库太多、类和方法数量太多、+load 太多、静态初始化太重、全局变量初始化做了文件读取或复杂计算。优化方向是减少动态库数量、减少无用三方库、避免在 +load 里做重活、减少复杂全局初始化，能静态化的依赖不要滥用动态库。\n\nmain 后主要是业务代码阶段，包括 UIApplicationMain、AppDelegate、SceneDelegate、window/rootViewController 创建、SDK 初始化、本地配置读取、数据库初始化、首屏 ViewController 加载、首页布局、首屏数据请求和首帧渲染。这里是业务侧最容易优化的部分，原则是启动阶段只做首屏必须的事，其他工作延迟、异步、按需。\n\n常见启动耗时点包括：AppDelegate 里初始化太多 SDK；启动时同步读大文件；启动时同步查数据库；启动时做大量 JSON 解析；启动时等待多个网络接口；首页 ViewController 的 viewDidLoad 做太多事；首页布局太复杂；图片太大或过早解码；动态库过多；+load 或 Swift 全局变量里做重操作。\n\n优化策略可以从几个方向说：\n\n1. 延迟初始化：不是首屏必须的功能不要放在启动阶段。比如支付 SDK 可以进入支付页再初始化，地图 SDK 可以进入地图页再初始化，分享 SDK 可以点击分享时再初始化，广告、IM、推送、埋点也可以根据业务优先级延后。\n\n2. SDK 分级初始化：启动时只初始化崩溃收集、基础日志、环境配置、必要的配置中心等关键能力；埋点、推送、IM、广告、分享、支付、地图等可以在首屏出现后或真正使用时再初始化。\n\n3. 减少主线程阻塞：启动阶段主线程要负责 UI 创建和渲染，文件读取、数据库查询、JSON 解析、图片解码、复杂计算等耗时任务不要同步卡住主线程。可以放到后台任务中处理，完成后再回主线程更新 UI。\n\n4. 首页轻量化：首屏不要一次性加载所有模块。可以先显示页面框架或缓存数据，再异步请求网络；列表分页加载；图片懒加载；复杂模块按需创建；不要在首页 viewDidLoad 里塞大量业务初始化。\n\n5. 减少 main 前成本：控制动态库数量，清理无用依赖，减少类和符号数量，避免 +load 做网络、数据库、文件读写等重操作，避免 Swift 全局变量在启动时隐式执行复杂初始化。\n\n6. 首屏数据策略：如果首页依赖网络，可以考虑先展示骨架屏、缓存数据或默认状态，网络回来后再刷新。不要为了等多个接口全部完成才展示首页，否则用户会明显感到启动慢。\n\n启动优化必须先测量再优化。常见衡量方式包括 Xcode Organizer 的启动指标、Instruments 的 App Launch、os_signpost、MetricKit、自定义埋点。自定义埋点可以记录进程启动、main、didFinishLaunching、SceneDelegate 创建根页面、首屏 viewDidLoad、viewDidAppear、首屏数据完成、用户可操作等节点。口径要统一，比如冷启动到首帧、冷启动到首屏可见、冷启动到首屏可交互。\n\n可以用一个回答模板收口：我会先区分冷启动和热启动，重点看冷启动；再按 main 前和 main 后拆。main 前关注 dyld、动态库、Runtime、+load 和静态初始化；main 后关注 AppDelegate/SceneDelegate、SDK 初始化、首页创建、首屏数据和首帧渲染。优化上减少动态库和 +load 重活，启动只做必要初始化，非核心 SDK 延迟或按需初始化，文件/数据库/JSON 等耗时任务后台化，首页轻量化并优先展示可见内容，最后用 Instruments、MetricKit、os_signpost 和埋点持续衡量。\n\n面试收口：iOS 启动优化 = main 前减少加载成本，main 后减少启动路径上的业务耗时，让首屏尽快可见可操作；核心原则是启动阶段只做必须做的事，其他都延迟、异步、按需。",
+    "difficulty": "Hard",
+    "oralOneLiner": "启动优化按冷启动拆 main 前和 main 后：main 前减动态库、+load 和静态初始化，main 后延迟 SDK、后台化重活、轻量首屏，并用 Instruments/MetricKit/埋点衡量。"
+  },
+  {
+    "id": "ios-performance-avoid-frame-drops",
+    "category": "iOS",
+    "topic": "性能 / 卡顿与渲染",
+    "question": "iOS 中如何避免卡帧和掉帧？FPS、主线程、列表、图片和渲染分别要注意什么？",
+    "answer": "iOS 卡帧或掉帧，本质是某一帧没有在屏幕刷新时间内准备好。60Hz 设备一帧约 16.67ms，120Hz 设备一帧约 8.33ms。如果主线程布局、绘制、事件处理、数据处理或 GPU 渲染合成超过这个预算，用户就会感觉滑动卡、动画抖、页面切换不流畅。\n\n可以先这样说：避免卡帧的核心是减少每一帧主线程和渲染管线的工作量，重活后台化，UI 更新轻量化，列表、图片、布局和图层效果重点优化，并用工具量化验证。\n\n常见原因包括：主线程做大量计算、同步文件 IO、同步数据库查询、大 JSON 解析、复杂 Auto Layout、列表 Cell 太重、大图解码、频繁 reloadData、频繁 layoutIfNeeded、圆角阴影导致离屏渲染、透明视图过多导致混合成本高、主线程等待锁或信号量。\n\n优化可以从这些方向做：\n\n1. 主线程只做 UI 和轻量逻辑：计算、JSON 解析、文件读写、数据库查询、图片处理等不要放在主线程。后台处理完成后再回主线程更新 UI。\n\n```swift\nTask.detached {\n    let models = try JSONDecoder().decode([User].self, from: data)\n\n    await MainActor.run {\n        self.models = models\n        self.tableView.reloadData()\n    }\n}\n```\n\n2. 列表要轻：UITableView/UICollectionView 的 cellForRow 或 cellForItem 里不要做同步 IO、复杂计算、大图解码。要复用 Cell，异步加载图片，取消复用前的旧请求，缓存图片和布局结果，必要时预计算高度，避免每次滑动都重新算复杂布局。\n\n3. 图片要小、要缓存、尽量后台解码：服务端最好返回合适尺寸的图片，列表不要加载原图。客户端可以使用缩略图、内存/磁盘缓存、后台解码和按需加载，避免大图在主线程解码造成瞬间卡顿。\n\n4. 布局要简单：减少 view 层级和约束数量，避免 Cell 内嵌套过深；不要频繁调用 setNeedsLayout/layoutIfNeeded；复杂列表可以缓存高度或考虑手动布局；StackView 很方便，但在特别复杂和高频复用场景也要注意开销。\n\n5. 减少无效 UI 刷新：不要动不动全量 reloadData。优先局部刷新、批量更新、Diffable Data Source 或差量更新；高频输入、滚动、搜索场景可以用防抖/节流；多次状态变化可以合并成一次 UI 刷新。\n\n6. 控制渲染成本：避免大量透明视图重叠，减少 alpha 混合；谨慎使用圆角加阴影、mask、shouldRasterize、模糊效果等可能增加渲染成本的效果；圆角阴影可以用阴影路径 shadowPath、预渲染图片或拆分图层优化。\n\n7. 避免主线程等待：不要在主线程等待网络、数据库、锁、信号量或异步任务结果。比如 DispatchSemaphore.wait、DispatchQueue.sync、锁竞争都可能让主线程卡住甚至死锁。\n\n8. 分批和懒加载：首屏只加载当前可见内容，非首屏模块延迟加载；大量数据分页加载；复杂任务分批处理，避免一次性把所有工作压到同一帧。\n\n排查工具也很重要：Time Profiler 看主线程 CPU 耗时函数；Core Animation 看 FPS、掉帧和渲染问题；Xcode Debug Navigator 看 CPU/内存粗略变化；View Debugger 看 UI 层级和遮挡；Instruments Allocations 看对象分配是否异常；卡住时可以暂停 App，用 LLDB 的 thread backtrace all 看主线程是否卡在 IO、锁、数据库、JSON 解析或布局里；线上可以用 MetricKit、RunLoop 卡顿监控、FPS 监控和主线程堆栈采样。\n\n一个常见回答模板是：我会先确认卡顿场景，比如列表滑动、页面转场还是启动首屏；然后用 Time Profiler 和 Core Animation 找主线程或渲染瓶颈；优化上把重活后台化，减少 cell 内同步工作，图片缩放缓存和后台解码，减少约束和层级，局部刷新代替全量刷新，避免主线程等锁；最后用 FPS、耗时和线上卡顿率对比优化前后效果。\n\n面试收口：避免卡帧就是守住每帧时间预算。主线程少做事，列表和图片重点优化，布局和渲染尽量简单，刷新要合并，锁和同步等待不能卡主线程，最终用 Instruments、MetricKit 和卡顿监控验证。",
+    "difficulty": "Hard",
+    "oralOneLiner": "避免卡帧的核心是减少每帧主线程和渲染工作：重活后台化、列表轻量、图片缓存解码、布局简化、局部刷新、避免主线程等待，并用 Time Profiler/Core Animation 验证。"
+  },
+  {
+    "id": "ios-list-scrolling-optimization-detailed",
+    "category": "iOS",
+    "topic": "性能 / 列表优化",
+    "question": "iOS 列表滚动优化怎么做？UITableView/UICollectionView 可能遇到哪些问题？",
+    "answer": "iOS 列表滚动优化主要针对 UITableView 和 UICollectionView。核心目标是让滑动时每一帧都足够轻，不能让主线程、图片解码、布局计算和渲染管线被 Cell 拖慢。简单列表可能很少出问题，但图文混排、动态高度、大量图片、复杂 Cell、频繁刷新和数据量大的列表很容易出现滚动问题。\n\n常见问题可以这样分类：\n\n1. 滑动掉帧：表现是快速滑动时一卡一卡、手势不跟手、图片加载时突然卡一下。常见原因是 cellForRow/cellForItem 里做复杂计算、同步文件读取、主线程图片解码、复杂 Auto Layout、频繁计算动态高度。\n\n2. 图片错乱：表现是 A 用户头像显示到 B 用户 Cell 上，滑动快时旧图片闪一下。原因是 Cell 复用后，旧图片请求回来又设置到了新 Cell 上。解决方式是复用时取消旧请求，设置 placeholder，图片回来时校验 URL，或者使用 SDWebImage、Kingfisher 这类成熟图片库。\n\n3. 复用状态残留：表现是按钮选中状态、进度条、开关、Label、图片还保留上一个 model 的状态。解决方式是在 prepareForReuse 清理旧状态，并在 configure(model:) 里完整设置所有 UI 状态。\n\n```swift\noverride func prepareForReuse() {\n    super.prepareForReuse()\n    avatarImageView.image = UIImage(named: \"avatar_placeholder\")\n    titleLabel.text = nil\n    progressView.progress = 0\n}\n```\n\n4. Cell 高度跳动：表现是滑动时高度突然变化、内容展开收起时列表抖动、滚动条位置跳。常见原因是 estimatedRowHeight 不准确、动态高度计算不稳定、图片异步回来后改变高度、约束不完整。解决方式是给合理 estimated height，必要时缓存高度，图片区域预留固定尺寸或固定比例，约束写完整。\n\n5. 首次进入列表慢：表现是进入页面白屏、首次 reloadData 卡一下。常见原因是一次性解析大量数据、一次性创建复杂 Cell、同步加载本地资源、首屏等待太多网络数据。解决方式是分页加载、后台解析、先展示缓存或骨架屏、首屏优先、分批插入。\n\n6. 内存上涨：表现是滑动一会儿内存越来越高，加载很多图片后内存升高。常见原因是图片太大、缓存无限增长、Cell 持有大对象、闭包强引用 VC、预加载过度。解决方式是使用缩略图、限制缓存大小、复用时清理状态、弱引用 self、控制预加载数量。\n\n7. 频繁 reloadData：表现是数据一变化就整表刷新，滑动时突然卡一下，动画不自然。优化方式是优先局部刷新、insert/delete/reload rows、performBatchUpdates、Diffable Data Source 或差量更新。\n\n8. Auto Layout 太复杂：表现是 Cell 内容复杂时滑动不顺。优化方式是减少 view 层级、减少约束数量、避免 StackView 深层嵌套、缓存高度，极复杂高频列表可以考虑手动布局。\n\n9. 渲染压力大：圆角、阴影、mask、透明混合、模糊效果都可能增加渲染成本。阴影可以设置 shadowPath，圆角和阴影尽量避免同时依赖 masksToBounds，复杂背景可以预渲染。\n\n10. 数据源更新和 UI 不一致：表现是 Invalid update 崩溃、插入删除动画异常。原因通常是 dataSource 数量和 UI 更新不匹配，或者多线程改数据源。解决方式是先更新数据源，再更新 UI，UI 操作放主线程，复杂 diff 用 Diffable Data Source。\n\n列表优化的常用做法：\n\n第一，Cell 复用要正确。register/dequeue 只是基础，关键是 prepareForReuse 清旧状态，configure(model:) 完整设置新状态，不要依赖上一次 Cell 的状态。\n\n第二，cellForRow/cellForItem 不做重活。不要在里面做网络请求、同步读文件、图片解码、复杂文本计算、大量 DateFormatter 创建或复杂高度计算。这些应提前算、缓存或异步处理。\n\n第三，图片异步加载并能取消。复用时取消旧请求、设置 placeholder，避免旧请求回调污染新 Cell。SDWebImage、Kingfisher 这类库通常已经处理了缓存、取消和异步解码等问题。\n\n```swift\noverride func prepareForReuse() {\n    super.prepareForReuse()\n    avatarImageView.sd_cancelCurrentImageLoad()\n    avatarImageView.image = UIImage(named: \"avatar_placeholder\")\n}\n```\n\n第四，高度要稳定。动态高度可以用 automaticDimension，但 estimatedRowHeight 要尽量合理；高度计算复杂时可以缓存；图片区域不要等图片回来后才撑开，最好预留固定高度或固定比例。\n\n第五，减少全量刷新。不要动不动 reloadData，优先局部刷新、批量更新或 diff。全量刷新会导致更多 Cell 重新配置、重新布局和可能的滚动位置跳动。\n\n第六，合理使用预加载。UITableViewDataSourcePrefetching 和 UICollectionViewDataSourcePrefetching 可以提前加载下一屏数据或图片，但要实现 cancelPrefetching，避免浪费网络和内存。\n\n第七，控制布局和渲染成本。减少层级、减少透明重叠、避免复杂圆角阴影和模糊效果，必要时设置 shadowPath 或预渲染。\n\n排查工具：Time Profiler 看主线程耗时和 cell 配置成本；Core Animation 看 FPS、掉帧和渲染压力；View Debugger 看 Cell 层级是否过深、约束是否复杂；Allocations 看滑动时对象是否大量创建；Memory Graph 看 Cell/VC 是否泄漏；卡住时可以暂停并用 LLDB thread backtrace all 看主线程栈。\n\n面试收口：列表滚动优化 = Cell 轻量 + 复用正确 + 图片异步可取消 + 高度稳定 + 局部刷新 + 布局渲染简单。真实项目中最容易遇到的是滑动掉帧、图片错乱、复用状态残留、动态高度跳动、内存上涨、频繁 reloadData 和数据源更新不一致。",
+    "difficulty": "Hard",
+    "oralOneLiner": "列表优化核心是让 Cell 足够轻：复用正确、图片异步可取消、高度稳定、少 reloadData、布局渲染简单，并用 Time Profiler/Core Animation 验证。"
+  },
+  {
+    "id": "ios-image-decoding-cache-sdwebimage-detailed",
+    "category": "iOS",
+    "topic": "性能 / 图片优化",
+    "question": "iOS 图片解码与缓存怎么理解？使用 SDWebImage 时要注意哪些问题？",
+    "answer": "iOS 图片解码与缓存主要解决两个问题：第一，避免网络图片重复下载；第二，避免大图解码和显示过程阻塞主线程，导致列表滑动卡顿或内存暴涨。实际项目里常用 SDWebImage、Kingfisher 等图片库，其中 SDWebImage 很常见。\n\n图片文件本身通常是 JPG、PNG、WebP 这类压缩格式，屏幕不能直接显示压缩数据，需要先解码成 Bitmap 像素数据。这个过程就是图片解码。解码后的内存占用大约是 宽 * 高 * 4 bytes，所以一张 3000 * 3000 的图片解码后可能接近 36MB。列表里如果加载原图，很容易造成内存上涨和掉帧。\n\nSDWebImage 的典型用法是：\n\n```swift\nimageView.sd_setImage(\n    with: URL(string: user.avatarURL),\n    placeholderImage: UIImage(named: \"avatar_placeholder\")\n)\n```\n\n它背后通常会做这些事：先查内存缓存，没有再查磁盘缓存，没有再发起网络下载；下载完成后进行图片解码和处理；把图片缓存到内存和磁盘；最后回到主线程设置到 UIImageView。对于列表复用场景，还可以取消旧图片请求，减少旧请求回调污染新 Cell。\n\n图片缓存一般分两层：内存缓存和磁盘缓存。内存缓存速度快，适合当前页面、列表来回滑动时复用，但 App 退出或内存警告时可能被清理。磁盘缓存速度慢一些，但可以持久保存，减少下次启动或下次进入页面时的重复下载。\n\n常见问题和解决方式：\n\n1. 图片太大导致内存上涨：头像只显示 40x40，但服务端返回 3000x3000，这会浪费下载、解码和内存。解决方式是让服务端返回合适尺寸或缩略图 URL；客户端做 downsample/thumbnail；列表不要加载原图；限制内存和磁盘缓存大小。\n\n2. 主线程解码导致卡顿：大图如果第一次显示时才在主线程解码，列表滑动会卡。解决方式是使用图片库的后台解码能力，或在后台队列提前解码/缩放，主线程只做设置 image。\n\n3. URL 不变但图片内容变了：比如用户换头像但 URL 还是同一个，SDWebImage 会继续命中旧缓存。解决方式可以主动删除缓存，或者更推荐后端在图片 URL 上加版本号、时间戳或 hash，比如 avatar.png?v=123 或 avatar.png?hash=xxx。\n\n```swift\nSDImageCache.shared.removeImage(\n    forKey: imageURL.absoluteString,\n    cacheType: .all,\n    completion: nil\n)\n```\n\n4. Cell 复用导致图片错乱：旧 Cell 的图片请求还没回来，Cell 已经被复用成新数据，旧请求回来后可能设置错图。解决方式是 prepareForReuse 里取消旧请求并设置 placeholder；图片回来时也可以校验 URL 是否仍然匹配当前 model。\n\n```swift\noverride func prepareForReuse() {\n    super.prepareForReuse()\n    avatarImageView.sd_cancelCurrentImageLoad()\n    avatarImageView.image = UIImage(named: \"avatar_placeholder\")\n}\n```\n\n5. 缓存无限增长：如果磁盘缓存和内存缓存不设置策略，图片会越来越多。可以配置最大磁盘大小、过期时间和内存成本。\n\n```swift\nSDImageCache.shared.config.maxDiskSize = 500 * 1024 * 1024\nSDImageCache.shared.config.maxDiskAge = 7 * 24 * 60 * 60\nSDImageCache.shared.config.maxMemoryCost = 100 * 1024 * 1024\n```\n\n6. placeholder 没设置导致体验差：Cell 复用时如果没有 placeholder，可能短暂显示旧图或空白。placeholder 可以让加载前状态稳定，也能减少旧图闪现。\n\n7. 缓存 key 设计问题：默认通常用 URL 作为 key。如果不同尺寸共用同一个 URL，可能出现缓存图尺寸不符合预期。实际项目里可以让服务端提供不同尺寸 URL，或按尺寸、裁剪参数生成不同缓存 key。\n\n8. GIF/WebP/动图问题：动图比普通静态图更耗内存和 CPU，需要控制尺寸、帧数和播放数量。列表里大量动图要谨慎，必要时只在可见 Cell 播放。\n\nSDWebImage 适合网络图片、头像、商品图、Feed 流、聊天图片等需要下载和缓存的场景。如果只是 App 包里的固定图片，直接 UIImage(named:) 就可以，不需要走 SDWebImage。\n\n面试回答可以这样说：图片性能主要关注下载、缓存、解码、缩放和复用取消。图片文件是压缩格式，真正显示前要解码成 Bitmap，大图如果在主线程解码会造成卡顿。实际项目里我一般用 SDWebImage，它会处理内存缓存、磁盘缓存、异步下载、后台解码、回主线程设置图片，并支持取消请求和缓存策略。优化上，服务端返回合适尺寸，客户端避免列表加载原图；Cell 复用时取消旧请求并设置 placeholder；URL 不变但内容变化时清缓存或让后端加版本号/hash；缓存要设置大小和过期时间；大图用 downsample，避免解码后内存暴涨。\n\n面试收口：图片优化 = 合适尺寸 + 异步下载 + 后台解码 + 内存/磁盘缓存 + 复用取消 + 缓存策略。SDWebImage 封装了这些能力，但仍要注意大图、缓存 key、URL 版本、placeholder 和缓存上限。",
+    "difficulty": "Hard",
+    "oralOneLiner": "图片优化关注尺寸、下载、解码、缓存和复用取消；SDWebImage 负责异步下载、内存/磁盘缓存、后台解码和设置图片，但仍要注意大图、URL 版本、placeholder 和缓存策略。"
+  },
+  {
+    "id": "ios-gcd-detailed-overview",
+    "category": "iOS",
+    "topic": "并发 / GCD",
+    "question": "iOS GCD 是什么？sync/async、串行/并发队列、常用 API 和死锁条件分别怎么理解？",
+    "answer": "GCD，全称 Grand Central Dispatch，是 Apple 提供的基于队列的多线程任务调度 API。它的核心是把任务提交到队列，系统负责在线程池里调度执行。可以先这样说：GCD 用队列管理任务，后台做耗时工作，主线程更新 UI。\n\nGCD 的核心概念有两个：Queue 和 Task。Queue 是队列，决定任务怎么排队、能不能并发；Task 是任务，也就是提交到队列里的闭包。队列不是线程，队列是调度抽象，线程是实际执行资源，GCD 会管理线程池。\n\n队列分为串行队列和并发队列。串行队列一次只执行一个任务，任务按顺序执行，适合保护共享资源、按顺序写文件、顺序处理任务。并发队列可以同时执行多个任务，适合多个互不依赖的下载、计算、解析任务。主队列是特殊串行队列，在主线程执行，UI 更新必须回主队列。\n\n任务提交方式分为 async 和 sync。async 是异步提交，提交后当前线程不等待任务完成，会继续往下走。sync 是同步提交，提交后当前线程会等待 block 执行完成，再继续往下走。注意：sync 一定会阻塞调用它的当前线程，不管目标队列是串行队列还是并发队列；串行/并发决定队列内部能不能并发执行，sync/async 决定当前线程等不等。\n\n常见写法：\n\n```swift\nDispatchQueue.global(qos: .userInitiated).async {\n    let result = loadData()\n\n    DispatchQueue.main.async {\n        updateUI(result)\n    }\n}\n```\n\n常用能力包括：\n\n1. main queue：主队列，在主线程执行，用于 UI 更新。\n\n2. global queue：系统后台并发队列，可以设置 QoS，比如 userInteractive、userInitiated、utility、background。\n\n3. asyncAfter：延迟执行，常用于延迟提示、简单防抖、延迟关闭 loading。\n\n4. DispatchGroup：等待多个异步任务全部完成后再统一回调，适合多个接口并行请求后合并结果。\n\n5. DispatchSemaphore：计数信号量，可以限制并发数量或做线程同步。要注意 wait/signal 成对出现，不要在主线程长时间 wait。\n\n6. DispatchWorkItem：把任务包装成对象，可以做简单取消和防抖。cancel 不会强制杀死已经执行中的任务，只是设置取消标记。\n\n7. barrier：栅栏任务，配合自定义并发队列实现多读单写。多个读可以并发，写操作独占。\n\nGCD 死锁的条件可以记成一句话：同步等待 + 目标任务无法开始 + 形成互相等待。最典型的是当前执行上下文正在占着某个队列，又 sync 等这个队列执行一个新任务，而这个新任务必须等当前任务结束后才能执行。\n\n常见死锁场景：\n\n1. 主线程调用 DispatchQueue.main.sync。主队列是串行队列，当前代码已经在主队列执行，又同步提交新任务到主队列，新任务要等当前任务结束，当前任务又等新任务完成，于是死锁。\n\n2. 自定义串行队列内部 sync 自己。串行队列正在执行外层任务，外层任务里又 queue.sync 提交内层任务，内层任务必须等外层任务结束，外层任务又等待内层任务完成，于是死锁。\n\n3. 两个串行队列互相 sync，形成等待环。\n\n4. 并发队列的 barrier 内部 sync 同一个队列。barrier 正在独占队列，内层 sync 任务要等 barrier 结束，barrier 又在等 sync 完成，也可能死锁。\n\n5. 主线程 wait 信号量，而 signal 又需要回主线程执行。主线程被 wait 阻塞，signal block 无法在主队列执行，于是卡死。\n\n要特别区分：串行队列 sync 本身不一定死锁。如果你在主线程对一个自定义串行队列 sync，只是主线程等待任务完成，不会必然死锁；只有在同一个串行队列内部 sync 自己，或者形成等待环，才会死锁。并发队列 sync 自己通常不容易死锁，但 sync 仍然会阻塞调用线程。\n\n避免 GCD 死锁和卡顿的原则：不要在主线程 DispatchQueue.main.sync；不要在队列内部 sync 自己；避免多个串行队列互相 sync；不要在主线程 semaphore.wait；不要为了把异步变同步而阻塞主线程；UI 更新回主线程；复杂共享状态可以考虑 actor、锁或串行队列统一保护。\n\nGCD 和 Swift Concurrency 的关系：GCD 更偏底层任务派发，关注把闭包提交到队列；async/await、Task、TaskGroup、actor、MainActor 是 Swift 的语言级并发模型，关注把异步流程写得更清楚，并集成取消、错误处理和结构化并发。现代业务异步流程通常优先 async/await 和 Task；老项目、底层队列控制、barrier、semaphore、一些系统 API 和面试里仍然需要理解 GCD。\n\n面试收口：GCD 是基于队列的任务调度 API。串行/并发决定队列内部一次执行几个任务，sync/async 决定当前线程是否等待。常用能力有 main/global queue、asyncAfter、DispatchGroup、Semaphore、WorkItem、barrier。GCD 死锁的本质是同步等待形成等待环，最常见是主队列 sync 主队列、串行队列里 sync 自己、主线程 wait 等一个回主线程 signal 的任务。",
+    "difficulty": "Hard",
+    "oralOneLiner": "GCD 是基于队列的任务调度 API；串行/并发管队列怎么执行，sync/async 管当前线程等不等，死锁本质是同步等待形成等待环。"
+  },
+  {
+    "id": "ios-operationqueue-detailed-overview",
+    "category": "iOS",
+    "topic": "并发 / OperationQueue",
+    "question": "iOS OperationQueue 是什么？相比 GCD 有什么特点？依赖、取消、优先级和常见坑怎么理解？",
+    "answer": "OperationQueue 是 Apple 提供的基于 Operation 的任务调度 API。它底层也和系统线程调度有关，但比 GCD 更面向“任务对象”。可以先这样说：GCD 更像把闭包丢到队列执行，OperationQueue 更像管理一组可取消、可依赖、可设置优先级、可观察状态的任务。\n\nOperationQueue 里有两个核心概念：Operation 和 OperationQueue。Operation 表示一个任务对象，OperationQueue 表示执行这些任务的队列。常见的 Operation 有 BlockOperation，也可以继承 Operation 自定义任务。\n\n和 GCD 相比，OperationQueue 的优势主要是任务管理能力更强。它天然支持依赖关系、取消、优先级、最大并发数、暂停/恢复、任务状态观察。比如 A 任务必须等 B、C 下载完成后再执行，这种任务编排用 OperationQueue 会比手写 DispatchGroup 更清晰。\n\n常见用法包括：\n\n1. BlockOperation：把一段代码包装成 Operation，适合简单任务。\n\n```swift\nlet operation = BlockOperation {\n    print(\"执行后台任务\")\n}\n\nlet queue = OperationQueue()\nqueue.addOperation(operation)\n```\n\n2. maxConcurrentOperationCount：限制最大并发数量。设置为 1 时类似串行队列；设置为大于 1 时可以并发执行。适合限制下载、图片处理、数据库批处理的并发量。\n\n```swift\nlet queue = OperationQueue()\nqueue.maxConcurrentOperationCount = 2\n```\n\n3. dependency：设置任务依赖。比如解析任务必须等下载任务完成后执行。\n\n```swift\nparseOperation.addDependency(downloadOperation)\nqueue.addOperations([downloadOperation, parseOperation], waitUntilFinished: false)\n```\n\n4. OperationQueue.main：回到主队列更新 UI。它类似 DispatchQueue.main，但对象模型是 OperationQueue。\n\n```swift\nOperationQueue.main.addOperation {\n    self.titleLabel.text = \"完成\"\n}\n```\n\n5. cancel：取消任务。注意 cancel 不是强制杀死线程，只是把 Operation 的 isCancelled 标记为 true。任务内部要主动检查 isCancelled，并尽早 return。\n\n```swift\nfinal class DownloadOperation: Operation {\n    override func main() {\n        if isCancelled { return }\n        // 执行一部分工作\n        if isCancelled { return }\n        // 继续执行\n    }\n}\n```\n\n6. isSuspended：暂停队列。暂停后，队列不会启动新的 Operation；但已经在运行的 Operation 不会被强制暂停。恢复时设置 isSuspended = false。\n\n7. queuePriority 和 qualityOfService：queuePriority 表示同一个队列里任务的相对优先级；qualityOfService 表示任务对系统资源调度的期望，比如 userInitiated、utility、background。优先级不是严格顺序保证，只是调度倾向。\n\nOperationQueue 常见适用场景：多个任务有先后依赖；任务需要取消；需要限制并发数量；需要暂停/恢复一组任务；需要观察任务状态；需要把任务封装成对象复用。比如图片批量处理、文件上传下载队列、离线数据同步、复杂初始化流程、多个接口完成后再做合并处理。\n\n常见坑要重点记：\n\n1. cancel 不会强制停止任务。Operation 已经开始执行后，如果内部不检查 isCancelled，它仍然会跑完。所以自定义 Operation 里要在耗时步骤之间检查 isCancelled。\n\n2. suspend 不会暂停正在执行的任务。isSuspended 只影响还没开始的任务。已经开始执行的任务要自己支持取消或暂停逻辑。\n\n3. 不要在主线程调用 waitUntilAllOperationsAreFinished。这个方法会阻塞当前线程。如果在主线程等待，而某个 Operation 完成后又需要回主线程更新或 signal，就可能造成界面卡死甚至等待环。\n\n4. 依赖关系不要形成环。比如 A 依赖 B，B 又依赖 A，这两个任务都会等对方完成，结果谁也不会开始。它不像 GCD sync 那样立刻死锁崩住线程，但表现是任务永远不执行。\n\n5. 异步任务不能只在 main 里启动网络请求就返回。普通 Operation 的 main 方法一返回，OperationQueue 就认为任务完成了。如果 main 里只是发起 URLSession 请求，然后立刻返回，依赖它的下游任务可能提前执行。真正封装异步任务时，需要自定义 Asynchronous Operation，正确维护 isExecuting 和 isFinished，或者在现代 Swift 中优先用 async/await。\n\n6. 不要把 OperationQueue 当成 UI 状态容器。OperationQueue 负责调度任务，不负责保护任意共享可变状态。多个 Operation 同时读写同一份数据，仍然要用锁、串行队列、actor 或数据库事务保护。\n\n7. maxConcurrentOperationCount 不是线程数量的绝对保证。它限制的是队列同时执行的 Operation 数量，系统实际线程调度仍由系统决定。\n\nOperationQueue 和 GCD 的选择可以这样记：简单异步派发、回主线程、延迟执行，用 GCD 很直接；任务有依赖、取消、优先级、并发限制和状态管理，用 OperationQueue 更合适；现代 Swift 业务异步流程优先考虑 async/await、Task、TaskGroup 和 actor，OperationQueue 更适合老项目、Foundation 任务编排、需要 Objective-C 兼容或对象化任务管理的场景。\n\n面试收口：OperationQueue 是比 GCD 更面向任务对象的并发工具，适合管理复杂任务编排。它支持依赖、取消、优先级、最大并发数、暂停恢复和状态观察。常见坑是 cancel 不会强杀任务、suspend 不会暂停已运行任务、主线程 wait 会卡死、依赖环导致任务永远不执行、异步 Operation 要正确维护完成状态。",
+    "difficulty": "Hard",
+    "oralOneLiner": "OperationQueue 用 Operation 对象管理任务，比 GCD 更适合依赖、取消、优先级、并发限制和状态观察；常见坑是 cancel 不强停、主线程 wait 卡死、依赖环和异步 Operation 提前完成。"
+  },
+  {
+    "id": "ios-runloop-detailed-overview",
+    "category": "iOS",
+    "topic": "并发 / RunLoop",
+    "question": "iOS RunLoop 是什么？它和线程、Timer、Mode、主线程卡顿有什么关系？",
+    "answer": "RunLoop 可以理解成线程里的事件循环机制。它让线程在有事件时被唤醒处理事件，没有事件时进入休眠，避免线程一直空转消耗 CPU。可以先这样说：RunLoop 不是线程，它是线程内部的事件循环；主线程靠 RunLoop 持续响应点击、滚动、Timer、Source 和 UI 刷新。\n\n如果没有 RunLoop，一个线程执行完入口函数就结束了。比如子线程里执行一段 print，执行完线程就退出。但 App 的主线程不能退出，因为它要一直等待用户点击、滑动、页面刷新、定时器和系统事件。系统会在主线程启动 RunLoop，让主线程长期存活，并在有事件时处理事件。\n\n可以用伪代码这样理解：\n\n```swift\nwhile appIsRunning {\n    等待事件\n    处理事件\n    没有事件时休眠\n}\n```\n\nRunLoop 和线程的关系：每个线程都可以有自己的 RunLoop，RunLoop 和线程是一一对应的，但 RunLoop 通常是懒创建的。主线程的 RunLoop 默认由系统启动；子线程的 RunLoop 默认不会自动一直运行，如果你想在子线程里使用 Timer、Port 或长期等待事件，需要手动启动 RunLoop。\n\n```swift\nThread {\n    Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in\n        print(\"子线程 Timer\")\n    }\n\n    RunLoop.current.run()\n}.start()\n```\n\nRunLoop 常处理的内容包括：Timer、Source、Observer、用户触摸事件、端口事件、performSelector、主队列任务、自动释放池相关处理、UI 刷新相关事件等。它不是专门为 Timer 存在的，Timer 只是 RunLoop 管理的一类输入。\n\nTimer 和 RunLoop 的关系非常重要。Timer 本身不会自己开线程，也不会自己一直跑。Timer 需要被加入某个 RunLoop 的某个 Mode，RunLoop 运行到对应 Mode 时才会触发 Timer。\n\n```swift\nlet timer = Timer(timeInterval: 1, repeats: true) { _ in\n    print(\"tick\")\n}\nRunLoop.main.add(timer, forMode: .common)\n```\n\nRunLoop Mode 可以理解成 RunLoop 的运行场景。常见 Mode 有：\n\n1. default：普通模式，页面正常停留时常用。\n\n2. tracking：滚动、拖拽、手势追踪时使用，比如 UIScrollView 正在滚动。\n\n3. common：不是一个具体 Mode，而是一组常用 Mode 的集合。把 Timer 加到 common，通常可以让它在 default 和 tracking 等常用模式下都工作。\n\n一个经典问题是：为什么滚动列表时 Timer 停了？原因通常是 Timer 默认被加入 default mode，而用户滚动 UIScrollView 时，主线程 RunLoop 切换到 tracking mode。此时 default mode 里的 Timer 不会被处理，所以看起来暂停了。解决方式是把 Timer 加到 common。\n\n```swift\nlet timer = Timer(timeInterval: 0.2, repeats: true) { _ in\n    print(\"刷新倒计时\")\n}\nRunLoop.main.add(timer, forMode: .common)\n```\n\nTimer 还容易和循环引用一起考。RunLoop 会持有 Timer，Timer 又可能强持有 target 或 closure，ViewController 如果再强持有 Timer，就可能形成循环引用。解决方式是页面退出时 invalidate，并在 block 里使用 weak self。只把 timer = nil 不一定够，因为 Timer 还可能被 RunLoop 持有。\n\n```swift\ntimer?.invalidate()\ntimer = nil\n```\n\nRunLoop 和主线程卡顿也有关系。主线程 RunLoop 负责处理 UI 事件和页面刷新。如果主线程正在执行耗时任务，比如同步网络、文件读写、大量 JSON 解析、大图解码、复杂布局、锁等待，RunLoop 就没有机会及时处理触摸和刷新，用户就会感觉卡顿。\n\n```swift\n// 错误示例：主线程睡眠会阻塞 RunLoop，页面无法响应。\nThread.sleep(forTimeInterval: 3)\n```\n\n实际开发中，RunLoop 常见应用场景包括：\n\n1. 解释主线程为什么不会退出，以及 App 为什么能持续响应事件。\n\n2. 解决 Timer 在列表滚动时暂停的问题。\n\n3. 创建常驻线程，让子线程长期等待任务。\n\n4. 理解 autorelease pool 在主线程 RunLoop 每轮中的释放时机。\n\n5. 做卡顿监控，通过观察主线程 RunLoop 状态判断是否长时间没有进入正常循环。\n\n6. 理解 UI 事件、手势、滚动和页面刷新为什么依赖主线程。\n\n但也要注意：现在日常业务开发里，不建议为了普通异步任务去手写复杂 RunLoop。耗时任务可以优先用 async/await、Task、OperationQueue、GCD。RunLoop 更多用于理解系统事件机制、Timer、卡顿监控、常驻线程和面试底层原理。\n\n面试可以这样回答：RunLoop 是线程的事件循环机制，让线程有事件时处理事件，没事件时休眠。主线程默认开启 RunLoop，所以 App 能持续响应点击、滚动、Timer 和 UI 刷新；子线程如果需要 Timer 或长期等待事件，需要手动启动 RunLoop。Timer 必须加入 RunLoop 的某个 Mode 才能触发，滚动时 Timer 暂停通常是因为 default mode 和 tracking mode 不匹配，可以加入 common modes。主线程如果被耗时任务阻塞，RunLoop 无法及时处理事件和刷新，就会造成卡顿。\n\n面试收口：RunLoop 不是线程，而是线程的事件循环；主线程靠它活着并响应 UI 事件。Timer、Mode、滚动暂停、常驻线程、自动释放池和卡顿监控，都是 RunLoop 高频考点。",
+    "difficulty": "Hard",
+    "oralOneLiner": "RunLoop 是线程的事件循环；主线程默认开启来处理 UI、Timer 和事件，Timer 滚动暂停多半是 Mode 不匹配，主线程卡顿本质是 RunLoop 被耗时任务阻塞。"
+  },
+  {
+    "id": "ios-timer-detailed-overview",
+    "category": "iOS",
+    "topic": "并发 / Timer",
+    "question": "iOS Timer 是什么？它和 RunLoop 有什么关系？使用时要注意哪些坑？",
+    "answer": "Timer 是 Foundation 提供的定时器，以前 Objective-C 里常叫 NSTimer。它用于在未来某个时间点，或者每隔一段时间，触发一段代码。常见场景有验证码倒计时、轮播图自动切换、定时刷新状态、简单轮询、延迟执行等。\n\n可以先这样说：Timer 是挂在 RunLoop 上的定时器，用来按时间触发任务；使用时重点注意 RunLoop Mode、精度、循环引用和 invalidate。\n\n最常见的创建方式是 scheduledTimer：\n\n```swift\nTimer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in\n    print(\"每 1 秒执行一次\")\n}\n```\n\n这里 withTimeInterval 表示时间间隔，repeats 表示是否重复执行。repeats 为 false 时只触发一次；repeats 为 true 时会重复触发，直到调用 invalidate。\n\nTimer 和 RunLoop 的关系非常关键。Timer 不是线程，它不会自己一直运行。Timer 必须被加入某个线程的 RunLoop，RunLoop 运行到对应 Mode 时，Timer 才会被触发。scheduledTimer 会自动把 Timer 加入当前线程 RunLoop 的 default mode。\n\n```swift\nlet timer = Timer(timeInterval: 1, repeats: true) { _ in\n    print(\"tick\")\n}\nRunLoop.main.add(timer, forMode: .common)\n```\n\n如果你在子线程创建 Timer，但没有启动子线程 RunLoop，Timer 可能不会触发，因为子线程执行完就退出了。\n\n```swift\nThread {\n    Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in\n        print(\"子线程 Timer\")\n    }\n\n    RunLoop.current.run()\n}.start()\n```\n\nTimer 的一个经典问题是：滚动列表时 Timer 为什么暂停？原因通常是 Timer 默认加入 default mode，而 UIScrollView 滚动时主线程 RunLoop 会进入 tracking mode。RunLoop 当前在 tracking mode 时，不会处理 default mode 里的 Timer，所以 Timer 看起来停了。解决方式是把 Timer 加到 common modes。\n\n```swift\nlet timer = Timer(timeInterval: 1, repeats: true) { _ in\n    print(\"滚动时也继续触发\")\n}\nRunLoop.main.add(timer, forMode: .common)\n```\n\nTimer 不是绝对精准的。它依赖 RunLoop 和系统调度，所以主线程繁忙、RunLoop mode 不匹配、系统调度延迟、App 进入后台等情况都会导致 Timer 延迟触发。Timer 适合普通倒计时和 UI 级别定时任务，不适合毫秒级严格计时。\n\nTimer 另一个高频坑是循环引用。ViewController 强持有 Timer，Timer 的 closure 又强捕获 self，就会形成 ViewController -> Timer -> closure -> ViewController。target-selector 写法里，Timer 也会强持有 target，如果 target 是 ViewController，同样容易循环引用。\n\n错误示例：\n\n```swift\nfinal class DemoViewController: UIViewController {\n    private var timer: Timer?\n\n    func startTimer() {\n        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in\n            self.updateUI()\n        }\n    }\n\n    private func updateUI() {}\n}\n```\n\n推荐写法：\n\n```swift\ntimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in\n    self?.updateUI()\n}\n```\n\n页面销毁或不需要 Timer 时，要调用 invalidate。invalidate 会让 Timer 从 RunLoop 中移除，并停止后续触发。只把 timer = nil 不一定够，因为 RunLoop 可能还持有 Timer。\n\n```swift\ntimer?.invalidate()\ntimer = nil\n```\n\ntarget-selector 写法在老项目里常见：\n\n```swift\ntimer = Timer.scheduledTimer(\n    timeInterval: 1,\n    target: self,\n    selector: #selector(timerFire),\n    userInfo: nil,\n    repeats: true\n)\n\n@objc private func timerFire() {\n    print(\"timer fire\")\n}\n```\n\n这种写法要特别注意 target 持有问题。如果 Timer 的 target 是 self，而 self 又持有 Timer，就容易出现循环引用。可以用 block + weak self，或者使用 weak proxy 转发。\n\nTimer 常见使用场景包括：验证码倒计时、Banner 自动轮播、简单轮询、页面定时刷新、延迟执行、检测用户一段时间无操作等。使用时要根据场景选择合适工具。\n\n几种定时方案的区别可以这样记：\n\n1. Timer：依赖 RunLoop，适合 UI 相关、普通精度的定时任务。\n\n2. DispatchSourceTimer：基于 GCD，适合后台队列定时任务，不受主 RunLoop Mode 影响。\n\n3. CADisplayLink：跟屏幕刷新同步，适合逐帧动画、FPS 监控。\n\n4. Task.sleep：Swift Concurrency 里的延迟等待，适合 async/await 流程中的延时、重试、超时控制。\n\n```swift\nTask {\n    try? await Task.sleep(nanoseconds: 1_000_000_000)\n    print(\"1 秒后继续异步流程\")\n}\n```\n\n实际开发建议：如果是页面上的倒计时或简单 UI 定时，Timer 可以用，但要 weak self、invalidate，并注意 common mode；如果是后台定时任务，可以考虑 DispatchSourceTimer；如果是动画每帧刷新，用 CADisplayLink；如果是 Swift 并发流程里的延迟，用 Task.sleep 更自然。\n\n面试收口：Timer 是 Foundation 的定时器，依赖 RunLoop 触发。scheduledTimer 默认加入当前 RunLoop 的 default mode，所以滚动列表时可能因为 RunLoop 切到 tracking mode 而暂停，可以加入 common modes。Timer 不保证绝对精准，主线程忙、mode 不匹配和系统调度都会造成延迟。使用 Timer 要注意循环引用，block 里 weak self，不需要时调用 invalidate 从 RunLoop 移除。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Timer 是依赖 RunLoop 的定时器；注意 default/common mode、触发精度、weak self 防循环引用，以及不需要时 invalidate。"
+  },
+  {
+    "id": "ios-retain-cycle-common-scenarios-detailed",
+    "category": "iOS",
+    "topic": "内存 / ARC",
+    "question": "iOS 中常见的循环引用有哪些？分别应该如何避免和排查？",
+    "answer": "iOS 中的循环引用，本质是两个或多个对象互相强持有，导致 ARC 的引用计数无法归零，对象不会执行 deinit。可以先这样说：只要 self 持有某个对象，而那个对象又长期保存一个会强捕获 self 的闭包，或者两个对象互相 strong，就要警惕循环引用。\n\n最常见场景如下。\n\n1. 闭包强持有 self。\n\n如果 ViewController 持有一个闭包属性，闭包内部又直接使用 self，就会形成 VC -> closure -> VC。\n\n```swift\nfinal class DemoViewController: UIViewController {\n    var callback: (() -> Void)?\n\n    func setup() {\n        callback = {\n            self.reloadData()\n        }\n    }\n\n    func reloadData() {}\n}\n```\n\n解决方式是使用 weak self。\n\n```swift\ncallback = { [weak self] in\n    self?.reloadData()\n}\n```\n\n注意：不是所有闭包都必须 weak self。关键看闭包是否被 self 间接或直接持有，或者闭包生命周期是否可能长于 self。短生命周期的一次性闭包不一定需要 weak。\n\n2. Timer / NSTimer。\n\nTimer 会被 RunLoop 持有，Timer 又会持有 target 或 closure。如果 VC 强持有 Timer，Timer 的 block 又强持有 VC，就会形成 VC -> Timer -> closure -> VC，同时 RunLoop -> Timer。\n\n```swift\ntimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in\n    self.updateUI()\n}\n```\n\n解决方式：block 中 weak self，并在页面退出或不需要时 invalidate。\n\n```swift\ntimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in\n    self?.updateUI()\n}\n\ntimer?.invalidate()\ntimer = nil\n```\n\n3. delegate 用 strong。\n\ndelegate 通常应该是 weak。如果 VC 持有 childView，childView 的 delegate 又强持有 VC，就会形成 VC -> childView -> delegate(VC)。\n\n```swift\nprotocol ChildViewDelegate: AnyObject {}\n\nfinal class ChildView: UIView {\n    weak var delegate: ChildViewDelegate?\n}\n```\n\n协议要继承 AnyObject，因为 weak 只能用于 class 类型。\n\n4. NotificationCenter block observer。\n\nblock 方式添加通知观察者时，如果 self 持有 observer token，block 又强捕获 self，就可能形成 self -> observer token -> block -> self。\n\n```swift\nobserver = NotificationCenter.default.addObserver(\n    forName: .init(\"Demo\"),\n    object: nil,\n    queue: .main\n) { [weak self] notification in\n    self?.handle(notification)\n}\n```\n\n不需要时移除观察者。\n\n```swift\nif let observer {\n    NotificationCenter.default.removeObserver(observer)\n}\n```\n\n5. CADisplayLink。\n\nCADisplayLink 和 Timer 很像，会被 RunLoop 持有，也会强持有 target。常见链路是 VC -> CADisplayLink -> target(VC)，RunLoop -> CADisplayLink。\n\n```swift\ndisplayLink = CADisplayLink(target: self, selector: #selector(tick))\ndisplayLink?.add(to: .main, forMode: .common)\n```\n\n解决方式：不需要时 invalidate，或使用 weak proxy。\n\n```swift\ndisplayLink?.invalidate()\ndisplayLink = nil\n```\n\n6. KVO。\n\nSwift 的 KVO observation token 如果被 self 持有，而观察回调又强捕获 self，就可能形成 self -> observation -> closure -> self。\n\n```swift\nobservation = object.observe(\\.name, options: [.new]) { [weak self] object, change in\n    self?.update()\n}\n```\n\n不需要时可以 invalidate 或释放 token。\n\n```swift\nobservation?.invalidate()\nobservation = nil\n```\n\n7. Combine。\n\nCombine 很常见的循环引用链路是 self -> cancellables -> AnyCancellable -> sink closure -> self。\n\n```swift\npublisher\n    .sink { [weak self] value in\n        self?.handle(value)\n    }\n    .store(in: &cancellables)\n```\n\n只要订阅被 self 保存，sink/assign 的闭包里就要特别注意 self 捕获。页面销毁时 cancellables 会释放，订阅结束；必要时也可以手动 cancel 或 removeAll。\n\n8. Task / async 闭包。\n\nTask 也可能捕获 self，尤其是页面持有 task，而 task 里面又长期 await、轮询或循环。链路可能是 self -> task -> closure -> self。\n\n```swift\ntask = Task { [weak self] in\n    await self?.loadData()\n}\n```\n\n页面销毁或任务不需要时取消。\n\n```swift\ntask?.cancel()\n```\n\n短生命周期 Task 不一定必须 weak self，但页面级长期任务、轮询任务、监听任务要重点注意。\n\n9. UIView 动画和 completion。\n\n普通短动画一般问题不大，因为闭包很快执行完。但如果是循环动画、长动画、或者动画 completion 被长期保存，就要注意 self 捕获。可以根据生命周期使用 weak self。\n\n```swift\nUIView.animate(withDuration: 0.3) { [weak self] in\n    self?.view.alpha = 0\n} completion: { [weak self] _ in\n    self?.finish()\n}\n```\n\n10. 对象互相 strong。\n\n两个普通对象互相强持有也会循环。比如 Teacher 持有 Student，Student 又持有 Teacher。\n\n```swift\nfinal class Teacher {\n    var student: Student?\n}\n\nfinal class Student {\n    weak var teacher: Teacher?\n}\n```\n\n一般由拥有者强持有被拥有者，被拥有者反向引用拥有者时用 weak。\n\n11. Coordinator。\n\nCoordinator 模式里，父 Coordinator 通常强持有子 Coordinator；子 Coordinator 通过闭包通知父级完成。如果闭包强捕获父级，就可能形成 ParentCoordinator -> ChildCoordinator -> closure -> ParentCoordinator。\n\n```swift\nchild.onFinish = { [weak self, weak child] in\n    guard let self, let child else { return }\n    self.free(child)\n}\n```\n\n还要记得在流程结束时从 childCoordinators 数组中移除子 Coordinator。\n\n12. TableView / CollectionView Cell 的闭包回调。\n\nCell 里常写按钮点击回调。如果 cell 持有 closure，closure 强持有 VC，而 VC 又持有 tableView，tableView 持有可见 cell，就可能形成 VC -> tableView -> cell -> closure -> VC。\n\n```swift\ncell.onTap = { [weak self] in\n    self?.openDetail(model)\n}\n```\n\n排查循环引用的方法：\n\n1. 在 deinit 里打印日志，反复 push/pop 页面，看页面是否释放。\n\n2. 使用 Xcode Memory Graph 查看对象是否残留，以及强引用链是谁持有谁。\n\n3. 使用 Instruments 的 Leaks 和 Allocations，看对象数量是否持续增长。\n\n4. 重点检查 Timer、CADisplayLink、Notification、KVO、Combine、Task、闭包属性、delegate、Coordinator children、Cell 回调。\n\n5. 修复后重复进出页面，确认 deinit 执行、对象数量回落。\n\nweak 和 unowned 的选择：weak 更安全，self 释放后自动变 nil，适合异步回调和生命周期不确定的场景；unowned 不增加引用计数，但对象释放后再访问会崩溃，只适合生命周期非常确定的场景。实际业务中异步闭包通常优先 weak。\n\n面试收口：iOS 常见循环引用集中在闭包、Timer、delegate、Notification、KVO、Combine、Task、CADisplayLink、对象互相 strong、Coordinator 和 Cell 回调。判断原则是看有没有强引用闭环；解决方式是 weak/unowned、invalidate、removeObserver、cancel、打断父子持有关系，并用 Memory Graph 和 deinit 验证。",
+    "difficulty": "Hard",
+    "oralOneLiner": "iOS 循环引用常见在闭包、Timer、delegate、通知、KVO、Combine、Task、CADisplayLink、Coordinator 和 Cell 回调；核心是找强引用闭环，用 weak、invalidate、remove、cancel 和 Memory Graph 处理。"
   }
 ]

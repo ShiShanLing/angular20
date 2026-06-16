@@ -14,6 +14,7 @@
           <span nz-icon nzType="book"></span>
           {{ builtinSeedButtonText }}
         </button>
+        
         <label class="file-pick">
           <input
             type="file"
@@ -26,8 +27,7 @@
         </label>
         <button nz-button nzType="link" type="button" (click)="showImportHelp()">说明</button>
       </div>
-    </div>
-    
+    </div>  
   } @else {
     <header class="practice-topbar">
       <div class="practice-topbar__nav">
@@ -40,6 +40,7 @@
         <button type="button" class="practice-btn" (click)="randomOne()" [disabled]="navDisabled()">
           随机一题
         </button>
+        
         <button
           type="button"
           class="practice-btn practice-btn--listen"
@@ -214,7 +215,7 @@
 
             @if (item.oralOneLiner) {
               <div class="oral-oneliner">
-                <div class="oral-oneliner__label">面试口播（一句）</div>
+                <div class="oral-oneliner__label">口播要点（一句）</div>
                 <p class="oral-oneliner__text">{{ item.oralOneLiner }}</p>
               </div>
             }
@@ -313,7 +314,7 @@
 
         @if (item.oralOneLiner) {
           <div class="oral-oneliner">
-            <div class="oral-oneliner__label">面试口播（一句）</div>
+            <div class="oral-oneliner__label">口播要点（一句）</div>
             <p class="oral-oneliner__text">{{ item.oralOneLiner }}</p>
           </div>
         }
@@ -404,4 +405,3 @@
     </main>
     }
   }
-</div>

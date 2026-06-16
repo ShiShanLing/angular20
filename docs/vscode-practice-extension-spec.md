@@ -1,9 +1,9 @@
-# VS Code 扩展：面试刷题工具 — 需求说明
+# VS Code 扩展：知识刷题工具 — 需求说明
 
 **目标读者**：负责实现 VS Code / Cursor 插件的同事或外部协作者。  
 **方案定位**：采用 **Extension + Webview** 的 **轻量 UI**；**业务规则与 Web 版对齐**，避免两套题库逻辑长期分叉。
 
-**参考实现（权威行为来源）**：本仓库 Angular 应用中的面试刷题页。
+**参考实现（权威行为来源）**：本仓库 Angular 应用中的知识刷题页。
 
 **扩展侧已提交示例题库**：若使用 `hello-cursor-extension` 仓库，可直接打开其中 `data/practice-catalog.json`（20 条结构化题目）与 `data/README.txt`；网站端无内置题库文件，题目在浏览器 `localStorage` 键 `angular20_practice_v1`，可自行导出 JSON 覆盖扩展内 `practice-catalog.json` 以同步。
 

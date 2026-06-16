@@ -52,7 +52,7 @@ function scopedKey(key: string, scope: PracticeStorageScope): string {
 }
 
 /**
- * 面试刷题数据持久化：题库、每日练习记录与筛选分类写入 localStorage。
+ * 知识刷题数据持久化：题库、每日练习记录与筛选分类写入 localStorage。
  */
 @Injectable({ providedIn: 'root' })
 export class PracticeStorageService {

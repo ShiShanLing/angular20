@@ -42,10 +42,17 @@ export class ToolsWeatherComponent implements OnInit {
     }
     this.searchWeather();
   }
+  /*
 
+
+### 78. `Sendable` 是什么？它能保证线程安全吗？什么时候需要 `@unchecked Sendable`？
+
+Sendable 表示一个类型的值可以安全跨并发边界传递。值类型且成员都 Sendable 通常自动满足；含可变共享状态的 class 默认不安全。Sendable 本身不加锁、不保证逻辑线程安全；@unchecked Sendable 是开发者向编译器承诺自己保证安全。
+
+  */
   searchWeather(): void {
     if (!this.city.trim()) return;
-
+    
     localStorage.setItem('tools_weather_city', this.city);
 
     const CACHE_KEY = `weather_cache_${this.city.trim().toLowerCase()}`;
@@ -64,9 +71,9 @@ export class ToolsWeatherComponent implements OnInit {
         localStorage.removeItem(CACHE_KEY);
       }
     }
-
+    
+    
     this.loading = true;
-
     // 1. Geocoding: 城市转经纬度
     const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(this.city)}&count=1&language=zh&format=json`;
 
@@ -77,7 +84,7 @@ export class ToolsWeatherComponent implements OnInit {
           this.loading = false;
           return;
         }
-
+        
         const location = geoRes.results[0];
         const lat = location.latitude;
         const lon = location.longitude;
@@ -148,12 +155,12 @@ export class ToolsWeatherComponent implements OnInit {
     }
     return result;
   }
-
+  
   updateChartOptions(): void {
     const hourly = this.getHourlyForecastArray();
     const times = hourly.map(h => new Date(h.time).getHours() + ':00');
     const temps = hourly.map(h => h.temp);
-
+    
     this.chartOptions = {
       grid: { left: '3%', right: '4%', bottom: '3%', top: '15%', containLabel: true },
       tooltip: { trigger: 'axis', formatter: '{b}<br/>温度: {c}°C' },
@@ -169,11 +176,13 @@ export class ToolsWeatherComponent implements OnInit {
             colorStops: [{ offset: 0, color: '#1890ff' }, { offset: 1, color: '#ffffff' }]
           }
         },
+        
         lineStyle: { color: '#1890ff' },
         itemStyle: { color: '#1890ff' }
       }]
     };
   }
+  
 
   getConditionIcon(code: number): string {
     // WMO Weather interpretation codes (WW)

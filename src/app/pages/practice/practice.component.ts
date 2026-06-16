@@ -81,7 +81,7 @@ function hashString(s: string): number {
 }
 
 /**
- * 面试刷题页：本地题库、分类与搜索、每日练习、语音播报与答案自检。
+ * 知识刷题页：本地题库、分类与搜索、每日练习、语音播报与答案自检。
  * 状态以 signal/computed 为主；持久化委托 {@link PracticeStorageService}。
  */
 @Component({
@@ -105,7 +105,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
   readonly categoryList = PRACTICE_CATEGORY_LIST;
   readonly isIosLearning = this.storageScope === 'ios-learning';
   readonly isAngularLearning = this.storageScope === 'angular-learning';
-  readonly pageName = this.isIosLearning ? 'iOS 学习' : this.isAngularLearning ? 'Angular 学习' : '面试刷题';
+  readonly pageName = this.isIosLearning ? 'iOS 学习' : this.isAngularLearning ? 'Angular 学习' : '知识刷题';
   readonly builtinSeedLabel = this.isIosLearning
     ? 'iOS 学习题库'
     : this.isAngularLearning
@@ -117,7 +117,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
       ? '加载 Angular 学习题库'
       : '加载内置 iOS 题库';
   readonly builtinSeedShortLabel = this.isIosLearning ? 'iOS题库' : this.isAngularLearning ? 'Angular题库' : '内置 iOS';
-
+  
   // 页面核心状态：题库、筛选、当前题、答案显隐、搜索与自检结果。
   readonly items = signal<PracticeItem[]>([]);
   readonly filterCategory = signal<FilterValue>('all');
@@ -140,7 +140,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
   readonly chantMode = signal(false);
   readonly chantIndex = signal(0);
   readonly chantPhase = signal<ChantPhase>('idle');
-
+  
   /** 当前分类筛选后的题目列表。 */
   readonly categoryFiltered = computed(() => {
     const all = this.items();
@@ -148,7 +148,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
     if (f === 'all') return all;
     return all.filter((i) => i.category === f);
   });
-
+  /**/
   /** 在当前分类内应用关键词搜索后的结果。 */
   readonly searchResults = computed(() =>
     applyPracticeSearchFilter(this.categoryFiltered(), this.searchQuery())
@@ -416,7 +416,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
     }
     this.startChantMode();
   }
-
+  
   /** 从当前题或当前筛选列表第一题开始唱题，不写入每日学习统计。 */
   startChantMode(): void {
     const list = this.listenList();
@@ -559,15 +559,20 @@ export class PracticeComponent implements OnInit, OnDestroy {
         this.msg.error('读取文件失败。');
         return;
       }
+      
       const { drafts, errors } = parsePracticeFile(buf);
       if (!drafts.length && errors.length) {
         this.msg.error(errors.slice(0, 5).join('；') + (errors.length > 5 ? ' …' : ''));
         return;
       }
+      
+      
       if (!drafts.length) {
         this.msg.warning('没有找到可导入的题目。');
         return;
       }
+      
+      
       const { added, skipped } = this.storage.importDrafts(drafts, this.storageScope);
       this.reloadFromStorage();
       this.ensureTodayPractice();
@@ -586,7 +591,6 @@ export class PracticeComponent implements OnInit, OnDestroy {
     reader.readAsArrayBuffer(file);
   }
 
-  /** 二次确认后清空本地题库和学习记录。 */
   confirmClear(): void {
     this.modal.confirm({
       nzTitle: '清空题库？',
@@ -604,7 +608,11 @@ export class PracticeComponent implements OnInit, OnDestroy {
       },
     });
   }
-
+  /*
+  泛型让一套代码适配多种具体类型，同时保留静态类型信息，比如 Array<Element>。协议作为类型更强调运行时抽象和能力约束，可能带来 existential 开销。
+  泛型适合类型在编译期确定、追求类型安全和性能；协议类型适合异构集合和运行时替换。
+  */
+  
   /** 展示导入格式、本地存储和内置题库说明。 */
   showImportHelp(): void {
     this.modal.info({
@@ -638,7 +646,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
       window.speechSynthesis.cancel();
     }
   }
-
+  //
   /** 唱题模式播放当前题目，结束后自动播放答案。 */
   private playChantQuestion(): void {
     if (!this.chantMode()) return;
@@ -718,18 +726,17 @@ export class PracticeComponent implements OnInit, OnDestroy {
     window.speechSynthesis.speak(utterance);
   }
 
-  /** 生成适合朗读的题目文本。 */
+  /** 生成适合朗读的题目文本：只读题目本体，跳过分类与标签。 */
   private questionSpeechText(item: PracticeItem): string {
-    const tags = item.tags ? `标签，${item.tags}。` : '';
-    return `${this.categoryLabel(item.category)}。${tags}题目。${item.question}`;
+    return item.question;
   }
 
-  /** 生成适合朗读的答案文本，优先包含面试口播一句。 */
+  /** 生成适合朗读的答案文本，优先包含口播要点。 */
   private answerSpeechText(item: PracticeItem): string {
     const oneLiner = item.oralOneLiner?.trim();
     const answer = item.answer?.trim();
-    if (oneLiner && answer) return `面试口播一句。${oneLiner}。参考答案。${answer}`;
-    if (oneLiner) return `面试口播一句。${oneLiner}`;
+    if (oneLiner && answer) return `口播要点。${oneLiner}。参考答案。${answer}`;
+    if (oneLiner) return `口播要点。${oneLiner}`;
     if (answer) return `参考答案。${answer}`;
     return '本题暂未录入参考答案。';
   }

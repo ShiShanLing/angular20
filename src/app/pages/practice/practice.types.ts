@@ -34,7 +34,7 @@ export type PracticeFilterCategory = PracticeCategory | 'all';
 export interface PracticeItem {
   id: string;
   category: PracticeCategory;
-  /** 面试问题 / 题干 */
+  /** 问题 / 题干 */
   question: string;
   /** 参考答案（可空，便于你先只录题） */
   answer: string;
@@ -43,7 +43,7 @@ export interface PracticeItem {
   importedAt: number;
   /** 为 true 时答案按 Markdown 渲染（代码块、加粗、表格等） */
   markD?: boolean;
-  /** 面试口播一句（可选，内置 iOS 题库有） */
+  /** 口播要点（可选，内置 iOS 题库有） */
   oralOneLiner?: string;
 }
 

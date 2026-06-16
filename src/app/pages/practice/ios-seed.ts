@@ -20,13 +20,13 @@ export function iosSeedToPracticeItems(importedAt: number): PracticeItem[] {
   return rowsToPracticeItems(rows, importedAt, 'ios');
 }
 
-/** 将 iOS 面试刷题计划 JSON 转为本应用 PracticeItem。 */
+/** 将 iOS 知识刷题计划 JSON 转为本应用 PracticeItem。 */
 export function iosJobSeedToPracticeItems(importedAt: number): PracticeItem[] {
   const rows = iosJobSeedJson as IosSeedRow[];
   return rowsToPracticeItems(rows, importedAt, 'ios');
 }
 
-/** 将 Angular 面试刷题计划 JSON 转为本应用 PracticeItem。 */
+/** 将 Angular 知识刷题计划 JSON 转为本应用 PracticeItem。 */
 export function angularJobSeedToPracticeItems(importedAt: number): PracticeItem[] {
   const rows = angularJobSeedJson as IosSeedRow[];
   return rowsToPracticeItems(rows, importedAt, 'angular');

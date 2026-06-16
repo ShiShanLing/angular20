@@ -1,10 +1,10 @@
-# Android iOS 面试刷题 App 实现说明
+# Android iOS 知识刷题 App 实现说明
 
 这份文档用于交接给新开的 Android 项目窗口。目标是基于当前 Angular 项目里的本地 iOS 题库，做一个原生 Android 刷题 App。
 
 ## 1. 项目定位
 
-做一个本地单机版 **iOS 面试刷题 App**。
+做一个本地单机版 **iOS 知识刷题 App**。
 
 第一版只刷内置 iOS 题目，不做导入功能，不做账号、不做云同步、不做后台管理。
 
@@ -35,7 +35,7 @@ Minimum SDK: API 26
 
 ```text
 Project name: IosPractice
-App name: iOS 面试刷题
+App name: iOS 知识刷题
 Package name: com.dfre.iospractice
 ```
 

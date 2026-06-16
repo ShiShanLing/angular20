@@ -13,7 +13,7 @@ import { PermissionService } from './core/permission.service';
 export class AppComponent {
   private readonly document = inject(DOCUMENT);
   private readonly permissionService = inject(PermissionService);
-
+  
   constructor() {
     const rootEl = this.document.querySelector('app-root');
     const raw = rootEl?.getAttribute('data-permissions') ?? null;
@@ -25,15 +25,11 @@ export class AppComponent {
     }
   }
 
-  /**
-   * 支持两种格式：
-   * 1) JSON 数组：["tools.mortgage","practice.view"]
-   * 2) 逗号分隔：tools.mortgage,practice.view
-   */
   private parsePermissions(raw: string | null): string[] | null {
     if (raw == null) {
       return null;
     }
+    
     const text = raw.trim();
     if (!text) {
       return [];
@@ -51,10 +47,11 @@ export class AppComponent {
         // JSON 格式非法时回退为逗号分隔解析
       }
     }
-
+    
     return text
       .split(',')
       .map((item) => item.trim())
       .filter((item) => item.length > 0);
+      
   }
 }

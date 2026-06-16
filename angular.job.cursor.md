@@ -1,6 +1,6 @@
-# Angular + JavaScript + TypeScript 面试向学习路线（`angular.job.cursor.md`）
+# Angular + JavaScript + TypeScript 技术学习路线（`angular.job.cursor.md`）
 
-> 面向 **前端 / Angular 岗** 面试：偏「常问什么、怎么答、怎么自检」，不是完整教程。
+> 面向 **前端 / Angular 岗** 技术学习：偏「常问什么、怎么答、怎么自检」，不是完整教程。
 >
 > **技术栈假设**：Angular **19+**（Standalone、Signals、`inject()`）、RxJS 7、TypeScript 5；UI 库常见为 **ng-zorro** 或 Material（概念互通）。
 >
@@ -8,7 +8,7 @@
 
 ---
 
-## 1. 面试在考什么（四块记分板）
+## 1. 重点在考什么（四块记分板）
 
 | 板块 | 典型形式 | 你要准备到什么程度 |
 |------|-----------|---------------------|
@@ -21,11 +21,11 @@
 
 ---
 
-## 2. 路线总览（按面试 ROI 排序）
+## 2. 路线总览（按学习 ROI 排序）
 
 **建议顺序**：**JavaScript 核心 → TypeScript → Angular 组件/DI/模板 → 路由与表单 → RxJS → 变更检测与性能 → 测试**。
 
-| 优先级 | 主题 | 面试关联 |
+| 优先级 | 主题 | 学习关联 |
 |--------|------|-----------|
 | P0 | JS：`this`、闭包、原型、事件循环、Promise | 几乎必问 |
 | P0 | TS：类型收窄、`interface` vs `type`、泛型、联合/交叉 | 几乎必问 |
@@ -43,7 +43,7 @@
 
 ---
 
-## 3. 分模块：面试题纲（自检用）
+## 3. 分模块：题纲（自检用）
 
 对每个 **粗体短语** 自问：能否 **口述 1～2 分钟**，必要时 **写 5～10 行伪代码**。
 
@@ -132,7 +132,7 @@
 - **REST**：幂等、401 刷新 Token 队列（口述）
 - **测试**：`HttpTestingController` 验证请求 URL / body，避免发真实请求
 
-### 3.8 RxJS（Angular 面试重灾区）
+### 3.8 RxJS（Angular 重点）
 
 - **Observable vs Promise**：多值、可取消、懒执行
 - **Subscription**：`unsubscribe`；`takeUntilDestroyed()` / `async` pipe 防泄漏
@@ -183,7 +183,7 @@
 - **打包体积**：分析 `source-map-explorer` / `ng build --stats-json`（了解）
 - **Chrome DevTools**：Network、Performance、Memory 各看什么
 
-### 3.13 浏览器与网络（前端通用面试题）
+### 3.13 浏览器与网络（前端通用题）
 
 - **HTTP 缓存**：`Cache-Control`、`ETag` / `If-None-Match`、304；强缓存 vs 协商缓存
 - **CORS**：简单请求 vs 预检（OPTIONS）；`Access-Control-Allow-*` 含义
@@ -244,7 +244,7 @@
 3. **难点**：例如首屏性能、表单复杂校验、路由权限、RxJS 内存泄漏排查 —— 用 **STAR**。
 4. **数据**：构建体积、首屏时间、缺陷率（没有就说监控/日志怎么补）。
 
-**可对照本仓库举例（面试时改成你的表述）**：
+**可对照本仓库举例（练习时改成你的表述）**：
 
 - 多工具站：**懒加载路由** + Layout 壳 + 响应式侧栏
 - 刷题页：**signal 状态** + `localStorage` 持久化 + Excel 导入
@@ -271,11 +271,11 @@
 | 3～4 周 | §3.3～3.5 + 做小 demo（列表+表单+路由） |
 | 5～6 周 | §3.7～3.8 RxJS 专项 + 写 1 个带搜索防抖的页面 |
 | 7～8 周 | 测试/性能/架构 + 简历项目 STAR 定稿 |
-| 9～10 周 | §7 模拟面试清单过 2 轮 + 录音复述 |
+| 9～10 周 | §7 模拟演练清单过 2 轮 + 录音复述 |
 
 ---
 
-## 7. 模拟面试清单（自拟）
+## 7. 模拟演练清单（自拟）
 
 - [ ] 「从输入 URL 到 Angular 首屏渲染，大致经过哪些步骤？」（可简答：bundle → bootstrap → 根组件 → 路由 outlet）
 - [ ] 「`switchMap` 和 `mergeMap` 区别？搜索框用哪个？」
@@ -306,7 +306,7 @@
 | `angular-css` | §3.10 |
 | `ios` / 其他 | 用 `ios.job.cursor.md` |
 
-导入 Excel 或内置 seed 后，在 **面试刷题** 页按分类筛选，配合本章 **§3** 做「口述自检」。
+导入 Excel 或内置 seed 后，在 **知识刷题** 页按分类筛选，配合本章 **§3** 做「口述自检」。
 
 ---
 

@@ -1,13 +1,13 @@
 # Angular + JavaScript + TypeScript Job Interview Roadmap
 
-> 目标：面向前端求职和晋升面试，系统准备 Angular、JavaScript、TypeScript、浏览器、工程化、性能优化和项目表达。  
+> 目标：面向前端求职和晋升考核，系统准备 Angular、JavaScript、TypeScript、浏览器、工程化、性能优化和项目表达。  
 > 适用对象：准备前端校招、社招、Angular 专项岗位、全栈前端岗位、晋升答辩。  
 > 建议周期：`8-16 周`集中准备，之后持续补项目、源码和工程经验。
 > 技术栈假设：Angular 19+、Standalone Component、Signals、RxJS 7、TypeScript 5；UI 库可以是 ng-zorro 或 Angular Material。
 
-## 面试能力模型
+## 能力模型
 
-Angular + JS + TS 面试通常考察 7 类能力：
+Angular + JS + TS 通常覆盖 7 类能力：
 
 1. JavaScript 语言基础与运行机制。
 2. TypeScript 类型系统和工程使用能力。
@@ -48,7 +48,7 @@ Angular + JS + TS 面试通常考察 7 类能力：
 - 防抖与节流
 - 模块化：ESM、CommonJS
 
-### 高频面试题
+### 高频题
 
 - `var`、`let`、`const` 有什么区别？
 - 什么是闭包？闭包有什么优缺点？
@@ -112,7 +112,7 @@ Angular + JS + TS 面试通常考察 7 类能力：
 - 装饰器基础
 - `tsconfig`
 
-### 高频面试题
+### 高频题
 
 - `type` 和 `interface` 有什么区别？
 - `any` 和 `unknown` 有什么区别？
@@ -179,7 +179,7 @@ Angular + JS + TS 面试通常考察 7 类能力：
 - Angular 新控制流：`@if`、`@for`、`@switch`、`@empty`
 - `@defer` 延迟加载视图
 
-### 高频面试题
+### 高频题
 
 - Angular 和 React / Vue 的主要区别是什么？
 - Component、Directive、Pipe 分别解决什么问题？
@@ -211,12 +211,12 @@ Angular + JS + TS 面试通常考察 7 类能力：
 - 写一个 `@for` + `track` 的列表 Demo。
 - 写一个 `@defer` 延迟加载重组件 Demo。
 
-### Angular 19+ 面试补盘
+### Angular 19+ 补盘
 
 - Standalone：组件通过 `imports` 显式声明依赖，不再必须依赖 NgModule 组织页面。
 - 新控制流：`@if`、`@for`、`@switch` 更贴近语言结构，`@for` 必须重视 `track`。
 - Signals：`signal` 保存状态，`computed` 做派生，`effect` 做副作用，但不要在 effect 中随意写回导致循环。
-- 信号输入输出：`input()`、`input.required()`、`model()`、`output()` 是新 API，面试能说出方向即可。
+- 信号输入输出：`input()`、`input.required()`、`model()`、`output()` 是新 API，能说出方向即可。
 - 信号查询：`viewChild()`、`contentChild()` 可以把查询结果作为 signal 使用。
 - `takeUntilDestroyed()`：在组件销毁时自动取消 RxJS 订阅，减少手动 Subject 样板代码。
 - Signal/RxJS 桥接：`toSignal(observable$)` 和 `toObservable(signal)` 适合在边界转换，不建议全项目盲目互转。
@@ -255,7 +255,7 @@ Angular + JS + TS 面试通常考察 7 类能力：
 - Cancel Request
 - HttpTestingController
 
-### 高频面试题
+### 高频题
 
 - Angular 路由懒加载有什么好处？
 - Route Guard 有哪些类型？分别适合什么场景？
@@ -323,7 +323,7 @@ Angular + JS + TS 面试通常考察 7 类能力：
 - AsyncPipe
 - Angular Signals 与 RxJS 互操作
 
-### 高频面试题
+### 高频题
 
 - Observable 和 Promise 有什么区别？
 - Subject 和 BehaviorSubject 有什么区别？
@@ -378,7 +378,7 @@ Angular + JS + TS 面试通常考察 7 类能力：
   - INP
   - TTI
 
-### 高频面试题
+### 高频题
 
 - Angular 变更检测是如何触发的？
 - Zone.js 在 Angular 中做了什么？
@@ -438,7 +438,7 @@ Angular + JS + TS 面试通常考察 7 类能力：
 - SameSite Cookie
 - HSTS
 
-### 高频面试题
+### 高频题
 
 - 浏览器从输入 URL 到页面展示经历了什么？
 - 回流和重绘有什么区别？
@@ -505,7 +505,7 @@ Angular + JS + TS 面试通常考察 7 类能力：
 - GitHub Pages
 - Nginx
 
-### 高频面试题
+### 高频题
 
 - Angular CLI 构建大致做了什么？
 - package-lock 的作用是什么？
@@ -579,7 +579,7 @@ Angular + JS + TS 面试通常考察 7 类能力：
 - 工程发布：`npm run build:gh`、`angular-cli-ghpages`、源码分支和 gh-pages 分支发布。
 - 性能警示：SCSS budget warning、CommonJS dependency warning 如何解释和处理。
 
-### 面试官常追问
+### 常追问
 
 - 这个模块为什么这样设计？
 - 有没有替代方案？
@@ -652,7 +652,7 @@ Angular + JS + TS 面试通常考察 7 类能力：
 - 能说出时间复杂度。
 - 能解释在项目中的实际应用。
 
-## 阶段 11：面试冲刺时间表
+## 阶段 11：冲刺时间表
 
 ### 第 1-2 周：JS + TS 基础
 
@@ -681,7 +681,7 @@ Angular + JS + TS 面试通常考察 7 类能力：
 - 浏览器渲染、缓存、安全。
 - 测试、CI/CD、部署。
 - 整理项目案例。
-- 模拟面试。
+- 模拟演练。
 
 ### 第 9-12 周：强化与查漏补缺
 
@@ -706,7 +706,7 @@ Angular + JS + TS 面试通常考察 7 类能力：
 ### 晚上
 
 - 复盘项目经历。
-- 模拟回答 5 个面试题。
+- 模拟回答 5 个练习题。
 - 记录不会的问题。
 
 ## 每周产出
@@ -715,9 +715,9 @@ Angular + JS + TS 面试通常考察 7 类能力：
 - 一个可运行 Demo。
 - 一份手写题代码。
 - 一份错题清单。
-- 一次模拟面试记录。
+- 一次模拟演练记录。
 
-## 面试回答原则
+## 回答原则
 
 1. 先给结论。
 2. 再解释原理。
@@ -837,7 +837,7 @@ Angular + JS + TS 面试通常考察 7 类能力：
 - CI/CD 实战
 - 线上问题复盘
 
-## 模拟面试题库
+## 模拟题库
 
 ### JavaScript
 
@@ -914,6 +914,6 @@ Angular + JS + TS 面试通常考察 7 类能力：
 1. 用一个 Angular 项目串起所有知识点。
 2. 每个高频题都写一个最小 Demo。
 3. 每天口述 5 个问题。
-4. 每周做一次模拟面试。
+4. 每周做一次模拟演练。
 5. 把不会的问题整理成错题本。
 6. 用“项目场景 + 原理 + 取舍 + 指标”回答高级问题。

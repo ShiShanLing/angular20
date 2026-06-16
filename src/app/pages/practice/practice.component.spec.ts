@@ -194,8 +194,9 @@ describe('PracticeComponent', () => {
     expect(speechCancelSpy).toHaveBeenCalled();
     expect(speechSpeakSpy).toHaveBeenCalled();
     const utterance = speechSpeakSpy.calls.mostRecent().args[0] as SpeechSynthesisUtterance;
-    expect(utterance.text).toContain('题目');
     expect(utterance.text).toContain('RunLoop 与线程关系？');
+    expect(utterance.text).not.toContain('标签');
+    expect(utterance.text).not.toContain('基础');
     expect(utterance.rate).toBeCloseTo(0.8, 2);
   });
 

@@ -52,14 +52,16 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   // 菜单显示设置面板是否打开
   isMenuSettingsOpen = false;
-
+  
   activationCode = '';
   activationMessage = '';
   activationMessageType: 'success' | 'error' | '' = '';
 
   // 统一管理所有订阅，在 ngOnDestroy 中一次性取消，防止内存泄漏
   private subs = new Subscription();
-
+  /*
+  
+  */
   constructor(
     private breakpointObserver: BreakpointObserver,
     private router: Router,
@@ -238,18 +240,20 @@ export class LayoutComponent implements OnInit, OnDestroy {
     const firstVisiblePath = visiblePaths[0];
     if (!firstVisiblePath) {
       if (
+        
         currentPath !== '/no-access' &&
         (currentPath === '' ||
           currentPath === '/' ||
           currentPath === '/tools' ||
           managedPaths.includes(currentPath))
       ) {
+        
         void this.router.navigateByUrl('/no-access', { replaceUrl: true });
       }
       return;
-    }
-
+    } 
     // 根路径、tools 根路径，或当前路径不在可见菜单里时，跳到第一个可见页面。
+     
     if (
       currentPath === '' ||
       currentPath === '/' ||
@@ -261,7 +265,10 @@ export class LayoutComponent implements OnInit, OnDestroy {
       }
     }
   }
-
+  /*
+    @escaping 表示闭包可能在函数返回后才执行，比如异步网络回调、DispatchQueue.async、保存到属性。非 escaping 闭包默认只在函数调用期间执行完。escaping 闭包需要显式写 self，是为了提醒可能延长对象生命周期并产生循环引用。 
+    
+  */
   private collectLeafPaths(items: MenuItem[]): string[] {
     const paths: string[] = [];
     for (const item of items) {
@@ -271,6 +278,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
         paths.push(item.path);
       }
     }
+    
     return paths;
   }
 

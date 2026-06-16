@@ -67,7 +67,7 @@
     "category": "Angular",
     "topic": "JavaScript 基础",
     "question": "`call`、`apply`、`bind` 有什么区别？分别适合什么场景？",
-    "answer": "call 和 apply 都是立即调用函数并指定 this，区别是 call 参数逐个传，apply 参数用数组。bind 不立即调用，而是返回一个绑定好 this 和部分参数的新函数。面试可补一句：bind 常用于回调保留 this。",
+    "answer": "call 和 apply 都是立即调用函数并指定 this，区别是 call 参数逐个传，apply 参数用数组。bind 不立即调用，而是返回一个绑定好 this 和部分参数的新函数。可补一句：bind 常用于回调保留 this。",
     "difficulty": "Easy",
     "oralOneLiner": "call/apply 立即执行，bind 返回新函数。"
   },
@@ -454,7 +454,7 @@
     "category": "Angular",
     "topic": "Angular 模板",
     "question": "Angular 新控制流 `@if`、`@for`、`@switch`、`@empty` 有什么特点？和旧 `*ngIf` / `*ngFor` 如何对比？",
-    "answer": "新控制流 @if、@for、@switch 更像语言结构，模板更清晰；@for 明确要求 track，有助于性能；@empty 处理空列表也更直观。旧 *ngIf/*ngFor 在存量项目仍常见，面试要都能读。",
+    "answer": "新控制流 @if、@for、@switch 更像语言结构，模板更清晰；@for 明确要求 track，有助于性能；@empty 处理空列表也更直观。旧 *ngIf/*ngFor 在存量项目仍常见，都要能读。",
     "difficulty": "Medium",
     "oralOneLiner": "新控制流更清晰，@for 要认真写 track。"
   },
@@ -1246,7 +1246,7 @@
     "category": "Angular",
     "topic": "手写题",
     "question": "手写 debounce，并说明立即执行版和非立即执行版如何实现。",
-    "answer": "防抖是在连续触发时重置计时器，只在停止触发一段时间后执行。搜索输入、窗口 resize 很适合防抖。\n\n```ts\nfunction debounce<T extends (...args: any[]) => void>(fn: T, delay = 300, immediate = false) {\n  let timer: ReturnType<typeof setTimeout> | null = null;\n\n  return function(this: ThisParameterType<T>, ...args: Parameters<T>) {\n    const callNow = immediate && !timer;\n    if (timer) clearTimeout(timer);\n\n    timer = setTimeout(() => {\n      timer = null;\n      if (!immediate) fn.apply(this, args);\n    }, delay);\n\n    if (callNow) fn.apply(this, args);\n  };\n}\n```\n\n面试收口：防抖关注最后一次触发，核心是清掉旧 timer。",
+    "answer": "防抖是在连续触发时重置计时器，只在停止触发一段时间后执行。搜索输入、窗口 resize 很适合防抖。\n\n```ts\nfunction debounce<T extends (...args: any[]) => void>(fn: T, delay = 300, immediate = false) {\n  let timer: ReturnType<typeof setTimeout> | null = null;\n\n  return function(this: ThisParameterType<T>, ...args: Parameters<T>) {\n    const callNow = immediate && !timer;\n    if (timer) clearTimeout(timer);\n\n    timer = setTimeout(() => {\n      timer = null;\n      if (!immediate) fn.apply(this, args);\n    }, delay);\n\n    if (callNow) fn.apply(this, args);\n  };\n}\n```\n\n收口总结：防抖关注最后一次触发，核心是清掉旧 timer。",
     "difficulty": "Medium",
     "oralOneLiner": "防抖是等用户停下来再执行，核心是重置 timer。",
     "markD": true
@@ -1256,7 +1256,7 @@
     "category": "Angular",
     "topic": "手写题",
     "question": "手写 throttle，并说明时间戳版和定时器版有什么差异。",
-    "answer": "节流是在固定时间间隔内最多执行一次，适合滚动、拖拽、mousemove 等高频事件。\n\n```ts\nfunction throttle<T extends (...args: any[]) => void>(fn: T, wait = 300) {\n  let last = 0;\n  let timer: ReturnType<typeof setTimeout> | null = null;\n\n  return function(this: ThisParameterType<T>, ...args: Parameters<T>) {\n    const now = Date.now();\n    const remaining = wait - (now - last);\n\n    if (remaining <= 0) {\n      if (timer) {\n        clearTimeout(timer);\n        timer = null;\n      }\n      last = now;\n      fn.apply(this, args);\n    } else if (!timer) {\n      timer = setTimeout(() => {\n        last = Date.now();\n        timer = null;\n        fn.apply(this, args);\n      }, remaining);\n    }\n  };\n}\n```\n\n面试收口：节流关注稳定频率，核心是控制执行间隔。",
+    "answer": "节流是在固定时间间隔内最多执行一次，适合滚动、拖拽、mousemove 等高频事件。\n\n```ts\nfunction throttle<T extends (...args: any[]) => void>(fn: T, wait = 300) {\n  let last = 0;\n  let timer: ReturnType<typeof setTimeout> | null = null;\n\n  return function(this: ThisParameterType<T>, ...args: Parameters<T>) {\n    const now = Date.now();\n    const remaining = wait - (now - last);\n\n    if (remaining <= 0) {\n      if (timer) {\n        clearTimeout(timer);\n        timer = null;\n      }\n      last = now;\n      fn.apply(this, args);\n    } else if (!timer) {\n      timer = setTimeout(() => {\n        last = Date.now();\n        timer = null;\n        fn.apply(this, args);\n      }, remaining);\n    }\n  };\n}\n```\n\n收口总结：节流关注稳定频率，核心是控制执行间隔。",
     "difficulty": "Medium",
     "oralOneLiner": "节流是固定频率执行，适合滚动这类高频事件。",
     "markD": true
@@ -1266,7 +1266,7 @@
     "category": "Angular",
     "topic": "手写题",
     "question": "手写 Promise.all，需要处理顺序、失败、空数组和非 Promise 值。",
-    "answer": "Promise.all 要保持结果顺序；任意一个失败就整体失败；空数组直接成功。\n\n```ts\nfunction promiseAll<T>(items: Array<T | Promise<T>>): Promise<T[]> {\n  return new Promise((resolve, reject) => {\n    if (items.length === 0) return resolve([]);\n\n    const results: T[] = new Array(items.length);\n    let finished = 0;\n\n    items.forEach((item, index) => {\n      Promise.resolve(item).then(value => {\n        results[index] = value;\n        finished++;\n        if (finished === items.length) resolve(results);\n      }, reject);\n    });\n  });\n}\n```\n\n面试收口：Promise.all 的关键是顺序不乱、失败短路、计数完成。",
+    "answer": "Promise.all 要保持结果顺序；任意一个失败就整体失败；空数组直接成功。\n\n```ts\nfunction promiseAll<T>(items: Array<T | Promise<T>>): Promise<T[]> {\n  return new Promise((resolve, reject) => {\n    if (items.length === 0) return resolve([]);\n\n    const results: T[] = new Array(items.length);\n    let finished = 0;\n\n    items.forEach((item, index) => {\n      Promise.resolve(item).then(value => {\n        results[index] = value;\n        finished++;\n        if (finished === items.length) resolve(results);\n      }, reject);\n    });\n  });\n}\n```\n\n收口总结：Promise.all 的关键是顺序不乱、失败短路、计数完成。",
     "difficulty": "Hard",
     "oralOneLiner": "Promise.all 保持顺序，全部成功才成功，一个失败就失败。",
     "markD": true
@@ -1286,7 +1286,7 @@
     "category": "Angular",
     "topic": "手写题",
     "question": "手写 new 操作符，并解释原型链接和构造函数返回对象的规则。",
-    "answer": "new 的核心是创建对象、链接原型、绑定 this 执行构造函数、处理返回值。\n\n```ts\nfunction myNew<T extends object>(Ctor: new (...args: any[]) => T, ...args: any[]): T {\n  const obj = Object.create(Ctor.prototype);\n  const ret = Ctor.apply(obj, args);\n  return ret !== null && (typeof ret === 'object' || typeof ret === 'function') ? ret : obj;\n}\n```\n\n面试收口：构造函数如果返回对象，就用返回对象，否则用新建对象。",
+    "answer": "new 的核心是创建对象、链接原型、绑定 this 执行构造函数、处理返回值。\n\n```ts\nfunction myNew<T extends object>(Ctor: new (...args: any[]) => T, ...args: any[]): T {\n  const obj = Object.create(Ctor.prototype);\n  const ret = Ctor.apply(obj, args);\n  return ret !== null && (typeof ret === 'object' || typeof ret === 'function') ? ret : obj;\n}\n```\n\n收口总结：构造函数如果返回对象，就用返回对象，否则用新建对象。",
     "difficulty": "Medium",
     "oralOneLiner": "new 做建对象、接原型、绑 this、处理返回值。",
     "markD": true
@@ -1296,7 +1296,7 @@
     "category": "Angular",
     "topic": "手写题",
     "question": "手写 instanceof，并解释它如何沿原型链查找。",
-    "answer": "instanceof 本质是检查构造函数的 prototype 是否出现在对象原型链上。\n\n```ts\nfunction myInstanceof(obj: unknown, Ctor: Function): boolean {\n  if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) return false;\n\n  let proto = Object.getPrototypeOf(obj);\n  const target = Ctor.prototype;\n\n  while (proto) {\n    if (proto === target) return true;\n    proto = Object.getPrototypeOf(proto);\n  }\n  return false;\n}\n```\n\n面试收口：instanceof 查的是原型链，不是直接比较构造函数。",
+    "answer": "instanceof 本质是检查构造函数的 prototype 是否出现在对象原型链上。\n\n```ts\nfunction myInstanceof(obj: unknown, Ctor: Function): boolean {\n  if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) return false;\n\n  let proto = Object.getPrototypeOf(obj);\n  const target = Ctor.prototype;\n\n  while (proto) {\n    if (proto === target) return true;\n    proto = Object.getPrototypeOf(proto);\n  }\n  return false;\n}\n```\n\n收口总结：instanceof 查的是原型链，不是直接比较构造函数。",
     "difficulty": "Medium",
     "oralOneLiner": "instanceof 就是沿原型链找 constructor.prototype。",
     "markD": true
@@ -1306,7 +1306,7 @@
     "category": "Angular",
     "topic": "手写题",
     "question": "手写 bind，需要考虑参数预置和作为构造函数调用的情况。",
-    "answer": "bind 返回一个新函数，固定 this 和部分参数；作为构造函数调用时，this 绑定要让位给 new。\n\n```ts\nfunction myBind(fn: Function, ctx: any, ...preset: any[]) {\n  function bound(this: any, ...later: any[]) {\n    const isNew = this instanceof bound;\n    return fn.apply(isNew ? this : ctx, [...preset, ...later]);\n  }\n  bound.prototype = Object.create(fn.prototype);\n  return bound;\n}\n```\n\n面试收口：bind 难点是参数预置和 new 调用优先级。",
+    "answer": "bind 返回一个新函数，固定 this 和部分参数；作为构造函数调用时，this 绑定要让位给 new。\n\n```ts\nfunction myBind(fn: Function, ctx: any, ...preset: any[]) {\n  function bound(this: any, ...later: any[]) {\n    const isNew = this instanceof bound;\n    return fn.apply(isNew ? this : ctx, [...preset, ...later]);\n  }\n  bound.prototype = Object.create(fn.prototype);\n  return bound;\n}\n```\n\n收口总结：bind 难点是参数预置和 new 调用优先级。",
     "difficulty": "Hard",
     "oralOneLiner": "bind 返回新函数，还要处理预置参数和 new 调用。",
     "markD": true
@@ -1316,7 +1316,7 @@
     "category": "Angular",
     "topic": "手写题",
     "question": "手写 EventEmitter，支持 on、off、once、emit。",
-    "answer": "EventEmitter 用事件名映射监听器集合，emit 时依次执行。once 可以包装一层，执行后自动 off。\n\n```ts\nclass EventEmitter {\n  private events = new Map<string, Set<Function>>();\n\n  on(name: string, fn: Function) {\n    if (!this.events.has(name)) this.events.set(name, new Set());\n    this.events.get(name)!.add(fn);\n    return () => this.off(name, fn);\n  }\n\n  off(name: string, fn: Function) {\n    this.events.get(name)?.delete(fn);\n  }\n\n  once(name: string, fn: Function) {\n    const wrapper = (...args: any[]) => {\n      this.off(name, wrapper);\n      fn(...args);\n    };\n    this.on(name, wrapper);\n  }\n\n  emit(name: string, ...args: any[]) {\n    for (const fn of this.events.get(name) ?? []) fn(...args);\n  }\n}\n```\n\n面试收口：核心结构是 eventName 到 listeners 的映射。",
+    "answer": "EventEmitter 用事件名映射监听器集合，emit 时依次执行。once 可以包装一层，执行后自动 off。\n\n```ts\nclass EventEmitter {\n  private events = new Map<string, Set<Function>>();\n\n  on(name: string, fn: Function) {\n    if (!this.events.has(name)) this.events.set(name, new Set());\n    this.events.get(name)!.add(fn);\n    return () => this.off(name, fn);\n  }\n\n  off(name: string, fn: Function) {\n    this.events.get(name)?.delete(fn);\n  }\n\n  once(name: string, fn: Function) {\n    const wrapper = (...args: any[]) => {\n      this.off(name, wrapper);\n      fn(...args);\n    };\n    this.on(name, wrapper);\n  }\n\n  emit(name: string, ...args: any[]) {\n    for (const fn of this.events.get(name) ?? []) fn(...args);\n  }\n}\n```\n\n收口总结：核心结构是 eventName 到 listeners 的映射。",
     "difficulty": "Medium",
     "oralOneLiner": "EventEmitter 核心是事件名到监听器集合的映射。",
     "markD": true
@@ -1326,7 +1326,7 @@
     "category": "Angular",
     "topic": "手写题",
     "question": "手写数组扁平化 flat，支持指定展开深度。",
-    "answer": "数组扁平化可以递归处理，每遇到数组且深度未耗尽就展开。\n\n```ts\nfunction flat(arr: any[], depth = 1): any[] {\n  const res: any[] = [];\n\n  for (const item of arr) {\n    if (Array.isArray(item) && depth > 0) {\n      res.push(...flat(item, depth - 1));\n    } else {\n      res.push(item);\n    }\n  }\n\n  return res;\n}\n```\n\n面试收口：递归时记得 depth 要递减，depth 为 0 就不再展开。",
+    "answer": "数组扁平化可以递归处理，每遇到数组且深度未耗尽就展开。\n\n```ts\nfunction flat(arr: any[], depth = 1): any[] {\n  const res: any[] = [];\n\n  for (const item of arr) {\n    if (Array.isArray(item) && depth > 0) {\n      res.push(...flat(item, depth - 1));\n    } else {\n      res.push(item);\n    }\n  }\n\n  return res;\n}\n```\n\n收口总结：递归时记得 depth 要递减，depth 为 0 就不再展开。",
     "difficulty": "Medium",
     "oralOneLiner": "数组扁平化就是递归展开，并控制 depth。",
     "markD": true
