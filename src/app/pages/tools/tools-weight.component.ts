@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule, DatePipe } from '@angular/common';
 
@@ -11,6 +11,7 @@ import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { NzSpinModule } from 'ng-zorro-antd/spin';
 
 import { NgxEchartsDirective } from 'ngx-echarts';
 import * as echarts from 'echarts/core';
@@ -19,22 +20,24 @@ import { TitleComponent, TooltipComponent, LegendComponent, GridComponent } from
 import { CanvasRenderer } from 'echarts/renderers';
 import type { EChartsOption } from 'echarts';
 
+import { RecordService } from '../../services/record.service';
+
 echarts.use([LineChart, TitleComponent, TooltipComponent, LegendComponent, GridComponent, CanvasRenderer]);
 
 interface WeightRecord {
-  id: string;
+  id: number | string;
   date: string;       // YYYY-MM-DD format ideally
   weight: number;     // kg
 }
 
-/** 体重记录列表与折线图趋势（本地持久化）。 */
+/** 体重记录列表与折线图趋势（服务器持久化）。 */
 @Component({
   selector: 'app-tools-weight',
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule,
     NzCardModule, NzFormModule, NzInputModule, NzInputNumberModule,
-    NzButtonModule, NzDatePickerModule, NzTableModule, NzGridModule,
+    NzButtonModule, NzDatePickerModule, NzTableModule, NzGridModule, NzSpinModule,
     NgxEchartsDirective
   ],
   providers: [DatePipe],
@@ -42,12 +45,16 @@ interface WeightRecord {
   styleUrl: './tools-weight.component.scss'
 })
 export class ToolsWeightComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  private msg = inject(NzMessageService);
+  private datePipe = inject(DatePipe);
+  private recordService = inject(RecordService);
+
   form!: FormGroup;
   records: WeightRecord[] = [];
   reversedRecords: WeightRecord[] = [];
   chartOption: EChartsOption = {};
-
-  constructor(private fb: FormBuilder, private msg: NzMessageService, private datePipe: DatePipe) {}
+  loading = false;
 
   ngOnInit(): void {
     this.form = this.fb.group({
@@ -70,59 +77,72 @@ export class ToolsWeightComponent implements OnInit {
 
     this.loadRecords();
   }
-  
+
   submitForm(): void {
     if (this.form.valid) {
       const val = this.form.value;
       const dateStr = this.datePipe.transform(val.date, 'yyyy-MM-dd') || '';
-      //买iPad 没实际用途啊
-      // Override if same date exists
       const existingIdx = this.records.findIndex(r => r.date === dateStr);
+
       if (existingIdx > -1) {
-        this.records[existingIdx].weight = val.weight;
+        const existing = this.records[existingIdx];
+        // 更新已有记录
+        this.recordService.update(Number(existing.id), { weight: val.weight }, dateStr).subscribe({
+          next: (res) => {
+            this.records[existingIdx].weight = val.weight;
+            this.reversedRecords = [...this.records].reverse();
+            this.msg.success('更新成功');
+            this.buildChart();
+          },
+          error: () => this.msg.error('更新失败')
+        });
       } else {
-        this.records.push({
-          id: Date.now().toString(),
-          date: dateStr,
-          weight: val.weight
+        // 创建新记录
+        this.recordService.create('weight', { weight: val.weight }, dateStr).subscribe({
+          next: (res) => {
+            this.records.push({ id: res.id, date: dateStr, weight: val.weight });
+            this.records.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            this.reversedRecords = [...this.records].reverse();
+            this.msg.success('记录成功');
+            this.buildChart();
+          },
+          error: () => this.msg.error('保存失败')
         });
       }
-      
-      // Sort by date ascending for chart
-      this.records.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      this.reversedRecords = [...this.records].reverse();
-      
-      this.saveRecords();
-      this.msg.success('记录成功');
-      this.buildChart();
     }
   }
 
-  deleteRecord(id: string): void {
-    this.records = this.records.filter(r => r.id !== id);
-    this.reversedRecords = [...this.records].reverse();
-    this.saveRecords();
-    this.msg.success('删除成功');
-    this.buildChart();
+  deleteRecord(id: number | string): void {
+    this.recordService.delete(Number(id)).subscribe({
+      next: () => {
+        this.records = this.records.filter(r => r.id !== id);
+        this.reversedRecords = [...this.records].reverse();
+        this.msg.success('删除成功');
+        this.buildChart();
+      },
+      error: () => this.msg.error('删除失败')
+    });
   }
 
   loadRecords(): void {
-    const data = localStorage.getItem('tools_weight_records');
-    if (data) {
-      try {
-        this.records = JSON.parse(data);
+    this.loading = true;
+    this.recordService.getAll('weight').subscribe({
+      next: (apiRecords) => {
+        this.records = apiRecords.map(r => ({
+          id: r.id,
+          date: r.recordDate || r.data?.date || '',
+          weight: r.data?.weight || 0,
+        }));
         this.records.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         this.reversedRecords = [...this.records].reverse();
-      } catch(e) {
-        this.records = [];
-        this.reversedRecords = [];
+        this.loading = false;
+        this.buildChart();
+      },
+      error: () => {
+        this.loading = false;
+        this.msg.error('加载记录失败');
       }
-    }
-    this.buildChart();
-  }
-
-  saveRecords(): void {
-    localStorage.setItem('tools_weight_records', JSON.stringify(this.records));
+    });
   }
 
   buildChart(): void {
@@ -136,47 +156,25 @@ export class ToolsWeightComponent implements OnInit {
 
     // Calculate 7-day moving average
     const maData = weightData.map((w, idx) => {
-      if (idx < 6) return null; // Not enough data for 7-day window
+      if (idx < 6) return null;
       const slice = weightData.slice(idx - 6, idx + 1);
       const sum = slice.reduce((a, b) => a + b, 0);
       return Number((sum / 7).toFixed(2));
     });
 
     this.chartOption = {
-      tooltip: {
-        trigger: 'axis'
-      },
-      legend: {
-        data: ['体重 (kg)', '7日均线']
-      },
-      grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '3%',
-        containLabel: true
-      },
-      xAxis: {
-        type: 'category',
-        boundaryGap: false,
-        data: xAxisData
-      },
-      yAxis: {
-        type: 'value',
-        scale: true,
-        name: 'kg'
-      },
+      tooltip: { trigger: 'axis' },
+      legend: { data: ['体重 (kg)', '7日均线'] },
+      grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+      xAxis: { type: 'category', boundaryGap: false, data: xAxisData },
+      yAxis: { type: 'value', scale: true, name: 'kg' },
       series: [
         {
           name: '体重 (kg)',
           type: 'line',
           data: weightData,
           itemStyle: { color: '#1890ff' },
-          markPoint: {
-            data: [
-              { type: 'max', name: 'Max' },
-              { type: 'min', name: 'Min' }
-            ]
-          }
+          markPoint: { data: [{ type: 'max', name: 'Max' }, { type: 'min', name: 'Min' }] }
         },
         {
           name: '7日均线',

@@ -1,4 +1,4 @@
-import { IsString, MinLength, MaxLength, IsOptional } from 'class-validator';
+import { IsString, MinLength, MaxLength, IsOptional, IsNotEmpty } from 'class-validator';
 
 export class RegisterDto {
   @IsString()
@@ -15,4 +15,8 @@ export class RegisterDto {
   @IsString()
   @MaxLength(50)
   nickname?: string;
+
+  @IsString()
+  @IsNotEmpty({ message: '邀请码不能为空' })
+  inviteCode!: string;
 }

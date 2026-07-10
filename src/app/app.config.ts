@@ -19,7 +19,7 @@ import {
   BlockOutline,
   PictureOutline, CalendarOutline, BookOutline,
   QrcodeOutline, UploadOutline, VideoCameraOutline, StopOutline,
-  UserOutline, LockOutline, LogoutOutline,
+  UserOutline, LockOutline, LogoutOutline, KeyOutline,
 } from '@ant-design/icons-angular/icons';
 import { registerLocaleData } from '@angular/common';
 import zh from '@angular/common/locales/zh';
@@ -39,7 +39,7 @@ const icons = [
   BlockOutline,
   PictureOutline, CalendarOutline, BookOutline,
   QrcodeOutline, UploadOutline, VideoCameraOutline, StopOutline,
-  UserOutline, LockOutline, LogoutOutline,
+  UserOutline, LockOutline, LogoutOutline, KeyOutline,
 ];
 
 

@@ -154,7 +154,7 @@
         <!-- 用户信息 + 退出登录 -->
         <span class="header-user">
           <span nz-icon nzType="user" nzTheme="outline"></span>
-          <span class="header-user-name">{{ authService.currentUser()?.displayName || authService.currentUser()?.username }}</span>
+          <span class="header-user-name">{{ authService.currentUser()?.nickname || authService.currentUser()?.username }}</span>
         </span>
         <button type="button" class="logout-btn" nz-tooltip nzTooltipTitle="退出登录" (click)="logout()">
           <span nz-icon nzType="logout" nzTheme="outline"></span>

@@ -52,5 +52,6 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/no-access/no-access.component').then(m => m.NoAccessComponent)
       },
     ]
-  }
+  },
+  { path: '**', redirectTo: '/login' }
 ];

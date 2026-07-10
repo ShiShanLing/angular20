@@ -39,6 +39,7 @@ export class LoginComponent {
   readonly registerForm = this.fb.nonNullable.group({
     username: ['', [Validators.required, Validators.minLength(3)]],
     password: ['', [Validators.required, Validators.minLength(6)]],
+    inviteCode: ['', [Validators.required]],
     nickname: [''],
   });
 
@@ -69,8 +70,8 @@ export class LoginComponent {
       return;
     }
     this.loading = true;
-    const { username, password, nickname } = this.registerForm.getRawValue();
-    this.authService.register(username, password, nickname).subscribe({
+    const { username, password, inviteCode, nickname } = this.registerForm.getRawValue();
+    this.authService.register(username, password, inviteCode, nickname).subscribe({
       next: () => {
         this.loading = false;
         this.message.success('注册成功，请登录');

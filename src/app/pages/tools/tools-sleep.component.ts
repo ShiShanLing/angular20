@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule, DatePipe } from '@angular/common';
 
@@ -12,13 +12,15 @@ import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzStatisticModule } from 'ng-zorro-antd/statistic';
 import { NzMessageService } from 'ng-zorro-antd/message';
 
+import { RecordService } from '../../services/record.service';
+
 interface SleepRecord {
-  id: string;
-  dateStr: string; 
-  sleepTime: string; 
-  wakeTime: string;  
-  napDuration: number; 
-  totalSleep: number; 
+  id: number | string;
+  dateStr: string;
+  sleepTime: string;
+  wakeTime: string;
+  napDuration: number;
+  totalSleep: number;
 }
 
 /** 睡眠记录：入睡/起床时间与时长汇总列表。 */
@@ -28,7 +30,7 @@ interface SleepRecord {
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule,
     NzCardModule, NzFormModule, NzInputNumberModule,
-    NzButtonModule, NzDatePickerModule, NzTableModule, 
+    NzButtonModule, NzDatePickerModule, NzTableModule,
     NzGridModule, NzStatisticModule
   ],
   providers: [DatePipe],
@@ -36,11 +38,15 @@ interface SleepRecord {
   styleUrl: './tools-sleep.component.scss'
 })
 export class ToolsSleepComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  private msg = inject(NzMessageService);
+  private datePipe = inject(DatePipe);
+  private recordService = inject(RecordService);
+
   form!: FormGroup;
   records: SleepRecord[] = [];
   stats: any = null;
-
-  constructor(private fb: FormBuilder, private msg: NzMessageService, private datePipe: DatePipe) {}
+  loading = false;
 
   ngOnInit(): void {
     const today = new Date();
@@ -81,7 +87,7 @@ export class ToolsSleepComponent implements OnInit {
       const dateStr = this.datePipe.transform(val.recordDate, 'yyyy-MM-dd') || '';
       const st = new Date(val.sleepTime);
       const wt = new Date(val.wakeTime);
-      
+
       if (st >= wt) {
         this.msg.error('起床时间必须晚于入睡时间');
         return;
@@ -90,58 +96,70 @@ export class ToolsSleepComponent implements OnInit {
       const diffMs = wt.getTime() - st.getTime();
       const diffHrs = diffMs / (1000 * 60 * 60);
       const totalSleep = diffHrs + (val.napDuration || 0);
+      const data = {
+        sleepTime: st.toISOString(),
+        wakeTime: wt.toISOString(),
+        napDuration: val.napDuration || 0,
+        totalSleep
+      };
 
-      // Upsert
       const existingIdx = this.records.findIndex(r => r.dateStr === dateStr);
       if (existingIdx > -1) {
-        this.records[existingIdx] = {
-          ...this.records[existingIdx],
-          sleepTime: st.toISOString(),
-          wakeTime: wt.toISOString(),
-          napDuration: val.napDuration || 0,
-          totalSleep
-        };
+        const existing = this.records[existingIdx];
+        this.recordService.update(Number(existing.id), data, dateStr).subscribe({
+          next: () => {
+            this.records[existingIdx] = { ...this.records[existingIdx], ...data };
+            this.msg.success('更新成功');
+            this.calculateStats();
+          },
+          error: () => this.msg.error('更新失败')
+        });
       } else {
-        this.records.push({
-          id: Date.now().toString(),
-          dateStr,
-          sleepTime: st.toISOString(),
-          wakeTime: wt.toISOString(),
-          napDuration: val.napDuration || 0,
-          totalSleep
+        this.recordService.create('sleep', data, dateStr).subscribe({
+          next: (res) => {
+            this.records.push({ id: res.id, dateStr, ...data });
+            this.records.sort((a, b) => new Date(b.dateStr).getTime() - new Date(a.dateStr).getTime());
+            this.msg.success('记录成功');
+            this.calculateStats();
+          },
+          error: () => this.msg.error('保存失败')
         });
       }
-
-      this.records.sort((a, b) => new Date(b.dateStr).getTime() - new Date(a.dateStr).getTime());
-      
-      this.saveRecords();
-      this.msg.success('记录成功');
-      this.calculateStats();
     }
   }
 
-  deleteRecord(id: string): void {
-    this.records = this.records.filter(r => r.id !== id);
-    this.saveRecords();
-    this.msg.success('删除成功');
-    this.calculateStats();
+  deleteRecord(id: number | string): void {
+    this.recordService.delete(Number(id)).subscribe({
+      next: () => {
+        this.records = this.records.filter(r => r.id !== id);
+        this.msg.success('删除成功');
+        this.calculateStats();
+      },
+      error: () => this.msg.error('删除失败')
+    });
   }
 
   loadRecords(): void {
-    const data = localStorage.getItem('tools_sleep_records');
-    if (data) {
-      try {
-        this.records = JSON.parse(data);
+    this.loading = true;
+    this.recordService.getAll('sleep').subscribe({
+      next: (apiRecords) => {
+        this.records = apiRecords.map(r => ({
+          id: r.id,
+          dateStr: r.recordDate || r.data?.dateStr || '',
+          sleepTime: r.data?.sleepTime || '',
+          wakeTime: r.data?.wakeTime || '',
+          napDuration: r.data?.napDuration || 0,
+          totalSleep: r.data?.totalSleep || 0,
+        }));
         this.records.sort((a, b) => new Date(b.dateStr).getTime() - new Date(a.dateStr).getTime());
-      } catch(e) {
-        this.records = [];
+        this.loading = false;
+        this.calculateStats();
+      },
+      error: () => {
+        this.loading = false;
+        this.msg.error('加载记录失败');
       }
-    }
-    this.calculateStats();
-  }
-
-  saveRecords(): void {
-    localStorage.setItem('tools_sleep_records', JSON.stringify(this.records));
+    });
   }
 
   calculateStats(): void {
@@ -150,23 +168,21 @@ export class ToolsSleepComponent implements OnInit {
       return;
     }
 
-    // "This Week" stats (last 7 recorded days)
     const recent = this.records.slice(0, 7);
-    
+
     let totalDur = 0;
-    let earliestSleepTime = 24; // hour of day format
+    let earliestSleepTime = 24;
     let earliestSleepLabel = '';
     let latestWakeTime = 0;
     let latestWakeLabel = '';
 
     recent.forEach(r => {
       totalDur += r.totalSleep;
-      
+
       const st = new Date(r.sleepTime);
       let stHour = st.getHours() + st.getMinutes() / 60;
-      // Adjust to make night times comparable. 20:00 - 12:00 next day
       if (stHour < 12) stHour += 24;
-      
+
       if (stHour < earliestSleepTime || earliestSleepTime === 24) {
         earliestSleepTime = stHour;
         earliestSleepLabel = this.datePipe.transform(st, 'HH:mm') || '';

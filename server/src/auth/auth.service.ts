@@ -1,5 +1,6 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 
 @Injectable()
@@ -7,9 +8,15 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
 
-  async register(username: string, password: string, nickname?: string) {
+  async register(username: string, password: string, inviteCode: string, nickname?: string) {
+    // 校验邀请码
+    const validCode = this.configService.get<string>('INVITE_CODE', 'angular20');
+    if (inviteCode !== validCode) {
+      throw new BadRequestException('邀请码不正确');
+    }
     const user = await this.usersService.create(username, password, nickname);
     return {
       id: user.id,

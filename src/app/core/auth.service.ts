@@ -42,8 +42,8 @@ export class AuthService {
     );
   }
 
-  register(username: string, password: string, nickname?: string): Observable<any> {
-    return this.http.post('/api/auth/register', { username, password, nickname });
+  register(username: string, password: string, inviteCode: string, nickname?: string): Observable<any> {
+    return this.http.post('/api/auth/register', { username, password, inviteCode, nickname });
   }
 
   logout(): void {
