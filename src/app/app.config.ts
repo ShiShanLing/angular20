@@ -1,7 +1,7 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, provideZoneChangeDetection, APP_INITIALIZER, inject } from '@angular/core';
 import { provideRouter, withComponentInputBinding, withHashLocation } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { zh_CN, provideNzI18n } from 'ng-zorro-antd/i18n';
 import { provideNzIcons } from 'ng-zorro-antd/icon';
 import { provideNzConfig } from 'ng-zorro-antd/core/config';
@@ -19,6 +19,7 @@ import {
   BlockOutline,
   PictureOutline, CalendarOutline, BookOutline,
   QrcodeOutline, UploadOutline, VideoCameraOutline, StopOutline,
+  UserOutline, LockOutline, LogoutOutline, KeyOutline,
 } from '@ant-design/icons-angular/icons';
 import { registerLocaleData } from '@angular/common';
 import zh from '@angular/common/locales/zh';
@@ -38,12 +39,21 @@ const icons = [
   BlockOutline,
   PictureOutline, CalendarOutline, BookOutline,
   QrcodeOutline, UploadOutline, VideoCameraOutline, StopOutline,
+  UserOutline, LockOutline, LogoutOutline, KeyOutline,
 ];
 
 
 import { routes } from './app.routes';
+import { authInterceptor } from './services/auth.interceptor';
+import { AuthService } from './core/auth.service';
 
 registerLocaleData(zh);
+
+/** 启动时验证 token 有效性，无效则清除登录态 */
+function initializeAuth(): () => Promise<boolean> {
+  const authService = inject(AuthService);
+  return () => authService.validateSession().toPromise().then(() => true).catch(() => true);
+}
 
 /** 全局 Angular providers：Hash 路由、动画、HTTP、Ng-Zorro 中文与按需图标、ECharts 核心。 */
 export const appConfig: ApplicationConfig = {
@@ -51,12 +61,17 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, withComponentInputBinding(), withHashLocation()),
     provideAnimationsAsync(),
-    provideHttpClient(),
+    provideHttpClient(withInterceptors([authInterceptor])),
     provideNzI18n(zh_CN),
     provideNzConfig({
       message: { nzTop: 80 }
     }),
     provideNzIcons(icons),
-    provideEchartsCore({ echarts })
+    provideEchartsCore({ echarts }),
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeAuth,
+      multi: true,
+    }
   ]
 };

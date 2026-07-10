@@ -150,6 +150,16 @@
       <div class="header-right">
         <span class="header-tag" nz-tooltip nzTooltipTitle="基于 Ant Design 的企业级 UI 组件库 (Angular v19)">ng-zorro-antd v19</span>
         <span class="header-tag" nz-tooltip nzTooltipTitle="由百度开源的强大可视化图表库 (当前 v5.6+)">ECharts v5</span>
+
+        <!-- 用户信息 + 退出登录 -->
+        <span class="header-user">
+          <span nz-icon nzType="user" nzTheme="outline"></span>
+          <span class="header-user-name">{{ authService.currentUser()?.nickname || authService.currentUser()?.username }}</span>
+        </span>
+        <button type="button" class="logout-btn" nz-tooltip nzTooltipTitle="退出登录" (click)="logout()">
+          <span nz-icon nzType="logout" nzTheme="outline"></span>
+          <span class="logout-text">退出</span>
+        </button>
       </div>
     </nz-header>
     <nz-content class="app-content">

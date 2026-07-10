@@ -52,3 +52,12 @@ Thumbs.db
 __pycache__/
 *.py[cod]
 .venv/
+
+# Server (NestJS backend)
+server/node_modules/
+server/dist/
+server/.env
+
+# SQLite database
+*.db
+*.db-journal

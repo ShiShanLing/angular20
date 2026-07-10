@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule, DatePipe } from '@angular/common';
 
@@ -22,10 +22,12 @@ import { TitleComponent, TooltipComponent, LegendComponent } from 'echarts/compo
 import { CanvasRenderer } from 'echarts/renderers';
 import type { EChartsOption } from 'echarts';
 
+import { RecordService } from '../../services/record.service';
+
 echarts.use([PieChart, TitleComponent, TooltipComponent, LegendComponent, CanvasRenderer]);
 
 interface AccountingRecord {
-  id: string;
+  id: number | string;
   amount: number;
   category: string;
   remarks: string;
@@ -48,14 +50,18 @@ interface AccountingRecord {
   styleUrl: './tools-accounting.component.scss'
 })
 export class ToolsAccountingComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  private msg = inject(NzMessageService);
+  private datePipe = inject(DatePipe);
+  private recordService = inject(RecordService);
+
   form!: FormGroup;
   categories = ['餐饮', '交通', '购物', '居住', '娱乐', '医疗', '其他'];
   records: AccountingRecord[] = [];
 
   chartOption: EChartsOption = {};
   currentChartMode: 'week' | 'month' = 'week';
-
-  constructor(private fb: FormBuilder, private msg: NzMessageService, private datePipe: DatePipe) {}
+  loading = false;
 
   ngOnInit(): void {
     this.form = this.fb.group({
@@ -82,58 +88,66 @@ export class ToolsAccountingComponent implements OnInit {
     setTimeout(() => this.buildChart(this.currentChartMode), 100);
   }
 
-
   submitForm(): void {
     if (this.form.valid) {
       const val = this.form.value;
-      const newRecord: AccountingRecord = {
-        id: Date.now().toString(),
+      const dateStr = this.datePipe.transform(val.date, 'yyyy-MM-dd') || '';
+      const data = {
         amount: val.amount,
         category: val.category,
         remarks: val.remarks,
         date: val.date.toISOString()
       };
-      this.records.unshift(newRecord);
-      this.saveRecords();
-      this.msg.success('记录成功');
 
-      this.form.patchValue({
-        amount: null,
-        remarks: '',
-        date: new Date()
+      this.recordService.create('accounting', data, dateStr).subscribe({
+        next: (res) => {
+          const newRecord: AccountingRecord = { id: res.id, ...data };
+          this.records.unshift(newRecord);
+          this.msg.success('记录成功');
+          this.form.patchValue({ amount: null, remarks: '', date: new Date() });
+          this.buildChart(this.currentChartMode);
+        },
+        error: () => this.msg.error('保存失败')
       });
-      this.buildChart(this.currentChartMode);
     }
   }
 
-
-  deleteRecord(id: string): void {
-    this.records = this.records.filter(r => r.id !== id);
-    this.saveRecords();
-    this.msg.success('删除成功');
-    this.buildChart(this.currentChartMode);
+  deleteRecord(id: number | string): void {
+    this.recordService.delete(Number(id)).subscribe({
+      next: () => {
+        this.records = this.records.filter(r => r.id !== id);
+        this.msg.success('删除成功');
+        this.buildChart(this.currentChartMode);
+      },
+      error: () => this.msg.error('删除失败')
+    });
   }
 
   loadRecords(): void {
-    const data = localStorage.getItem('tools_accounting_records');
-    if (data) {
-      try {
-        this.records = JSON.parse(data);
-      } catch(e) {
-        this.records = [];
+    this.loading = true;
+    this.recordService.getAll('accounting').subscribe({
+      next: (apiRecords) => {
+        this.records = apiRecords.map(r => ({
+          id: r.id,
+          amount: r.data?.amount || 0,
+          category: r.data?.category || '',
+          remarks: r.data?.remarks || '',
+          date: r.data?.date || r.recordDate || '',
+        }));
+        this.loading = false;
+        this.buildChart(this.currentChartMode);
+      },
+      error: () => {
+        this.loading = false;
+        this.msg.error('加载记录失败');
       }
-    }
+    });
   }
 
-  saveRecords(): void {
-    localStorage.setItem('tools_accounting_records', JSON.stringify(this.records));
-    
-  }
-  
   buildChart(mode: 'week' | 'month'): void {
     this.currentChartMode = mode;
     const now = new Date();
-    //Filter records based on mode 
+
     const filteredRecords = this.records.filter(r => {
       const d = new Date(r.date);
       if (mode === 'month') {
@@ -144,12 +158,12 @@ export class ToolsAccountingComponent implements OnInit {
         return d >= monday;
       }
     });
-    
+
     const categorySum: Record<string, number> = {};
     filteredRecords.forEach(r => {
       categorySum[r.category] = (categorySum[r.category] || 0) + r.amount;
     });
-    
+
     const pieData = Object.keys(categorySum).map(k => ({ name: k, value: Number(categorySum[k].toFixed(2)) })).sort((a,b) => b.value - a.value);
 
     this.chartOption = {
@@ -157,10 +171,7 @@ export class ToolsAccountingComponent implements OnInit {
         trigger: 'item',
         formatter: '{a} <br/>{b} : ¥{c} ({d}%)'
       },
-      legend: {
-        bottom: 10,
-        left: 'center'
-      },
+      legend: { bottom: 10, left: 'center' },
       series: [
         {
           name: '消费金额',
@@ -168,17 +179,12 @@ export class ToolsAccountingComponent implements OnInit {
           radius: '50%',
           data: pieData,
           emphasis: {
-            itemStyle: {
-              shadowBlur: 10,
-              shadowOffsetX: 0,
-              shadowColor: 'rgba(0, 0, 0, 0.5)'
-            }
+            itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0, 0, 0, 0.5)' }
           }
         }
       ]
     };
   }
-
 
   exportCSV(): void {
     if (!this.records.length) {
@@ -190,7 +196,7 @@ export class ToolsAccountingComponent implements OnInit {
       this.datePipe.transform(r.date, 'yyyy-MM-dd HH:mm:ss') || '',
       r.category,
       r.amount.toString(),
-      r.remarks.replace(/,/g, '，') // avoid csv comma collision
+      r.remarks.replace(/,/g, '，')
     ]);
     const csvContent = "\uFEFF" + [headers, ...rows].map(e => e.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });

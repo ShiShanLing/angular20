@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzGridModule } from 'ng-zorro-antd/grid';
@@ -17,6 +17,7 @@ import {
   togglePause,
   type TetrisState
 } from './tetris-game';
+import { GameScoreService } from '../../services/game-score.service';
 
 /** 俄罗斯方块：10×20 棋盘 DOM 渲染，逻辑在 `tetris-game.ts`。 */
 @Component({
@@ -26,16 +27,10 @@ import {
   styleUrl: './tetris.component.scss'
 })
 export class TetrisComponent implements OnInit, OnDestroy {
-  /**
-   * 经典棋盘：10x20。
-   * 采用纯 DOM + CSS Grid 渲染，不引入 Canvas 依赖。
-   */
+  private scoreService = inject(GameScoreService);
+
   readonly width = 10;
   readonly height = 20;
-  /**
-   * 重力 tick 间隔（毫秒）。
-   * 为了保持“最小实现”，这里不做等级加速；后续需要可以按 lines/score 调整。
-   */
   readonly tickMs = 520;
 
   state: TetrisState = newTetrisState({ width: this.width, height: this.height, seed: 1 });
@@ -43,19 +38,14 @@ export class TetrisComponent implements OnInit, OnDestroy {
   rows = Array.from({ length: this.height }, (_, i) => i);
   cols = Array.from({ length: this.width }, (_, i) => i);
 
-  /** 渲染用的“最终棋盘颜色”（包含已锁定 board + 当前 active 叠加）。 */
   cellColors: Array<string | null> = [];
 
-  /**
-   * 下一块预览：使用一个 4x4 小网格渲染（俄罗斯方块的标准预览尺寸）。
-   * - `null`：空格
-   * - `string`：颜色
-   */
   readonly previewSize = 4;
   previewRows = Array.from({ length: this.previewSize }, (_, i) => i);
   previewCols = Array.from({ length: this.previewSize }, (_, i) => i);
   nextPreviewColors: Array<string | null> = [];
 
+  bestScore = 0;
   private intervalId: number | null = null;
 
   ngOnInit(): void {
@@ -63,6 +53,7 @@ export class TetrisComponent implements OnInit, OnDestroy {
     this.rebuildNextPreview();
     this.startLoop();
     window.addEventListener('keydown', this.onKeyDown, { passive: false });
+    this.loadBestScore();
   }
 
   ngOnDestroy(): void {
@@ -70,53 +61,46 @@ export class TetrisComponent implements OnInit, OnDestroy {
     window.removeEventListener('keydown', this.onKeyDown);
   }
 
-  /** 重置游戏状态并刷新棋盘与预览。 */
   restart(): void {
     this.state = restart(this.state);
     this.rebuildCellColors();
     this.rebuildNextPreview();
   }
 
-  /** 暂停或恢复重力 tick。 */
   pauseResume(): void {
     this.state = togglePause(this.state);
   }
 
-  /** 主循环：每次 tick 只负责“重力下落一步/锁定结算”。 */
   step(): void {
+    const prevGameOver = this.state.isGameOver;
     const next = tick(this.state);
     if (next === this.state) return;
     this.state = next;
     this.rebuildCellColors();
     this.rebuildNextPreview();
+
+    // 游戏刚结束时提交分数
+    if (!prevGameOver && next.isGameOver && next.score > 0) {
+      this.scoreService.submit('tetris', next.score).subscribe({
+        next: () => this.loadBestScore(),
+        error: () => {}
+      });
+    }
   }
 
-  /** 当前活动方块左移一格。 */
-  left(): void {
-    this.apply(moveLeft);
+  left(): void { this.apply(moveLeft); }
+  right(): void { this.apply(moveRight); }
+  rotate(): void { this.apply(rotateCW); }
+  down(): void { this.apply(softDrop); }
+  drop(): void { this.apply(hardDrop); }
+
+  loadBestScore(): void {
+    this.scoreService.getBest('tetris').subscribe({
+      next: (res) => { this.bestScore = res?.score || 0; },
+      error: () => {}
+    });
   }
 
-  /** 当前活动方块右移一格。 */
-  right(): void {
-    this.apply(moveRight);
-  }
-
-  /** 顺时针旋转当前方块。 */
-  rotate(): void {
-    this.apply(rotateCW);
-  }
-
-  /** 软降一格（加速下落）。 */
-  down(): void {
-    this.apply(softDrop);
-  }
-
-  /** 硬降到底并锁定。 */
-  drop(): void {
-    this.apply(hardDrop);
-  }
-
-  /** 应用纯函数状态迁移并刷新视图。 */
   private apply(fn: (s: TetrisState) => TetrisState): void {
     const next = fn(this.state);
     if (next === this.state) return;
@@ -136,16 +120,8 @@ export class TetrisComponent implements OnInit, OnDestroy {
     this.intervalId = null;
   }
 
-  /**
-   * 重新构建 cellColors：
-   * - 先拷贝已锁定的 board
-   * - 再把 active 的 4 个格子叠加上去（active 的颜色覆盖 board 的空格）
-   *
-   * 这样模板渲染只需要 O(1) 取数组，不需要复杂计算。
-   */
   private rebuildCellColors(): void {
     const colors = this.state.board.slice();
-    // 把 active 的 4 个格子叠加到最终颜色数组上（active 覆盖 board 的空格）。
     const active = this.state.active;
     for (const p of getPieceCells(active)) {
       if (p.y < 0) continue;
@@ -156,21 +132,11 @@ export class TetrisComponent implements OnInit, OnDestroy {
     this.cellColors = colors;
   }
 
-  /**
-   * 重建下一块预览（4x4）。
-   * 预览仅展示 `state.next.kind` 在 rotation=0 的形状，并用 `state.next.color` 着色。
-   */
   private rebuildNextPreview(): void {
     const size = this.previewSize;
     const colors = Array.from({ length: size * size }, () => null as string | null);
     const points = getKindRelativeCells(this.state.next.kind, 0);
 
-    // 让预览图形在 4x4 网格中“居中显示”：
-    // 1) 先计算图形的包围盒（bounding box）
-    // 2) 再把包围盒整体平移到预览网格中心
-    //
-    // 说明：不同方块的相对坐标范围不同（例如 I 是 4 格长条），
-    // 直接按原坐标绘制会导致看起来偏上/偏左。
     let minX = Number.POSITIVE_INFINITY;
     let maxX = Number.NEGATIVE_INFINITY;
     let minY = Number.POSITIVE_INFINITY;
@@ -198,16 +164,6 @@ export class TetrisComponent implements OnInit, OnDestroy {
     this.nextPreviewColors = colors;
   }
 
-  /**
-   * 键盘输入：
-   * - ←/A：左移
-   * - →/D：右移
-   * - ↓/S：软降（下 1 格）
-   * - ↑/W：旋转
-   * - Space：硬降
-   * - P：暂停/继续
-   * - R：重开
-   */
   private onKeyDown = (e: KeyboardEvent) => {
     const key = e.key.toLowerCase();
     if (key === 'arrowleft' || key === 'a') { e.preventDefault(); this.left(); }

@@ -1,0 +1,65 @@
+<div class="login-container">
+  <div class="login-card">
+    <h2 class="login-title">Angular20 工具箱</h2>
+
+    <nz-tabset [(nzSelectedIndex)]="tabIndex">
+      <nz-tab nzTitle="登录">
+        <form nz-form [formGroup]="loginForm" (ngSubmit)="onLogin()" nzLayout="vertical">
+          <nz-form-item>
+            <nz-form-control nzErrorTip="请输入用户名">
+              <nz-input-group nzPrefixIcon="user">
+                <input nz-input formControlName="username" placeholder="用户名" />
+              </nz-input-group>
+            </nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-form-control nzErrorTip="请输入密码">
+              <nz-input-group nzPrefixIcon="lock">
+                <input nz-input formControlName="password" type="password" placeholder="密码" />
+              </nz-input-group>
+            </nz-form-control>
+          </nz-form-item>
+          <button nz-button nzType="primary" nzBlock [nzLoading]="loading" [disabled]="loginForm.invalid">
+            登 录
+          </button>
+        </form>
+      </nz-tab>
+
+      <nz-tab nzTitle="注册">
+        <form nz-form [formGroup]="registerForm" (ngSubmit)="onRegister()" nzLayout="vertical">
+          <nz-form-item>
+            <nz-form-control nzErrorTip="用户名至少3个字符">
+              <nz-input-group nzPrefixIcon="user">
+                <input nz-input formControlName="username" placeholder="用户名" />
+              </nz-input-group>
+            </nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-form-control nzErrorTip="密码至少6个字符">
+              <nz-input-group nzPrefixIcon="lock">
+                <input nz-input formControlName="password" type="password" placeholder="密码" />
+              </nz-input-group>
+            </nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-form-control nzErrorTip="请输入邀请码">
+              <nz-input-group nzPrefixIcon="key">
+                <input nz-input formControlName="inviteCode" placeholder="邀请码" />
+              </nz-input-group>
+            </nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-form-control>
+              <nz-input-group>
+                <input nz-input formControlName="nickname" placeholder="昵称（可选）" />
+              </nz-input-group>
+            </nz-form-control>
+          </nz-form-item>
+          <button nz-button nzType="primary" nzBlock [nzLoading]="loading" [disabled]="registerForm.invalid">
+            注 册
+          </button>
+        </form>
+      </nz-tab>
+    </nz-tabset>
+  </div>
+</div>
