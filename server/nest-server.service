@@ -1,0 +1,18 @@
+[Unit]
+Description=Angular20 NestJS Backend API Server
+Documentation=https://github.com/ShiShanLing/angular20
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/projects/angular20/server
+ExecStart=/usr/bin/node dist/main.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:/var/log/nest-server.log
+StandardError=append:/var/log/nest-server-error.log
+EnvironmentFile=/root/projects/angular20/server/.env
+
+[Install]
+WantedBy=multi-user.target

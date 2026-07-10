@@ -1,0 +1,13 @@
+/var/log/nest-server.log /var/log/nest-server-error.log /var/log/backup.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0644 root root
+    sharedscripts
+    postrotate
+        systemctl restart nest-server > /dev/null 2>&1 || true
+    endscript
+}

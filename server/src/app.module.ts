@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { RecordsModule } from './records/records.module';
 import { GameScoresModule } from './game-scores/game-scores.module';
+import { ExportModule } from './export/export.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -23,6 +24,7 @@ import { AppController } from './app.controller';
     UsersModule,
     RecordsModule,
     GameScoresModule,
+    ExportModule,
   ],
   controllers: [AppController],
   providers: [
