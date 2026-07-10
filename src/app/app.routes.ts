@@ -1,11 +1,17 @@
 import { Routes } from '@angular/router';
 import { menuAccessGuard } from './core/menu-access.guard';
+import { authGuard } from './core/auth.guard';
 
-/** 顶层路由：`layout` 为壳；默认进入房贷工具；`tools` 懒加载子路由。 */
+/** 顶层路由：登录页独立布局；其余页面走 layout 壳并需要登录认证。 */
 export const routes: Routes = [
+  {
+    path: 'login',
+    loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent),
+  },
   {
     path: '',
     loadComponent: () => import('./layout/layout.component').then(m => m.LayoutComponent),
+    canActivate: [authGuard],
     canActivateChild: [menuAccessGuard],
     children: [
       { path: '', redirectTo: 'tools/mortgage', pathMatch: 'full' },

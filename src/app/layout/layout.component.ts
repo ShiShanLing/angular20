@@ -14,6 +14,7 @@ import { filter } from 'rxjs/operators';
 import { PermissionService } from '../core/permission.service';
 import { FeatureActivationService } from '../core/feature-activation.service';
 import { MenuVisibilityService } from '../core/menu-visibility.service';
+import { AuthService } from '../core/auth.service';
 import { FEATURE_MENU_ITEMS, type FeatureMenuItem } from '../core/feature-menu';
 
 type MenuItem = FeatureMenuItem;
@@ -68,6 +69,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     private permissionService: PermissionService,
     private featureActivationService: FeatureActivationService,
     private menuVisibilityService: MenuVisibilityService,
+    readonly authService: AuthService,
   ) {}
 
   ngOnInit() {
@@ -110,6 +112,12 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.subs.unsubscribe();
+  }
+
+  /** 退出登录：清除 session 并跳转到登录页。 */
+  logout(): void {
+    this.authService.logout();
+    this.router.navigateByUrl('/login');
   }
 
   /**
