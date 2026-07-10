@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, provideZoneChangeDetection, APP_INITIALIZER, inject } from '@angular/core';
 import { provideRouter, withComponentInputBinding, withHashLocation } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
@@ -45,8 +45,15 @@ const icons = [
 
 import { routes } from './app.routes';
 import { authInterceptor } from './services/auth.interceptor';
+import { AuthService } from './core/auth.service';
 
 registerLocaleData(zh);
+
+/** 启动时验证 token 有效性，无效则清除登录态 */
+function initializeAuth(): () => Promise<boolean> {
+  const authService = inject(AuthService);
+  return () => authService.validateSession().toPromise().then(() => true).catch(() => true);
+}
 
 /** 全局 Angular providers：Hash 路由、动画、HTTP、Ng-Zorro 中文与按需图标、ECharts 核心。 */
 export const appConfig: ApplicationConfig = {
@@ -60,6 +67,11 @@ export const appConfig: ApplicationConfig = {
       message: { nzTop: 80 }
     }),
     provideNzIcons(icons),
-    provideEchartsCore({ echarts })
+    provideEchartsCore({ echarts }),
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeAuth,
+      multi: true,
+    }
   ]
 };
