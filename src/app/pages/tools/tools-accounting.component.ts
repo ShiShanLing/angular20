@@ -127,31 +127,29 @@ export class ToolsAccountingComponent implements OnInit {
 
   saveRecords(): void {
     localStorage.setItem('tools_accounting_records', JSON.stringify(this.records));
+    
   }
-
+  
   buildChart(mode: 'week' | 'month'): void {
     this.currentChartMode = mode;
     const now = new Date();
-
-    // Filter records based on mode
+    //Filter records based on mode 
     const filteredRecords = this.records.filter(r => {
       const d = new Date(r.date);
       if (mode === 'month') {
         return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
       } else {
-        // week logic: roughly within last 7 days for simplicity, or strict this week check
-        // For strict week: get Monday of this week
         const day = now.getDay() || 7;
         const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day + 1);
         return d >= monday;
       }
     });
-
+    
     const categorySum: Record<string, number> = {};
     filteredRecords.forEach(r => {
       categorySum[r.category] = (categorySum[r.category] || 0) + r.amount;
     });
-
+    
     const pieData = Object.keys(categorySum).map(k => ({ name: k, value: Number(categorySum[k].toFixed(2)) })).sort((a,b) => b.value - a.value);
 
     this.chartOption = {
@@ -180,8 +178,6 @@ export class ToolsAccountingComponent implements OnInit {
       ]
     };
   }
-
-
 
 
   exportCSV(): void {

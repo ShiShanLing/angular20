@@ -1,0 +1,115 @@
+.html-preview-page {
+  min-height: 100%;
+  color: #1f2937;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.page-header h2 {
+  margin: 0 0 6px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.page-header p {
+  margin: 0;
+  color: #667085;
+}
+
+.reload-btn,
+.sample-tabs button {
+  height: 34px;
+  border: 1px solid #d0d5dd;
+  background: #fff;
+  color: #344054;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.reload-btn {
+  padding: 0 14px;
+}
+
+.sample-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.sample-tabs button {
+  padding: 0 16px;
+}
+
+.sample-tabs button.active {
+  border-color: #1677ff;
+  background: #e6f4ff;
+  color: #0958d9;
+}
+
+.preview-panel {
+  background: #fff;
+  border: 1px solid #eaecf0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 42px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #eaecf0;
+  background: #f9fafb;
+  color: #475467;
+  font-size: 13px;
+}
+
+.panel-title span {
+  overflow-wrap: anywhere;
+}
+
+.panel-title strong {
+  color: #1677ff;
+  font-weight: 600;
+}
+
+.preview-content {
+  width: 100%;
+  max-width: 100%;
+  min-height: 320px;
+  padding: 16px;
+  overflow-x: hidden;
+  background: #fff;
+}
+
+.error {
+  margin: 0;
+  padding: 20px;
+  color: #b42318;
+}
+
+@media (max-width: 640px) {
+  .page-header {
+    display: block;
+  }
+
+  .reload-btn {
+    margin-top: 12px;
+  }
+
+  .sample-tabs {
+    overflow-x: auto;
+  }
+
+  .preview-content {
+    padding: 12px;
+  }
+}

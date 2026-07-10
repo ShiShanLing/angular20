@@ -42,6 +42,11 @@ export const routes: Routes = [
           import('./pages/chart-showcase/chart-showcase.component').then(m => m.ChartShowcaseComponent)
       },
       {
+        path: 'html-preview',
+        loadComponent: () =>
+          import('./pages/html-preview/html-preview.component').then(m => m.HtmlPreviewComponent)
+      },
+      {
         path: 'no-access',
         loadComponent: () => import('./pages/no-access/no-access.component').then(m => m.NoAccessComponent)
       },

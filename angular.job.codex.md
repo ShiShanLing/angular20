@@ -322,9 +322,7 @@ Angular + JS + TS 通常覆盖 7 类能力：
 - 内存泄漏
 - AsyncPipe
 - Angular Signals 与 RxJS 互操作
-
-### 高频题
-
+### 高频题 
 - Observable 和 Promise 有什么区别？
 - Subject 和 BehaviorSubject 有什么区别？
 - `switchMap`、`mergeMap`、`concatMap`、`exhaustMap` 有什么区别？
@@ -379,6 +377,7 @@ Angular + JS + TS 通常覆盖 7 类能力：
   - TTI
 
 ### 高频题
+- ANgular 变更检测如何触发的?
 
 - Angular 变更检测是如何触发的？
 - Zone.js 在 Angular 中做了什么？
@@ -456,8 +455,11 @@ Angular + JS + TS 通常覆盖 7 类能力：
 - Angular 默认模板转义能防哪些 XSS？什么时候 `DomSanitizer` 会有风险？
 - HTTPS 解决了什么问题？
 - WebSocket、SSE、轮询分别适合什么场景？
-
+23X7 = 161
 ### 练习任务
+161个
+1610每小时.
+每份20个,那就是80份,
 
 - 写一个事件委托 Demo。
 - 写一个 localStorage 封装。

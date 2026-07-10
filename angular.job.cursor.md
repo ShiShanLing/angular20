@@ -146,6 +146,9 @@
 - **与 Signal**：`toSignal()` / `toObservable()` 桥接（19+ 常问方向）
 
 ### 3.9 架构与状态
+已经30$
+还有70%
+
 
 - **分层**：Component 薄、Service 承载业务、纯函数 util
 - **Smart / Dumb 组件**：容器管数据，展示组件只收 `@Input`

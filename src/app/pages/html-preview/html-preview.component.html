@@ -1,0 +1,37 @@
+<div class="html-preview-page">
+  <header class="page-header">
+    <div>
+      <h2>HTML 条款预览</h2>
+      <p>按 Angular <code>[innerHTML]</code> 的方式展示条款字符串。</p>
+    </div>
+
+    <button type="button" class="reload-btn" (click)="reload()">刷新</button>
+  </header>
+
+  <div class="sample-tabs" role="tablist" aria-label="HTML 示例文件">
+    @for (sample of samples; track sample.path) {
+      <button
+        type="button"
+        role="tab"
+        [class.active]="selectedPath() === sample.path"
+        (click)="selectSample(sample.path)">
+        {{ sample.label }}
+      </button>
+    }
+  </div>
+
+  <section class="preview-panel">
+    <div class="panel-title">
+      <span>{{ selectedPath() }}</span>
+      @if (loading()) {
+        <strong>加载中...</strong>
+      }
+    </div>
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    } @else {
+      <div class="clause preview-content" [innerHTML]="trustedHtml()"></div>
+    }
+  </section>
+</div>

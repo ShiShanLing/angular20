@@ -58,6 +58,9 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
   {
     label: '数据演示',
     icon: 'bar-chart',
-    children: [{ path: '/chart-showcase', label: '炫酷图表', permission: 'chart.showcase' }]
+    children: [
+      { path: '/chart-showcase', label: '炫酷图表', permission: 'chart.showcase' },
+      { path: '/html-preview', label: '条款预览' }
+    ]
   }
 ];

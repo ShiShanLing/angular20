@@ -10,6 +10,7 @@ import { PermissionService } from './core/permission.service';
   template: '<router-outlet />',
   styles: [':host { display: block; height: 100%; }']
 })
+
 export class AppComponent {
   private readonly document = inject(DOCUMENT);
   private readonly permissionService = inject(PermissionService);
@@ -24,7 +25,7 @@ export class AppComponent {
       this.permissionService.setPermissions(permissions);
     }
   }
-
+  
   private parsePermissions(raw: string | null): string[] | null {
     if (raw == null) {
       return null;
@@ -47,7 +48,7 @@ export class AppComponent {
         // JSON 格式非法时回退为逗号分隔解析
       }
     }
-    
+    //
     return text
       .split(',')
       .map((item) => item.trim())
