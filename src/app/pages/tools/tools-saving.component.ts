@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Subscription, debounceTime } from 'rxjs';
 
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzFormModule } from 'ng-zorro-antd/form';
@@ -11,6 +12,11 @@ import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzProgressModule } from 'ng-zorro-antd/progress';
 import { NzStatisticModule } from 'ng-zorro-antd/statistic';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
+
+import { RecordService } from '../../services/record.service';
+
+const RECORD_TYPE = 'saving';
+const LS_KEY = 'tools_saving_form';
 
 /** 存钱目标与定投进度条展示。 */
 @Component({
@@ -24,11 +30,17 @@ import { NzAlertModule } from 'ng-zorro-antd/alert';
   templateUrl: './tools-saving.component.html',
   styleUrl: './tools-saving.component.scss'
 })
-export class ToolsSavingComponent implements OnInit {
+export class ToolsSavingComponent implements OnInit, OnDestroy {
   form!: FormGroup;
   result: any = null;
 
-  constructor(private fb: FormBuilder) {}
+  private recordId: number | null = null;
+  private sub?: Subscription;
+
+  constructor(
+    private fb: FormBuilder,
+    private recordService: RecordService,
+  ) {}
 
   ngOnInit(): void {
     this.form = this.fb.group({
@@ -38,21 +50,21 @@ export class ToolsSavingComponent implements OnInit {
       currentSaved: [10000, [Validators.required, Validators.min(0)]]
     });
 
-    const savedData = localStorage.getItem('tools_saving_form');
-    if (savedData) {
-      try {
-        this.form.patchValue(JSON.parse(savedData));
-      } catch (e) {}
-    }
-
+    this.loadFromLocalStorage();
     this.calculate();
+    this.loadFromApi();
 
-    this.form.valueChanges.subscribe(() => {
+    this.sub = this.form.valueChanges.pipe(debounceTime(500)).subscribe(() => {
       if (this.form.valid) {
-        localStorage.setItem('tools_saving_form', JSON.stringify(this.form.value));
+        this.saveToLocalStorage();
+        this.saveToApi();
         this.calculate();
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
   }
 
   calculate(): void {
@@ -64,7 +76,6 @@ export class ToolsSavingComponent implements OnInit {
 
     const finalAmount = current + (monthly * months);
     const gap = target - finalAmount;
-    
     let progress = (finalAmount / target) * 100;
     if (progress > 100) progress = 100;
 
@@ -77,20 +88,50 @@ export class ToolsSavingComponent implements OnInit {
     } else if (current >= target) {
       finishMonths = 0;
     } else {
-      finishMonths = -1; // impossible
+      finishMonths = -1;
     }
 
     this.result = {
-      target,
-      months,
-      monthly,
-      current,
-      finalAmount,
-      gap,
-      progress,
-      requiredMonthly,
-      extraMonthly,
-      finishMonths
+      target, months, monthly, current, finalAmount, gap,
+      progress, requiredMonthly, extraMonthly, finishMonths
     };
+  }
+
+  // === 持久化 ===
+
+  private loadFromLocalStorage(): void {
+    try {
+      const savedData = localStorage.getItem(LS_KEY);
+      if (savedData) this.form.patchValue(JSON.parse(savedData), { emitEvent: false });
+    } catch {}
+  }
+
+  private saveToLocalStorage(): void {
+    localStorage.setItem(LS_KEY, JSON.stringify(this.form.value));
+  }
+
+  private loadFromApi(): void {
+    this.recordService.getAll(RECORD_TYPE).subscribe({
+      next: (records) => {
+        if (records.length > 0) {
+          const rec = records[0];
+          this.recordId = rec.id;
+          const data = typeof rec.data === 'string' ? JSON.parse(rec.data) : rec.data;
+          this.form.patchValue(data, { emitEvent: false });
+          this.calculate();
+        }
+      }
+    });
+  }
+
+  private saveToApi(): void {
+    const data = this.form.value;
+    if (this.recordId) {
+      this.recordService.update(this.recordId, data).subscribe();
+    } else {
+      this.recordService.create(RECORD_TYPE, data).subscribe({
+        next: (rec) => this.recordId = rec.id
+      });
+    }
   }
 }

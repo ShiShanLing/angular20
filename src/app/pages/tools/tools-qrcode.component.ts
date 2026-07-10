@@ -15,9 +15,12 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 
+import { RecordService } from '../../services/record.service';
+
 type ErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H';
 
 const STORAGE_KEY = 'tools_qrcode_text';
+const RECORD_TYPE = 'qrcode';
 const MAX_DECODE_SIDE = 1800;
 const DECODE_SCALES = [1, 1.5, 2, 0.75];
 
@@ -71,11 +74,24 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     { label: '高 (H)', value: 'H' }
   ];
 
-  constructor(private readonly msg: NzMessageService) {}
+  constructor(
+    private readonly msg: NzMessageService,
+    private readonly recordService: RecordService,
+  ) {}
 
   ngOnInit(): void {
+    // 加载上次生成的文本
+    this.recordService.getAll(RECORD_TYPE).subscribe({
+      next: (records) => {
+        if (records.length > 0) {
+          const data = typeof records[0].data === 'string' ? JSON.parse(records[0].data) : records[0].data;
+          if (data.text) this.generateText.set(data.text);
+        }
+      }
+    });
+    // 兑容 localStorage 旧数据
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
+    if (saved && !this.generateText()) {
       this.generateText.set(saved);
     }
   }
@@ -87,6 +103,16 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
   onGenerateTextChange(value: string): void {
     this.generateText.set(value);
     localStorage.setItem(STORAGE_KEY, value);
+    // 保存到 API
+    this.recordService.getAll(RECORD_TYPE).subscribe({
+      next: (records) => {
+        if (records.length > 0) {
+          this.recordService.update(records[0].id, { text: value }).subscribe();
+        } else {
+          this.recordService.create(RECORD_TYPE, { text: value }).subscribe();
+        }
+      }
+    });
   }
 
   async generateQrCode(): Promise<void> {
@@ -234,6 +260,8 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
       const result = await this.decodeImageDataUrl(dataUrl);
       if (result) {
         this.decodeResult.set(result);
+        // 保存识别记录到 API
+        this.recordService.create('qrcode_scan', { content: result }).subscribe();
         this.msg.success('解码成功');
       } else {
         this.msg.warning('未识别到二维码，请换一张更清晰的图片');
@@ -313,6 +341,7 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     if (code?.data && code.data !== this.lastScanResult) {
       this.lastScanResult = code.data;
       this.decodeResult.set(code.data);
+      this.recordService.create('qrcode_scan', { content: code.data }).subscribe();
       this.msg.success('扫描成功');
     }
 

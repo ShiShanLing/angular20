@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -7,6 +7,7 @@ import {
   FormsModule,
 } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Subscription, debounceTime } from 'rxjs';
 
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzFormModule } from 'ng-zorro-antd/form';
@@ -18,6 +19,8 @@ import { NzDividerModule } from 'ng-zorro-antd/divider';
 import { NzTypographyModule } from 'ng-zorro-antd/typography';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
+
+import { RecordService } from '../../services/record.service';
 
 import {
   CHINA_CENSUS_7TH_DEATH_AGE_MEDIAN_GROUP_MIDPOINT,
@@ -54,6 +57,7 @@ export interface FireSimSummary {
 }
 
 const LS_KEY = 'tools_fire_sim_v1';
+const RECORD_TYPE = 'fire';
 const MAX_RETIREMENT_YEARS = 85;
 //
 /** FIRE 退休模拟：储蓄、提取率、通胀与长寿参数下的逐年资产负债表。 */
@@ -78,7 +82,7 @@ const MAX_RETIREMENT_YEARS = 85;
   templateUrl: './tools-fire.component.html',
   styleUrl: './tools-fire.component.scss',
 })
-export class ToolsFireComponent implements OnInit {
+export class ToolsFireComponent implements OnInit, OnDestroy {
   form!: FormGroup;
   rows: FireYearRow[] = [];
   summary: FireSimSummary | null = null;
@@ -86,7 +90,14 @@ export class ToolsFireComponent implements OnInit {
   readonly longevity = CHINA_CENSUS_7TH_LIFE_EXPECTANCY;
   readonly deathMedian = CHINA_CENSUS_7TH_DEATH_AGE_MEDIAN_GROUP_MIDPOINT;
   readonly currentCalendarYear = new Date().getFullYear();
-  constructor(private fb: FormBuilder) {}
+
+  private recordId: number | null = null;
+  private sub?: Subscription;
+
+  constructor(
+    private fb: FormBuilder,
+    private recordService: RecordService,
+  ) {}
 
   /**
    * * nz-input-number 在部分浏览器下按回车不会失焦，内部值可能尚未写回 FormControl，
@@ -112,22 +123,21 @@ export class ToolsFireComponent implements OnInit {
       retirementAge: [60, [Validators.required, Validators.min(18), Validators.max(100)]],
     });
 
-    const raw = localStorage.getItem(LS_KEY);
-    if (raw) {
-      try {
-        this.form.patchValue(JSON.parse(raw));
-      } catch {
-        /* ignore */
-      }
-    }
-
+    this.loadFromLocalStorage();
     this.run();
-    this.form.valueChanges.subscribe(() => {
+    this.loadFromApi();
+
+    this.sub = this.form.valueChanges.pipe(debounceTime(500)).subscribe(() => {
       if (this.form.valid) {
-        localStorage.setItem(LS_KEY, JSON.stringify(this.form.value));
+        this.saveToLocalStorage();
+        this.saveToApi();
       }
       this.run();
     });
+  }
+
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
   }
 
   referenceExpectancy(): number {
@@ -312,5 +322,43 @@ export class ToolsFireComponent implements OnInit {
       finalBalanceIfNotDepleted:
         depletionCalendarYear === null ? B : null,
     };
+  }
+
+  // === 持久化 ===
+
+  private loadFromLocalStorage(): void {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) this.form.patchValue(JSON.parse(raw), { emitEvent: false });
+    } catch {}
+  }
+
+  private saveToLocalStorage(): void {
+    localStorage.setItem(LS_KEY, JSON.stringify(this.form.value));
+  }
+
+  private loadFromApi(): void {
+    this.recordService.getAll(RECORD_TYPE).subscribe({
+      next: (records) => {
+        if (records.length > 0) {
+          const rec = records[0];
+          this.recordId = rec.id;
+          const data = typeof rec.data === 'string' ? JSON.parse(rec.data) : rec.data;
+          this.form.patchValue(data, { emitEvent: false });
+          this.run();
+        }
+      }
+    });
+  }
+
+  private saveToApi(): void {
+    const data = this.form.value;
+    if (this.recordId) {
+      this.recordService.update(this.recordId, data).subscribe();
+    } else {
+      this.recordService.create(RECORD_TYPE, data).subscribe({
+        next: (rec) => this.recordId = rec.id
+      });
+    }
   }
 }

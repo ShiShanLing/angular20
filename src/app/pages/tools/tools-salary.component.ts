@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Subscription, debounceTime } from 'rxjs';
 
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzFormModule } from 'ng-zorro-antd/form';
@@ -15,6 +16,11 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzTableModule } from 'ng-zorro-antd/table';
 
+import { RecordService } from '../../services/record.service';
+
+const RECORD_TYPE = 'salary';
+const LS_KEY = 'tools_salary_template';
+
 /** 工资个税试算：五险一金扣除与税率阶梯表格。 */
 @Component({
   selector: 'app-tools-salary',
@@ -28,52 +34,55 @@ import { NzTableModule } from 'ng-zorro-antd/table';
   templateUrl: './tools-salary.component.html',
   styleUrl: './tools-salary.component.scss'
 })
-export class ToolsSalaryComponent implements OnInit {
+export class ToolsSalaryComponent implements OnInit, OnDestroy {
   form!: FormGroup;
   result: any = null;
-  
   isModalVisible = false;
   monthlyProjection: any[] = [];
 
-  constructor(private fb: FormBuilder, private msg: NzMessageService) {}
+  private recordId: number | null = null;
+  private sub?: Subscription;
+
+  constructor(
+    private fb: FormBuilder,
+    private msg: NzMessageService,
+    private recordService: RecordService,
+  ) {}
 
   ngOnInit(): void {
     this.form = this.fb.group({
       grossPay: [10000, [Validators.required, Validators.min(0)]],
       socialBase: [10000, [Validators.required, Validators.min(0)]],
       housingBase: [10000, [Validators.required, Validators.min(0)]],
-      housingRatio: [7, [Validators.required, Validators.min(0), Validators.max(100)]], // %
-      specialDeduction: [0, [Validators.min(0)]], // 专项附加扣除
+      housingRatio: [7, [Validators.required, Validators.min(0), Validators.max(100)]],
+      specialDeduction: [0, [Validators.min(0)]],
       threshold: [5000, [Validators.required, Validators.min(0)]],
-      bonusMonths: [0, [Validators.min(0), Validators.max(24)]], // 年终奖（月数）
-      monthlyExpense: [0, [Validators.min(0)]] // 每月其他支出
+      bonusMonths: [0, [Validators.min(0), Validators.max(24)]],
+      monthlyExpense: [0, [Validators.min(0)]]
     });
-    this.loadTemplate();
+
+    this.loadFromLocalStorage();
     this.calculate();
-    
-    // Auto calculate on form changes
-    this.form.valueChanges.subscribe(() => {
+    this.loadFromApi();
+
+    this.sub = this.form.valueChanges.pipe(debounceTime(500)).subscribe(() => {
       if (this.form.valid) {
-        this.saveTemplate(false);
+        this.saveToLocalStorage();
+        this.saveToApi();
         this.calculate();
       }
     });
   }
 
-  saveTemplate(showMsg = true): void {
-    if (this.form.valid) {
-      localStorage.setItem('tools_salary_template', JSON.stringify(this.form.value));
-      if (showMsg) this.msg.success('模板已保存');
-    }
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
   }
 
-  loadTemplate(): void {
-    const data = localStorage.getItem('tools_salary_template');
-    if (data) {
-      try {
-        const parsed = JSON.parse(data);
-        this.form.patchValue(parsed, { emitEvent: false });
-      } catch (e) {}
+  saveTemplate(showMsg = true): void {
+    if (this.form.valid) {
+      this.saveToLocalStorage();
+      this.saveToApi();
+      if (showMsg) this.msg.success('模板已保存');
     }
   }
 
@@ -82,23 +91,17 @@ export class ToolsSalaryComponent implements OnInit {
     const gross = val.grossPay || 0;
     const socialBase = val.socialBase || 0;
     const housingBase = val.housingBase || 0;
-    
-    // 养老 8%, 医疗 2%, 失业 0.5%
+
     const pension = socialBase * 0.08;
     const medical = socialBase * 0.02;
     const unemployment = socialBase * 0.005;
     const socialTotal = pension + medical + unemployment;
-
-    // 公积金
     const housing = housingBase * (val.housingRatio / 100);
-
     const deductions = socialTotal + housing;
 
-    // 计税金额 = 税前 - 五险一金 - 起征点 - 专项扣除
     let taxable = gross - deductions - val.threshold - (val.specialDeduction || 0);
     if (taxable < 0) taxable = 0;
 
-    // 简单算税层级 (此处仅为单月预扣预缴简化版)
     let tax = 0;
     if (taxable <= 3000) tax = taxable * 0.03;
     else if (taxable <= 12000) tax = taxable * 0.1 - 210;
@@ -109,32 +112,17 @@ export class ToolsSalaryComponent implements OnInit {
     else tax = taxable * 0.45 - 15160;
 
     const netPay = gross - deductions - tax;
-
-    // 年度计算
     const bonusMonths = val.bonusMonths || 0;
     const monthlyExpense = val.monthlyExpense || 0;
-    
     const annualGross = gross * (12 + bonusMonths);
     const annualNetPay = netPay * (12 + bonusMonths);
     const annualExpenses = monthlyExpense * 12;
     const annualSavings = annualNetPay - annualExpenses;
 
     this.result = {
-      gross,
-      pension,
-      medical,
-      unemployment,
-      housing,
-      deductions,
-      taxable,
-      tax,
-      netPay,
-      annualGross,
-      annualNetPay,
-      annualExpenses,
-      annualSavings
+      gross, pension, medical, unemployment, housing, deductions,
+      taxable, tax, netPay, annualGross, annualNetPay, annualExpenses, annualSavings
     };
-
     this.updateMonthlyProjection();
   }
 
@@ -143,7 +131,7 @@ export class ToolsSalaryComponent implements OnInit {
     const gross = val.grossPay || 0;
     const socialBase = val.socialBase || 0;
     const housingBase = val.housingBase || 0;
-    
+
     const pension = socialBase * 0.08;
     const medical = socialBase * 0.02;
     const unemployment = socialBase * 0.005;
@@ -160,11 +148,10 @@ export class ToolsSalaryComponent implements OnInit {
       const cumDeductions = deductions * i;
       const cumThreshold = threshold * i;
       const cumSpecial = specialDeduction * i;
-      
+
       let cumTaxable = cumGross - cumDeductions - cumThreshold - cumSpecial;
       if (cumTaxable < 0) cumTaxable = 0;
 
-      // Annual cumulative tax brackets
       let cumTax = 0;
       if (cumTaxable <= 36000) cumTax = cumTaxable * 0.03;
       else if (cumTaxable <= 144000) cumTax = cumTaxable * 0.1 - 2520;
@@ -178,23 +165,51 @@ export class ToolsSalaryComponent implements OnInit {
       totalTaxSoFar = cumTax;
 
       projection.push({
-        month: `${i}月`,
-        gross,
-        deductions,
-        taxable: cumTaxable / i, // Average taxable for display focus
-        tax: monthTax,
-        netPay: gross - deductions - monthTax
+        month: `${i}月`, gross, deductions,
+        taxable: cumTaxable / i, tax: monthTax, netPay: gross - deductions - monthTax
       });
     }
-
     this.monthlyProjection = projection;
   }
 
-  showModal(): void {
-    this.isModalVisible = true;
+  showModal(): void { this.isModalVisible = true; }
+  handleCancel(): void { this.isModalVisible = false; }
+
+  // === 持久化 ===
+
+  private loadFromLocalStorage(): void {
+    try {
+      const data = localStorage.getItem(LS_KEY);
+      if (data) this.form.patchValue(JSON.parse(data), { emitEvent: false });
+    } catch {}
   }
 
-  handleCancel(): void {
-    this.isModalVisible = false;
+  private saveToLocalStorage(): void {
+    localStorage.setItem(LS_KEY, JSON.stringify(this.form.value));
+  }
+
+  private loadFromApi(): void {
+    this.recordService.getAll(RECORD_TYPE).subscribe({
+      next: (records) => {
+        if (records.length > 0) {
+          const rec = records[0];
+          this.recordId = rec.id;
+          const data = typeof rec.data === 'string' ? JSON.parse(rec.data) : rec.data;
+          this.form.patchValue(data, { emitEvent: false });
+          this.calculate();
+        }
+      }
+    });
+  }
+
+  private saveToApi(): void {
+    const data = this.form.value;
+    if (this.recordId) {
+      this.recordService.update(this.recordId, data).subscribe();
+    } else {
+      this.recordService.create(RECORD_TYPE, data).subscribe({
+        next: (rec) => this.recordId = rec.id
+      });
+    }
   }
 }
