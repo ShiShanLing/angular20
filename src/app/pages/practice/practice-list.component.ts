@@ -28,6 +28,7 @@ import {
   PracticeStorageService,
   type PracticeStorageScope,
 } from './practice-storage.service';
+import { angularJobSeedToPracticeItems, iosJobSeedToPracticeItems, iosSeedToPracticeItems } from './ios-seed';
 import { MarkdPipe } from './markd.pipe';
 
 type FilterValue = PracticeFilterCategory;
@@ -417,6 +418,9 @@ export class PracticeListComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit() {
+    // 先确保所有内置题库已注入 localStorage
+    this.ensureAllSeeds();
+
     // 合并所有题库（practice + ios-learning + angular-learning）
     const allScopes: PracticeStorageScope[] = ['practice', 'ios-learning', 'angular-learning'];
     const merged: PracticeItem[] = [];
@@ -431,6 +435,24 @@ export class PracticeListComponent implements OnInit, OnDestroy {
       }
     }
     this.allItems.set(merged);
+  }
+
+  /** 确保所有内置题库已注入（首次访问时自动初始化） */
+  private ensureAllSeeds(): void {
+    const now = Date.now();
+    const scopes: Array<{ scope: PracticeStorageScope; seed: (t: number) => PracticeItem[] }> = [
+      { scope: 'practice', seed: iosSeedToPracticeItems },
+      { scope: 'ios-learning', seed: iosJobSeedToPracticeItems },
+      { scope: 'angular-learning', seed: angularJobSeedToPracticeItems },
+    ];
+    for (const { scope, seed } of scopes) {
+      const existing = this.storage.load(scope);
+      if (existing.length === 0) {
+        this.storage.save(seed(now), scope);
+      } else {
+        this.storage.mergeItems(seed(now), scope);
+      }
+    }
   }
 
   ngOnDestroy() {}
