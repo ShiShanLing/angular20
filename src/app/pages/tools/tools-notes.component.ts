@@ -13,6 +13,7 @@ import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 
 import { QuillModule } from 'ngx-quill';
 import Quill from 'quill';
@@ -36,7 +37,7 @@ const Table = Quill.import('modules/table');
     CommonModule, FormsModule,
     NzButtonModule, NzIconModule, NzInputModule, NzMessageModule,
     NzModalModule, NzTagModule, NzToolTipModule, NzPopconfirmModule,
-    NzEmptyModule, NzSelectModule, QuillModule,
+    NzEmptyModule, NzSelectModule, NzInputNumberModule, QuillModule,
   ],
   templateUrl: './tools-notes.component.html',
   styleUrl: './tools-notes.component.scss',
@@ -116,6 +117,21 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
     }
   }
 
+  insertTable(): void {
+    this.tableRows = 3;
+    this.tableCols = 3;
+    this.showTableModal = true;
+  }
+
+  confirmInsertTable(): void {
+    if (!this.quillInstance) return;
+    const table = this.quillInstance.getModule('table');
+    if (table) {
+      table.insertTable(this.tableRows, this.tableCols);
+    }
+    this.showTableModal = false;
+  }
+
   onEditorCreated(editor: any): void {
     this.quillInstance = editor;
   }
@@ -125,32 +141,10 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
     this.autoSaveSubject.next();
   }
 
-  insertTable(): void {
-    if (!this.quillInstance) return;
-    this.modal.confirm({
-      nzTitle: '插入表格',
-      nzContent: `
-        <div style="display:flex;gap:12px;margin-top:8px;">
-          <div style="flex:1;">
-            <label style="display:block;margin-bottom:4px;font-size:13px;">行数</label>
-            <input id="table-rows" class="ant-input" type="number" value="3" min="1" max="20" />
-          </div>
-          <div style="flex:1;">
-            <label style="display:block;margin-bottom:4px;font-size:13px;">列数</label>
-            <input id="table-cols" class="ant-input" type="number" value="3" min="1" max="10" />
-          </div>
-        </div>
-      `,
-      nzOnOk: () => {
-        const rows = parseInt((document.getElementById('table-rows') as HTMLInputElement)?.value || '3');
-        const cols = parseInt((document.getElementById('table-cols') as HTMLInputElement)?.value || '3');
-        const table = this.quillInstance!.getModule('table');
-        if (table) {
-          table.insertTable(rows, cols);
-        }
-      },
-    });
-  }
+  // Table insert state
+  showTableModal = false;
+  tableRows = 3;
+  tableCols = 3;
 
   // === Sidebar ===
 

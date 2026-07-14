@@ -499,3 +499,23 @@
   .notes-list { width: 100%; min-width: 100%; height: 200px; border-right: none; border-bottom: 1px solid var(--border-light); }
   .notes-editor { height: 500px; }
 }
+
+// === Table Modal ===
+.table-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.table-form-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  label {
+    min-width: 40px;
+    font-size: 14px;
+    color: var(--text-primary);
+  }
+}

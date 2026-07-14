@@ -137,3 +137,24 @@
     </div>
   </div>
 </div>
+
+<!-- 插入表格弹窗 -->
+<nz-modal
+  [(nzVisible)]="showTableModal"
+  nzTitle="插入表格"
+  nzOkText="插入"
+  (nzOnOk)="confirmInsertTable()"
+  (nzOnCancel)="showTableModal = false">
+  <ng-container *nzModalContent>
+    <div class="table-modal-form">
+      <div class="table-form-row">
+        <label>行数</label>
+        <nz-input-number [(ngModel)]="tableRows" [nzMin]="1" [nzMax]="20" style="width:100%"></nz-input-number>
+      </div>
+      <div class="table-form-row">
+        <label>列数</label>
+        <nz-input-number [(ngModel)]="tableCols" [nzMin]="1" [nzMax]="10" style="width:100%"></nz-input-number>
+      </div>
+    </div>
+  </ng-container>
+</nz-modal>
