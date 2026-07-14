@@ -143,9 +143,49 @@ html, body {
     border-color: var(--border-light);
     color: var(--text-primary);
   }
+
+  .ant-card-body {
+    color: var(--text-primary);
+  }
   
   /* Form */
   .ant-form-item-label > label {
+    color: var(--text-secondary);
+  }
+
+  .ant-form-item-explain {
+    color: var(--text-tertiary);
+  }
+
+  /* Radio */
+  .ant-radio-wrapper {
+    color: var(--text-primary);
+  }
+
+  .ant-radio-wrapper-disabled {
+    color: var(--text-tertiary);
+  }
+
+  /* Checkbox */
+  .ant-checkbox-wrapper {
+    color: var(--text-primary);
+  }
+
+  /* Alert */
+  .ant-alert {
+    color: var(--text-primary);
+  }
+
+  .ant-alert-info {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+  }
+
+  .ant-alert-message {
+    color: var(--text-primary);
+  }
+
+  .ant-alert-description {
     color: var(--text-secondary);
   }
   
@@ -161,6 +201,16 @@ html, body {
   .ant-input::placeholder,
   .ant-input-number-input::placeholder {
     color: var(--text-tertiary) !important;
+  }
+
+  /* Input number handler icons */
+  .ant-input-number-handler {
+    border-color: var(--border-light) !important;
+  }
+
+  .ant-input-number-handler:hover .ant-input-number-handler-up-inner,
+  .ant-input-number-handler:hover .ant-input-number-handler-down-inner {
+    color: var(--accent-color);
   }
   
   /* Modal */
