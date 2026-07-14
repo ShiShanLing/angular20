@@ -223,6 +223,15 @@ html, body {
   .ant-form-item-extra {
     color: var(--text-tertiary);
   }
+
+  /* Typography */
+  .ant-typography-secondary {
+    color: var(--text-tertiary);
+  }
+
+  .ant-typography {
+    color: var(--text-primary);
+  }
   
   .ant-input,
   .ant-input-number,
