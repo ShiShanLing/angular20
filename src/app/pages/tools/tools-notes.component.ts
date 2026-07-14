@@ -13,11 +13,21 @@ import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzSelectModule } from 'ng-zorro-antd/select';
-import { NzColorPickerModule } from 'ng-zorro-antd/color-picker';
+
+import { QuillModule } from 'ngx-quill';
+import Quill from 'quill';
 
 import { NoteService, Notebook, Note } from '../../services/note.service';
 
 type SidebarFilter = 'all' | 'favorite' | { notebookId: number } | { tag: string };
+
+// Register custom font size attributor for pt values
+const SizeStyle = Quill.import('attributors/style/size') as any;
+SizeStyle.whitelist = ['9pt','10pt','11pt','12pt','14pt','16pt','18pt','20pt','22pt','24pt','28pt','32pt','36pt','48pt','72pt'];
+Quill.register(SizeStyle, true);
+
+// Register table module
+const Table = Quill.import('modules/table');
 
 @Component({
   selector: 'app-tools-notes',
@@ -26,13 +36,13 @@ type SidebarFilter = 'all' | 'favorite' | { notebookId: number } | { tag: string
     CommonModule, FormsModule,
     NzButtonModule, NzIconModule, NzInputModule, NzMessageModule,
     NzModalModule, NzTagModule, NzToolTipModule, NzPopconfirmModule,
-    NzEmptyModule, NzSelectModule, NzColorPickerModule,
+    NzEmptyModule, NzSelectModule, QuillModule,
   ],
   templateUrl: './tools-notes.component.html',
   styleUrl: './tools-notes.component.scss',
 })
 export class ToolsNotesComponent implements OnInit, OnDestroy {
-  @ViewChild('editor') editorRef?: ElementRef<HTMLDivElement>;
+  @ViewChild('quillEditor') quillEditorRef?: any;
 
   // Sidebar
   notebooks: Notebook[] = [];
@@ -51,16 +61,32 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
   newTag = '';
   isDirty = false;
   private autoSaveSubject = new Subject<void>();
+  private quillInstance: any = null;
+  editorContent = '';
 
-  // Toolbar state
-  textColor = '#262626';
-  currentFontSize = 14;
+  // Quill editor options
+  editorModules = {
+    toolbar: {
+      container: [
+        [{ header: [1, 2, 3, false] }],
+        [{ size: ['9pt','10pt','11pt','12pt','14pt','16pt','18pt','20pt','22pt','24pt','28pt','32pt','36pt','48pt','72pt'] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ color: [] }, { background: [] }],
+        [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
+        [{ indent: '-1' }, { indent: '+1' }],
+        ['blockquote', 'code-block'],
+        ['link', 'image'],
+        [{ align: [] }],
+        ['clean'],
+      ],
+    },
+    table: true,
+  };
 
-  headingOptions = [
-    { label: '正文', value: 'p' },
-    { label: '标题 1', value: 'h1' },
-    { label: '标题 2', value: 'h2' },
-    { label: '标题 3', value: 'h3' },
+  editorFormats = [
+    'header', 'size', 'bold', 'italic', 'underline', 'strike',
+    'color', 'background', 'list', 'indent', 'align',
+    'blockquote', 'code-block', 'link', 'image', 'table',
   ];
 
   constructor(
@@ -90,140 +116,21 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
     }
   }
 
-  // === Toolbar Commands ===
-
-  execCommand(cmd: string, value?: string): void {
-    this.editorRef?.nativeElement.focus();
-    document.execCommand(cmd, false, value);
-    this.onContentChange();
+  onEditorCreated(editor: any): void {
+    this.quillInstance = editor;
   }
 
-  onHeadingChange(tag: string): void {
-    this.editorRef?.nativeElement.focus();
-    if (tag === 'p') {
-      document.execCommand('formatBlock', false, 'p');
-    } else {
-      document.execCommand('formatBlock', false, tag);
-    }
-    this.onContentChange();
-  }
-
-  onFontSizeChange(event: Event): void {
-    const val = parseInt((event.target as HTMLInputElement).value);
-    if (isNaN(val) || val < 9 || val > 72) return;
-    this.currentFontSize = val;
-    this.applyFontSize(val);
-  }
-
-  onFontSizeInputBlur(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    let val = parseInt(input.value);
-    if (isNaN(val) || val < 9) val = 9;
-    if (val > 72) val = 72;
-    input.value = String(val);
-    this.currentFontSize = val;
-    this.applyFontSize(val);
-  }
-
-  private applyFontSize(pt: number): void {
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
-    const editor = this.editorRef?.nativeElement;
-    if (!editor) return;
-    // Use fontSize command then swap <font> tags for <span> with exact pt
-    document.execCommand('fontSize', false, '7');
-    const fonts = editor.querySelectorAll('font[size="7"]');
-    fonts.forEach(f => {
-      const span = document.createElement('span');
-      span.style.fontSize = pt + 'pt';
-      span.innerHTML = f.innerHTML;
-      f.replaceWith(span);
-    });
-    this.onContentChange();
-  }
-
-  onTextColorChange(color: string): void {
-    this.textColor = color;
-    this.editorRef?.nativeElement.focus();
-    document.execCommand('foreColor', false, color);
-    this.onContentChange();
-  }
-
-  toggleBold(): void { this.execCommand('bold'); }
-  toggleItalic(): void { this.execCommand('italic'); }
-  toggleUnderline(): void { this.execCommand('underline'); }
-  toggleStrike(): void { this.execCommand('strikeThrough'); }
-
-  insertList(type: string): void {
-    this.editorRef?.nativeElement.focus();
-    if (type === 'ol') {
-      document.execCommand('insertOrderedList');
-    } else if (type === 'ol-alpha') {
-      document.execCommand('insertOrderedList');
-      const editor = this.editorRef?.nativeElement;
-      const ols = editor?.querySelectorAll('ol');
-      if (ols) {
-        const lastOl = ols[ols.length - 1];
-        if (lastOl) lastOl.style.listStyleType = 'lower-alpha';
-      }
-    } else {
-      document.execCommand('insertUnorderedList');
-    }
-    this.onContentChange();
-  }
-
-  insertChecklist(): void {
-    this.editorRef?.nativeElement.focus();
-    const html = '<div style="display:flex;align-items:center;gap:6px;margin:2px 0;"><input type="checkbox" style="width:16px;height:16px;cursor:pointer;" onclick="this.parentElement?.querySelector(\'span\')?.classList?.toggle(\'checked\'); if(this.checked){this.parentElement.querySelector(\'span\')?.style?.setProperty(\'text-decoration\',\'line-through\');}else{this.parentElement.querySelector(\'span\')?.style?.removeProperty(\'text-decoration\');}" /><span style="flex:1;" contenteditable="true">待办事项</span></div>';
-    document.execCommand('insertHTML', false, html);
-    this.onContentChange();
+  onContentChanged(): void {
+    this.isDirty = true;
+    this.autoSaveSubject.next();
   }
 
   insertTable(): void {
-    this.modal.confirm({
-      nzTitle: '插入表格',
-      nzContent: `
-        <div style="display:flex;gap:12px;margin-top:8px;">
-          <div style="flex:1;">
-            <label style="display:block;margin-bottom:4px;font-size:13px;">行数</label>
-            <input id="table-rows" class="ant-input" type="number" value="3" min="1" max="20" />
-          </div>
-          <div style="flex:1;">
-            <label style="display:block;margin-bottom:4px;font-size:13px;">列数</label>
-            <input id="table-cols" class="ant-input" type="number" value="3" min="1" max="10" />
-          </div>
-        </div>
-      `,
-      nzOnOk: () => {
-        const rows = parseInt((document.getElementById('table-rows') as HTMLInputElement)?.value || '3');
-        const cols = parseInt((document.getElementById('table-cols') as HTMLInputElement)?.value || '3');
-        this.doInsertTable(rows, cols);
-      },
-    });
-  }
-
-  private doInsertTable(rows: number, cols: number): void {
-    this.editorRef?.nativeElement.focus();
-    let html = '<table style="border-collapse:collapse;width:100%;margin:8px 0;">';
-    for (let r = 0; r < rows; r++) {
-      html += '<tr>';
-      for (let c = 0; c < cols; c++) {
-        const tag = r === 0 ? 'th' : 'td';
-        const style = 'border:1px solid var(--border-color, #d9d9d9);padding:6px 10px;min-width:60px;';
-        const bgStyle = r === 0 ? 'background:var(--bg-tertiary, #fafafa);font-weight:600;' : '';
-        html += `<${tag} style="${style}${bgStyle}">${r === 0 ? '表头' : ''}</${tag}>`;
-      }
-      html += '</tr>';
+    if (!this.quillInstance) return;
+    const table = this.quillInstance.getModule('table');
+    if (table) {
+      table.insertTable(3, 3);
     }
-    html += '</table><p><br></p>';
-    document.execCommand('insertHTML', false, html);
-    this.onContentChange();
-  }
-
-  insertDivider(): void {
-    this.editorRef?.nativeElement.focus();
-    document.execCommand('insertHTML', false, '<hr style="border:none;border-top:1px solid var(--border-light, #e8e8e8);margin:12px 0;" /><p><br></p>');
-    this.onContentChange();
   }
 
   // === Sidebar ===
@@ -333,14 +240,13 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
     this.selectedNoteId = note.id;
     this.editTitle = note.title;
     this.editTags = [...(note.tags || [])];
+    this.editorContent = note.content || '';
     this.isDirty = false;
 
-    // Set editor content after view updates
-    setTimeout(() => {
-      if (this.editorRef?.nativeElement) {
-        this.editorRef.nativeElement.innerHTML = note.content || '';
-      }
-    }, 0);
+    // Load content into existing editor instance
+    if (this.quillInstance) {
+      this.quillInstance.root.innerHTML = note.content || '';
+    }
   }
 
   isSelected(note: Note): boolean {
@@ -393,7 +299,6 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
   }
 
   getNoteSummary(note: Note): string {
-    // Strip HTML tags for summary
     const div = document.createElement('div');
     div.innerHTML = note.content || '';
     const text = div.textContent?.trim() || '';
@@ -416,18 +321,14 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
 
   // === Editor ===
 
-  onContentChange(): void {
-    this.isDirty = true;
-    this.autoSaveSubject.next();
+  private getEditorContent(): string {
+    if (!this.quillInstance) return '';
+    return this.quillInstance.root.innerHTML;
   }
 
   onTitleChange(): void {
     this.isDirty = true;
     this.autoSaveSubject.next();
-  }
-
-  private getEditorContent(): string {
-    return this.editorRef?.nativeElement?.innerHTML || '';
   }
 
   saveCurrentNote(): void {
@@ -502,23 +403,5 @@ th{background:#fafafa;font-weight:600;}</style></head><body>
     a.download = (this.editTitle || 'note') + '.html';
     a.click();
     URL.revokeObjectURL(url);
-  }
-
-  // === Image Upload ===
-
-  onFileSelect(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (file) this.uploadAndInsert(file);
-    input.value = '';
-  }
-
-  private uploadAndInsert(file: File): void {
-    this.noteService.uploadImage(file).subscribe(res => {
-      const img = `<img src="${res.url}" alt="${file.name}" style="max-width:100%;border-radius:4px;margin:4px 0;" />`;
-      this.editorRef?.nativeElement.focus();
-      document.execCommand('insertHTML', false, img);
-      this.onContentChange();
-    });
   }
 }
