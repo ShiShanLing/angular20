@@ -54,15 +54,7 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
 
   // Toolbar state
   textColor = '#262626';
-
-  fontSizeOptions = [
-    { label: '小', value: '2' },
-    { label: '正常', value: '3' },
-    { label: '大', value: '4' },
-    { label: '特大', value: '5' },
-    { label: '超大', value: '6' },
-  ];
-  currentFontSize = '3';
+  currentFontSize = 14;
 
   headingOptions = [
     { label: '正文', value: 'p' },
@@ -116,10 +108,37 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
     this.onContentChange();
   }
 
-  onFontSizeChange(size: string): void {
-    this.currentFontSize = size;
-    this.editorRef?.nativeElement.focus();
-    document.execCommand('fontSize', false, size);
+  onFontSizeChange(event: Event): void {
+    const val = parseInt((event.target as HTMLInputElement).value);
+    if (isNaN(val) || val < 9 || val > 72) return;
+    this.currentFontSize = val;
+    this.applyFontSize(val);
+  }
+
+  onFontSizeInputBlur(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let val = parseInt(input.value);
+    if (isNaN(val) || val < 9) val = 9;
+    if (val > 72) val = 72;
+    input.value = String(val);
+    this.currentFontSize = val;
+    this.applyFontSize(val);
+  }
+
+  private applyFontSize(pt: number): void {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+    const editor = this.editorRef?.nativeElement;
+    if (!editor) return;
+    // Use fontSize command then swap <font> tags for <span> with exact pt
+    document.execCommand('fontSize', false, '7');
+    const fonts = editor.querySelectorAll('font[size="7"]');
+    fonts.forEach(f => {
+      const span = document.createElement('span');
+      span.style.fontSize = pt + 'pt';
+      span.innerHTML = f.innerHTML;
+      f.replaceWith(span);
+    });
     this.onContentChange();
   }
 
@@ -137,7 +156,19 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
 
   insertList(type: string): void {
     this.editorRef?.nativeElement.focus();
-    document.execCommand(type === 'ol' ? 'insertOrderedList' : 'insertUnorderedList');
+    if (type === 'ol') {
+      document.execCommand('insertOrderedList');
+    } else if (type === 'ol-alpha') {
+      document.execCommand('insertOrderedList');
+      const editor = this.editorRef?.nativeElement;
+      const ols = editor?.querySelectorAll('ol');
+      if (ols) {
+        const lastOl = ols[ols.length - 1];
+        if (lastOl) lastOl.style.listStyleType = 'lower-alpha';
+      }
+    } else {
+      document.execCommand('insertUnorderedList');
+    }
     this.onContentChange();
   }
 

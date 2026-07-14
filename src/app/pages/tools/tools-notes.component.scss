@@ -297,6 +297,39 @@
   &:hover { border-color: var(--accent-color); }
 }
 
+.toolbar-fontsize-wrap {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.toolbar-fontsize-input {
+  width: 42px;
+  height: 28px;
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-align: center;
+  outline: none;
+  padding: 0 4px;
+  -moz-appearance: textfield;
+
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  &:hover, &:focus { border-color: var(--accent-color); }
+}
+
+.toolbar-fontsize-unit {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
 .toolbar-color-wrap {
   position: relative;
   display: inline-flex;
@@ -372,9 +405,20 @@
 
   p { margin: 4px 0; }
 
-  ul, ol {
+  ul {
+    list-style-type: disc;
     padding-left: 24px;
     margin: 4px 0;
+  }
+
+  ol {
+    list-style-type: decimal;
+    padding-left: 24px;
+    margin: 4px 0;
+
+    &[style*="lower-alpha"] { list-style-type: lower-alpha; }
+    &[style*="upper-alpha"] { list-style-type: upper-alpha; }
+    &[style*="lower-roman"] { list-style-type: lower-roman; }
   }
 
   li { margin: 2px 0; }

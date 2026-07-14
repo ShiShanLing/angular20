@@ -105,9 +105,11 @@
         <select class="toolbar-select" (change)="onHeadingChange($any($event.target).value)">
           <option *ngFor="let h of headingOptions" [value]="h.value">{{ h.label }}</option>
         </select>
-        <select class="toolbar-select" (change)="onFontSizeChange($any($event.target).value)">
-          <option *ngFor="let s of fontSizeOptions" [value]="s.value" [selected]="s.value === currentFontSize">{{ s.label }}</option>
-        </select>
+        <div class="toolbar-fontsize-wrap">
+          <input class="toolbar-fontsize-input" type="number" [value]="currentFontSize"
+                 min="9" max="72" (change)="onFontSizeChange($event)" (blur)="onFontSizeInputBlur($event)" />
+          <span class="toolbar-fontsize-unit">pt</span>
+        </div>
       </div>
 
       <div class="toolbar-divider"></div>
@@ -133,8 +135,11 @@
         <button class="toolbar-btn" (click)="insertList('ul')" nz-tooltip nzTooltipTitle="无序列表">
           <i nz-icon nzType="unordered-list"></i>
         </button>
-        <button class="toolbar-btn" (click)="insertList('ol')" nz-tooltip nzTooltipTitle="有序列表">
+        <button class="toolbar-btn" (click)="insertList('ol')" nz-tooltip nzTooltipTitle="数字列表 1. 2. 3.">
           <i nz-icon nzType="ordered-list"></i>
+        </button>
+        <button class="toolbar-btn" (click)="insertList('ol-alpha')" nz-tooltip nzTooltipTitle="字母列表 a. b. c.">
+          <span style="font-size:12px;font-weight:600;">A</span>
         </button>
         <button class="toolbar-btn" (click)="insertChecklist()" nz-tooltip nzTooltipTitle="待办清单">
           <i nz-icon nzType="check-square"></i>
