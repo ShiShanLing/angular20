@@ -451,13 +451,16 @@ export class PracticeListComponent implements OnInit, OnDestroy {
   }
 
   toggleExpand(id: string) {
-    const set = new Set(this.expandedIds());
+    const set = this.expandedIds();
     if (set.has(id)) {
-      set.delete(id);
+      // 点击已展开的，关闭它
+      this.expandedIds.set(new Set());
+      this.revealedIds.set(new Set());
     } else {
-      set.add(id);
+      // 手风琴模式：只展开当前这个，关闭其他
+      this.expandedIds.set(new Set([id]));
+      this.revealedIds.set(new Set());
     }
-    this.expandedIds.set(set);
   }
 
   toggleAnswer(id: string) {
