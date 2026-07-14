@@ -3,10 +3,12 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const config = app.get(ConfigService);
 
   // 安全 HTTP 头
@@ -40,9 +42,13 @@ async function bootstrap() {
     .addTag('records', '使用记录（体重/睡眠/记账）')
     .addTag('game-scores', '游戏分数（贪吃蛇/俄罗斯方块）')
     .addTag('export', '数据导出（CSV/Excel）')
+    .addTag('notes', '记事本（笔记/文件夹/标签）')
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, document);
+
+  // 静态文件服务 - 上传文件
+  app.useStaticAssets(join('/var/www/uploads'), { prefix: '/uploads' });
 
   const port = config.get<number>('PORT', 3000);
   await app.listen(port);

@@ -72,6 +72,10 @@ export const TOOLS_ROUTES: Routes = [
     path: 'qrcode',
     loadComponent: () => import('./tools-qrcode.component').then(m => m.ToolsQrcodeComponent)
   },
+  {
+    path: 'notes',
+    loadComponent: () => import('./tools-notes.component').then(m => m.ToolsNotesComponent)
+  },
   // 兼容旧链接：之前的“健康与时间”页面
   { path: 'health', redirectTo: 'bmi', pathMatch: 'full' }
 ];

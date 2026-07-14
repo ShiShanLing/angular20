@@ -37,6 +37,7 @@
     "@types/bcrypt": "^5.0.2",
     "@types/better-sqlite3": "^7.6.12",
     "@types/express": "^5.0.6",
+    "@types/multer": "^2.2.0",
     "@types/node": "^22.0.0",
     "@types/passport-jwt": "^4.0.1",
     "typescript": "~5.7.2"

@@ -1,0 +1,156 @@
+<div class="notes-app">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-title">记事本</span>
+      <button nz-button nzType="text" nzSize="small" (click)="createNotebook()" nz-tooltip nzTooltipTitle="新建文件夹">
+        <i nz-icon nzType="folder-add" nzTheme="outline"></i>
+      </button>
+    </div>
+
+    <div class="sidebar-list">
+      <div class="sidebar-item" [class.active]="isFilterActive('all')" (click)="selectSidebar('all')">
+        <i nz-icon nzType="file-text" nzTheme="outline"></i>
+        <span>全部笔记</span>
+        <span class="count">{{ notes.length }}</span>
+      </div>
+      <div class="sidebar-item" [class.active]="isFilterActive('favorite')" (click)="selectSidebar('favorite')">
+        <i nz-icon nzType="star" nzTheme="outline"></i>
+        <span>收藏</span>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="sidebar-item notebook-item" *ngFor="let nb of notebooks"
+           [class.active]="isNotebookSelected(nb.id)"
+           (click)="selectSidebar({ notebookId: nb.id })">
+        <i nz-icon nzType="folder" nzTheme="fill"></i>
+        <span class="notebook-name">{{ nb.name }}</span>
+        <span class="notebook-actions">
+          <button nz-button nzType="text" nzSize="small" (click)="renameNotebook(nb, $event)">
+            <i nz-icon nzType="edit" nzTheme="outline"></i>
+          </button>
+          <button nz-button nzType="text" nzSize="small" nzDanger (click)="deleteNotebook(nb, $event)">
+            <i nz-icon nzType="delete" nzTheme="outline"></i>
+          </button>
+        </span>
+      </div>
+    </div>
+
+    <!-- Tags filter -->
+    <div class="sidebar-tags" *ngIf="allTags.length > 0">
+      <div class="sidebar-divider"></div>
+      <div class="tags-header">标签</div>
+      <div class="tags-list">
+        <nz-tag *ngFor="let tag of allTags"
+                [class.active]="isFilterActive({ tag: tag })"
+                (click)="filterByTag(tag)">
+          {{ tag }}
+        </nz-tag>
+      </div>
+    </div>
+  </div>
+
+  <!-- Note List -->
+  <div class="note-list">
+    <div class="note-list-header">
+      <nz-input-group [nzPrefix]="searchIcon">
+        <input nz-input placeholder="搜索笔记..." [(ngModel)]="searchQuery" (ngModelChange)="onSearch()" />
+      </nz-input-group>
+      <ng-template #searchIcon><i nz-icon nzType="search"></i></ng-template>
+      <button nz-button nzType="primary" nzSize="small" (click)="createNote()">
+        <i nz-icon nzType="plus"></i> 新建
+      </button>
+    </div>
+
+    <div class="note-list-body">
+      <div *ngFor="let note of notes"
+           class="note-card"
+           [class.selected]="isSelected(note)"
+           (click)="selectNote(note)">
+        <div class="note-card-top">
+          <span class="note-title" [class.pinned]="note.isPinned">
+            <i nz-icon nzType="pushpin" nzTheme="fill" *ngIf="note.isPinned" class="pin-icon"></i>
+            {{ note.title }}
+          </span>
+          <span class="note-actions-mini">
+            <button nz-button nzType="text" nzSize="small" (click)="toggleFavorite(note, $event)">
+              <i nz-icon [nzType]="note.isFavorite ? 'star' : 'star'"
+                   [nzTheme]="note.isFavorite ? 'fill' : 'outline'"
+                   [class.favorite]="note.isFavorite"></i>
+            </button>
+            <button nz-button nzType="text" nzSize="small" nzDanger (click)="deleteNote(note, $event)">
+              <i nz-icon nzType="delete" nzTheme="outline"></i>
+            </button>
+          </span>
+        </div>
+        <div class="note-summary">{{ getNoteSummary(note) }}</div>
+        <div class="note-card-bottom">
+          <span class="note-time">{{ getRelativeTime(note.updatedAt) }}</span>
+          <span class="note-tags" *ngIf="note.tags?.length">
+            <nz-tag *ngFor="let t of note.tags" nzColor="blue" [nzMode]="'default'" class="mini-tag">{{ t }}</nz-tag>
+          </span>
+        </div>
+      </div>
+
+      <nz-empty *ngIf="notes.length === 0" nzNotFoundContent="暂无笔记"></nz-empty>
+    </div>
+  </div>
+
+  <!-- Editor -->
+  <div class="editor-panel" *ngIf="selectedNoteId; else noSelection">
+    <!-- Editor Toolbar -->
+    <div class="editor-toolbar">
+      <input class="title-input" [(ngModel)]="editTitle" (ngModelChange)="onTitleChange()" placeholder="笔记标题" />
+      <div class="toolbar-right">
+        <div class="view-switch">
+          <button nz-button nzType="text" nzSize="small" [class.active]="viewMode === 'edit'" (click)="setViewMode('edit')" nz-tooltip nzTooltipTitle="编辑">
+            <i nz-icon nzType="edit" nzTheme="outline"></i>
+          </button>
+          <button nz-button nzType="text" nzSize="small" [class.active]="viewMode === 'split'" (click)="setViewMode('split')" nz-tooltip nzTooltipTitle="分屏">
+            <i nz-icon nzType="column-width" nzTheme="outline"></i>
+          </button>
+          <button nz-button nzType="text" nzSize="small" [class.active]="viewMode === 'preview'" (click)="setViewMode('preview')" nz-tooltip nzTooltipTitle="预览">
+            <i nz-icon nzType="eye" nzTheme="outline"></i>
+          </button>
+        </div>
+        <button nz-button nzType="text" nzSize="small" (click)="togglePinCurrent()" nz-tooltip nzTooltipTitle="置顶">
+          <i nz-icon nzType="pushpin" [nzTheme]="currentNotePinned ? 'fill' : 'outline'"></i>
+        </button>
+        <label nz-button nzType="text" nzSize="small" nz-tooltip nzTooltipTitle="插入图片">
+          <i nz-icon nzType="picture" nzTheme="outline"></i>
+          <input type="file" accept="image/*" hidden (change)="onFileSelect($event)" />
+        </label>
+        <button nz-button nzType="text" nzSize="small" (click)="exportNote()" nz-tooltip nzTooltipTitle="导出 Markdown">
+          <i nz-icon nzType="download" nzTheme="outline"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Editor Body -->
+    <div class="editor-body" [class.mode-edit]="viewMode === 'edit'" [class.mode-preview]="viewMode === 'preview'" [class.mode-split]="viewMode === 'split'">
+      <textarea #editor
+                class="editor-textarea"
+                [(ngModel)]="editContent"
+                (ngModelChange)="onContentChange()"
+                (paste)="onPaste($event)"
+                placeholder="开始书写... 支持 Markdown 语法"
+                spellcheck="false"></textarea>
+      <div class="editor-preview markdown-body" [innerHTML]="previewHtml"></div>
+    </div>
+
+    <!-- Tags Bar -->
+    <div class="editor-tags">
+      <i nz-icon nzType="tag" nzTheme="outline" class="tag-icon"></i>
+      <nz-tag *ngFor="let tag of editTags" nzClosable (nzOnClose)="removeTag(tag)">{{ tag }}</nz-tag>
+      <input class="tag-input" [(ngModel)]="newTag" placeholder="+ 标签" (keydown.enter)="addTag()" />
+    </div>
+  </div>
+
+  <ng-template #noSelection>
+    <div class="no-selection">
+      <i nz-icon nzType="file-add" nzTheme="outline" class="no-sel-icon"></i>
+      <p>选择或新建一个笔记开始编辑</p>
+    </div>
+  </ng-template>
+</div>

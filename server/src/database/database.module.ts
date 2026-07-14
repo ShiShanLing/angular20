@@ -4,6 +4,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { User } from '../users/entities/user.entity';
 import { Record } from '../records/entities/record.entity';
 import { GameScore } from '../game-scores/entities/game-score.entity';
+import { Notebook } from '../notes/entities/notebook.entity';
+import { Note } from '../notes/entities/note.entity';
+import { NoteTag } from '../notes/entities/note-tag.entity';
 
 @Module({
   imports: [
@@ -13,7 +16,7 @@ import { GameScore } from '../game-scores/entities/game-score.entity';
       useFactory: (config: ConfigService) => ({
         type: 'better-sqlite3',
         database: config.get<string>('DB_PATH', '/var/lib/mydata/app.db'),
-        entities: [User, Record, GameScore],
+        entities: [User, Record, GameScore, Notebook, Note, NoteTag],
         synchronize: true, // 开发环境自动同步表结构
       }),
     }),

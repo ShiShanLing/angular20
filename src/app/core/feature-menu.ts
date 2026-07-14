@@ -41,6 +41,7 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
       { path: '/tools/calendar', label: '万年历', permission: 'tools.calendar' },
       { path: '/tools/text', label: '文本处理', permission: 'tools.text' },
       { path: '/tools/qrcode', label: '二维码', permission: 'tools.qrcode' },
+      { path: '/tools/notes', label: '记事本', permission: 'tools.notes' },
       { path: '/tools/dev', label: '开发助手', permission: 'tools.dev' },
       { path: '/practice', label: '知识刷题', permission: 'practice.view', activationCode: '999' },
       { path: '/practice-list', label: '列表刷题', permission: 'practice.view', activationCode: '999' },
