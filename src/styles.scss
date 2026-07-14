@@ -207,6 +207,27 @@ html, body {
     border-color: var(--border-color) !important;
     color: var(--text-primary) !important;
   }
+
+  .ant-picker-input > input {
+    color: var(--text-primary) !important;
+  }
+
+  .ant-picker-input > input::placeholder {
+    color: var(--text-tertiary) !important;
+  }
+
+  .ant-picker-suffix {
+    color: var(--text-tertiary);
+  }
+
+  .ant-picker-separator {
+    color: var(--text-tertiary);
+  }
+
+  .ant-picker-clear {
+    background: var(--bg-tertiary);
+    color: var(--text-tertiary);
+  }
   
   .ant-input::placeholder,
   .ant-input-number-input::placeholder {
@@ -450,11 +471,6 @@ html, body {
   .ant-picker-month-btn:hover,
   .ant-picker-decade-btn:hover {
     color: var(--accent-color);
-  }
-
-  .ant-picker-clear {
-    background: var(--bg-secondary);
-    color: var(--text-tertiary);
   }
 
   /* Range Picker */
