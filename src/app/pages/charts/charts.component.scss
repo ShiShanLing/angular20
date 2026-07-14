@@ -4,13 +4,13 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 20px;
-    h2 { margin: 0; font-size: 20px; color: #1a1a1a; }
+    h2 { margin: 0; font-size: 20px; color: var(--text-primary, #1a1a1a); }
     .theme-toggle {
       display: flex;
       align-items: center;
       gap: 8px;
       font-size: 14px;
-      color: #555;
+      color: var(--text-secondary, #555);
     }
   }
 
@@ -19,7 +19,7 @@
     transition: background 0.3s;
     &.dark { background: #1f1f1f; }
     .chart-desc {
-      color: #888;
+      color: var(--text-tertiary, #888);
       font-size: 13px;
       margin-bottom: 12px;
     }

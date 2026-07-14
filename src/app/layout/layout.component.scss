@@ -107,9 +107,9 @@
     transition: all 0.2s;
 
     &:hover {
-      color: #1677ff;
-      border-color: #91caff;
-      background: #f0f7ff;
+      color: var(--accent-color, #1677ff);
+      border-color: var(--accent-hover, #91caff);
+      background: var(--bg-tertiary, #f0f7ff);
     }
   }
 
@@ -146,9 +146,9 @@
     white-space: nowrap;
 
     &:hover {
-      color: #ff4d4f;
-      border-color: #ffccc7;
-      background: #fff1f0;
+      color: var(--error-color, #ff4d4f);
+      border-color: var(--error-border, #ffccc7);
+      background: var(--error-bg, #fff1f0);
     }
 
     .logout-text {
@@ -168,9 +168,9 @@
     cursor: pointer;
 
     &:hover {
-      background: #fff;
-      color: #1890ff;
-      border-color: #91d5ff;
+      background: var(--card-bg, #fff);
+      color: var(--accent-color, #1890ff);
+      border-color: var(--accent-hover, #91d5ff);
     }
   }
 }
@@ -256,14 +256,14 @@
     color: var(--text-primary, #262626);
 
     &:focus {
-      border-color: #4096ff;
+      border-color: var(--accent-color, #4096ff);
       box-shadow: 0 0 0 2px rgba(5, 145, 255, 0.1);
     }
   }
 
   button {
-    border: 1px solid #1677ff;
-    background: #1677ff;
+    border: 1px solid var(--accent-color, #1677ff);
+    background: var(--accent-color, #1677ff);
     border-radius: 6px;
     color: #fff;
     font-size: 12px;
@@ -272,8 +272,8 @@
     cursor: pointer;
 
     &:hover {
-      background: #4096ff;
-      border-color: #4096ff;
+      background: var(--accent-hover, #4096ff);
+      border-color: var(--accent-hover, #4096ff);
     }
   }
 }
@@ -284,11 +284,11 @@
   line-height: 18px;
 
   &.success {
-    color: #389e0d;
+    color: var(--success-color, #389e0d);
   }
 
   &.error {
-    color: #cf1322;
+    color: var(--error-color, #cf1322);
   }
 }
 
@@ -327,9 +327,9 @@
   cursor: pointer;
 
   &:hover {
-    color: #1677ff;
-    border-color: #91caff;
-    background: #f0f7ff;
+    color: var(--accent-color, #1677ff);
+    border-color: var(--accent-hover, #91caff);
+    background: var(--bg-tertiary, #f0f7ff);
   }
 }
 

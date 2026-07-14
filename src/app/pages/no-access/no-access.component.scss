@@ -10,29 +10,29 @@
   border-radius: 12px;
   border: 1px solid #f0f0f0;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  background: #fff;
+  background: var(--card-bg, #fff);
   text-align: center;
 
   h1 {
     margin: 0 0 10px;
-    color: #262626;
+    color: var(--text-primary, #262626);
     font-size: 24px;
   }
 
   p {
     margin: 6px 0;
-    color: #595959;
+    color: var(--text-secondary, #595959);
   }
 }
 
 .tips {
-  color: #8c8c8c;
+  color: var(--text-tertiary, #8c8c8c);
 }
 
 .back-link {
   margin-top: 16px;
   display: inline-block;
-  color: #1677ff;
+  color: var(--accent-color, #1677ff);
   text-decoration: none;
 }
 

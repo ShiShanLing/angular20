@@ -375,6 +375,146 @@ html, body {
     color: var(--text-tertiary);
     border-top: 1px solid var(--border-light);
   }
+
+  /* Badge & Tag text */
+  .ant-badge-status-text {
+    color: var(--text-secondary);
+  }
+
+  /* Pagination */
+  .ant-pagination-item a {
+    color: var(--text-primary);
+  }
+
+  .ant-pagination-item-active a {
+    color: var(--accent-color);
+  }
+
+  /* Popover */
+  .ant-popover-inner {
+    background: var(--bg-secondary);
+  }
+
+  .ant-popover-title {
+    color: var(--text-primary);
+  }
+
+  .ant-popover-inner-content {
+    color: var(--text-secondary);
+  }
+
+  /* List */
+  .ant-list-item {
+    border-color: var(--border-light);
+    color: var(--text-primary);
+  }
+
+  .ant-list-item-meta-title {
+    color: var(--text-primary);
+  }
+
+  .ant-list-item-meta-description {
+    color: var(--text-secondary);
+  }
+
+  /* Steps */
+  .ant-steps-item-title {
+    color: var(--text-primary);
+  }
+
+  .ant-steps-item-description {
+    color: var(--text-tertiary);
+  }
+
+  /* Drawer */
+  .ant-drawer-content {
+    background: var(--bg-secondary);
+  }
+
+  .ant-drawer-header {
+    border-color: var(--border-light);
+  }
+
+  .ant-drawer-title {
+    color: var(--text-primary);
+  }
+
+  .ant-drawer-body {
+    color: var(--text-primary);
+  }
+
+  /* Spin */
+  .ant-spin-text {
+    color: var(--text-secondary);
+  }
+
+  /* Breadcrumb */
+  .ant-breadcrumb {
+    color: var(--text-secondary);
+  }
+
+  .ant-breadcrumb a {
+    color: var(--accent-color);
+  }
+
+  /* Tree */
+  .ant-tree {
+    color: var(--text-primary);
+    background: transparent;
+  }
+
+  .ant-tree-node-content-wrapper:hover {
+    background: var(--bg-tertiary);
+  }
+
+  /* Select dropdown */
+  .ant-select-dropdown {
+    background: var(--bg-secondary);
+  }
+
+  .ant-select-item {
+    color: var(--text-primary);
+  }
+
+  .ant-select-item-option-active {
+    background: var(--bg-tertiary);
+  }
+
+  /* Cascader */
+  .ant-cascader-menu {
+    border-color: var(--border-light);
+  }
+
+  .ant-cascader-menu-item {
+    color: var(--text-primary);
+  }
+
+  .ant-cascader-menu-item:hover {
+    background: var(--bg-tertiary);
+  }
+
+  /* Common page elements dark mode */
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+  }
+
+  p, span, div, td, th, li, label {
+    color: inherit;
+  }
+
+  code {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-color: var(--border-light);
+  }
+
+  /* Card-based demo pages */
+  .chart-card,
+  .demo-card {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+  }
 }
 
 /* ========== Theme Toggle Button ========== */

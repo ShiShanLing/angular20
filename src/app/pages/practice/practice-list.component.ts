@@ -235,7 +235,7 @@ type FilterValue = PracticeFilterCategory;
     }
 
     .question-card.expanded {
-      border-color: #1890ff;
+      border-color: var(--accent-color, #1890ff);
     }
 
     .question-header {
