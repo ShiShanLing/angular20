@@ -44,7 +44,8 @@
             "allowedCommonJsDependencies": [
               "echarts-gl",
               "claygl",
-              "echarts-liquidfill"
+              "echarts-liquidfill",
+              "quill-delta"
             ]
           },
           "configurations": {

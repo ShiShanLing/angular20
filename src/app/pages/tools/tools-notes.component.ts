@@ -127,10 +127,29 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
 
   insertTable(): void {
     if (!this.quillInstance) return;
-    const table = this.quillInstance.getModule('table');
-    if (table) {
-      table.insertTable(3, 3);
-    }
+    this.modal.confirm({
+      nzTitle: '插入表格',
+      nzContent: `
+        <div style="display:flex;gap:12px;margin-top:8px;">
+          <div style="flex:1;">
+            <label style="display:block;margin-bottom:4px;font-size:13px;">行数</label>
+            <input id="table-rows" class="ant-input" type="number" value="3" min="1" max="20" />
+          </div>
+          <div style="flex:1;">
+            <label style="display:block;margin-bottom:4px;font-size:13px;">列数</label>
+            <input id="table-cols" class="ant-input" type="number" value="3" min="1" max="10" />
+          </div>
+        </div>
+      `,
+      nzOnOk: () => {
+        const rows = parseInt((document.getElementById('table-rows') as HTMLInputElement)?.value || '3');
+        const cols = parseInt((document.getElementById('table-cols') as HTMLInputElement)?.value || '3');
+        const table = this.quillInstance!.getModule('table');
+        if (table) {
+          table.insertTable(rows, cols);
+        }
+      },
+    });
   }
 
   // === Sidebar ===
