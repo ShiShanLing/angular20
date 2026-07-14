@@ -50,7 +50,7 @@
             <nz-statistic nzTitle="目标金额" [nzValue]="(result.target | number:'1.2-2')!"></nz-statistic>
           </nz-col>
           <nz-col [nzSpan]="8">
-            <nz-statistic nzTitle="期满资金缺口" [nzValue]="((result.gap > 0 ? result.gap : 0) | number:'1.2-2')!" [nzValueStyle]="{ color: result.gap > 0 ? '#ff4d4f' : '#3f8600' }"></nz-statistic>
+            <nz-statistic nzTitle="期满资金缺口" [nzValue]="((result.gap > 0 ? result.gap : 0) | number:'1.2-2')!" [nzValueStyle]="{ color: result.gap > 0 ? 'var(--error-color)' : 'var(--success-color)' }"></nz-statistic>
           </nz-col>
         </nz-row>
 

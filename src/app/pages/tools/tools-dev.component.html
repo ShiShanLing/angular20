@@ -6,8 +6,8 @@
       <nz-tab nzTitle="时间戳转换">
         <div style="margin-bottom: 24px;">
           <h3 style="display: inline-block; margin-right: 16px;">当前时间戳</h3>
-          <span style="font-size: 20px; font-weight: bold; color: #1890ff;">{{ currentTimestamp }}</span>
-          <span style="font-size: 20px; font-weight: bold; color: #1890ff; margin-left:16px;">{{ currentTimestamp | date:'yyyy-MM-dd HH:mm:ss' }}</span>
+          <span style="font-size: 20px; font-weight: bold; color: var(--accent-color);">{{ currentTimestamp }}</span>
+          <span style="font-size: 20px; font-weight: bold; color: var(--accent-color); margin-left:16px;">{{ currentTimestamp | date:'yyyy-MM-dd HH:mm:ss' }}</span>
         </div>
 
         <nz-row [nzGutter]="16" style="margin-bottom: 16px;">
@@ -62,7 +62,7 @@
              <div style="margin-bottom: 8px;">
                <button nz-button (click)="copy(jsonOutput)"><nz-icon nzType="copy" /> 复制</button>
              </div>
-             <textarea nz-input [ngModel]="jsonOutput" readonly [nzAutosize]="{ minRows: 15, maxRows: 25 }" placeholder="输出结果..." style="background-color: #fafafa;"></textarea>
+             <textarea nz-input [ngModel]="jsonOutput" readonly [nzAutosize]="{ minRows: 15, maxRows: 25 }" placeholder="输出结果..." style="background-color: var(--bg-tertiary);"></textarea>
           </nz-col>
         </nz-row>
       </nz-tab>
@@ -81,7 +81,7 @@
           </nz-col>
           <nz-col [nzSpan]="24">
             <label style="display: block; margin-bottom: 8px; font-weight: bold;">结果 <a (click)="copy(base64Output)" style="margin-left: 8px; font-weight: normal;"><nz-icon nzType="copy"/> 复制</a></label>
-            <textarea nz-input [ngModel]="base64Output" readonly [nzAutosize]="{ minRows: 5, maxRows: 10 }" style="background-color: #fafafa;"></textarea>
+            <textarea nz-input [ngModel]="base64Output" readonly [nzAutosize]="{ minRows: 5, maxRows: 10 }" style="background-color: var(--bg-tertiary);"></textarea>
           </nz-col>
         </nz-row>
       </nz-tab>
@@ -100,7 +100,7 @@
           </nz-col>
           <nz-col [nzSpan]="24">
             <label style="display: block; margin-bottom: 8px; font-weight: bold;">结果 <a (click)="copy(urlOutput)" style="margin-left: 8px; font-weight: normal;"><nz-icon nzType="copy"/> 复制</a></label>
-            <textarea nz-input [ngModel]="urlOutput" readonly [nzAutosize]="{ minRows: 5, maxRows: 10 }" style="background-color: #fafafa;"></textarea>
+            <textarea nz-input [ngModel]="urlOutput" readonly [nzAutosize]="{ minRows: 5, maxRows: 10 }" style="background-color: var(--bg-tertiary);"></textarea>
           </nz-col>
         </nz-row>
       </nz-tab>

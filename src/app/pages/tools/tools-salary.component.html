@@ -75,9 +75,9 @@
 
     <nz-col [nzSpan]="24" [nzMd]="14">
       <nz-card nzTitle="计算结果" *ngIf="result">
-        <div style="text-align: center; margin-bottom: 24px;">
-          <h2 style="color: #666; font-weight: normal; margin-bottom: 8px;">本月预期到手薪资</h2>
-          <span style="font-size: 48px; color: #52c41a; font-weight: bold;">¥{{ result.netPay | number:'1.2-2' }}</span>
+        <div class="salary-hero">
+          <h2>本月预期到手薪资</h2>
+          <span class="big-amount">¥{{ result.netPay | number:'1.2-2' }}</span>
           <div style="margin-top: 8px;">
             <button nz-button nzType="link" (click)="showModal()">查看年度每月详情 (累计预扣预缴) ></button>
           </div>
@@ -98,7 +98,7 @@
             <nz-statistic nzTitle="公积金" [nzValue]="(result.housing | number:'1.2-2')!"></nz-statistic>
           </nz-col>
           <nz-col [nzSpan]="8">
-            <nz-statistic nzTitle="个人扣款合计" [nzValue]="(result.deductions | number:'1.2-2')!" [nzValueStyle]="{ color: '#ff4d4f' }"></nz-statistic>
+            <nz-statistic nzTitle="个人扣款合计" [nzValue]="(result.deductions | number:'1.2-2')!" [nzValueStyle]="{ color: 'var(--error-color)' }"></nz-statistic>
           </nz-col>
         </nz-row>
 
@@ -108,7 +108,7 @@
             <nz-statistic nzTitle="计税金额" [nzValue]="(result.taxable | number:'1.2-2')!"></nz-statistic>
           </nz-col>
           <nz-col [nzSpan]="12">
-            <nz-statistic nzTitle="应交个税" [nzValue]="(result.tax | number:'1.2-2')!" [nzValueStyle]="{ color: '#ff4d4f' }"></nz-statistic>
+            <nz-statistic nzTitle="应交个税" [nzValue]="(result.tax | number:'1.2-2')!" [nzValueStyle]="{ color: 'var(--error-color)' }"></nz-statistic>
           </nz-col>
         </nz-row>
 
@@ -118,18 +118,18 @@
             <nz-statistic nzTitle="年薪总额 (税前)" [nzValue]="(result.annualGross | number:'1.2-2')!"></nz-statistic>
           </nz-col>
           <nz-col [nzSpan]="12">
-            <nz-statistic nzTitle="年到手收入 (税后)" [nzValue]="(result.annualNetPay | number:'1.2-2')!" [nzValueStyle]="{ color: '#52c41a' }"></nz-statistic>
+            <nz-statistic nzTitle="年到手收入 (税后)" [nzValue]="(result.annualNetPay | number:'1.2-2')!" [nzValueStyle]="{ color: 'var(--success-color)' }"></nz-statistic>
           </nz-col>
           <nz-col [nzSpan]="12">
-            <nz-statistic nzTitle="年固定支出总计" [nzValue]="(result.annualExpenses | number:'1.2-2')!" [nzValueStyle]="{ color: '#ff4d4f' }"></nz-statistic>
+            <nz-statistic nzTitle="年固定支出总计" [nzValue]="(result.annualExpenses | number:'1.2-2')!" [nzValueStyle]="{ color: 'var(--error-color)' }"></nz-statistic>
           </nz-col>
           <nz-col [nzSpan]="12">
-            <nz-statistic nzTitle="预计年度结余" [nzValue]="(result.annualSavings | number:'1.2-2')!" [nzValueStyle]="{ color: '#1890ff', 'font-weight': 'bold' }"></nz-statistic>
+            <nz-statistic nzTitle="预计年度结余" [nzValue]="(result.annualSavings | number:'1.2-2')!" [nzValueStyle]="{ color: 'var(--accent-color)', 'font-weight': 'bold' }"></nz-statistic>
           </nz-col>
         </nz-row>
         
         <div style="margin-top: 24px;">
-          <p style="color: #999; font-size: 12px;">注：个税采用简易单月预扣预缴公式计算，实际情况可能因累计预扣预缴等政策存在细微差异。</p>
+          <p class="hint-text">注：个税采用简易单月预扣预缴公式计算，实际情况可能因累计预扣预缴等政策存在细微差异。</p>
         </div>
       </nz-card>
     </nz-col>
@@ -144,7 +144,7 @@
   nzWidth="800px"
 >
   <ng-container *nzModalContent>
-    <p style="margin-bottom: 16px; color: #666;">
+    <p class="modal-desc">
       说明：根据中国个税政策，工资采用“累计预扣预缴”算法。由于起征点和税率区间是按年度累计的，通常在月薪较高时，下半年的个税会因进入更高税率档位而增加，导致到手薪资逐渐减少。
     </p>
     <nz-table #basicTable [nzData]="monthlyProjection" [nzFrontPagination]="false" nzSize="small">
@@ -162,8 +162,8 @@
           <td>{{ data.month }}</td>
           <td>¥{{ data.gross | number:'1.0-0' }}</td>
           <td>¥{{ data.deductions | number:'1.2-2' }}</td>
-          <td [style.color]="data.tax > 0 ? '#ff4d4f' : 'inherit'">¥{{ data.tax | number:'1.2-2' }}</td>
-          <td style="font-weight: bold; color: #52c41a;">¥{{ data.netPay | number:'1.2-2' }}</td>
+          <td [class.tax-cell]="data.tax > 0">¥{{ data.tax | number:'1.2-2' }}</td>
+          <td class="netpay-cell">¥{{ data.netPay | number:'1.2-2' }}</td>
         </tr>
       </tbody>
     </nz-table>

@@ -61,9 +61,9 @@
     overflow-x: auto;
     overflow-y: auto;
     max-height: min(70vh, 720px);
-    border: 1px solid #94a3b8;
+    border: 1px solid var(--border-color, #94a3b8);
     border-radius: 2px;
-    background: #fff;
+    background: var(--card-bg, #fff);
   }
 
   .excel-table {

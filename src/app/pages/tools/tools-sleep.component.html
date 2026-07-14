@@ -38,7 +38,7 @@
           <nz-card nzTitle="近期统计（最近 {{ stats?.count || 0 }} 天）" *ngIf="stats">
             <nz-row [nzGutter]="[16, 16]">
                <nz-col [nzSpan]="8">
-                <nz-statistic nzTitle="日均总睡眠" [nzValue]="((stats.avgSleep | number:'1.1-1') || '0') + ' h'" [nzValueStyle]="{ color: stats.avgSleep >= 7 ? '#52c41a' : '#faad14' }"></nz-statistic>
+                <nz-statistic nzTitle="日均总睡眠" [nzValue]="((stats.avgSleep | number:'1.1-1') || '0') + ' h'" [nzValueStyle]="{ color: stats.avgSleep >= 7 ? 'var(--success-color)' : 'var(--warning-color)' }"></nz-statistic>
               </nz-col>
               <nz-col [nzSpan]="8">
                 <nz-statistic nzTitle="最早入睡" [nzValue]="stats.earliestSleep"></nz-statistic>
@@ -67,8 +67,8 @@
                 <td>{{ data.dateStr }}</td>
                 <td>{{ data.sleepTime | date:'MM-dd HH:mm' }} ~ {{ data.wakeTime | date:'HH:mm' }}</td>
                 <td>{{ data.napDuration ? data.napDuration + 'h' : '-' }}</td>
-                <td><span style="font-weight: bold; color: #1890ff;">{{ data.totalSleep | number:'1.1-1' }}h</span></td>
-                <td><a (click)="deleteRecord(data.id)" style="color: #ff4d4f;">删除</a></td>
+                <td><span style="font-weight: bold; color: var(--accent-color);">{{ data.totalSleep | number:'1.1-1' }}h</span></td>
+                <td><a (click)="deleteRecord(data.id)" style="color: var(--error-color);">删除</a></td>
               </tr>
             </tbody>
           </nz-table>
