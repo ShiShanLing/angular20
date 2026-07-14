@@ -302,6 +302,10 @@ html, body {
   .ant-divider {
     border-color: var(--border-light);
   }
+
+  .ant-divider-inner-text {
+    color: var(--text-primary);
+  }
   
   /* Descriptions */
   .ant-descriptions-item-label {
