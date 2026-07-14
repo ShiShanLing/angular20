@@ -198,6 +198,31 @@ html, body {
   .ant-alert-description {
     color: var(--text-secondary);
   }
+
+  .ant-alert-warning {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+  }
+
+  .ant-alert-success {
+    background: var(--success-bg, #f6ffed);
+    border-color: var(--success-border, #b7eb8f);
+  }
+
+  .ant-alert-error {
+    background: var(--error-bg, #fff2f0);
+    border-color: var(--error-border, #ffccc7);
+  }
+
+  .ant-alert-warning > .ant-alert-icon > .anticon-exclamation-circle,
+  .ant-alert-warning > .ant-alert-icon > .anticon-warning {
+    color: #faad14;
+  }
+
+  /* Form item extra text */
+  .ant-form-item-extra {
+    color: var(--text-tertiary);
+  }
   
   .ant-input,
   .ant-input-number,
