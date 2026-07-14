@@ -43,11 +43,6 @@ export const routes: Routes = [
         data: { practiceScope: 'angular-learning' }
       },
       {
-        path: 'practice-list',
-        loadComponent: () => import('./pages/practice/practice-list.component').then(m => m.PracticeListComponent),
-        data: { practiceScope: 'practice' }
-      },
-      {
         path: 'ios-learning-list',
         loadComponent: () => import('./pages/practice/practice-list.component').then(m => m.PracticeListComponent),
         data: { practiceScope: 'ios-learning' }
