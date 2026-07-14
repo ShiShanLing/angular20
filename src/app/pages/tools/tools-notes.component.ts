@@ -1,9 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Subject, debounceTime } from 'rxjs';
-import { marked } from 'marked';
 
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -14,11 +12,11 @@ import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
-import { NzBadgeModule } from 'ng-zorro-antd/badge';
+import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzColorPickerModule } from 'ng-zorro-antd/color-picker';
 
 import { NoteService, Notebook, Note } from '../../services/note.service';
 
-type ViewMode = 'edit' | 'preview' | 'split';
 type SidebarFilter = 'all' | 'favorite' | { notebookId: number } | { tag: string };
 
 @Component({
@@ -28,13 +26,13 @@ type SidebarFilter = 'all' | 'favorite' | { notebookId: number } | { tag: string
     CommonModule, FormsModule,
     NzButtonModule, NzIconModule, NzInputModule, NzMessageModule,
     NzModalModule, NzTagModule, NzToolTipModule, NzPopconfirmModule,
-    NzEmptyModule, NzBadgeModule,
+    NzEmptyModule, NzSelectModule, NzColorPickerModule,
   ],
   templateUrl: './tools-notes.component.html',
   styleUrl: './tools-notes.component.scss',
 })
 export class ToolsNotesComponent implements OnInit, OnDestroy {
-  @ViewChild('editor') editorRef?: ElementRef<HTMLTextAreaElement>;
+  @ViewChild('editor') editorRef?: ElementRef<HTMLDivElement>;
 
   // Sidebar
   notebooks: Notebook[] = [];
@@ -49,17 +47,32 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
 
   // Editor
   editTitle = '';
-  editContent = '';
   editTags: string[] = [];
   newTag = '';
-  viewMode: ViewMode = 'split';
-  previewHtml: SafeHtml = '';
   isDirty = false;
   private autoSaveSubject = new Subject<void>();
 
+  // Toolbar state
+  textColor = '#262626';
+
+  fontSizeOptions = [
+    { label: '小', value: '2' },
+    { label: '正常', value: '3' },
+    { label: '大', value: '4' },
+    { label: '特大', value: '5' },
+    { label: '超大', value: '6' },
+  ];
+  currentFontSize = '3';
+
+  headingOptions = [
+    { label: '正文', value: 'p' },
+    { label: '标题 1', value: 'h1' },
+    { label: '标题 2', value: 'h2' },
+    { label: '标题 3', value: 'h3' },
+  ];
+
   constructor(
     private noteService: NoteService,
-    private sanitizer: DomSanitizer,
     private msg: NzMessageService,
     private modal: NzModalService,
   ) {}
@@ -83,6 +96,103 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
     if (this.isDirty && this.selectedNoteId) {
       this.saveCurrentNote();
     }
+  }
+
+  // === Toolbar Commands ===
+
+  execCommand(cmd: string, value?: string): void {
+    this.editorRef?.nativeElement.focus();
+    document.execCommand(cmd, false, value);
+    this.onContentChange();
+  }
+
+  onHeadingChange(tag: string): void {
+    this.editorRef?.nativeElement.focus();
+    if (tag === 'p') {
+      document.execCommand('formatBlock', false, 'p');
+    } else {
+      document.execCommand('formatBlock', false, tag);
+    }
+    this.onContentChange();
+  }
+
+  onFontSizeChange(size: string): void {
+    this.currentFontSize = size;
+    this.editorRef?.nativeElement.focus();
+    document.execCommand('fontSize', false, size);
+    this.onContentChange();
+  }
+
+  onTextColorChange(color: string): void {
+    this.textColor = color;
+    this.editorRef?.nativeElement.focus();
+    document.execCommand('foreColor', false, color);
+    this.onContentChange();
+  }
+
+  toggleBold(): void { this.execCommand('bold'); }
+  toggleItalic(): void { this.execCommand('italic'); }
+  toggleUnderline(): void { this.execCommand('underline'); }
+  toggleStrike(): void { this.execCommand('strikeThrough'); }
+
+  insertList(type: string): void {
+    this.editorRef?.nativeElement.focus();
+    document.execCommand(type === 'ol' ? 'insertOrderedList' : 'insertUnorderedList');
+    this.onContentChange();
+  }
+
+  insertChecklist(): void {
+    this.editorRef?.nativeElement.focus();
+    const html = '<div style="display:flex;align-items:center;gap:6px;margin:2px 0;"><input type="checkbox" style="width:16px;height:16px;cursor:pointer;" onclick="this.parentElement?.querySelector(\'span\')?.classList?.toggle(\'checked\'); if(this.checked){this.parentElement.querySelector(\'span\')?.style?.setProperty(\'text-decoration\',\'line-through\');}else{this.parentElement.querySelector(\'span\')?.style?.removeProperty(\'text-decoration\');}" /><span style="flex:1;" contenteditable="true">待办事项</span></div>';
+    document.execCommand('insertHTML', false, html);
+    this.onContentChange();
+  }
+
+  insertTable(): void {
+    this.modal.confirm({
+      nzTitle: '插入表格',
+      nzContent: `
+        <div style="display:flex;gap:12px;margin-top:8px;">
+          <div style="flex:1;">
+            <label style="display:block;margin-bottom:4px;font-size:13px;">行数</label>
+            <input id="table-rows" class="ant-input" type="number" value="3" min="1" max="20" />
+          </div>
+          <div style="flex:1;">
+            <label style="display:block;margin-bottom:4px;font-size:13px;">列数</label>
+            <input id="table-cols" class="ant-input" type="number" value="3" min="1" max="10" />
+          </div>
+        </div>
+      `,
+      nzOnOk: () => {
+        const rows = parseInt((document.getElementById('table-rows') as HTMLInputElement)?.value || '3');
+        const cols = parseInt((document.getElementById('table-cols') as HTMLInputElement)?.value || '3');
+        this.doInsertTable(rows, cols);
+      },
+    });
+  }
+
+  private doInsertTable(rows: number, cols: number): void {
+    this.editorRef?.nativeElement.focus();
+    let html = '<table style="border-collapse:collapse;width:100%;margin:8px 0;">';
+    for (let r = 0; r < rows; r++) {
+      html += '<tr>';
+      for (let c = 0; c < cols; c++) {
+        const tag = r === 0 ? 'th' : 'td';
+        const style = 'border:1px solid var(--border-color, #d9d9d9);padding:6px 10px;min-width:60px;';
+        const bgStyle = r === 0 ? 'background:var(--bg-tertiary, #fafafa);font-weight:600;' : '';
+        html += `<${tag} style="${style}${bgStyle}">${r === 0 ? '表头' : ''}</${tag}>`;
+      }
+      html += '</tr>';
+    }
+    html += '</table><p><br></p>';
+    document.execCommand('insertHTML', false, html);
+    this.onContentChange();
+  }
+
+  insertDivider(): void {
+    this.editorRef?.nativeElement.focus();
+    document.execCommand('insertHTML', false, '<hr style="border:none;border-top:1px solid var(--border-light, #e8e8e8);margin:12px 0;" /><p><br></p>');
+    this.onContentChange();
   }
 
   // === Sidebar ===
@@ -191,10 +301,15 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
     }
     this.selectedNoteId = note.id;
     this.editTitle = note.title;
-    this.editContent = note.content;
     this.editTags = [...(note.tags || [])];
     this.isDirty = false;
-    this.updatePreview();
+
+    // Set editor content after view updates
+    setTimeout(() => {
+      if (this.editorRef?.nativeElement) {
+        this.editorRef.nativeElement.innerHTML = note.content || '';
+      }
+    }, 0);
   }
 
   isSelected(note: Note): boolean {
@@ -223,7 +338,6 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
           if (this.selectedNoteId === note.id) {
             this.selectedNoteId = null;
             this.editTitle = '';
-            this.editContent = '';
             this.editTags = [];
           }
           this.loadNotes();
@@ -248,7 +362,10 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
   }
 
   getNoteSummary(note: Note): string {
-    const text = note.content.replace(/[#*`>\-\[\]!()]/g, '').trim();
+    // Strip HTML tags for summary
+    const div = document.createElement('div');
+    div.innerHTML = note.content || '';
+    const text = div.textContent?.trim() || '';
     return text.substring(0, 60) || '暂无内容';
   }
 
@@ -270,7 +387,6 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
 
   onContentChange(): void {
     this.isDirty = true;
-    this.updatePreview();
     this.autoSaveSubject.next();
   }
 
@@ -279,29 +395,34 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
     this.autoSaveSubject.next();
   }
 
+  private getEditorContent(): string {
+    return this.editorRef?.nativeElement?.innerHTML || '';
+  }
+
   saveCurrentNote(): void {
     if (!this.selectedNoteId || !this.isDirty) return;
     this.noteService.updateNote(this.selectedNoteId, {
       title: this.editTitle,
-      content: this.editContent,
+      content: this.getEditorContent(),
       tags: this.editTags,
     }).subscribe(() => {
       this.isDirty = false;
-      // Refresh the list to update title/summary
       this.loadNotes();
     });
   }
 
-  setViewMode(mode: ViewMode): void {
-    this.viewMode = mode;
-    if (mode !== 'edit') {
-      this.updatePreview();
-    }
+  get currentNotePinned(): boolean {
+    const note = this.notes.find(n => n.id === this.selectedNoteId);
+    return note?.isPinned || false;
   }
 
-  private updatePreview(): void {
-    const html = marked.parse(this.editContent || '') as string;
-    this.previewHtml = this.sanitizer.bypassSecurityTrustHtml(html);
+  togglePinCurrent(): void {
+    if (!this.selectedNoteId) return;
+    const note = this.notes.find(n => n.id === this.selectedNoteId);
+    if (!note) return;
+    this.noteService.updateNote(note.id, { isPinned: !note.isPinned }).subscribe(updated => {
+      note.isPinned = updated.isPinned;
+    });
   }
 
   // === Tags ===
@@ -335,46 +456,24 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
 
   // === Export ===
 
-  get currentNotePinned(): boolean {
-    const note = this.notes.find(n => n.id === this.selectedNoteId);
-    return note?.isPinned || false;
-  }
-
-  togglePinCurrent(): void {
-    if (!this.selectedNoteId) return;
-    const note = this.notes.find(n => n.id === this.selectedNoteId);
-    if (!note) return;
-    this.noteService.updateNote(note.id, { isPinned: !note.isPinned }).subscribe(updated => {
-      note.isPinned = updated.isPinned;
-    });
-  }
-
   exportNote(): void {
     if (!this.selectedNoteId) return;
-    this.noteService.exportNote(this.selectedNoteId).subscribe(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = (this.editTitle || 'note') + '.md';
-      a.click();
-      URL.revokeObjectURL(url);
-    });
+    const content = this.getEditorContent();
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${this.editTitle}</title>
+<style>body{font-family:sans-serif;max-width:800px;margin:40px auto;padding:0 20px;line-height:1.7;}
+table{border-collapse:collapse;width:100%;}th,td{border:1px solid #d9d9d9;padding:6px 10px;}
+th{background:#fafafa;font-weight:600;}</style></head><body>
+<h1>${this.editTitle}</h1>${content}</body></html>`;
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (this.editTitle || 'note') + '.html';
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   // === Image Upload ===
-
-  onPaste(event: ClipboardEvent): void {
-    const items = event.clipboardData?.items;
-    if (!items) return;
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].type.startsWith('image/')) {
-        event.preventDefault();
-        const file = items[i].getAsFile();
-        if (file) this.uploadAndInsert(file);
-        return;
-      }
-    }
-  }
 
   onFileSelect(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -385,16 +484,10 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
 
   private uploadAndInsert(file: File): void {
     this.noteService.uploadImage(file).subscribe(res => {
-      const md = `![${file.name}](${res.url})`;
-      const textarea = this.editorRef?.nativeElement;
-      if (textarea) {
-        const start = textarea.selectionStart;
-        this.editContent = this.editContent.substring(0, start) + md + this.editContent.substring(textarea.selectionEnd);
-        this.onContentChange();
-      } else {
-        this.editContent += '\n' + md;
-        this.onContentChange();
-      }
+      const img = `<img src="${res.url}" alt="${file.name}" style="max-width:100%;border-radius:4px;margin:4px 0;" />`;
+      this.editorRef?.nativeElement.focus();
+      document.execCommand('insertHTML', false, img);
+      this.onContentChange();
     });
   }
 }
