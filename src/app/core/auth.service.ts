@@ -80,7 +80,6 @@ export class AuthService {
       return new Observable<boolean>((sub) => { sub.next(false); sub.complete(); });
     }
     return this.http.get('/api/auth/profile').pipe(
-      tap(() => {}),
       map(() => true),
       catchError(() => {
         this.logout();

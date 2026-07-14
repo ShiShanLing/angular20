@@ -62,7 +62,7 @@ export class ToolsDevComponent implements OnInit, OnDestroy {
   private timer: any;
 
   constructor(private msg: NzMessageService, private datePipe: DatePipe) {}
-  //什么情况会有家属的补贴金.是家人没有劳动能力的情况吗.
+  
   ngOnInit(): void {
     this.timer = setInterval(() => {
       this.currentTimestamp = Date.now();

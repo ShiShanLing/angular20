@@ -275,10 +275,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
       }
     }
   }
-  /*
-    @escaping 表示闭包可能在函数返回后才执行，比如异步网络回调、DispatchQueue.async、保存到属性。非 escaping 闭包默认只在函数调用期间执行完。escaping 闭包需要显式写 self，是为了提醒可能延长对象生命周期并产生循环引用。 
-    
-  */
+
   private collectLeafPaths(items: MenuItem[]): string[] {
     const paths: string[] = [];
     for (const item of items) {
