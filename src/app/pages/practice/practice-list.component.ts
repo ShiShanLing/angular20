@@ -387,7 +387,8 @@ export class PracticeListComponent implements OnInit, OnDestroy {
   /** 分类筛选选项 */
   readonly filterCategories: FilterValue[] = ['all', ...PRACTICE_CATEGORY_LIST];
 
-  /** storage scope（与 practice/ios-learning/angular-learning 对应） */
+  /** storage scope（与 practice/ios-learning/angular-learning 对应）
+   *  已废弃：现在合并加载所有题库，保留字段仅为类型兼容 */
   private scope: PracticeStorageScope = 'practice';
 
   /** 筛选后的题目列表 */
@@ -416,16 +417,26 @@ export class PracticeListComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit() {
-    this.scope = (this.route.snapshot.data['practiceScope'] as PracticeStorageScope) || 'practice';
-    this.allItems.set(this.storage.load(this.scope));
+    // 合并所有题库（practice + ios-learning + angular-learning）
+    const allScopes: PracticeStorageScope[] = ['practice', 'ios-learning', 'angular-learning'];
+    const merged: PracticeItem[] = [];
+    const seenIds = new Set<string>();
+    for (const scope of allScopes) {
+      const items = this.storage.load(scope);
+      for (const item of items) {
+        if (!seenIds.has(item.id)) {
+          seenIds.add(item.id);
+          merged.push(item);
+        }
+      }
+    }
+    this.allItems.set(merged);
   }
 
   ngOnDestroy() {}
 
   get pageTitle(): string {
-    if (this.scope === 'ios-learning') return 'iOS 学习 · 列表模式';
-    if (this.scope === 'angular-learning') return 'Angular 学习 · 列表模式';
-    return '知识刷题 · 列表模式';
+    return '列表刷题';
   }
 
   getCategoryLabel(cat: FilterValue): string {
