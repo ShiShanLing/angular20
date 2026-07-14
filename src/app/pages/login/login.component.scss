@@ -28,11 +28,15 @@
   padding: 24px;
 }
 
+:host-context([data-theme="dark"]) .login-page {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
+
 .login-card {
   width: min(400px, 100%);
-  background: #fff;
+  background: var(--card-bg, #fff);
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg, 0 8px 32px rgba(0, 0, 0, 0.1));
   padding: 36px 32px 28px;
 }
 
@@ -42,7 +46,7 @@
 
   .logo-icon {
     font-size: 40px;
-    color: #1677ff;
+    color: var(--accent-color, #1677ff);
     margin-bottom: 8px;
     display: block;
   }
@@ -50,13 +54,13 @@
   h1 {
     margin: 0;
     font-size: 22px;
-    color: #262626;
+    color: var(--text-primary, #262626);
     font-weight: 600;
   }
 
   .subtitle {
     margin: 6px 0 0;
-    color: #8c8c8c;
+    color: var(--text-tertiary, #8c8c8c);
     font-size: 13px;
   }
 }
@@ -74,7 +78,7 @@
   margin-top: 16px;
 
   .hint {
-    color: #bfbfbf;
+    color: var(--text-tertiary, #bfbfbf);
     font-size: 12px;
   }
 }

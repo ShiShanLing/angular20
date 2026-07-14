@@ -15,6 +15,7 @@ import { PermissionService } from '../core/permission.service';
 import { FeatureActivationService } from '../core/feature-activation.service';
 import { MenuVisibilityService } from '../core/menu-visibility.service';
 import { AuthService } from '../core/auth.service';
+import { ThemeService } from '../core/theme.service';
 import { FEATURE_MENU_ITEMS, type FeatureMenuItem } from '../core/feature-menu';
 
 type MenuItem = FeatureMenuItem;
@@ -70,6 +71,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     private featureActivationService: FeatureActivationService,
     private menuVisibilityService: MenuVisibilityService,
     readonly authService: AuthService,
+    readonly themeService: ThemeService,
   ) {}
 
   ngOnInit() {

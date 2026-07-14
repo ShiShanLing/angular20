@@ -151,6 +151,17 @@
         <span class="header-tag" nz-tooltip nzTooltipTitle="基于 Ant Design 的企业级 UI 组件库 (Angular v19)">ng-zorro-antd v19</span>
         <span class="header-tag" nz-tooltip nzTooltipTitle="由百度开源的强大可视化图表库 (当前 v5.6+)">ECharts v5</span>
 
+        <!-- 主题切换按钮 -->
+        <button
+          type="button"
+          class="theme-toggle-btn"
+          nz-tooltip
+          [nzTooltipTitle]="themeService.mode() === 'dark' ? '切换到浅色模式' : '切换到深色模式'"
+          (click)="themeService.toggle()"
+        >
+          <span nz-icon [nzType]="themeService.mode() === 'dark' ? 'sun' : 'moon'" nzTheme="outline"></span>
+        </button>
+
         <!-- 用户信息 + 退出登录 -->
         <span class="header-user">
           <span nz-icon nzType="user" nzTheme="outline"></span>

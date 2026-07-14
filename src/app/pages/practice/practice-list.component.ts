@@ -182,6 +182,7 @@ type FilterValue = PracticeFilterCategory;
       margin: 0;
       font-size: 18px;
       font-weight: 600;
+      color: var(--text-primary, #262626);
     }
 
     .toolbar-right {
@@ -206,10 +207,10 @@ type FilterValue = PracticeFilterCategory;
       align-items: center;
       gap: 8px;
       padding: 8px 0;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid var(--border-light, #f0f0f0);
       margin-bottom: 12px;
       font-size: 13px;
-      color: #666;
+      color: var(--text-tertiary, #666);
     }
 
     .spacer { flex: 1; }
@@ -221,15 +222,15 @@ type FilterValue = PracticeFilterCategory;
     }
 
     .question-card {
-      background: #fff;
-      border: 1px solid #e8e8e8;
+      background: var(--card-bg, #fff);
+      border: 1px solid var(--border-color, #e8e8e8);
       border-radius: 8px;
       overflow: hidden;
-      transition: box-shadow 0.2s;
+      transition: box-shadow 0.2s, border-color 0.2s;
     }
 
     .question-card:hover {
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      box-shadow: var(--shadow-sm, 0 2px 8px rgba(0,0,0,0.08));
     }
 
     .question-card.expanded {
@@ -249,14 +250,14 @@ type FilterValue = PracticeFilterCategory;
       flex-shrink: 0;
       width: 28px;
       height: 28px;
-      background: #f0f5ff;
+      background: var(--bg-tertiary, #f0f5ff);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 12px;
       font-weight: 600;
-      color: #1890ff;
+      color: var(--accent-color, #1890ff);
     }
 
     .cat-tag {
@@ -269,6 +270,7 @@ type FilterValue = PracticeFilterCategory;
       font-size: 14px;
       line-height: 1.6;
       padding-top: 2px;
+      color: var(--text-primary, #262626);
     }
 
     .question-text :deep(p) {
@@ -277,13 +279,13 @@ type FilterValue = PracticeFilterCategory;
 
     .expand-icon {
       flex-shrink: 0;
-      color: #999;
+      color: var(--text-tertiary, #999);
       padding-top: 4px;
     }
 
     .question-body {
       padding: 0 16px 16px 52px;
-      border-top: 1px solid #f5f5f5;
+      border-top: 1px solid var(--border-light, #f5f5f5);
     }
 
     .answer-section {
@@ -296,48 +298,49 @@ type FilterValue = PracticeFilterCategory;
       gap: 6px;
       font-size: 13px;
       font-weight: 500;
-      color: #666;
+      color: var(--text-secondary, #666);
       margin-bottom: 8px;
     }
 
     .answer-content {
-      background: #f6ffed;
-      border: 1px solid #b7eb8f;
+      background: var(--bg-tertiary, #f6ffed);
+      border: 1px solid var(--border-color, #b7eb8f);
       border-radius: 6px;
       padding: 12px 16px;
       font-size: 14px;
       line-height: 1.8;
+      color: var(--text-primary, #262626);
     }
 
     .answer-content :deep(pre) {
-      background: #f0f0f0;
+      background: var(--bg-tertiary, #f0f0f0);
       padding: 12px;
       border-radius: 4px;
       overflow-x: auto;
     }
 
     .answer-content :deep(code) {
-      background: #f0f0f0;
+      background: var(--bg-tertiary, #f0f0f0);
       padding: 2px 6px;
       border-radius: 3px;
       font-size: 13px;
     }
 
     .answer-hidden {
-      background: #fafafa;
-      border: 1px dashed #d9d9d9;
+      background: var(--bg-tertiary, #fafafa);
+      border: 1px dashed var(--border-color, #d9d9d9);
       border-radius: 6px;
       padding: 16px;
       text-align: center;
-      color: #999;
+      color: var(--text-tertiary, #999);
       cursor: pointer;
       transition: all 0.2s;
     }
 
     .answer-hidden:hover {
-      background: #f0f5ff;
-      border-color: #1890ff;
-      color: #1890ff;
+      background: var(--bg-secondary, #f0f5ff);
+      border-color: var(--accent-color, #1890ff);
+      color: var(--accent-color, #1890ff);
     }
 
     .memo-section {
