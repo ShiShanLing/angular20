@@ -2,57 +2,171 @@
   padding: 12px;
 }
 
-.result-panel {
-  .detail-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
-    font-size: 14px;
-    
-    .label {
-      color: var(--text-tertiary, rgba(0,0,0,0.45));
-    }
-    .value {
-      font-weight: 500;
-      color: var(--text-primary, rgba(0,0,0,0.85));
-    }
+/* Section Headers */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+
+  .section-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent-color, #1677ff);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary, #262626);
   }
 }
 
-.support-panel {
-  text-align: center;
-  padding: 16px;
-  background: var(--bg-tertiary, #f6faff);
+/* Hero Metrics */
+.hero-metrics {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 20px 0 24px;
+
+  .hero-item {
+    text-align: center;
+    flex: 1;
+  }
+
+  .hero-divider {
+    width: 1px;
+    height: 48px;
+    background: var(--border-light, #f0f0f0);
+    flex-shrink: 0;
+  }
+
+  .hero-label {
+    font-size: 13px;
+    color: var(--text-tertiary, #8c8c8c);
+    margin-bottom: 6px;
+  }
+
+  .hero-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary, #262626);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+
+    &.accent {
+      color: var(--accent-color, #1677ff);
+    }
+  }
+
+  .hero-unit {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-tertiary, #8c8c8c);
+  }
+}
+
+/* Detail Section */
+.detail-section {
+  padding-top: 4px;
+}
+
+.detail-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #595959);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-light, #f0f0f0);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.detail-cell {
+  padding: 10px 12px;
+  background: var(--bg-tertiary, #fafafa);
   border-radius: 8px;
 
-  .support-stat {
-    margin-bottom: 8px;
-    .main-val {
-      font-size: 32px;
-      font-weight: bold;
-      color: var(--accent-color, #1890ff);
-      line-height: 1;
-    }
-    .sub-label {
-      font-size: 12px;
-      color: var(--text-tertiary, #888);
-    }
-  }
-
-  .support-info {
-    font-size: 14px;
-    margin-bottom: 12px;
-    color: var(--text-primary);
-  }
-
-  .hint-text {
+  .detail-label {
+    display: block;
     font-size: 12px;
-    color: var(--text-tertiary, #999);
-    font-style: italic;
-    margin: 0;
+    color: var(--text-tertiary, #8c8c8c);
+    margin-bottom: 4px;
+  }
+
+  .detail-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary, #262626);
+    font-variant-numeric: tabular-nums;
+
+    small {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--text-tertiary, #8c8c8c);
+    }
   }
 }
 
+/* Support Section */
+.support-section {
+  margin-top: 20px;
+}
+
+.support-card {
+  text-align: center;
+  padding: 20px 16px;
+  background: var(--bg-tertiary, #f6faff);
+  border-radius: 10px;
+  border: 1px solid var(--border-light, #e6f4ff);
+
+  .support-number {
+    font-size: 42px;
+    font-weight: 800;
+    color: var(--accent-color, #1677ff);
+    line-height: 1;
+    margin-bottom: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .support-label {
+    font-size: 13px;
+    color: var(--text-tertiary, #888);
+    margin-bottom: 8px;
+  }
+
+  .support-equiv {
+    font-size: 14px;
+    color: var(--text-secondary, #595959);
+
+    strong {
+      color: var(--accent-color, #1677ff);
+      font-weight: 600;
+    }
+  }
+}
+
+.hint-text {
+  font-size: 12px;
+  color: var(--text-quaternary, #bfbfbf);
+  font-style: italic;
+  margin: 12px 0 0;
+  text-align: center;
+}
+
+/* Radio styling */
 :host ::ng-deep {
   .ant-radio-wrapper {
     display: flex;
