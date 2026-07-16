@@ -3,7 +3,7 @@ import {
   UseGuards, Request, Res, UploadedFile, UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiConsumes } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiConsumes, ApiResponse } from '@nestjs/swagger';
 import { Response } from 'express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
@@ -30,12 +30,29 @@ export class NotesController {
 
   @Get('notebooks')
   @ApiOperation({ summary: '获取文件夹列表' })
+  @ApiResponse({
+    status: 200,
+    description: '返回当前用户的所有文件夹',
+    schema: {
+      example: [
+        { id: 1, userId: 1, name: '工作', sortOrder: 0, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
+        { id: 2, userId: 1, name: '生活', sortOrder: 1, createdAt: '2026-01-02T00:00:00.000Z', updatedAt: '2026-01-02T00:00:00.000Z' },
+      ],
+    },
+  })
   getNotebooks(@Request() req: any) {
     return this.notesService.getNotebooks(req.user.userId);
   }
 
   @Post('notebooks')
   @ApiOperation({ summary: '创建文件夹' })
+  @ApiResponse({
+    status: 201,
+    description: '返回创建的文件夹',
+    schema: {
+      example: { id: 3, userId: 1, name: '学习', sortOrder: 2, createdAt: '2026-07-16T00:00:00.000Z', updatedAt: '2026-07-16T00:00:00.000Z' },
+    },
+  })
   createNotebook(@Request() req: any, @Body() dto: CreateNotebookDto) {
     return this.notesService.createNotebook(req.user.userId, dto.name);
   }
@@ -63,6 +80,19 @@ export class NotesController {
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'tag', required: false })
   @ApiQuery({ name: 'isFavorite', required: false })
+  @ApiResponse({
+    status: 200,
+    description: '返回笔记列表（置顶优先）',
+    schema: {
+      example: [
+        {
+          id: 1, userId: 1, notebookId: 1, title: '会议纪要', content: '<p>会议内容...</p>',
+          isPinned: true, isFavorite: false, tags: [{ id: 1, noteId: 1, tagName: '工作' }],
+          createdAt: '2026-07-10T10:00:00.000Z', updatedAt: '2026-07-15T14:30:00.000Z',
+        },
+      ],
+    },
+  })
   getNotes(
     @Request() req: any,
     @Query('notebookId') notebookId?: string,
@@ -89,6 +119,17 @@ export class NotesController {
 
   @Post('notes')
   @ApiOperation({ summary: '创建笔记' })
+  @ApiResponse({
+    status: 201,
+    description: '返回创建的笔记',
+    schema: {
+      example: {
+        id: 2, userId: 1, notebookId: 1, title: '新笔记', content: '',
+        isPinned: false, isFavorite: false, tags: [],
+        createdAt: '2026-07-16T00:00:00.000Z', updatedAt: '2026-07-16T00:00:00.000Z',
+      },
+    },
+  })
   createNote(@Request() req: any, @Body() dto: CreateNoteDto) {
     return this.notesService.createNote(
       req.user.userId, dto.title, dto.content, dto.notebookId, dto.tags,
@@ -97,6 +138,18 @@ export class NotesController {
 
   @Put('notes/:id')
   @ApiOperation({ summary: '更新笔记' })
+  @ApiResponse({
+    status: 200,
+    description: '返回更新后的笔记',
+    schema: {
+      example: {
+        id: 1, userId: 1, notebookId: 1, title: '修改后的标题', content: '<p>新内容</p>',
+        isPinned: false, isFavorite: true, tags: [{ id: 2, noteId: 1, tagName: '重要' }],
+        createdAt: '2026-07-10T10:00:00.000Z', updatedAt: '2026-07-16T08:00:00.000Z',
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: '笔记不存在', schema: { example: { error: '笔记不存在' } } })
   async updateNote(@Request() req: any, @Param('id') id: number, @Body() dto: UpdateNoteDto) {
     const result = await this.notesService.updateNote(id, req.user.userId, dto);
     if (!result) return { error: '笔记不存在' };
@@ -105,6 +158,11 @@ export class NotesController {
 
   @Delete('notes/:id')
   @ApiOperation({ summary: '删除笔记' })
+  @ApiResponse({
+    status: 200,
+    description: '返回删除结果',
+    schema: { example: { success: true } },
+  })
   async deleteNote(@Request() req: any, @Param('id') id: number) {
     const ok = await this.notesService.deleteNote(id, req.user.userId);
     return { success: ok };
@@ -124,6 +182,11 @@ export class NotesController {
   @Post('notes/upload')
   @ApiOperation({ summary: '上传图片附件' })
   @ApiConsumes('multipart/form-data')
+  @ApiResponse({
+    status: 201,
+    description: '返回上传后的图片 URL',
+    schema: { example: { url: '/uploads/1721088000-123456789.png', originalName: 'screenshot.png' } },
+  })
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({
       destination: UPLOAD_DIR,
