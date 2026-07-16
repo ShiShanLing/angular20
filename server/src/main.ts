@@ -45,7 +45,13 @@ async function bootstrap() {
     .addTag('notes', '记事本（笔记/文件夹/标签）')
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('api/docs', app, document, {
+    customCssUrl: '/swagger-ui-static/swagger-ui.css',
+    customJs: [
+      '/swagger-ui-static/swagger-ui-bundle.js',
+      '/swagger-ui-static/swagger-ui-standalone-preset.js',
+    ],
+  });
 
   // 静态文件服务 - 上传文件
   app.useStaticAssets(join('/var/www/uploads'), { prefix: '/uploads' });
