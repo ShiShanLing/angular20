@@ -11,11 +11,25 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const config = app.get(ConfigService);
 
-  // 安全 HTTP 头（HTTP环境下关闭 COOP/COEP，避免浏览器强制升级 HTTPS）
+  // 安全 HTTP 头（HTTP环境关闭 COOP/COEP/CSP升级/HSTS，避免浏览器强制 HTTPS）
   app.use(helmet({
     crossOriginOpenerPolicy: false,
     crossOriginEmbedderPolicy: false,
     crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:"],
+        fontSrc: ["'self'", "data:"],
+        connectSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        frameAncestors: ["'self'"],
+        upgradeInsecureRequests: null,
+      },
+    },
+    hsts: false,
   }));
 
   // 全局前缀
