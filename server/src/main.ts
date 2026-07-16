@@ -11,8 +11,12 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const config = app.get(ConfigService);
 
-  // 安全 HTTP 头
-  app.use(helmet());
+  // 安全 HTTP 头（HTTP环境下关闭 COOP/COEP，避免浏览器强制升级 HTTPS）
+  app.use(helmet({
+    crossOriginOpenerPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  }));
 
   // 全局前缀
   app.setGlobalPrefix('api');
