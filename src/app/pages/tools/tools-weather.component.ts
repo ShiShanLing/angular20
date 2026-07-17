@@ -33,6 +33,8 @@ export class ToolsWeatherComponent implements OnInit {
   loading: boolean = false;
   chartOptions: any = null;
   recentCities: { id: number; name: string; lat: number; lon: number; country?: string; admin1?: string }[] = [];
+  geocodeResults: any[] = [];
+  showGeocodePicker: boolean = false;
   
   constructor(private http: HttpClient, private msg: NzMessageService) { }
   
@@ -56,24 +58,10 @@ export class ToolsWeatherComponent implements OnInit {
     if (!this.city.trim()) return;
     
     localStorage.setItem('tools_weather_city', this.city);
-    
-    const CACHE_KEY = `weather_cache_${this.city.trim().toLowerCase()}`;
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (cached) {
-      try {
-        const { timestamp, data } = JSON.parse(cached);
-        const threeHours = 3 * 60 * 60 * 1000;
-        if (Date.now() - timestamp < threeHours) {
-          this.weatherData = data;
-          this.updateChartOptions();
-          return;
-        }
-      } catch (e) {
-        localStorage.removeItem(CACHE_KEY);
-      }
-    }
 
     this.loading = true;
+    this.showGeocodePicker = false;
+    this.geocodeResults = [];
     // 1. Geocoding: 城市转经纬度（通过后端代理）
     const geoUrl = `/api/weather/geocode?name=${encodeURIComponent(this.city)}`;
 
@@ -85,43 +73,79 @@ export class ToolsWeatherComponent implements OnInit {
           return;
         }
         
-        const location = geoRes.results[0];
-        const lat = location.latitude;
-        const lon = location.longitude;
-
-        // 2. 获取 7 天预案 + 24 小时逐时数据（通过后端代理）
-        const forecastUrl = `/api/weather/forecast?latitude=${lat}&longitude=${lon}`;
-
-        this.http.get(forecastUrl).subscribe({
-          next: (data: any) => {
-            const finalData = {
-              location,
-              current: data.current_weather,
-              daily: data.daily,
-              hourly: data.hourly
-            };
-            this.weatherData = finalData;
-            
-            // 存入缓存
-            localStorage.setItem(CACHE_KEY, JSON.stringify({
-              timestamp: Date.now(),
-              data: finalData
-            }));
-            
-            // 保存到历史城市列表
-            this.addRecentCity(location);
-
-            this.updateChartOptions();
-            this.loading = false;
-          },
-          error: () => {
-            this.msg.error('获取天气详情失败');
-            this.loading = false;
-          }
-        });
+        // 多个结果时让用户选择
+        if (geoRes.results.length > 1) {
+          this.geocodeResults = geoRes.results;
+          this.showGeocodePicker = true;
+          this.loading = false;
+          return;
+        }
+        
+        // 只有一个结果，直接使用
+        this.fetchWeather(geoRes.results[0]);
       },
       error: () => {
         this.msg.error('地名解析失败');
+        this.loading = false;
+      }
+    });
+  }
+
+  /** 从多个 geocoding 结果中选择城市 */
+  pickGeocodeResult(location: any): void {
+    this.showGeocodePicker = false;
+    this.geocodeResults = [];
+    this.city = location.name;
+    this.fetchWeather(location);
+  }
+
+  /** 通过经纬度获取天气数据 */
+  fetchWeather(location: any): void {
+    const lat = location.latitude;
+    const lon = location.longitude;
+    const CACHE_KEY = `weather_cache_${lat.toFixed(2)}_${lon.toFixed(2)}`;
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      try {
+        const { timestamp, data } = JSON.parse(cached);
+        const threeHours = 3 * 60 * 60 * 1000;
+        if (Date.now() - timestamp < threeHours) {
+          this.weatherData = data;
+          this.updateChartOptions();
+          this.loading = false;
+          return;
+        }
+      } catch (e) {
+        localStorage.removeItem(CACHE_KEY);
+      }
+    }
+
+    this.loading = true;
+    const forecastUrl = `/api/weather/forecast?latitude=${lat}&longitude=${lon}`;
+
+    this.http.get(forecastUrl).subscribe({
+      next: (data: any) => {
+        const finalData = {
+          location,
+          current: data.current_weather,
+          daily: data.daily,
+          hourly: data.hourly
+        };
+        this.weatherData = finalData;
+        
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+          timestamp: Date.now(),
+          data: finalData
+        }));
+        
+        // 保存到历史城市列表
+        this.addRecentCity(location);
+
+        this.updateChartOptions();
+        this.loading = false;
+      },
+      error: () => {
+        this.msg.error('获取天气详情失败');
         this.loading = false;
       }
     });

@@ -195,3 +195,56 @@
     }
   }
 }
+
+/* 地名解析结果选择器 */
+.geocode-picker {
+  margin-bottom: 16px;
+  border: 1px solid var(--border-light, #e8e8e8);
+  border-radius: 8px;
+  background: var(--bg-secondary, #fff);
+  overflow: hidden;
+  
+  .picker-title {
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary, #333);
+    border-bottom: 1px solid var(--border-light, #e8e8e8);
+    background: var(--bg-tertiary, #fafafa);
+  }
+  
+  .picker-list {
+    max-height: 240px;
+    overflow-y: auto;
+  }
+  
+  .picker-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-light, #f0f0f0);
+    transition: background 0.2s;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    &:hover {
+      background: var(--bg-tertiary, #f5f5f5);
+    }
+    
+    .picker-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary, #333);
+      min-width: 80px;
+    }
+    
+    .picker-detail {
+      font-size: 12px;
+      color: var(--text-tertiary, #999);
+    }
+  }
+}
