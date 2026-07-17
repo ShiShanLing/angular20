@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { WeatherHistory } from './entities/weather-history.entity';
 import { AuthGuard } from '../auth/auth.guard';
+import { searchLocalCity } from './china-cities';
 
 /**
  * 天气 API 代理 + 搜索历史管理
@@ -24,9 +25,38 @@ export class WeatherController {
   @ApiOperation({ summary: '地名解析为经纬度' })
   @ApiQuery({ name: 'name', description: '城市名称（中文/拼音/英文均可）', example: 'Shanghai' })
   async geocode(@Query('name') name: string) {
+    // 1. 优先查本地中国城市库
+    const localResults = searchLocalCity(name).map(c => ({
+      name: c.name,
+      latitude: c.lat,
+      longitude: c.lon,
+      country: '中国',
+      admin1: c.admin1,
+      admin2: c.admin2,
+      _source: 'local',
+    }));
+
+    // 2. 同时查询 Open-Meteo
     const url = `${this.GEO_BASE}?name=${encodeURIComponent(name)}&count=5&language=zh&format=json`;
-    const res = await fetch(url);
-    return res.json();
+    let remoteResults: any[] = [];
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      remoteResults = (data.results || []).map((r: any) => ({ ...r, _source: 'remote' }));
+    } catch {}
+
+    // 3. 合并：本地优先，去重（按经纬度近似去重）
+    const merged = [...localResults];
+    const seenCoords = new Set(merged.map(r => `${r.latitude.toFixed(1)}_${r.longitude.toFixed(1)}`));
+    for (const r of remoteResults) {
+      const key = `${r.latitude.toFixed(1)}_${r.longitude.toFixed(1)}`;
+      if (!seenCoords.has(key)) {
+        merged.push(r);
+        seenCoords.add(key);
+      }
+    }
+
+    return { results: merged };
   }
 
   @Get('forecast')

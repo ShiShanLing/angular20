@@ -25,7 +25,7 @@
     <div class="picker-list">
       <div class="picker-item" *ngFor="let r of geocodeResults" (click)="pickGeocodeResult(r)">
         <span class="picker-name">{{ r.name }}</span>
-        <span class="picker-detail">{{ r.admin2 || r.admin1 || '' }} {{ r.country || '' }} ({{ r.latitude | number:'1.2-2' }}, {{ r.longitude | number:'1.2-2' }})</span>
+        <span class="picker-detail">{{ r.admin2 || '' }} {{ r.admin1 || '' }} {{ r.country || '' }} ({{ r.latitude | number:'1.2-2' }}, {{ r.longitude | number:'1.2-2' }})</span>
       </div>
     </div>
   </div>
