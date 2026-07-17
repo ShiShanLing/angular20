@@ -1,0 +1,587 @@
+{
+  "generatedAt": "2026-07-17T04:26:17.738Z",
+  "dateRange": "2026-07-16 ~ 2026-07-17",
+  "marketIndex": {
+    "index": 56,
+    "level": "中性",
+    "emoji": "🟡",
+    "description": "市场情绪平稳，多空均衡",
+    "divergence": 9,
+    "divergenceLabel": "基本一致",
+    "totalPosts": 1557,
+    "totalClicks": 31565,
+    "totalComments": 639,
+    "validBarCount": 5
+  },
+  "bars": [
+    {
+      "code": "sh000001",
+      "name": "上证指数",
+      "postCount": 813,
+      "temperature": 53,
+      "avgScore": 0.067,
+      "distribution": {
+        "bullish": 184,
+        "bearish": 131,
+        "fear": 3,
+        "greed": 2,
+        "neutral": 493
+      },
+      "totalClicks": 17242,
+      "totalComments": 372,
+      "avgClicks": 21.2,
+      "avgComments": 0.5,
+      "fearGreedRatio": 0.72,
+      "topBullish": [
+        {
+          "title": "抄反弹，抄反弹",
+          "clicks": 263,
+          "words": [
+            "反弹"
+          ]
+        },
+        {
+          "title": "相信牛市。即便亏得倾家荡产，我也坚信最终股市长虹，会让散户挣到钱的。祝愿大A否极",
+          "clicks": 229,
+          "words": [
+            "牛市",
+            "牛"
+          ]
+        }
+      ],
+      "topBearish": [
+        {
+          "title": "指数今天直接打到支撑位情绪绝望到极致证券银行保险各有2-3波脉冲一个月主板干了4",
+          "clicks": 522,
+          "words": [
+            "绝望",
+            "绝望"
+          ]
+        },
+        {
+          "title": "哈哈哈，太过精准，平台说不能让散户看到，不然就没法操盘了",
+          "clicks": 445,
+          "words": []
+        }
+      ]
+    },
+    {
+      "code": "sz399006",
+      "name": "创业板指",
+      "postCount": 493,
+      "temperature": 48,
+      "avgScore": -0.046,
+      "distribution": {
+        "bullish": 79,
+        "bearish": 99,
+        "fear": 0,
+        "greed": 0,
+        "neutral": 315
+      },
+      "totalClicks": 9720,
+      "totalComments": 184,
+      "avgClicks": 19.7,
+      "avgComments": 0.4,
+      "fearGreedRatio": 1.25,
+      "topBullish": [
+        {
+          "title": "能不跌么，像这样的沾边挂钩的都涨幅二十多倍，多大的泡沫，赶紧大数据分析把背后通过",
+          "clicks": 169,
+          "words": [
+            "涨"
+          ]
+        },
+        {
+          "title": "【股市交流】这是什么梗啊？主力束手无策，背后信号值得深思",
+          "clicks": 108,
+          "words": [
+            "主力"
+          ]
+        }
+      ],
+      "topBearish": [
+        {
+          "title": "午评|炸裂！A股持续暴跌！熊市降临？",
+          "clicks": 910,
+          "words": [
+            "暴跌",
+            "熊市",
+            "暴跌"
+          ]
+        },
+        {
+          "title": "千万别当反转，A股有反抽，纯粹诱多安抚情绪",
+          "clicks": 486,
+          "words": [
+            "诱多"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "BK0473",
+      "name": "证券Ⅱ",
+      "postCount": 139,
+      "temperature": 58,
+      "avgScore": 0.15,
+      "distribution": {
+        "bullish": 36,
+        "bearish": 16,
+        "fear": 0,
+        "greed": 0,
+        "neutral": 87
+      },
+      "totalClicks": 2472,
+      "totalComments": 39,
+      "avgClicks": 17.8,
+      "avgComments": 0.3,
+      "fearGreedRatio": 0.44,
+      "topBullish": [
+        {
+          "title": "能源科技TCL科技未来必超三星，全仓抄底了，机不可失时不再来，全仓抄底，我的目标",
+          "clicks": 136,
+          "words": [
+            "抄底",
+            "全仓"
+          ]
+        },
+        {
+          "title": "军工科技。TCL科技未来必超三星，全仓抄底了，机不可失时不再来，全仓抄底，我的目",
+          "clicks": 121,
+          "words": [
+            "抄底",
+            "全仓"
+          ]
+        }
+      ],
+      "topBearish": [
+        {
+          "title": "曾经的券商，跟今天的券商已经今日不同往日了，A股的指数不是你能决定的了的。呵呵",
+          "clicks": 25,
+          "words": []
+        },
+        {
+          "title": "估计券商一时半会起不来了，走势天天在破位的边缘，其他人发个帖子，评论区里面好多机",
+          "clicks": 24,
+          "words": [
+            "破位"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "BK0475",
+      "name": "银行Ⅱ",
+      "postCount": 110,
+      "temperature": 60,
+      "avgScore": 0.194,
+      "distribution": {
+        "bullish": 32,
+        "bearish": 11,
+        "fear": 0,
+        "greed": 0,
+        "neutral": 67
+      },
+      "totalClicks": 2057,
+      "totalComments": 44,
+      "avgClicks": 18.7,
+      "avgComments": 0.4,
+      "fearGreedRatio": 0.34,
+      "topBullish": [
+        {
+          "title": "最适合散户买的是银行。不会退市，每年有分红提供现金流，长期来看都是涨的，还不用经",
+          "clicks": 75,
+          "words": [
+            "涨"
+          ]
+        },
+        {
+          "title": "还好银行护盘，不然指数更难看",
+          "clicks": 50,
+          "words": [
+            "护盘"
+          ]
+        }
+      ],
+      "topBearish": [
+        {
+          "title": "还在拉这个害，人精哈哈真好，这个市场都是些啥，玩意哦，没拉的，了把，低位，拉了个",
+          "clicks": 35,
+          "words": []
+        },
+        {
+          "title": "今天科技大概率又要下跌，你是跟昨天一样一起砸盘还是护盘？",
+          "clicks": 27,
+          "words": [
+            "砸盘",
+            "下跌"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "BK0477",
+      "name": "酿酒概念",
+      "postCount": 2,
+      "temperature": 76,
+      "avgScore": 0.525,
+      "distribution": {
+        "bullish": 1,
+        "bearish": 0,
+        "fear": 0,
+        "greed": 0,
+        "neutral": 1
+      },
+      "totalClicks": 74,
+      "totalComments": 0,
+      "avgClicks": 37,
+      "avgComments": 0,
+      "fearGreedRatio": 0,
+      "topBullish": [
+        {
+          "title": "能抄底的抄底，不能抄底的别割，等反弹！",
+          "clicks": 56,
+          "words": [
+            "抄底",
+            "反弹"
+          ]
+        }
+      ],
+      "topBearish": []
+    },
+    {
+      "code": "BK0493",
+      "name": "新能源",
+      "postCount": 0,
+      "sentiment": null
+    },
+    {
+      "code": "BK0447",
+      "name": "互联网服务",
+      "postCount": 0,
+      "sentiment": null
+    }
+  ],
+  "hotTopics": [
+    {
+      "term": "科技",
+      "count": 101,
+      "totalClicks": 2026,
+      "hotScore": 134,
+      "samplePosts": [
+        {
+          "title": "今天守住3700月底肯定会砸到3500！还有科技处于高位他们资金还没撤！",
+          "clicks": 1
+        },
+        {
+          "title": "科技真到头了这一次！太恐怖了，中际旭创都跌停了，以前从没有过这种现象！",
+          "clicks": 1
+        }
+      ]
+    },
+    {
+      "term": "指数",
+      "count": 77,
+      "totalClicks": 2548,
+      "hotScore": 111,
+      "samplePosts": [
+        {
+          "title": "虽然上证指数只跌了一个多点，但大科技的票几乎全部腰斩了！",
+          "clicks": 2
+        },
+        {
+          "title": "$上证指数(SH000001)$",
+          "clicks": 1
+        }
+      ]
+    },
+    {
+      "term": "大盘",
+      "count": 68,
+      "totalClicks": 1540,
+      "hotScore": 100,
+      "samplePosts": [
+        {
+          "title": "这次大盘会一直杀到茅台为全市第一高价股股吗？",
+          "clicks": 4
+        },
+        {
+          "title": "大盘新股的发行导致弱不禁风的股市再度大幅下跌。",
+          "clicks": 1
+        }
+      ]
+    },
+    {
+      "term": "银行",
+      "count": 66,
+      "totalClicks": 1693,
+      "hotScore": 98,
+      "samplePosts": [
+        {
+          "title": "拉银行套餐来了，其他全是A杀，不留缝的埋散户",
+          "clicks": 4
+        },
+        {
+          "title": "要就直接跌破3800，别拉银行了",
+          "clicks": 1
+        }
+      ]
+    },
+    {
+      "term": "抄底",
+      "count": 50,
+      "totalClicks": 798,
+      "hotScore": 79,
+      "samplePosts": [
+        {
+          "title": "下午可以抄底券商了",
+          "clicks": 2
+        },
+        {
+          "title": "我今天就抄底有种上方缺口补补",
+          "clicks": 1
+        }
+      ]
+    },
+    {
+      "term": "散户",
+      "count": 47,
+      "totalClicks": 1538,
+      "hotScore": 79,
+      "samplePosts": [
+        {
+          "title": "散户干万不要忍不住去接最后那些三件套的一把刀。",
+          "clicks": 1
+        },
+        {
+          "title": "一个小韩国几千万人股市涨到8000多点，A股好几亿散户连4000多点都稳不住，美",
+          "clicks": 2
+        }
+      ]
+    },
+    {
+      "term": "创业板",
+      "count": 35,
+      "totalClicks": 432,
+      "hotScore": 61,
+      "samplePosts": [
+        {
+          "title": "未来上证持续拉升，科创板创业板持续下跌，因为他们要拉金融了，只有金融股严重低估",
+          "clicks": 1
+        },
+        {
+          "title": "创业板盘中跌至3487.99，大幅跌破技术性熊市临界线3504的点位。",
+          "clicks": 3
+        }
+      ]
+    },
+    {
+      "term": "量化",
+      "count": 29,
+      "totalClicks": 165,
+      "hotScore": 51,
+      "samplePosts": [
+        {
+          "title": "去量化，开T0，退垃圾，护优绩才能长盛不衰！",
+          "clicks": 1
+        },
+        {
+          "title": "量化下的熊市大部分时间4000多只下跌，几十家跌停，亏钱太利害了",
+          "clicks": 2
+        }
+      ]
+    },
+    {
+      "term": "上证指数",
+      "count": 28,
+      "totalClicks": 1260,
+      "hotScore": 59,
+      "samplePosts": [
+        {
+          "title": "虽然上证指数只跌了一个多点，但大科技的票几乎全部腰斩了！",
+          "clicks": 2
+        },
+        {
+          "title": "$上证指数(SH000001)$",
+          "clicks": 1
+        }
+      ]
+    },
+    {
+      "term": "主力",
+      "count": 27,
+      "totalClicks": 739,
+      "hotScore": 56,
+      "samplePosts": [
+        {
+          "title": "大家一定坚信信心，3000点稳中向好，长线投资，相信大主力，大基金，带领我们站稳",
+          "clicks": 1
+        },
+        {
+          "title": "金螳螂：奔着2.94去的，跌到2.94，做空主力获利50%，耐心蹲底，跌到2.94闭眼梭哈……哈哈……个人记录",
+          "clicks": 111
+        }
+      ]
+    },
+    {
+      "term": "证券",
+      "count": 22,
+      "totalClicks": 1242,
+      "hotScore": 53,
+      "samplePosts": [
+        {
+          "title": "最近各证券公司都在推广AI智能交易，难怪股市会大跌！",
+          "clicks": 1
+        },
+        {
+          "title": "指数今天直接打到支撑位情绪绝望到极致证券银行保险各有2-3波脉冲一个月主板干了4",
+          "clicks": 522
+        }
+      ]
+    },
+    {
+      "term": "3000点",
+      "count": 21,
+      "totalClicks": 149,
+      "hotScore": 43,
+      "samplePosts": [
+        {
+          "title": "大家一定坚信信心，3000点稳中向好，长线投资，相信大主力，大基金，带领我们站稳",
+          "clicks": 1
+        },
+        {
+          "title": "熊市即将到来。直奔3000点",
+          "clicks": 1
+        }
+      ]
+    },
+    {
+      "term": "跌停",
+      "count": 15,
+      "totalClicks": 75,
+      "hotScore": 34,
+      "samplePosts": [
+        {
+          "title": "量化下的熊市大部分时间4000多只下跌，几十家跌停，亏钱太利害了",
+          "clicks": 2
+        },
+        {
+          "title": "科技真到头了这一次！太恐怖了，中际旭创都跌停了，以前从没有过这种现象！",
+          "clicks": 1
+        }
+      ]
+    },
+    {
+      "term": "年线",
+      "count": 12,
+      "totalClicks": 1764,
+      "hotScore": 44,
+      "samplePosts": [
+        {
+          "title": "跌穿年线，收不回走熊了",
+          "clicks": 1
+        },
+        {
+          "title": "事实再一次告诉我们，年线，半年线，多少分钟线从来就不是安全线，都是股评家给大家画",
+          "clicks": 7
+        }
+      ]
+    },
+    {
+      "term": "空仓",
+      "count": 11,
+      "totalClicks": 92,
+      "hotScore": 31,
+      "samplePosts": [
+        {
+          "title": "行情不好就空仓，没有规定行情不好时也必须交易，所以你非要天天交易亏了钱只能怪自己",
+          "clicks": 4
+        },
+        {
+          "title": "还在幻想反弹呢，三个指数都背离了，最好就是空仓",
+          "clicks": 4
+        }
+      ]
+    },
+    {
+      "term": "半导体",
+      "count": 10,
+      "totalClicks": 316,
+      "hotScore": 35,
+      "samplePosts": [
+        {
+          "title": "半导体跌的好玩吗",
+          "clicks": 167
+        },
+        {
+          "title": "芯片半导体被如此深度杀跌，导火索及根源是机构大基金的套现抽空，",
+          "clicks": 1
+        }
+      ]
+    },
+    {
+      "term": "涨停",
+      "count": 9,
+      "totalClicks": 111,
+      "hotScore": 29,
+      "samplePosts": [
+        {
+          "title": "哈哈哈，下午涨停",
+          "clicks": 1
+        },
+        {
+          "title": "见过指数涨停的还没有见过跌停的，今天是要破纪录吗？",
+          "clicks": 17
+        }
+      ]
+    },
+    {
+      "term": "放量",
+      "count": 9,
+      "totalClicks": 165,
+      "hotScore": 31,
+      "samplePosts": [
+        {
+          "title": "中午11：30，两市成交比昨的同时间放量1200亿，有抄底资金进场",
+          "clicks": 1
+        },
+        {
+          "title": "截至午盘，大盘放量下跌，机构出逃资金达854亿元......",
+          "clicks": 2
+        }
+      ]
+    },
+    {
+      "term": "融资",
+      "count": 9,
+      "totalClicks": 128,
+      "hotScore": 30,
+      "samplePosts": [
+        {
+          "title": "这波跌下来不知多少融资盘爆仓（韩国爆了2万多亿韩元）",
+          "clicks": 1
+        },
+        {
+          "title": "怎么融资市都不弄了么。。。",
+          "clicks": 1
+        }
+      ]
+    },
+    {
+      "term": "割肉",
+      "count": 8,
+      "totalClicks": 40,
+      "hotScore": 24,
+      "samplePosts": [
+        {
+          "title": "几百个跌停，基民放量割肉",
+          "clicks": 2
+        },
+        {
+          "title": "几百个跌停，基民放量割肉",
+          "clicks": 2
+        }
+      ]
+    }
+  ]
+}
