@@ -123,37 +123,66 @@ function parseComment(c) {
   };
 }
 
+/** 判断评论是否是今天的（东八区） */
+function isToday(isoStr) {
+  if (!isoStr) return false;
+  const d = new Date(isoStr);
+  // 转为东八区日期
+  const now = new Date();
+  const bjOffset = 8 * 60; // 东八区偏移分钟
+  const utcNow = now.getTime() + now.getTimezoneOffset() * 60000;
+  const bjNow = new Date(utcNow + bjOffset * 60000);
+  const bjComment = new Date(d.getTime() + d.getTimezoneOffset() * 60000 + bjOffset * 60000);
+  return bjNow.getFullYear() === bjComment.getFullYear()
+    && bjNow.getMonth() === bjComment.getMonth()
+    && bjNow.getDate() === bjComment.getDate();
+}
+
 /** 抓取一个 URL 的所有评论 */
-async function crawlUrl(url) {
+async function crawlUrl(url, opts = {}) {
   const parsed = parseUrl(url);
   if (!parsed) {
     console.error(`  ⚠ 无法解析URL: ${url}`);
     return { url, error: '无法解析URL', comments: [] };
   }
 
-  console.log(`  → ${parsed.label} [${parsed.itemId}]`);
+  console.log(`  → ${parsed.label} [${parsed.itemId}]${opts.todayOnly ? ' (仅今天)' : ''}`);
 
   const allComments = [];
   let cursor = '0';
   let page = 0;
   let total = 0;
+  let skippedOld = 0;
 
   while (true) {
     page++;
     const result = await fetchComments(parsed.itemId, parsed.itemType, cursor);
     total = result.total;
 
-    const comments = result.comments.map(parseComment);
+    let comments = result.comments.map(parseComment);
+
+    if (opts.todayOnly) {
+      const before = comments.length;
+      comments = comments.filter(c => isToday(c.createdAt));
+      skippedOld += (before - comments.length);
+    }
+
     allComments.push(...comments);
 
     process.stdout.write(`    第${page}页: 获取${comments.length}条 (累计${allComments.length}/${total})\r`);
 
-    if (!result.hasMore || comments.length === 0) break;
+    // 仅今天模式：如果整页都没有今天的评论，说明后面的更早，可以停了
+    if (opts.todayOnly && comments.length === 0 && result.comments.length > 0) {
+      console.log(`    ℹ 遇到非今天评论，提前结束 (跳过${skippedOld}条旧评论)`);
+      break;
+    }
+
+    if (!result.hasMore || result.comments.length === 0) break;
     cursor = result.cursor;
     await sleep(CONFIG.delay);
   }
 
-  console.log(`    ✓ 完成: 共${allComments.length}条评论 (${total}条总计含回复)`);
+  console.log(`    ✓ 完成: 共${allComments.length}条评论${opts.todayOnly ? ` (过滤掉${skippedOld}条旧数据)` : ''}`);
 
   return {
     url,
@@ -265,6 +294,7 @@ async function main() {
   }
 
   // --config: 从配置文件读取URL列表
+  const todayOnly = args.includes('--today');
   let urls = [];
   if (args.includes('--config')) {
     const configFile = args[args.indexOf('--config') + 1];
@@ -281,21 +311,23 @@ async function main() {
 
   if (!urls.length) {
     console.log('用法:');
-    console.log('  node crawler/juejin.mjs <url1> [url2] ...');
-    console.log('  node crawler/juejin.mjs --config targets.json');
+    console.log('  node crawler/juejin.mjs <url1> [url2] ... [--today]');
+    console.log('  node crawler/juejin.mjs --config targets.json [--today]');
     console.log('  node crawler/juejin.mjs --list');
     console.log('  node crawler/juejin.mjs --export csv');
+    console.log('\n选项:');
+    console.log('  --today   仅采集今天的评论');
     return;
   }
 
   console.log(`\n🕷️  掘金评论爬虫 v1.0`);
-  console.log(`   目标: ${urls.length} 个URL\n`);
+  console.log(`   目标: ${urls.length} 个URL${todayOnly ? ' (仅今天)' : ''}\n`);
 
   const results = [];
   for (const url of urls) {
     console.log(`\n[${urls.indexOf(url) + 1}/${urls.length}] ${url}`);
     try {
-      const result = await crawlUrl(url);
+      const result = await crawlUrl(url, { todayOnly });
       results.push(result);
     } catch (err) {
       console.error(`  ✗ 错误: ${err.message}`);
