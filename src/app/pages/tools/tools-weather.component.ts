@@ -32,14 +32,12 @@ export class ToolsWeatherComponent implements OnInit {
   weatherData: any = null;
   loading: boolean = false;
   chartOptions: any = null;
-  recentCities: { name: string; lat: number; lon: number; country?: string; admin1?: string }[] = [];
-  private readonly RECENT_KEY = 'weather_recent_cities';
-  private readonly MAX_RECENT = 10;
+  recentCities: { id: number; name: string; lat: number; lon: number; country?: string; admin1?: string }[] = [];
   
   constructor(private http: HttpClient, private msg: NzMessageService) { }
   
   ngOnInit(): void {
-    // 加载历史城市列表
+    // 加载历史城市列表（从后端）
     this.loadRecentCities();
     
     const savedCity = localStorage.getItem('tools_weather_city');
@@ -129,39 +127,29 @@ export class ToolsWeatherComponent implements OnInit {
     });
   }
 
-  /** 加载历史城市列表 */
+  /** 加载历史城市列表（从后端 API） */
   loadRecentCities(): void {
-    try {
-      const stored = localStorage.getItem(this.RECENT_KEY);
-      if (stored) {
-        this.recentCities = JSON.parse(stored);
-      }
-    } catch { this.recentCities = []; }
+    this.http.get<any[]>('/api/weather/history').subscribe({
+      next: (list) => {
+        this.recentCities = list.map(h => ({ id: h.id, name: h.name, lat: h.lat, lon: h.lon, country: h.country, admin1: h.admin1 }));
+      },
+      error: () => { this.recentCities = []; }
+    });
   }
   
-  /** 添加成功搜索的城市到历史 */
+  /** 添加成功搜索的城市到历史（通过后端 API） */
   addRecentCity(location: any): void {
-    const city = {
+    const params = new URLSearchParams({
       name: location.name,
-      lat: location.latitude,
-      lon: location.longitude,
-      country: location.country,
-      admin1: location.admin1
-    };
-    // 移除已存在的相同城市
-    this.recentCities = this.recentCities.filter(c => c.lat !== city.lat || c.lon !== city.lon);
-    // 添加到头部
-    this.recentCities.unshift(city);
-    // 限制数量
-    if (this.recentCities.length > this.MAX_RECENT) {
-      this.recentCities = this.recentCities.slice(0, this.MAX_RECENT);
-    }
-    this.saveRecentCities();
-  }
-  
-  /** 持久化历史城市列表 */
-  saveRecentCities(): void {
-    localStorage.setItem(this.RECENT_KEY, JSON.stringify(this.recentCities));
+      lat: String(location.latitude),
+      lon: String(location.longitude),
+      country: location.country || '',
+      admin1: location.admin1 || '',
+    });
+    this.http.post(`/api/weather/history?${params.toString()}`, {}).subscribe({
+      next: () => this.loadRecentCities(),
+      error: () => {}
+    });
   }
   
   /** 从历史列表选择城市 */
@@ -191,11 +179,15 @@ export class ToolsWeatherComponent implements OnInit {
     });
   }
   
-  /** 从历史列表中移除城市 */
-  removeRecentCity(index: number, event: Event): void {
+  /** 从历史列表中移除城市（通过后端 API） */
+  removeRecentCity(cityId: number, event: Event): void {
     event.stopPropagation();
-    this.recentCities.splice(index, 1);
-    this.saveRecentCities();
+    this.http.delete(`/api/weather/history/${cityId}`).subscribe({
+      next: () => {
+        this.recentCities = this.recentCities.filter(c => c.id !== cityId);
+      },
+      error: () => this.msg.error('删除失败')
+    });
   }
 
   getForecastArray(): any[] {

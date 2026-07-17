@@ -10,8 +10,8 @@ import { RecordsModule } from './records/records.module';
 import { GameScoresModule } from './game-scores/game-scores.module';
 import { ExportModule } from './export/export.module';
 import { NotesModule } from './notes/notes.module';
+import { WeatherModule } from './weather/weather.module';
 import { AppController } from './app.controller';
-import { WeatherController } from './weather/weather.controller';
 
 @Module({
   imports: [
@@ -28,8 +28,9 @@ import { WeatherController } from './weather/weather.controller';
     GameScoresModule,
     ExportModule,
     NotesModule,
+    WeatherModule,
   ],
-  controllers: [AppController, WeatherController],
+  controllers: [AppController],
   providers: [
     // 全局启用限流守卫
     {

@@ -1,28 +1,28 @@
-import { Controller, Get, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { Controller, Get, Post, Delete, Query, Param, UseGuards, Request } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { WeatherHistory } from './entities/weather-history.entity';
+import { AuthGuard } from '../auth/auth.guard';
 
 /**
- * 天气 API 代理：
- * 前端直接调用 open-meteo 外网 API 会因 CORS/代理问题失败，
- * 由后端服务端代理请求，前端只调 /api/weather/*。
+ * 天气 API 代理 + 搜索历史管理
  */
 @ApiTags('weather')
 @Controller('weather')
 export class WeatherController {
   private readonly GEO_BASE = 'https://geocoding-api.open-meteo.com/v1/search';
   private readonly FORECAST_BASE = 'https://api.open-meteo.com/v1/forecast';
+  private readonly MAX_HISTORY = 10;
+
+  constructor(
+    @InjectRepository(WeatherHistory)
+    private readonly historyRepo: Repository<WeatherHistory>,
+  ) {}
 
   @Get('geocode')
   @ApiOperation({ summary: '地名解析为经纬度' })
   @ApiQuery({ name: 'name', description: '城市名称（中文/拼音/英文均可）', example: 'Shanghai' })
-  @ApiResponse({
-    status: 200,
-    schema: {
-      example: {
-        results: [{ id: 1796236, name: '上海', latitude: 31.2222, longitude: 121.4581, country: '中国', admin1: '上海' }],
-      },
-    },
-  })
   async geocode(@Query('name') name: string) {
     const url = `${this.GEO_BASE}?name=${encodeURIComponent(name)}&count=5&language=zh&format=json`;
     const res = await fetch(url);
@@ -33,16 +33,6 @@ export class WeatherController {
   @ApiOperation({ summary: '获取天气预报（当前天气 + 7天 + 24小时逐时）' })
   @ApiQuery({ name: 'latitude', description: '纬度', example: 31.2222 })
   @ApiQuery({ name: 'longitude', description: '经度', example: 121.4581 })
-  @ApiResponse({
-    status: 200,
-    schema: {
-      example: {
-        current_weather: { temperature: 32.5, weathercode: 1, windspeed: 12, winddirection: 180 },
-        daily: { time: ['2026-07-17'], weathercode: [1], temperature_2m_max: [34], temperature_2m_min: [26], precipitation_sum: [0] },
-        hourly: { time: ['2026-07-17T00:00'], temperature_2m: [27.2], weathercode: [0] },
-      },
-    },
-  })
   async forecast(
     @Query('latitude') latitude: number,
     @Query('longitude') longitude: number,
@@ -50,5 +40,56 @@ export class WeatherController {
     const url = `${this.FORECAST_BASE}?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=temperature_2m,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto`;
     const res = await fetch(url);
     return res.json();
+  }
+
+  // ========== 搜索历史（需登录） ==========
+
+  @Get('history')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '获取当前用户的搜索历史城市列表' })
+  @ApiResponse({
+    status: 200,
+    schema: {
+      example: [
+        { id: 1, name: '上海', lat: 31.2222, lon: 121.4581, country: '中国', admin1: '上海市' },
+      ],
+    },
+  })
+  async getHistory(@Request() req: any) {
+    return this.historyRepo.find({
+      where: { userId: req.user.userId },
+      order: { createdAt: 'DESC' },
+      take: this.MAX_HISTORY,
+    });
+  }
+
+  @Post('history')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '添加城市到搜索历史（重复则置顶）' })
+  async addHistory(@Request() req: any, @Query('name') name: string, @Query('lat') lat: number, @Query('lon') lon: number, @Query('country') country?: string, @Query('admin1') admin1?: string) {
+    const userId = req.user.userId;
+    // 移除已存在的相同城市
+    await this.historyRepo.delete({ userId, lat, lon });
+    // 插入新记录到头部
+    const entry = this.historyRepo.create({ userId, name, lat, lon, country: country || '', admin1: admin1 || '' });
+    await this.historyRepo.save(entry);
+    // 超过上限则删除最旧的
+    const all = await this.historyRepo.find({ where: { userId }, order: { createdAt: 'DESC' } });
+    if (all.length > this.MAX_HISTORY) {
+      const toDelete = all.slice(this.MAX_HISTORY);
+      await this.historyRepo.delete(toDelete.map(h => h.id));
+    }
+    return { success: true };
+  }
+
+  @Delete('history/:id')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '从搜索历史中删除指定城市' })
+  async removeHistory(@Request() req: any, @Param('id') id: number) {
+    await this.historyRepo.delete({ id, userId: req.user.userId });
+    return { success: true };
   }
 }

@@ -13,9 +13,9 @@
   <!-- 最近搜索的城市 -->
   <div class="recent-cities" *ngIf="recentCities.length > 0">
     <span class="recent-label">最近搜索：</span>
-    <span class="recent-tag" *ngFor="let c of recentCities; let i = index" (click)="selectRecentCity(c)">
+    <span class="recent-tag" *ngFor="let c of recentCities" (click)="selectRecentCity(c)">
       <span class="tag-text">{{ c.name }}</span>
-      <span class="tag-close" (click)="removeRecentCity(i, $event)">×</span>
+      <span class="tag-close" (click)="removeRecentCity(c.id, $event)">×</span>
     </span>
   </div>
 
