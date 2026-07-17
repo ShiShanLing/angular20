@@ -61,6 +61,7 @@ async function bootstrap() {
     .addTag('game-scores', '游戏分数（贪吃蛇/俄罗斯方块）')
     .addTag('export', '数据导出（CSV/Excel）')
     .addTag('notes', '记事本（笔记/文件夹/标签）')
+    .addTag('weather', '天气预报（代理 Open-Meteo API）')
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, document, {

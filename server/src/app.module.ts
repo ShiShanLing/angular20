@@ -11,6 +11,7 @@ import { GameScoresModule } from './game-scores/game-scores.module';
 import { ExportModule } from './export/export.module';
 import { NotesModule } from './notes/notes.module';
 import { AppController } from './app.controller';
+import { WeatherController } from './weather/weather.controller';
 
 @Module({
   imports: [
@@ -28,7 +29,7 @@ import { AppController } from './app.controller';
     ExportModule,
     NotesModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, WeatherController],
   providers: [
     // 全局启用限流守卫
     {

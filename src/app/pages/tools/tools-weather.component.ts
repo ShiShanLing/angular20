@@ -68,8 +68,8 @@ export class ToolsWeatherComponent implements OnInit {
     }
 
     this.loading = true;
-    // 1. Geocoding: 城市转经纬度
-    const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(this.city)}&count=1&language=zh&format=json`;
+    // 1. Geocoding: 城市转经纬度（通过后端代理）
+    const geoUrl = `/api/weather/geocode?name=${encodeURIComponent(this.city)}`;
 
     this.http.get(geoUrl).subscribe({
       next: (geoRes: any) => {
@@ -83,8 +83,8 @@ export class ToolsWeatherComponent implements OnInit {
         const lat = location.latitude;
         const lon = location.longitude;
 
-        // 2. 获取 7 天预案 + 24 小时逐时数据
-        const forecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=temperature_2m,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto`;
+        // 2. 获取 7 天预案 + 24 小时逐时数据（通过后端代理）
+        const forecastUrl = `/api/weather/forecast?latitude=${lat}&longitude=${lon}`;
 
         this.http.get(forecastUrl).subscribe({
           next: (data: any) => {
