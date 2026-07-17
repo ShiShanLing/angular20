@@ -32,8 +32,16 @@ export class ToolsWeatherComponent implements OnInit {
   weatherData: any = null;
   loading: boolean = false;
   chartOptions: any = null;
+  recentCities: { name: string; lat: number; lon: number; country?: string; admin1?: string }[] = [];
+  private readonly RECENT_KEY = 'weather_recent_cities';
+  private readonly MAX_RECENT = 10;
+  
   constructor(private http: HttpClient, private msg: NzMessageService) { }
+  
   ngOnInit(): void {
+    // 加载历史城市列表
+    this.loadRecentCities();
+    
     const savedCity = localStorage.getItem('tools_weather_city');
     if (savedCity) {
       this.city = savedCity;
@@ -101,6 +109,9 @@ export class ToolsWeatherComponent implements OnInit {
               timestamp: Date.now(),
               data: finalData
             }));
+            
+            // 保存到历史城市列表
+            this.addRecentCity(location);
 
             this.updateChartOptions();
             this.loading = false;
@@ -116,6 +127,75 @@ export class ToolsWeatherComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  /** 加载历史城市列表 */
+  loadRecentCities(): void {
+    try {
+      const stored = localStorage.getItem(this.RECENT_KEY);
+      if (stored) {
+        this.recentCities = JSON.parse(stored);
+      }
+    } catch { this.recentCities = []; }
+  }
+  
+  /** 添加成功搜索的城市到历史 */
+  addRecentCity(location: any): void {
+    const city = {
+      name: location.name,
+      lat: location.latitude,
+      lon: location.longitude,
+      country: location.country,
+      admin1: location.admin1
+    };
+    // 移除已存在的相同城市
+    this.recentCities = this.recentCities.filter(c => c.lat !== city.lat || c.lon !== city.lon);
+    // 添加到头部
+    this.recentCities.unshift(city);
+    // 限制数量
+    if (this.recentCities.length > this.MAX_RECENT) {
+      this.recentCities = this.recentCities.slice(0, this.MAX_RECENT);
+    }
+    this.saveRecentCities();
+  }
+  
+  /** 持久化历史城市列表 */
+  saveRecentCities(): void {
+    localStorage.setItem(this.RECENT_KEY, JSON.stringify(this.recentCities));
+  }
+  
+  /** 从历史列表选择城市 */
+  selectRecentCity(city: typeof this.recentCities[0]): void {
+    this.city = city.name;
+    localStorage.setItem('tools_weather_city', city.name);
+    
+    // 直接通过经纬度获取天气（跳过 geocoding）
+    this.loading = true;
+    const forecastUrl = `/api/weather/forecast?latitude=${city.lat}&longitude=${city.lon}`;
+    this.http.get(forecastUrl).subscribe({
+      next: (data: any) => {
+        const location = { ...city, latitude: city.lat, longitude: city.lon };
+        this.weatherData = {
+          location,
+          current: data.current_weather,
+          daily: data.daily,
+          hourly: data.hourly
+        };
+        this.updateChartOptions();
+        this.loading = false;
+      },
+      error: () => {
+        this.msg.error('获取天气详情失败');
+        this.loading = false;
+      }
+    });
+  }
+  
+  /** 从历史列表中移除城市 */
+  removeRecentCity(index: number, event: Event): void {
+    event.stopPropagation();
+    this.recentCities.splice(index, 1);
+    this.saveRecentCities();
   }
 
   getForecastArray(): any[] {
