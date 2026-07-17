@@ -3,11 +3,18 @@
  * 东方财富股吧 - 市场情绪分析模块
  *
  * 用法:
- *   node crawler/guba-analyze.mjs                    # 分析已有数据
+ *   node crawler/guba-analyze.mjs                    # 关键词分析（默认，快速免费）
+ *   node crawler/guba-analyze.mjs --ai               # AI分析（需配置API Key）
+ *   node crawler/guba-analyze.mjs --compare          # 对比模式：关键词+AI并排
  *   node crawler/guba-analyze.mjs --crawl            # 先抓取再分析
  *   node crawler/guba-analyze.mjs --crawl --pages=10 # 抓更多页
  *   node crawler/guba-analyze.mjs --json             # 输出JSON格式（供前端调用）
  *   node crawler/guba-analyze.mjs --days=3           # 分析最近N天数据
+ *
+ * 分析模式:
+ *   关键词(默认) - 快速免费，适合趋势对比，绝对值有偏差
+ *   AI(--ai)     - 准确度高，需LLM API Key，每次约0.05元
+ *   对比(--compare) - 两种方案同时运行，直观对比差异
  *
  * 分析内容:
  *   1. 帖子情绪分类（看多/看空/恐慌/贪婪/中性）
@@ -487,6 +494,93 @@ function getTempBar(temp) {
 }
 
 // ============================================================
+// 对比报告
+// ============================================================
+
+function printComparison(kwResult, aiResult) {
+  console.log('\n' + '='.repeat(65));
+  console.log('  📊 关键词 vs AI 分析对比报告');
+  console.log('  📅 ' + new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }));
+  console.log('='.repeat(65));
+
+  const kwMI = kwResult.marketIndex;
+  const aiMI = aiResult.marketIndex;
+
+  // 核心指标对比
+  console.log('\n🎯 市场情绪指数:');
+  console.log(`  关键词方案: ${kwMI.index}/100  ${kwMI.level}  ${kwMI.emoji || ''}`);
+  console.log(`  AI分析方案: ${aiMI.index}/100  ${aiMI.level}  ${aiMI.emoji || ''}`);
+  console.log(`  差异: ${Math.abs(kwMI.index - aiMI.index)}点 ${kwMI.index > aiMI.index ? '(关键词偏高)' : '(AI偏高)'}`);
+
+  // 全局情绪分布对比
+  const kwDist = kwResult.bars.reduce((acc, b) => {
+    if (!b.distribution) return acc;
+    for (const [k, v] of Object.entries(b.distribution)) acc[k] = (acc[k] || 0) + v;
+    return acc;
+  }, {});
+  const kwTotal = Object.values(kwDist).reduce((a, b) => a + b, 0);
+
+  const aiDist = aiResult.globalDistribution || {};
+  const aiTotal = Object.values(aiDist).reduce((a, b) => a + b, 0);
+
+  console.log('\n📊 全局情绪分布对比:');
+  console.log('  情绪     | 关键词          | AI分析          | 差异');
+  console.log('  ---------|-----------------|-----------------|--------');
+  for (const cat of ['bullish', 'greed', 'neutral', 'bearish', 'fear']) {
+    const labels = { bullish: '看多', greed: '贪婪', neutral: '中性', bearish: '看空', fear: '恐慌' };
+    const kwVal = kwDist[cat] || 0;
+    const aiVal = aiDist[cat] || 0;
+    const kwPct = kwTotal > 0 ? (kwVal / kwTotal * 100).toFixed(1) : '0.0';
+    const aiPct = aiTotal > 0 ? (aiVal / aiTotal * 100).toFixed(1) : '0.0';
+    const diff = (parseFloat(aiPct) - parseFloat(kwPct)).toFixed(1);
+    const diffStr = diff > 0 ? `+${diff}%` : `${diff}%`;
+    console.log(`  ${labels[cat].padEnd(6)} | ${String(kwVal).padStart(4)} (${kwPct.padStart(5)}%) | ${String(aiVal).padStart(4)} (${aiPct.padStart(5)}%) | ${diffStr}`);
+  }
+
+  // 看多看空合计
+  const kwBull = ((kwDist.bullish || 0) + (kwDist.greed || 0)) / kwTotal * 100;
+  const kwBear = ((kwDist.bearish || 0) + (kwDist.fear || 0)) / kwTotal * 100;
+  const aiBull = ((aiDist.bullish || 0) + (aiDist.greed || 0)) / aiTotal * 100;
+  const aiBear = ((aiDist.bearish || 0) + (aiDist.fear || 0)) / aiTotal * 100;
+  console.log('  ---------|-----------------|-----------------|--------');
+  console.log(`  看多合计 | ${kwBull.toFixed(1).padStart(13)}% | ${aiBull.toFixed(1).padStart(13)}% | ${(aiBull - kwBull).toFixed(1)}%`);
+  console.log(`  看空合计 | ${kwBear.toFixed(1).padStart(13)}% | ${aiBear.toFixed(1).padStart(13)}% | ${(aiBear - kwBear).toFixed(1)}%`);
+
+  // 板块温度对比
+  console.log('\n📈 板块温度对比:');
+  console.log('  板块         | 关键词 | AI分析 | 差异  | 说明');
+  console.log('  -------------|--------|--------|-------|--------');
+
+  const aiBarMap = new Map((aiResult.bars || []).map(b => [b.code, b]));
+  for (const kwBar of kwResult.bars) {
+    if (kwBar.postCount === 0) continue;
+    const aiBar = aiBarMap.get(kwBar.code);
+    if (!aiBar || aiBar.postCount === 0) continue;
+    const diff = aiBar.temperature - kwBar.temperature;
+    let note = '';
+    if (diff < -15) note = 'AI更悲观';
+    else if (diff > 15) note = 'AI更乐观';
+    else note = '基本一致';
+    console.log(`  ${kwBar.name.padEnd(10)} | ${String(kwBar.temperature).padStart(4)}°  | ${String(aiBar.temperature).padStart(4)}°  | ${diff > 0 ? '+' : ''}${diff}° | ${note}`);
+  }
+
+  // 总结
+  console.log('\n💡 对比总结:');
+  const indexDiff = kwMI.index - aiMI.index;
+  if (indexDiff > 15) {
+    console.log(`  ⚠ 关键词方案比AI高${indexDiff}点，可能高估了市场乐观度`);
+    console.log('  📌 关键词方案把大量讽刺/反语/混合情绪帖子误判为“中性”');
+    console.log('  📌 AI方案能识别语境，判断更准确');
+  } else if (indexDiff < -15) {
+    console.log(`  ⚠ AI方案比关键词高${Math.abs(indexDiff)}点`);
+  } else {
+    console.log('  ℹ 两种方案结果接近，市场情绪较明确');
+  }
+  console.log('\n  📌 建议: 用AI分析做决策参考，用关键词分析做日常趋势跟踪');
+  console.log('='.repeat(65) + '\n');
+}
+
+// ============================================================
 // 主流程
 // ============================================================
 
@@ -494,10 +588,73 @@ async function main() {
   const args = process.argv.slice(2);
   const outputJson = args.includes('--json');
   const doCrawl = args.includes('--crawl');
+  const useAI = args.includes('--ai');
+  const useCompare = args.includes('--compare');
   const daysArg = args.find(a => a.startsWith('--days='));
   const days = daysArg ? parseInt(daysArg.split('=')[1]) : 1;
   const pagesArg = args.find(a => a.startsWith('--pages='));
   const pages = pagesArg ? pagesArg.split('=')[1] : '5';
+
+  // --ai 或 --compare 模式：调用AI分析
+  if (useAI || useCompare) {
+    const aiScript = join(__dirname, 'guba-ai.mjs');
+    const aiArgs = [];
+    if (doCrawl) aiArgs.push('--crawl');
+    if (daysArg) aiArgs.push(daysArg);
+    if (pagesArg) aiArgs.push(pagesArg);
+    if (outputJson && !useCompare) aiArgs.push('--json');
+
+    if (useCompare) {
+      // 对比模式：先跑关键词，再跑AI，最后输出对比
+      console.log('📊 对比模式：同时运行关键词分析和AI分析\n');
+
+      // 1) 先抓取数据
+      if (doCrawl) {
+        console.log('🔄 先抓取最新数据...\n');
+        try {
+          execSync(
+            `node ${join(__dirname, 'guba.mjs')} --config ${join(__dirname, 'guba_targets.json')} --today --pages=${pages}`,
+            { stdio: 'inherit' }
+          );
+        } catch (err) { console.error('抓取失败:', err.message); }
+      }
+
+      // 2) 运行关键词分析（静默，获取JSON）
+      console.log('\n🔤 运行关键词分析...');
+      const kwScript = join(__dirname, 'guba-analyze.mjs');
+      let kwResult;
+      try {
+        const kwOutput = execSync(`node ${kwScript} --json --days=${days}`, { encoding: 'utf-8' });
+        kwResult = JSON.parse(kwOutput);
+      } catch (err) {
+        console.error('关键词分析失败:', err.message);
+      }
+
+      // 3) 运行AI分析
+      console.log('\n🤖 运行AI分析...');
+      try {
+        execSync(`node ${aiScript} ${aiArgs.join(' ')}`, { stdio: 'inherit' });
+      } catch (err) {
+        console.error('AI分析失败:', err.message);
+      }
+
+      // 4) 读取AI结果并输出对比
+      const aiReportFile = join(DATA_DIR, 'guba_ai_analysis.json');
+      if (kwResult && existsSync(aiReportFile)) {
+        const aiResult = JSON.parse(readFileSync(aiReportFile, 'utf-8'));
+        printComparison(kwResult, aiResult);
+      }
+      return;
+    } else {
+      // 纯AI模式
+      try {
+        execSync(`node ${aiScript} ${aiArgs.join(' ')}`, { stdio: 'inherit' });
+      } catch (err) {
+        console.error('AI分析失败:', err.message);
+      }
+      return;
+    }
+  }
 
   // 先抓取数据
   if (doCrawl) {
