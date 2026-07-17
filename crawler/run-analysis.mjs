@@ -27,6 +27,8 @@ const DATA_DIR = join(__dirname, 'data');
 const DATA_FILE = join(DATA_DIR, 'guba_posts.json');
 const KW_REPORT_FILE = join(DATA_DIR, 'guba_analysis.json');
 const QODER_INPUT_FILE = join(DATA_DIR, 'qoder_input.txt');
+const QODER_AI_INPUT_FILE = join(DATA_DIR, 'qoder_ai_input.txt');
+const AI_MAX_POSTS_PER_SECTOR = 120;  // AI分析每板块最多帖子数
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -117,14 +119,39 @@ function generateQoderInput(days) {
     lines.push('');
   }
 
+  // 生成AI精简版输入（每板块取 Top N 高点击帖子）
+  const aiLines = [];
+  let aiPostCount = 0;
+  aiLines.push(`# 股吧帖子采样 - AI情绪分析`);
+  aiLines.push(`# 日期: ${cutoffStr} ~ ${new Date().toISOString().substring(0, 10)}`);
+  aiLines.push(`# 原始帖子数: ${allPosts.length}，AI采样: 每板块Top ${AI_MAX_POSTS_PER_SECTOR}条（按点击数）`);
+  aiLines.push(`# 要求: 基于采样推断全局情绪分布，给出各板块温度和市场指数`);
+  aiLines.push('');
+
+  for (const [code, bar] of Object.entries(byBar)) {
+    const topPosts = bar.posts.slice(0, AI_MAX_POSTS_PER_SECTOR);
+    aiPostCount += topPosts.length;
+    aiLines.push(`## ${bar.name} (${code}) - 总${bar.posts.length}条，采样${topPosts.length}条`);
+    aiLines.push('');
+    for (let i = 0; i < topPosts.length; i++) {
+      const p = topPosts[i];
+      const text = p.content && p.content !== p.title
+        ? `${p.title} | ${p.content.substring(0, 60)}`
+        : p.title;
+      aiLines.push(`${i + 1}. [${p.clicks || 0}击/${p.comments || 0}评] ${text.substring(0, 100)}`);
+    }
+    aiLines.push('');
+  }
+  const aiContent = aiLines.join('\n');
+  writeFileSync(QODER_AI_INPUT_FILE, aiContent, 'utf-8');
+  console.log(`  ✓ AI采样: ${aiPostCount} 条 (${(aiContent.length / 1024).toFixed(1)} KB)`);
+
   const content = lines.join('\n');
 
   if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
   writeFileSync(QODER_INPUT_FILE, content, 'utf-8');
 
-  console.log(`  ✓ 已生成 ${allPosts.length} 条帖子清单`);
-  console.log(`  ✓ 文件: ${QODER_INPUT_FILE}`);
-  console.log(`  ✓ 大小: ${(content.length / 1024).toFixed(1)} KB`);
+  console.log(`  ✓ 全量清单: ${allPosts.length} 条 (${(content.length / 1024).toFixed(1)} KB)`);
 
   return allPosts;
 }
@@ -289,18 +316,17 @@ function runQoderAnalysis() {
     process.env.PATH = `${dirname(found)}:${process.env.PATH}`;
   }
 
-  if (!existsSync(QODER_INPUT_FILE)) {
+  const inputFile = existsSync(QODER_AI_INPUT_FILE) ? QODER_AI_INPUT_FILE : QODER_INPUT_FILE;
+  if (!existsSync(inputFile)) {
     console.error('  ❌ 帖子清单文件不存在');
     return null;
   }
 
-  const postContent = readFileSync(QODER_INPUT_FILE, 'utf-8');
-
   // 构造 prompt：让 qodercli 读取附件并分析
-  const prompt = `请阅读附件中的股吧帖子数据，对全部帖子进行AI情绪分析。\n\n附件路径: ${QODER_INPUT_FILE}\n\n请按照系统提示的格式输出完整分析报告。`;
+  const prompt = `请阅读附件中的股吧帖子采样数据，进行AI情绪分析。\n\n附件路径: ${inputFile}\n\n请按照系统提示的格式输出完整分析报告。`;
 
-  console.log('  📤 发送数据给 Qoder CLI...');
-  console.log('  ⏳ 分析中（可能需要1~3分钟）...\n');
+  console.log('  📤 发送采样数据给 Qoder CLI...');
+  console.log('  ⏳ AI 分析中（可能需要2~5分钟）...\n');
   console.log('─'.repeat(55));
 
   // 调用 qodercli -p（非交互模式，打印结果后退出）
@@ -308,19 +334,19 @@ function runQoderAnalysis() {
     '-p',                              // 非交互模式
     '--permission-mode', 'bypass_permissions',  // 跳过权限确认
     '--system-prompt', SYSTEM_PROMPT,   // 设置系统提示
-    '--attachment', QODER_INPUT_FILE,   // 附加帖子文件
-    '--max-output-tokens', '8000',      // 限制输出长度
+    '--attachment', inputFile,           // 附加帖子文件
+    '--max-output-tokens', '6000',      // 限制输出长度
     prompt,                             // 用户提示
   ], {
     encoding: 'utf-8',
     stdio: ['pipe', 'pipe', 'pipe'],
-    timeout: 300000,  // 5分钟超时
+    timeout: 600000,  // 10分钟超时
     maxBuffer: 10 * 1024 * 1024,
   });
 
   if (result.error) {
     if (result.error.code === 'ETIMEDOUT') {
-      console.error('\n  ⏰ AI 分析超时（>5分钟）');
+      console.error('\n  ⏰ AI 分析超时（>10分钟）');
     } else {
       console.error(`\n  ❌ qodercli 执行错误: ${result.error.message}`);
     }
