@@ -12,9 +12,9 @@ import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzStatisticModule } from 'ng-zorro-antd/statistic';
 import { NzDividerModule } from 'ng-zorro-antd/divider';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { TextFieldModule } from '@angular/cdk/text-field';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzIconModule } from 'ng-zorro-antd/icon';
-import { NzMessageModule } from 'ng-zorro-antd/message';
 
 /** 每日饮水目标与喝水记录打卡。 */
 @Component({
@@ -24,7 +24,7 @@ import { NzMessageModule } from 'ng-zorro-antd/message';
     CommonModule, ReactiveFormsModule, FormsModule,
     NzCardModule, NzFormModule, NzInputModule, NzInputNumberModule,
     NzButtonModule, NzDatePickerModule, NzGridModule, NzStatisticModule, NzDividerModule,
-    NzAlertModule, NzIconModule, NzMessageModule
+    NzAlertModule, NzIconModule, TextFieldModule
   ],
   templateUrl: './tools-water.component.html',
   styleUrl: './tools-water.component.scss'

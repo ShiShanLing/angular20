@@ -10,6 +10,7 @@ import { NzTabsModule } from 'ng-zorro-antd/tabs';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzIconModule } from 'ng-zorro-antd/icon';
+import { TextFieldModule } from '@angular/cdk/text-field';
 
 /** 开发常用小工具：时间戳/编码解码等（多 Tab）。 */
 @Component({
@@ -18,7 +19,7 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
   imports: [
     CommonModule, FormsModule,
     NzCardModule, NzInputModule, NzButtonModule, NzSpaceModule,
-    NzTabsModule, NzGridModule, NzIconModule
+    NzTabsModule, NzGridModule, NzIconModule, TextFieldModule
   ],
   providers: [DatePipe],
   templateUrl: './tools-dev.component.html',

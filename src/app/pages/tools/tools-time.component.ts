@@ -18,7 +18,6 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
-import { NzMessageModule } from 'ng-zorro-antd/message';
 
 interface TodoItem {
   id: string;
@@ -34,7 +33,7 @@ interface TodoItem {
     CommonModule, ReactiveFormsModule, FormsModule,
     NzCardModule, NzFormModule, NzInputModule, NzInputNumberModule,
     NzButtonModule, NzDatePickerModule, NzGridModule, NzStatisticModule, NzDividerModule,
-    NzListModule, NzCheckboxModule, NzSelectModule, NzIconModule, NzModalModule, NzMessageModule
+    NzListModule, NzCheckboxModule, NzSelectModule, NzIconModule, NzModalModule
   ],
   templateUrl: './tools-time.component.html',
   styleUrl: './tools-time.component.scss'

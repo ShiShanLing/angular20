@@ -1,8 +1,10 @@
 <!-- 趋势图 -->
-<div class="chart-section" *ngIf="chartOptions()">
-  <h3 class="section-title">📈 情绪趋势（最近 30 天）</h3>
-  <div echarts [options]="chartOptions()" style="height: 280px;"></div>
-</div>
+@if (chartOptions(); as opts) {
+  <div class="chart-section">
+    <h3 class="section-title">📈 情绪趋势（最近 30 天）</h3>
+    <div echarts [options]="opts" style="height: 280px;"></div>
+  </div>
+}
 
 <!-- 数据列表 -->
 <div class="table-section">

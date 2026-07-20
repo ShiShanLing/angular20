@@ -45,7 +45,7 @@ export class MarketListComponent implements OnInit {
   readonly total = signal(0);
   readonly page = signal(1);
   readonly pageSize = signal(20);
-  readonly chartOptions = signal<any>(null);
+  readonly chartOptions = signal<EChartsOption | null>(null);
 
   // 详情视图状态
   readonly showDetail = signal(false);
@@ -77,10 +77,11 @@ export class MarketListComponent implements OnInit {
   }
 
   loadTrend(): void {
-    this.marketService.getTrend(30).subscribe({
+    const days = 30;
+    this.marketService.getTrend(days).subscribe({
       next: (data) => {
         if (data.length === 0) return;
-        this.chartOptions.set(this.buildChartOptions(data));
+        this.chartOptions.set(this.buildChartOptions(data, days));
       },
     });
   }
@@ -144,11 +145,41 @@ export class MarketListComponent implements OnInit {
     return 'green';
   }
 
-  private buildChartOptions(data: TrendItem[]): any {
-    const dates = data.map(d => d.date.substring(5)); // MM-DD
-    const aiValues = data.map(d => d.aiIndex);
-    const kwValues = data.map(d => d.kwIndex);
-    const panicValues = data.map(d => d.panicTotal);
+  private formatLocalDate(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  private buildChartOptions(data: TrendItem[], days: number): EChartsOption {
+    const byDate = new Map(data.map((d) => [d.date, d]));
+    const filled: TrendItem[] = [];
+    const today = new Date();
+
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const key = this.formatLocalDate(d);
+      filled.push(
+        byDate.get(key) ?? {
+          date: key,
+          aiIndex: null,
+          kwIndex: null,
+          panicTotal: null,
+          bearFearPct: 0,
+          totalPosts: 0,
+        },
+      );
+    }
+
+    const dates = filled.map((d) => d.date.substring(5));
+    const aiValues = filled.map((d) => d.aiIndex);
+    const kwValues = filled.map((d) => d.kwIndex);
+    const panicValues = filled.map((d) => d.panicTotal);
+
+    const panicNums = panicValues.filter((v): v is number => v != null);
+    const panicMax = panicNums.length ? Math.max(...panicNums, 1) : 1;
 
     return {
       tooltip: {
@@ -159,21 +190,49 @@ export class MarketListComponent implements OnInit {
         data: ['AI 指数', '关键词指数', '恐慌词数'],
         bottom: 0,
       },
-      grid: { left: '3%', right: '4%', bottom: '15%', top: '8%', containLabel: true },
+      grid: { left: 48, right: 48, bottom: '15%', top: 36, containLabel: false },
       xAxis: {
         type: 'category',
         data: dates,
-        axisLabel: { fontSize: 11 },
+        axisPointer: { type: 'shadow' },
+        axisLabel: {
+          fontSize: 11,
+          interval: Math.max(0, Math.floor(days / 10) - 1),
+        },
       },
       yAxis: [
-        { type: 'value', name: '指数', min: 0, max: 100 },
-        { type: 'value', name: '恐慌词数', splitLine: { show: false } },
+        {
+          type: 'value',
+          name: '指数',
+          position: 'left',
+          min: 0,
+          max: 100,
+          interval: 20,
+          axisLine: { show: true },
+          axisLabel: { show: true, formatter: '{value}' },
+          splitLine: { show: true, lineStyle: { type: 'dashed' } },
+        },
+        {
+          type: 'value',
+          name: '恐慌词数',
+          position: 'right',
+          min: 0,
+          max: Math.ceil(panicMax * 1.2 / 10) * 10 || 10,
+          interval: Math.max(10, Math.ceil(panicMax * 1.2 / 5 / 10) * 10),
+          axisLine: { show: true },
+          axisLabel: { show: true },
+          splitLine: { show: false },
+        },
       ],
       series: [
         {
           name: 'AI 指数',
           type: 'line',
+          yAxisIndex: 0,
           smooth: true,
+          connectNulls: true,
+          showSymbol: true,
+          symbolSize: 6,
           data: aiValues,
           itemStyle: { color: '#2563eb' },
           areaStyle: {
@@ -189,7 +248,11 @@ export class MarketListComponent implements OnInit {
         {
           name: '关键词指数',
           type: 'line',
+          yAxisIndex: 0,
           smooth: true,
+          connectNulls: true,
+          showSymbol: true,
+          symbolSize: 6,
           data: kwValues,
           itemStyle: { color: '#f59e0b' },
         },

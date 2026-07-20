@@ -10,6 +10,7 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzSpaceModule } from 'ng-zorro-antd/space';
 import { NzTabsModule } from 'ng-zorro-antd/tabs';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { TextFieldModule } from '@angular/cdk/text-field';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzGridModule } from 'ng-zorro-antd/grid';
@@ -39,7 +40,8 @@ const DECODE_SCALES = [1, 1.5, 2, 0.75];
     NzIconModule,
     NzSelectModule,
     NzGridModule,
-    NzAlertModule
+    NzAlertModule,
+    TextFieldModule
   ],
   templateUrl: './tools-qrcode.component.html',
   styleUrl: './tools-qrcode.component.scss'

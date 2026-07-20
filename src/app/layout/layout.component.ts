@@ -6,7 +6,7 @@ import { NzLayoutModule } from 'ng-zorro-antd/layout';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzBreadCrumbModule } from 'ng-zorro-antd/breadcrumb';
-import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
+import { NzTooltipModule } from 'ng-zorro-antd/tooltip';
 // BreakpointObserver 来自 Angular CDK，用于监听媒体查询断点变化
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { Subscription } from 'rxjs';
@@ -37,7 +37,7 @@ interface MenuSettingsGroup {
     NzMenuModule,
     NzIconModule,
     NzBreadCrumbModule,
-    NzToolTipModule
+    NzTooltipModule
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss'

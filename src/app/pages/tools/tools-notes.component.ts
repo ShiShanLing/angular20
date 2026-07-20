@@ -6,10 +6,10 @@ import { Subject, debounceTime } from 'rxjs';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
-import { NzMessageModule, NzMessageService } from 'ng-zorro-antd/message';
+import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NzTagModule } from 'ng-zorro-antd/tag';
-import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
+import { NzTooltipModule } from 'ng-zorro-antd/tooltip';
 import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzSelectModule } from 'ng-zorro-antd/select';
@@ -35,8 +35,8 @@ const Table = Quill.import('modules/table');
   standalone: true,
   imports: [
     CommonModule, FormsModule,
-    NzButtonModule, NzIconModule, NzInputModule, NzMessageModule,
-    NzModalModule, NzTagModule, NzToolTipModule, NzPopconfirmModule,
+    NzButtonModule, NzIconModule, NzInputModule,
+    NzModalModule, NzTagModule, NzTooltipModule, NzPopconfirmModule,
     NzEmptyModule, NzSelectModule, NzInputNumberModule, QuillModule,
   ],
   templateUrl: './tools-notes.component.html',

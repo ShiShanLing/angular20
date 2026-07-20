@@ -8,8 +8,9 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzSpaceModule } from 'ng-zorro-antd/space';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzIconModule } from 'ng-zorro-antd/icon';
+import { TextFieldModule } from '@angular/cdk/text-field';
 import { NzDividerModule } from 'ng-zorro-antd/divider';
-import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
+import { NzTooltipModule } from 'ng-zorro-antd/tooltip';
 
 /** 文本工具箱：统计字数、Base64、哈希等快捷操作。 */
 @Component({
@@ -18,7 +19,7 @@ import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
   imports: [
     CommonModule, FormsModule,
     NzCardModule, NzInputModule, NzButtonModule, NzSpaceModule,
-    NzIconModule, NzDividerModule, NzToolTipModule
+    NzIconModule, NzDividerModule, NzTooltipModule, TextFieldModule
   ],
   templateUrl: './tools-text.component.html',
   styleUrl: './tools-text.component.scss'

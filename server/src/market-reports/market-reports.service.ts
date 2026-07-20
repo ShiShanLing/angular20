@@ -36,14 +36,26 @@ export class MarketReportsService {
   }
 
   /**
-   * 趋势数据（最近 N 天）
+   * 趋势数据（最近 N 天，按日期升序）
    */
   async getTrend(days = 30) {
-    return this.repo.find({
-      select: ['date', 'aiIndex', 'kwIndex', 'panicTotal', 'bearFearPct', 'totalPosts'],
-      order: { date: 'ASC' },
-      take: days,
-    });
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+
+    return this.repo
+      .createQueryBuilder('r')
+      .select([
+        'r.date',
+        'r.aiIndex',
+        'r.kwIndex',
+        'r.panicTotal',
+        'r.bearFearPct',
+        'r.totalPosts',
+      ])
+      .where('r.date >= :cutoff', { cutoff: cutoffStr })
+      .orderBy('r.date', 'ASC')
+      .getMany();
   }
 
   /**

@@ -1,4 +1,8 @@
 # Angular20
+
+## 接口文档
+http://106.13.175.227/api/docs
+
 二维码功能
 1.还需要优化,图片高度会影响下方结果展示位置,
 2.图片识别有问题,有可能识别不出来
@@ -83,6 +87,7 @@ ng generate component component-name
 ```
 
 查看全部 schematic：
+
 
 ```bash
 ng generate --help

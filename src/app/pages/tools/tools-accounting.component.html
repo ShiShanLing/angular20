@@ -39,7 +39,7 @@
     
     <nz-col [nzSpan]="24" [nzMd]="16">
       <nz-card nzTitle="统计与记录">
-        <nz-tabset>
+        <nz-tabs>
           
           <nz-tab nzTitle="本周饼图" (nzClick)="buildChart('week')">
              <div echarts [options]="chartOption" style="height: 350px;"></div>
@@ -69,7 +69,7 @@
               </tbody>
             </nz-table>
           </nz-tab>
-        </nz-tabset>
+        </nz-tabs>
       </nz-card>
     </nz-col>
   </nz-row>

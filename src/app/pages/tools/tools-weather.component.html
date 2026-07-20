@@ -1,12 +1,10 @@
 <div class="tool-content">
   <nz-row [nzGutter]="16" style="margin-bottom: 16px;">
     <nz-col [nzSpan]="18">
-      <nz-input-group nzSearch [nzAddOnAfter]="suffixButton">
+      <nz-input-search>
         <input type="text" nz-input [(ngModel)]="city" (keyup.enter)="searchWeather()" placeholder="输入城市名称（拼音或英文，如: Beijing, Shanghai）" />
-      </nz-input-group>
-      <ng-template #suffixButton>
-        <button nz-button nzType="primary" (click)="searchWeather()" [nzLoading]="loading">搜索</button>
-      </ng-template>
+        <button nzInputAddonAfter nz-button nzType="primary" (click)="searchWeather()" [nzLoading]="loading">搜索</button>
+      </nz-input-search>
     </nz-col>
   </nz-row>
   

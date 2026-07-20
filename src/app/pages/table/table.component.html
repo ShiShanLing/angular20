@@ -5,14 +5,14 @@
   <nz-card [nzBordered]="false">
     <!-- Toolbar -->
     <div class="toolbar">
-      <nz-input-group [nzPrefix]="searchIcon" style="max-width: 300px">
+      <nz-input-wrapper style="max-width: 300px">
+        <span nzInputPrefix><span nz-icon nzType="search"></span></span>
         <input
           nz-input
           [(ngModel)]="searchText"
           (ngModelChange)="applyFilter()"
           placeholder="搜索姓名 / 邮箱 / 角色" />
-      </nz-input-group>
-      <ng-template #searchIcon><span nz-icon nzType="search"></span></ng-template>
+      </nz-input-wrapper>
       <span class="record-count">共 {{ displayData.length }} 条记录</span>
     </div>
 

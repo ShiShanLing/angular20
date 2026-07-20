@@ -7,7 +7,7 @@
     </div>
   </div>
 
-  <nz-tabset nzType="card">
+  <nz-tabs nzType="card">
     <nz-tab nzTitle="📈 折线图">
       <nz-card [nzBordered]="false" class="chart-card" [class.dark]="darkMode">
         <p class="chart-desc">多产品月度销量趋势对比，平滑曲线展示数据走向</p>
@@ -56,5 +56,5 @@
         <div echarts [options]="heatmapOption" class="chart-area chart-area--heatmap"></div>
       </nz-card>
     </nz-tab>
-  </nz-tabset>
+  </nz-tabs>
 </div>

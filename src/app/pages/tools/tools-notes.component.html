@@ -50,10 +50,10 @@
   <!-- Notes List -->
   <div class="notes-list">
     <div class="list-header">
-      <nz-input-group [nzPrefix]="searchIcon" nzSize="small">
+      <nz-input-wrapper nzSize="small">
+        <span nzInputPrefix><i nz-icon nzType="search"></i></span>
         <input nz-input placeholder="搜索笔记..." [(ngModel)]="searchQuery" (ngModelChange)="onSearch()" />
-      </nz-input-group>
-      <ng-template #searchIcon><i nz-icon nzType="search"></i></ng-template>
+      </nz-input-wrapper>
       <button nz-button nzType="primary" nzSize="small" (click)="createNote()" class="create-btn">
         <i nz-icon nzType="plus"></i>
       </button>

@@ -18,7 +18,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzDividerModule } from 'ng-zorro-antd/divider';
 import { NzTypographyModule } from 'ng-zorro-antd/typography';
 import { NzTagModule } from 'ng-zorro-antd/tag';
-import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
+import { NzTooltipModule } from 'ng-zorro-antd/tooltip';
 
 import { RecordService } from '../../services/record.service';
 
@@ -77,7 +77,7 @@ const MAX_RETIREMENT_YEARS = 85;
     NzDividerModule,
     NzTypographyModule,
     NzTagModule,
-    NzToolTipModule,
+    NzTooltipModule,
   ],
   templateUrl: './tools-fire.component.html',
   styleUrl: './tools-fire.component.scss',

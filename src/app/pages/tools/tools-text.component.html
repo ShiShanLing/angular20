@@ -13,7 +13,7 @@
       </nz-space>
     </div>
 
-    <textarea nz-input [(ngModel)]="sourceText" [nzAutosize]="{ minRows: 15, maxRows: 30 }"
+    <textarea nz-input [(ngModel)]="sourceText" cdkTextareaAutosize [cdkAutosizeMinRows]="15" [cdkAutosizeMaxRows]="30"
       placeholder="在此打字或粘贴文本，点击上方按钮进行处理..."></textarea>
   </nz-card>
   <ng-template #extraTpl>

@@ -44,7 +44,7 @@
           <nz-form-item>
             <nz-form-label>每天提醒时间点 (HH:MM，多行)</nz-form-label>
             <nz-form-control>
-              <textarea nz-input formControlName="timeList" placeholder="e.g. 09:30" [nzAutosize]="{ minRows: 4, maxRows: 10 }"></textarea>
+              <textarea nz-input formControlName="timeList" placeholder="e.g. 09:30" cdkTextareaAutosize [cdkAutosizeMinRows]="4" [cdkAutosizeMaxRows]="10"></textarea>
             </nz-form-control>
           </nz-form-item>
 

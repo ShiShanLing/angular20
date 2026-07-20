@@ -16,6 +16,7 @@ import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzBadgeModule } from 'ng-zorro-antd/badge';
+import { TextFieldModule } from '@angular/cdk/text-field';
 
 import {
   PRACTICE_CATEGORY_LABELS,
@@ -48,6 +49,7 @@ type FilterValue = PracticeFilterCategory;
     NzTagModule,
     NzEmptyModule,
     NzBadgeModule,
+    TextFieldModule,
     MarkdPipe,
   ],
   template: `
@@ -70,17 +72,15 @@ type FilterValue = PracticeFilterCategory;
             }
           </div>
           <!-- 搜索框 -->
-          <nz-input-group [nzPrefix]="searchIcon" nzSize="small" class="search-box">
+          <nz-input-wrapper nzSize="small" class="search-box">
+            <span nzInputPrefix><span nz-icon nzType="search"></span></span>
             <input
               nz-input
               placeholder="搜索题目..."
               [(ngModel)]="searchText"
               (ngModelChange)="onSearchChange()"
             />
-          </nz-input-group>
-          <ng-template #searchIcon>
-            <span nz-icon nzType="search"></span>
-          </ng-template>
+          </nz-input-wrapper>
         </div>
       </div>
 
@@ -145,7 +145,7 @@ type FilterValue = PracticeFilterCategory;
                   </div>
                   <textarea
                     nz-input
-                    [nzAutosize]="{ minRows: 2, maxRows: 8 }"
+                    cdkTextareaAutosize [cdkAutosizeMinRows]="2" [cdkAutosizeMaxRows]="8"
                     placeholder="在这里默写答案，加深记忆..."
                     [(ngModel)]="memoInputs[item.id]"
                     (blur)="onMemoBlur(item.id)"

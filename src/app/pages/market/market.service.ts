@@ -34,7 +34,7 @@ export interface TrendItem {
   date: string;
   aiIndex: number | null;
   kwIndex: number | null;
-  panicTotal: number;
+  panicTotal: number | null;
   bearFearPct: number;
   totalPosts: number;
 }

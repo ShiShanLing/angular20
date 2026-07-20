@@ -1,6 +1,6 @@
 <div class="tool-content">
   <nz-card nzTitle="开发小工具" [nzBodyStyle]="{ padding: '0px' }">
-    <nz-tabset nzSize="large" [nzTabPosition]="'top'" style="padding: 16px;">
+    <nz-tabs nzSize="large" [nzTabPosition]="'top'" style="padding: 16px;">
       
       <!-- Timestamp Tab -->
       <nz-tab nzTitle="时间戳转换">
@@ -12,9 +12,9 @@
 
         <nz-row [nzGutter]="16" style="margin-bottom: 16px;">
           <nz-col [nzSpan]="10">
-            <nz-input-group nzAddOnBefore="时间戳">
+            <nz-input-wrapper nzAddonBefore="时间戳">
               <input type="text" nz-input [(ngModel)]="inputTimestamp" placeholder="支持秒或毫秒" />
-            </nz-input-group>
+            </nz-input-wrapper>
           </nz-col>
           <nz-col [nzSpan]="4" style="text-align: center;">
             <button nz-button nzType="primary" (click)="convertTsToTime()">转换 <nz-icon nzType="arrow-right" /></button>
@@ -29,9 +29,9 @@
 
         <nz-row [nzGutter]="16">
           <nz-col [nzSpan]="10">
-            <nz-input-group nzAddOnBefore="标准时间">
+            <nz-input-wrapper nzAddonBefore="标准时间">
               <input type="text" nz-input [(ngModel)]="inputTime" placeholder="例如 2026-03-19 12:00:00" />
-            </nz-input-group>
+            </nz-input-wrapper>
           </nz-col>
           <nz-col [nzSpan]="4" style="text-align: center;">
              <button nz-button nzType="primary" (click)="convertTimeToTs()">转换 <nz-icon nzType="arrow-right" /></button>
@@ -56,13 +56,13 @@
                 <button *nzSpaceItem nz-button nzDanger (click)="jsonInput = ''">清空</button>
               </nz-space>
             </div>
-            <textarea nz-input [(ngModel)]="jsonInput" [nzAutosize]="{ minRows: 15, maxRows: 25 }" placeholder="粘贴未格式化的 JSON 字符串..."></textarea>
+            <textarea nz-input [(ngModel)]="jsonInput" cdkTextareaAutosize [cdkAutosizeMinRows]="15" [cdkAutosizeMaxRows]="25" placeholder="粘贴未格式化的 JSON 字符串..."></textarea>
           </nz-col>
           <nz-col [nzSpan]="12">
              <div style="margin-bottom: 8px;">
                <button nz-button (click)="copy(jsonOutput)"><nz-icon nzType="copy" /> 复制</button>
              </div>
-             <textarea nz-input [ngModel]="jsonOutput" readonly [nzAutosize]="{ minRows: 15, maxRows: 25 }" placeholder="输出结果..." style="background-color: var(--bg-tertiary);"></textarea>
+             <textarea nz-input [ngModel]="jsonOutput" readonly cdkTextareaAutosize [cdkAutosizeMinRows]="15" [cdkAutosizeMaxRows]="25" placeholder="输出结果..." style="background-color: var(--bg-tertiary);"></textarea>
           </nz-col>
         </nz-row>
       </nz-tab>
@@ -71,7 +71,7 @@
       <nz-tab nzTitle="Base64 编解码">
         <nz-row [nzGutter]="16">
           <nz-col [nzSpan]="24" style="margin-bottom: 16px;">
-            <textarea nz-input [(ngModel)]="base64Input" [nzAutosize]="{ minRows: 5, maxRows: 10 }" placeholder="输入需要编解码的内容..."></textarea>
+            <textarea nz-input [(ngModel)]="base64Input" cdkTextareaAutosize [cdkAutosizeMinRows]="5" [cdkAutosizeMaxRows]="10" placeholder="输入需要编解码的内容..."></textarea>
           </nz-col>
           <nz-col [nzSpan]="24" style="text-align: center; margin-bottom: 16px;">
             <nz-space>
@@ -81,7 +81,7 @@
           </nz-col>
           <nz-col [nzSpan]="24">
             <label style="display: block; margin-bottom: 8px; font-weight: bold;">结果 <a (click)="copy(base64Output)" style="margin-left: 8px; font-weight: normal;"><nz-icon nzType="copy"/> 复制</a></label>
-            <textarea nz-input [ngModel]="base64Output" readonly [nzAutosize]="{ minRows: 5, maxRows: 10 }" style="background-color: var(--bg-tertiary);"></textarea>
+            <textarea nz-input [ngModel]="base64Output" readonly cdkTextareaAutosize [cdkAutosizeMinRows]="5" [cdkAutosizeMaxRows]="10" style="background-color: var(--bg-tertiary);"></textarea>
           </nz-col>
         </nz-row>
       </nz-tab>
@@ -90,7 +90,7 @@
       <nz-tab nzTitle="URL 编解码">
          <nz-row [nzGutter]="16">
           <nz-col [nzSpan]="24" style="margin-bottom: 16px;">
-            <textarea nz-input [(ngModel)]="urlInput" [nzAutosize]="{ minRows: 5, maxRows: 10 }" placeholder="输入需要编解码的 URL 或参数..."></textarea>
+            <textarea nz-input [(ngModel)]="urlInput" cdkTextareaAutosize [cdkAutosizeMinRows]="5" [cdkAutosizeMaxRows]="10" placeholder="输入需要编解码的 URL 或参数..."></textarea>
           </nz-col>
           <nz-col [nzSpan]="24" style="text-align: center; margin-bottom: 16px;">
             <nz-space>
@@ -100,11 +100,11 @@
           </nz-col>
           <nz-col [nzSpan]="24">
             <label style="display: block; margin-bottom: 8px; font-weight: bold;">结果 <a (click)="copy(urlOutput)" style="margin-left: 8px; font-weight: normal;"><nz-icon nzType="copy"/> 复制</a></label>
-            <textarea nz-input [ngModel]="urlOutput" readonly [nzAutosize]="{ minRows: 5, maxRows: 10 }" style="background-color: var(--bg-tertiary);"></textarea>
+            <textarea nz-input [ngModel]="urlOutput" readonly cdkTextareaAutosize [cdkAutosizeMinRows]="5" [cdkAutosizeMaxRows]="10" style="background-color: var(--bg-tertiary);"></textarea>
           </nz-col>
         </nz-row>
       </nz-tab>
 
-    </nz-tabset>
+    </nz-tabs>
   </nz-card>
 </div>

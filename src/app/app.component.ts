@@ -1,5 +1,5 @@
-import { DOCUMENT } from '@angular/common';
-import { Component, inject } from '@angular/core';
+
+import { Component, inject, DOCUMENT } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { PermissionService } from './core/permission.service';
 import { AuthService } from './core/auth.service';

@@ -1,6 +1,6 @@
 <div class="tool-content">
   <nz-card nzTitle="二维码工具" [nzBodyStyle]="{ padding: '0px' }">
-    <nz-tabset nzSize="large" [nzTabPosition]="'top'" class="qrcode-tabs">
+    <nz-tabs nzSize="large" [nzTabPosition]="'top'" class="qrcode-tabs">
       <!-- 生成 -->
       <nz-tab nzTitle="生成二维码">
         <div class="tab-panel">
@@ -8,7 +8,7 @@
             nz-input
             [ngModel]="generateText()"
             (ngModelChange)="onGenerateTextChange($event)"
-            [nzAutosize]="{ minRows: 4, maxRows: 10 }"
+            cdkTextareaAutosize [cdkAutosizeMinRows]="4" [cdkAutosizeMaxRows]="10"
             placeholder="输入文本、链接或其他内容，点击生成二维码..."
           ></textarea>
 
@@ -90,7 +90,7 @@
             nz-input
             [ngModel]="decodeResult()"
             (ngModelChange)="decodeResult.set($event)"
-            [nzAutosize]="{ minRows: 4, maxRows: 12 }"
+            cdkTextareaAutosize [cdkAutosizeMinRows]="4" [cdkAutosizeMaxRows]="12"
             [readOnly]="decoding()"
             class="decode-result"
             placeholder="解码结果将显示在这里..."
@@ -132,12 +132,12 @@
             nz-input
             [ngModel]="decodeResult()"
             (ngModelChange)="decodeResult.set($event)"
-            [nzAutosize]="{ minRows: 3, maxRows: 8 }"
+            cdkTextareaAutosize [cdkAutosizeMinRows]="3" [cdkAutosizeMaxRows]="8"
             placeholder="扫描结果将显示在这里..."
             style="margin-top: 16px;"
           ></textarea>
         </div>
       </nz-tab>
-    </nz-tabset>
+    </nz-tabs>
   </nz-card>
 </div>
