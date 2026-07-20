@@ -1,0 +1,160 @@
+<div class="notes-container">
+  <!-- Sidebar: Folders & Filters -->
+  <aside class="notes-sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-title">记事本</span>
+      <button nz-button nzType="text" nzSize="small" (click)="createNotebook()" nz-tooltip nzTooltipTitle="新建文件夹">
+        <i nz-icon nzType="folder-add" nzTheme="outline"></i>
+      </button>
+    </div>
+
+    <div class="sidebar-list">
+      <div class="sidebar-item" [class.active]="isFilterActive('all')" (click)="selectSidebar('all')">
+        <i nz-icon nzType="file-text" nzTheme="outline"></i>
+        <span>全部笔记</span>
+      </div>
+      <div class="sidebar-item" [class.active]="isFilterActive('favorite')" (click)="selectSidebar('favorite')">
+        <i nz-icon nzType="star" nzTheme="outline"></i>
+        <span>收藏</span>
+      </div>
+
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section-title">文件夹</div>
+
+      <div class="sidebar-item" *ngFor="let nb of notebooks" [class.active]="isNotebookSelected(nb.id)"
+           (click)="selectSidebar({ notebookId: nb.id })">
+        <i nz-icon nzType="folder" nzTheme="outline"></i>
+        <span class="nb-name">{{ nb.name }}</span>
+        <span class="nb-actions">
+          <button nz-button nzType="text" nzSize="small" (click)="renameNotebook(nb, $event)">
+            <i nz-icon nzType="edit" nzTheme="outline"></i>
+          </button>
+          <button nz-button nzType="text" nzSize="small" nzDanger (click)="deleteNotebook(nb, $event)">
+            <i nz-icon nzType="delete" nzTheme="outline"></i>
+          </button>
+        </span>
+      </div>
+
+      <div class="sidebar-empty" *ngIf="notebooks.length === 0">
+        暂无文件夹
+      </div>
+
+      <div class="sidebar-divider" *ngIf="allTags.length > 0"></div>
+      <div class="sidebar-section-title" *ngIf="allTags.length > 0">标签</div>
+      <div class="sidebar-tag" *ngFor="let tag of allTags" (click)="filterByTag(tag)">
+        <nz-tag>{{ tag }}</nz-tag>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Notes List -->
+  <div class="notes-list">
+    <div class="list-header">
+      <nz-input-group [nzPrefix]="searchIcon" nzSize="small">
+        <input nz-input placeholder="搜索笔记..." [(ngModel)]="searchQuery" (ngModelChange)="onSearch()" />
+      </nz-input-group>
+      <ng-template #searchIcon><i nz-icon nzType="search"></i></ng-template>
+      <button nz-button nzType="primary" nzSize="small" (click)="createNote()" class="create-btn">
+        <i nz-icon nzType="plus"></i>
+      </button>
+    </div>
+
+    <div class="list-scroll">
+      <div class="note-item" *ngFor="let note of notes" [class.selected]="isSelected(note)"
+           (click)="selectNote(note)">
+        <div class="note-item-header">
+          <span class="note-item-title">
+            <i nz-icon nzType="pushpin" nzTheme="fill" *ngIf="note.isPinned" class="pin-icon"></i>
+            {{ note.title }}
+          </span>
+          <span class="note-item-actions">
+            <button nz-button nzType="text" nzSize="small" (click)="togglePin(note, $event)" nz-tooltip
+                    [nzTooltipTitle]="note.isPinned ? '取消置顶' : '置顶'">
+              <i nz-icon [nzType]="'pushpin'" [nzTheme]="note.isPinned ? 'fill' : 'outline'"></i>
+            </button>
+            <button nz-button nzType="text" nzSize="small" (click)="toggleFavorite(note, $event)" nz-tooltip
+                    [nzTooltipTitle]="note.isFavorite ? '取消收藏' : '收藏'">
+              <i nz-icon [nzType]="'star'" [nzTheme]="note.isFavorite ? 'fill' : 'outline'"></i>
+            </button>
+            <button nz-button nzType="text" nzSize="small" nzDanger (click)="deleteNote(note, $event)">
+              <i nz-icon nzType="delete" nzTheme="outline"></i>
+            </button>
+          </span>
+        </div>
+        <div class="note-item-summary">{{ getNoteSummary(note) }}</div>
+        <div class="note-item-meta">
+          <span>{{ getRelativeTime(note.updatedAt) }}</span>
+          <nz-tag *ngIf="note.tags?.length" nzSize="small" class="note-tag-mini">{{ note.tags![0] }}</nz-tag>
+        </div>
+      </div>
+
+      <nz-empty *ngIf="notes.length === 0" nzNotFoundContent="暂无笔记"></nz-empty>
+    </div>
+  </div>
+
+  <!-- Editor -->
+  <div class="notes-editor">
+    <div class="editor-header" *ngIf="selectedNoteId">
+      <input class="editor-title" [(ngModel)]="editTitle" (ngModelChange)="onTitleChange()"
+             placeholder="输入标题..." />
+      <div class="editor-actions">
+        <button class="action-btn" [class.active]="currentNotePinned" (click)="togglePinCurrent()" nz-tooltip nzTooltipTitle="置顶">
+          <i nz-icon nzType="pushpin" [nzTheme]="currentNotePinned ? 'fill' : 'outline'"></i>
+        </button>
+        <button class="action-btn" (click)="insertTable()" nz-tooltip nzTooltipTitle="插入表格">
+          <i nz-icon nzType="table"></i>
+        </button>
+        <button class="action-btn" (click)="exportNote()" nz-tooltip nzTooltipTitle="导出HTML">
+          <i nz-icon nzType="export" nzTheme="outline"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Tag bar -->
+    <div class="editor-tags" *ngIf="selectedNoteId">
+      <nz-tag *ngFor="let tag of editTags" nzClosable (nzOnClose)="removeTag(tag)">{{ tag }}</nz-tag>
+      <input class="tag-input" [(ngModel)]="newTag" placeholder="+ 标签"
+             (keydown.enter)="addTag()" />
+    </div>
+
+    <!-- Quill Editor -->
+    <div class="editor-body" *ngIf="selectedNoteId">
+      <quill-editor
+        #quillEditor
+        [(ngModel)]="editorContent"
+        [modules]="editorModules"
+        [formats]="editorFormats"
+        format="html"
+        placeholder="开始编写..."
+        (onEditorCreated)="onEditorCreated($event)"
+        (onContentChanged)="onContentChanged()">
+      </quill-editor>
+    </div>
+
+    <div class="editor-placeholder" *ngIf="!selectedNoteId">
+      <i nz-icon nzType="edit" nzTheme="outline"></i>
+      <p>选择一篇笔记开始编辑</p>
+    </div>
+  </div>
+</div>
+
+<!-- 插入表格弹窗 -->
+<nz-modal
+  [(nzVisible)]="showTableModal"
+  nzTitle="插入表格"
+  nzOkText="插入"
+  (nzOnOk)="confirmInsertTable()"
+  (nzOnCancel)="showTableModal = false">
+  <ng-container *nzModalContent>
+    <div class="table-modal-form">
+      <div class="table-form-row">
+        <label>行数</label>
+        <nz-input-number [(ngModel)]="tableRows" [nzMin]="1" [nzMax]="20" style="width:100%"></nz-input-number>
+      </div>
+      <div class="table-form-row">
+        <label>列数</label>
+        <nz-input-number [(ngModel)]="tableCols" [nzMin]="1" [nzMax]="10" style="width:100%"></nz-input-number>
+      </div>
+    </div>
+  </ng-container>
+</nz-modal>

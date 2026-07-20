@@ -30,6 +30,75 @@
   line-height: 1.5;
 }
 
+/* Dark mode overrides for practice component */
+:host-context([data-theme="dark"]) .practice-app {
+  --border: 1px solid rgba(255, 255, 255, 0.15);
+  --fg: rgba(255, 255, 255, 0.88);
+  --fg-muted: rgba(255, 255, 255, 0.55);
+  --bg: #1f1f1f;
+  --bg-soft: #262626;
+  --input-bg: #262626;
+  --focus: #1668dc;
+}
+
+:host-context([data-theme="dark"]) .practice-app {
+  .search-results__item.is-active {
+    border-color: var(--accent-color);
+    box-shadow: inset 2px 0 0 0 var(--accent-color);
+  }
+
+  .fab-menu-item.is-active {
+    color: var(--accent-color);
+  }
+
+  .progress--chant {
+    color: var(--accent-color);
+  }
+
+  .chant-view__progress {
+    color: var(--accent-color);
+  }
+
+  .daily-meter__dot.is-done {
+    border-color: var(--success-color);
+    background: var(--success-color);
+  }
+
+  .compare-result--ok {
+    border-color: var(--success-color);
+  }
+
+  .compare-result--mid {
+    border-color: var(--warning-color);
+  }
+
+  .compare-result--low {
+    border-color: var(--error-color);
+  }
+
+  .practice-btn--ghost {
+    color: var(--accent-color);
+  }
+
+  .practice-btn--danger {
+    color: var(--error-color);
+  }
+
+  .practice-btn--primary {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+  }
+
+  .practice-btn--listen {
+    color: var(--accent-color);
+  }
+
+  .practice-calendar__day.is-today {
+    border-color: var(--accent-color);
+    box-shadow: inset 0 0 0 1px var(--accent-color);
+  }
+}
+
 .practice-empty-fullpage {
   flex: 1;
   display: flex;

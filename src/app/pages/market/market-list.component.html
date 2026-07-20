@@ -1,0 +1,94 @@
+<!-- 趋势图 -->
+<div class="chart-section" *ngIf="chartOptions()">
+  <h3 class="section-title">📈 情绪趋势（最近 30 天）</h3>
+  <div echarts [options]="chartOptions()" style="height: 280px;"></div>
+</div>
+
+<!-- 数据列表 -->
+<div class="table-section">
+  <h3 class="section-title">📊 历史报告</h3>
+
+  <nz-spin [nzSpinning]="loading()">
+    <nz-table
+      #reportTable
+      [nzData]="items()"
+      [nzTotal]="total()"
+      [nzPageIndex]="page()"
+      [nzPageSize]="pageSize()"
+      [nzFrontPagination]="false"
+      [nzShowSizeChanger]="false"
+      (nzPageIndexChange)="onPageChange($event)"
+      nzShowQuickJumper
+    >
+      <thead>
+        <tr>
+          <th nzWidth="120px">日期</th>
+          <th nzWidth="100px" nzAlign="center">AI 指数</th>
+          <th nzWidth="100px" nzAlign="center">关键词指数</th>
+          <th nzWidth="90px" nzAlign="center">帖子数</th>
+          <th nzWidth="110px" nzAlign="center">看空+恐慌</th>
+          <th nzWidth="90px" nzAlign="center">恐慌词</th>
+          <th nzWidth="100px" nzAlign="center">情绪等级</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of reportTable.data; track item.id) {
+          <tr class="data-row">
+            <td>
+              <a class="date-link" (click)="openDetail(item.date)">{{ item.date }}</a>
+            </td>
+            <td nzAlign="center">
+              <span class="index-value" [style.color]="getIndexColor(item.aiIndex)">
+                {{ item.aiIndex ?? '-' }}°
+              </span>
+            </td>
+            <td nzAlign="center">
+              <span class="index-value" [style.color]="getIndexColor(item.kwIndex)">
+                {{ item.kwIndex ?? '-' }}°
+              </span>
+            </td>
+            <td nzAlign="center">{{ item.totalPosts | number }}</td>
+            <td nzAlign="center">
+              <span [class.danger]="item.bearFearPct > 60">{{ item.bearFearPct }}%</span>
+            </td>
+            <td nzAlign="center">
+              <span [class.danger]="item.panicTotal > 50">{{ item.panicTotal }}</span>
+            </td>
+            <td nzAlign="center">
+              <nz-tag [nzColor]="getLevelColor(item.aiIndex)">
+                {{ getLevelLabel(item.aiIndex) }}
+              </nz-tag>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7" nzAlign="center">
+              <nz-empty nzNotFoundContent="暂无数据"></nz-empty>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </nz-table>
+  </nz-spin>
+</div>
+
+<!-- 详情弹框（自定义定位，居中于内容区） -->
+@if (showDetail()) {
+  <div class="modal-mask" (click)="backToList()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <span class="modal-title">📊 市场情绪日报 · {{ detailDate() }}</span>
+        <button class="modal-close" (click)="backToList()">✕</button>
+      </div>
+      <div class="modal-body">
+        <nz-spin [nzSpinning]="detailLoading()">
+          @if (detailError()) {
+            <div class="error-msg">{{ detailError() }}</div>
+          } @else if (detailReport()) {
+            <div class="report-frame" [innerHTML]="detailSafeHtml()"></div>
+          }
+        </nz-spin>
+      </div>
+    </div>
+  </div>
+}

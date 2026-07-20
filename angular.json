@@ -37,13 +37,15 @@
               }
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "node_modules/quill/dist/quill.snow.css"
             ],
             "scripts": [],
             "allowedCommonJsDependencies": [
               "echarts-gl",
               "claygl",
-              "echarts-liquidfill"
+              "echarts-liquidfill",
+              "quill-delta"
             ]
           },
           "configurations": {
@@ -56,8 +58,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "10kB",
-                  "maximumError": "14kB"
+                  "maximumWarning": "14kB",
+                  "maximumError": "18kB"
                 }
               ],
               "outputHashing": "all"

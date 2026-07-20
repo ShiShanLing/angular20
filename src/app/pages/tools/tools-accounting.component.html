@@ -62,7 +62,7 @@
                 <tr *ngFor="let data of basicTable.data">
                   <td>{{ data.date | date:'MM-dd HH:mm' }}</td>
                   <td><nz-tag>{{ data.category }}</nz-tag></td>
-                  <td style="color: #ff4d4f; font-weight: bold;">-¥{{ data.amount }}</td>
+                  <td style="color: var(--error-color); font-weight: bold;">-¥{{ data.amount }}</td>
                   <td>{{ data.remarks }}</td>
                   <td><a (click)="deleteRecord(data.id)">删除</a></td>
                 </tr>

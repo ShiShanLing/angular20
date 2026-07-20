@@ -106,9 +106,9 @@ export class ToolsTextComponent implements OnInit {
     }
     
     const parseLine = (line: string) => {
-      if (line.includes('\\t')) return line.split('\\t');
+      if (line.includes('\t')) return line.split('\t');
       if (line.includes(',')) return line.split(',');
-      return line.split(/\\s+/);
+      return line.split(/\s+/);
     };
 
     const parsedData = lines.map(parseLine);
@@ -118,10 +118,10 @@ export class ToolsTextComponent implements OnInit {
     parsedData.forEach((row, i) => {
       // pad row
       while (row.length < colCount) row.push('');
-      table += '| ' + row.join(' | ') + ' |\\n';
+      table += '| ' + row.join(' | ') + ' |\n';
       
       if (i === 0) {
-        table += '|' + Array(colCount).fill('---').join('|') + '|\\n';
+        table += '|' + Array(colCount).fill('---').join('|') + '|\n';
       }
     });
 

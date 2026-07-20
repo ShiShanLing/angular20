@@ -9,6 +9,26 @@
       </ng-template>
     </nz-col>
   </nz-row>
+  
+  <!-- 最近搜索的城市 -->
+  <div class="recent-cities" *ngIf="recentCities.length > 0">
+    <span class="recent-label">最近搜索：</span>
+    <span class="recent-tag" *ngFor="let c of recentCities" (click)="selectRecentCity(c)">
+      <span class="tag-text">{{ c.name }}</span>
+      <span class="tag-close" (click)="removeRecentCity(c.id, $event)">×</span>
+    </span>
+  </div>
+
+  <!-- 地名解析结果选择 -->
+  <div class="geocode-picker" *ngIf="showGeocodePicker">
+    <div class="picker-title">找到多个匹配城市，请选择：</div>
+    <div class="picker-list">
+      <div class="picker-item" *ngFor="let r of geocodeResults" (click)="pickGeocodeResult(r)">
+        <span class="picker-name">{{ r.name }}</span>
+        <span class="picker-detail">{{ r.admin2 || '' }} {{ r.admin1 || '' }} {{ r.country || '' }} ({{ r.latitude | number:'1.2-2' }}, {{ r.longitude | number:'1.2-2' }})</span>
+      </div>
+    </div>
+  </div>
 
   <nz-spin [nzSpinning]="loading">
     <div *ngIf="weatherData">
@@ -75,6 +95,6 @@
   </nz-spin>
 
   <div style="margin-top: 16px;">
-    <p style="color: #999; font-size: 12px;">注：天气数据来自 Open-Meteo 免费 API。支持全球城市搜索，建议输入拼音或英文。</p>
+    <p style="color: var(--text-tertiary); font-size: 12px;">注：天气数据来自 Open-Meteo 免费 API。支持全球城市搜索，建议输入拼音或英文。</p>
   </div>
 </div>

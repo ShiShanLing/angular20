@@ -22,7 +22,7 @@
   gap: 20px;
 
   .panel-card {
-    background: #fff;
+    background: var(--card-bg, #fff);
     border: 1px solid #f0f0f0;
     border-radius: 12px;
     padding: 16px;
@@ -31,7 +31,7 @@
 
   .panel-label {
     font-size: 12px;
-    color: #999;
+    color: var(--text-tertiary, #999);
     font-weight: 600;
     margin-bottom: 12px;
     letter-spacing: 1px;
@@ -44,8 +44,8 @@
   display: flex;
   flex-direction: column;
   margin-bottom: 12px;
-  .stat-label { font-size: 11px; color: #8c8c8c; }
-  .stat-value { font-size: 24px; font-weight: bold; color: #1d1d1d; }
+  .stat-label { font-size: 11px; color: var(--text-tertiary, #8c8c8c); }
+  .stat-value { font-size: 24px; font-weight: bold; color: var(--text-primary, #1d1d1d); }
 }
 .status-tags {
   display: flex;
@@ -98,7 +98,7 @@
     height: 44px;
     border-radius: 8px;
     border: 1px solid #d9d9d9;
-    background: #fff;
+    background: var(--card-bg, #fff);
     font-size: 18px;
     cursor: pointer;
     transition: all 0.2s;
@@ -107,9 +107,9 @@
     justify-content: center;
 
     &:hover:not(:disabled) {
-      color: #1890ff;
-      border-color: #1890ff;
-      background: #e6f7ff;
+      color: var(--accent-color, #1890ff);
+      border-color: var(--accent-color, #1890ff);
+      background: var(--bg-tertiary, #e6f7ff);
     }
     &:active:not(:disabled) { transform: scale(0.95); }
     &:disabled { cursor: not-allowed; opacity: 0.5; }

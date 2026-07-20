@@ -20,6 +20,8 @@ import {
   PictureOutline, CalendarOutline, BookOutline,
   QrcodeOutline, UploadOutline, VideoCameraOutline, StopOutline,
   UserOutline, LockOutline, LogoutOutline, KeyOutline,
+  BulbOutline, EditOutline, UpOutline, DownOutline, SunOutline, MoonOutline,
+  StockOutline, ArrowLeftOutline,
 } from '@ant-design/icons-angular/icons';
 import { registerLocaleData } from '@angular/common';
 import zh from '@angular/common/locales/zh';
@@ -40,12 +42,15 @@ const icons = [
   PictureOutline, CalendarOutline, BookOutline,
   QrcodeOutline, UploadOutline, VideoCameraOutline, StopOutline,
   UserOutline, LockOutline, LogoutOutline, KeyOutline,
+  BulbOutline, EditOutline, UpOutline, DownOutline, SunOutline, MoonOutline,
+  StockOutline, ArrowLeftOutline,
 ];
 
 
 import { routes } from './app.routes';
 import { authInterceptor } from './services/auth.interceptor';
 import { AuthService } from './core/auth.service';
+import { ThemeService } from './core/theme.service';
 
 registerLocaleData(zh);
 
@@ -53,6 +58,12 @@ registerLocaleData(zh);
 function initializeAuth(): () => Promise<boolean> {
   const authService = inject(AuthService);
   return () => authService.validateSession().toPromise().then(() => true).catch(() => true);
+}
+
+/** 启动时初始化主题（确保登录页也能应用深色模式） */
+function initializeTheme(): () => void {
+  const themeService = inject(ThemeService);
+  return () => { /* ThemeService 构造函数已自动 applyTheme */ };
 }
 
 /** 全局 Angular providers：Hash 路由、动画、HTTP、Ng-Zorro 中文与按需图标、ECharts 核心。 */
@@ -71,6 +82,11 @@ export const appConfig: ApplicationConfig = {
     {
       provide: APP_INITIALIZER,
       useFactory: initializeAuth,
+      multi: true,
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeTheme,
       multi: true,
     }
   ]

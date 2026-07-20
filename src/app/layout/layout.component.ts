@@ -15,6 +15,7 @@ import { PermissionService } from '../core/permission.service';
 import { FeatureActivationService } from '../core/feature-activation.service';
 import { MenuVisibilityService } from '../core/menu-visibility.service';
 import { AuthService } from '../core/auth.service';
+import { ThemeService } from '../core/theme.service';
 import { FEATURE_MENU_ITEMS, type FeatureMenuItem } from '../core/feature-menu';
 
 type MenuItem = FeatureMenuItem;
@@ -70,6 +71,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     private featureActivationService: FeatureActivationService,
     private menuVisibilityService: MenuVisibilityService,
     readonly authService: AuthService,
+    readonly themeService: ThemeService,
   ) {}
 
   ngOnInit() {
@@ -273,10 +275,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
       }
     }
   }
-  /*
-    @escaping 表示闭包可能在函数返回后才执行，比如异步网络回调、DispatchQueue.async、保存到属性。非 escaping 闭包默认只在函数调用期间执行完。escaping 闭包需要显式写 self，是为了提醒可能延长对象生命周期并产生循环引用。 
-    
-  */
+
   private collectLeafPaths(items: MenuItem[]): string[] {
     const paths: string[] = [];
     for (const item of items) {

@@ -17,6 +17,7 @@ export class PermissionService {
       .filter((code) => code.length > 0);
     this.permissions.set(new Set(normalized));
     this.configured.set(true);
+    console.log('[PERM] setPermissions:', normalized);
   }
 
   /** 清空权限配置：退回到“未配置即放行”的默认态。 */
@@ -31,8 +32,11 @@ export class PermissionService {
       return true;
     }
     if (!this.configured()) {
+      console.log('[PERM] hasPermission: not configured, 放行');
       return true;
     }
-    return this.permissions().has(code);
+    const result = this.permissions().has(code);
+    console.log('[PERM] hasPermission:', code, '→', result, '(all:', Array.from(this.permissions()).join(','), ')');
+    return result;
   }
 }

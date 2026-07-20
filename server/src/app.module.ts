@@ -9,6 +9,9 @@ import { UsersModule } from './users/users.module';
 import { RecordsModule } from './records/records.module';
 import { GameScoresModule } from './game-scores/game-scores.module';
 import { ExportModule } from './export/export.module';
+import { NotesModule } from './notes/notes.module';
+import { WeatherModule } from './weather/weather.module';
+import { MarketReportsModule } from './market-reports/market-reports.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -25,6 +28,9 @@ import { AppController } from './app.controller';
     RecordsModule,
     GameScoresModule,
     ExportModule,
+    NotesModule,
+    WeatherModule,
+    MarketReportsModule,
   ],
   controllers: [AppController],
   providers: [

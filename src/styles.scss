@@ -1,6 +1,69 @@
 /* Global Styles */
 @import 'ng-zorro-antd/ng-zorro-antd.min.css';
 
+/* ========== CSS Variables for Theming ========== */
+:root {
+  /* Light mode (default) */
+  --bg-primary: #f0f2f5;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #fafafa;
+  --text-primary: #262626;
+  --text-secondary: #595959;
+  --text-tertiary: #8c8c8c;
+  --text-quaternary: #bfbfbf;
+  --border-color: #d9d9d9;
+  --border-light: #f0f0f0;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
+  --accent-color: #1677ff;
+  --accent-hover: #4096ff;
+  --success-color: #52c41a;
+  --success-bg: #f6ffed;
+  --success-border: #b7eb8f;
+  --warning-color: #faad14;
+  --error-color: #ff4d4f;
+  --error-bg: #fff2f0;
+  --error-border: #ffccc7;
+  --card-bg: #ffffff;
+  --header-bg: #ffffff;
+  --footer-bg: #fafafa;
+  --scrollbar-track: #f1f1f1;
+  --scrollbar-thumb: #c1c1c1;
+  --scrollbar-thumb-hover: #a8a8a8;
+}
+
+/* Dark mode */
+[data-theme="dark"] {
+  --bg-primary: #141414;
+  --bg-secondary: #1f1f1f;
+  --bg-tertiary: #262626;
+  --text-primary: #ffffffd9;
+  --text-secondary: #ffffffa6;
+  --text-tertiary: #ffffff73;
+  --text-quaternary: #ffffff45;
+  --border-color: #434343;
+  --border-light: #303030;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --accent-color: #1668dc;
+  --accent-hover: #3c89e8;
+  --success-color: #49aa19;
+  --success-bg: #162312;
+  --success-border: #274916;
+  --warning-color: #d89614;
+  --error-color: #d32029;
+  --error-bg: #2a1215;
+  --error-border: #58181c;
+  --card-bg: #1f1f1f;
+  --header-bg: #1f1f1f;
+  --footer-bg: #141414;
+  --scrollbar-track: #262626;
+  --scrollbar-thumb: #434343;
+  --scrollbar-thumb-hover: #595959;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -10,7 +73,9 @@ html, body {
   margin: 0;
   padding: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
-  background-color: #f0f2f5;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Scrollbar */
@@ -19,14 +84,14 @@ html, body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--scrollbar-track);
 }
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* Page transitions */
@@ -50,7 +115,591 @@ html, body {
   cursor: default;
   transition: box-shadow 0.2s ease, transform 0.2s ease;
   &:hover {
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+    box-shadow: var(--shadow-lg) !important;
     transform: translateY(-2px);
+  }
+}
+
+/* ========== Dark Mode Overrides ========== */
+
+/* ng-zorro components dark mode */
+[data-theme="dark"] {
+  /* Layout */
+  .ant-layout {
+    background: var(--bg-primary);
+  }
+  
+  .ant-layout-header {
+    background: var(--header-bg) !important;
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .ant-layout-footer {
+    background: var(--footer-bg);
+    color: var(--text-tertiary);
+  }
+  
+  .ant-layout-sider {
+    background: var(--bg-secondary) !important;
+  }
+  
+  /* Card */
+  .ant-card {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+  }
+  
+  .ant-card-head {
+    border-color: var(--border-light);
+    color: var(--text-primary);
+  }
+
+  .ant-card-body {
+    color: var(--text-primary);
+  }
+  
+  /* Form */
+  .ant-form-item-label > label {
+    color: var(--text-secondary);
+  }
+
+  .ant-form-item-explain {
+    color: var(--text-tertiary);
+  }
+
+  /* Radio */
+  .ant-radio-wrapper {
+    color: var(--text-primary);
+  }
+
+  .ant-radio-wrapper-disabled {
+    color: var(--text-tertiary);
+  }
+
+  /* Checkbox */
+  .ant-checkbox-wrapper {
+    color: var(--text-primary);
+  }
+
+  /* Alert */
+  .ant-alert {
+    color: var(--text-primary);
+  }
+
+  .ant-alert-info {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+  }
+
+  .ant-alert-message {
+    color: var(--text-primary);
+  }
+
+  .ant-alert-description {
+    color: var(--text-secondary);
+  }
+
+  .ant-alert-warning {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+  }
+
+  .ant-alert-success {
+    background: var(--success-bg, #f6ffed);
+    border-color: var(--success-border, #b7eb8f);
+  }
+
+  .ant-alert-error {
+    background: var(--error-bg, #fff2f0);
+    border-color: var(--error-border, #ffccc7);
+  }
+
+  .ant-alert-warning > .ant-alert-icon > .anticon-exclamation-circle,
+  .ant-alert-warning > .ant-alert-icon > .anticon-warning {
+    color: #faad14;
+  }
+
+  /* Form item extra text */
+  .ant-form-item-extra {
+    color: var(--text-tertiary);
+  }
+
+  /* Typography */
+  .ant-typography-secondary {
+    color: var(--text-tertiary);
+  }
+
+  .ant-typography {
+    color: var(--text-primary);
+  }
+  
+  .ant-input,
+  .ant-input-number,
+  .ant-select-selector,
+  .ant-picker {
+    background: var(--bg-tertiary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+  }
+
+  .ant-picker-input > input {
+    color: var(--text-primary) !important;
+  }
+
+  .ant-picker-input > input::placeholder {
+    color: var(--text-tertiary) !important;
+  }
+
+  .ant-picker-suffix {
+    color: var(--text-tertiary);
+  }
+
+  .ant-picker-separator {
+    color: var(--text-tertiary);
+  }
+
+  .ant-picker-clear {
+    background: var(--bg-tertiary);
+    color: var(--text-tertiary);
+  }
+  
+  .ant-input::placeholder,
+  .ant-input-number-input::placeholder {
+    color: var(--text-tertiary) !important;
+  }
+
+  /* Input number handler icons */
+  .ant-input-number-handler {
+    border-color: var(--border-light) !important;
+  }
+
+  .ant-input-number-handler:hover .ant-input-number-handler-up-inner,
+  .ant-input-number-handler:hover .ant-input-number-handler-down-inner {
+    color: var(--accent-color);
+  }
+  
+  /* Modal */
+  .ant-modal-content {
+    background: var(--bg-secondary);
+  }
+  
+  .ant-modal-header {
+    background: var(--bg-secondary);
+    border-color: var(--border-light);
+  }
+  
+  .ant-modal-title {
+    color: var(--text-primary);
+  }
+  
+  .ant-modal-body {
+    color: var(--text-secondary);
+  }
+  
+  /* Table */
+  .ant-table {
+    background: var(--card-bg);
+    color: var(--text-primary);
+  }
+  
+  .ant-table-thead > tr > th {
+    background: var(--bg-tertiary) !important;
+    color: var(--text-primary);
+    border-color: var(--border-light);
+  }
+  
+  .ant-table-tbody > tr > td {
+    border-color: var(--border-light);
+  }
+  
+  .ant-table-tbody > tr:hover > td {
+    background: var(--bg-tertiary) !important;
+  }
+  
+  /* Tabs */
+  .ant-tabs-tab {
+    color: var(--text-secondary);
+  }
+  
+  .ant-tabs-tab-active .ant-tabs-tab-btn {
+    color: var(--accent-color);
+  }
+  
+  /* Dropdown */
+  .ant-dropdown-menu {
+    background: var(--bg-secondary);
+  }
+  
+  .ant-dropdown-menu-item {
+    color: var(--text-primary);
+  }
+  
+  .ant-dropdown-menu-item:hover {
+    background: var(--bg-tertiary);
+  }
+  
+  /* Tag */
+  .ant-tag {
+    border-color: var(--border-color);
+  }
+  
+  /* Empty */
+  .ant-empty-description {
+    color: var(--text-tertiary);
+  }
+  
+  /* Menu - already dark theme, adjust for consistency */
+  .ant-menu-dark {
+    background: var(--bg-secondary) !important;
+  }
+  
+  /* Divider */
+  .ant-divider {
+    border-color: var(--border-light);
+  }
+
+  .ant-divider-inner-text {
+    color: var(--text-primary);
+  }
+  
+  /* Descriptions */
+  .ant-descriptions-item-label {
+    color: var(--text-tertiary);
+  }
+  
+  .ant-descriptions-item-content {
+    color: var(--text-primary);
+  }
+  
+  /* Statistic */
+  .ant-statistic-title {
+    color: var(--text-tertiary);
+  }
+  
+  .ant-statistic-content {
+    color: var(--text-primary);
+  }
+  
+  /* Tooltip */
+  .ant-tooltip-inner {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+  }
+  
+  /* Collapse */
+  .ant-collapse {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+  }
+  
+  .ant-collapse-header {
+    color: var(--text-primary) !important;
+  }
+  
+  .ant-collapse-content {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+  }
+  
+  /* Progress */
+  .ant-progress-text {
+    color: var(--text-secondary);
+  }
+  
+  /* Switch */
+  .ant-switch {
+    background: var(--bg-tertiary);
+  }
+  
+  .ant-switch-checked {
+    background: var(--accent-color);
+  }
+
+  /* Date Picker / Time Picker Panel */
+  .ant-picker-panel {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+  }
+
+  .ant-picker-panel-container {
+    background: var(--bg-secondary);
+  }
+
+  .ant-picker-header {
+    color: var(--text-primary);
+    border-color: var(--border-light);
+  }
+
+  .ant-picker-header button {
+    color: var(--text-primary);
+  }
+
+  .ant-picker-header button:hover {
+    color: var(--accent-color);
+  }
+
+  .ant-picker-content th {
+    color: var(--text-tertiary);
+  }
+
+  .ant-picker-cell {
+    color: var(--text-tertiary);
+  }
+
+  .ant-picker-cell-in-view {
+    color: var(--text-primary);
+  }
+
+  .ant-picker-cell:hover .ant-picker-cell-inner {
+    background: var(--bg-tertiary);
+  }
+
+  .ant-picker-cell-selected .ant-picker-cell-inner {
+    background: var(--accent-color);
+    color: #fff;
+  }
+
+  .ant-picker-cell-today .ant-picker-cell-inner::before {
+    border-color: var(--accent-color);
+  }
+
+  .ant-picker-footer {
+    border-color: var(--border-light);
+  }
+
+  .ant-picker-datetime-panel .ant-picker-time-panel {
+    border-color: var(--border-light);
+  }
+
+  .ant-picker-time-panel-column {
+    border-color: var(--border-light);
+  }
+
+  .ant-picker-time-panel-column > li.ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
+    background: var(--accent-color);
+    color: #fff;
+  }
+
+  .ant-picker-time-panel-cell-inner {
+    color: var(--text-primary);
+  }
+
+  .ant-picker-time-panel-cell-inner:hover {
+    background: var(--bg-tertiary);
+  }
+
+  .ant-picker-super-prev-icon,
+  .ant-picker-prev-icon,
+  .ant-picker-next-icon,
+  .ant-picker-super-next-icon {
+    color: var(--text-tertiary);
+  }
+
+  .ant-picker-year-btn,
+  .ant-picker-month-btn,
+  .ant-picker-decade-btn {
+    color: var(--text-primary);
+  }
+
+  .ant-picker-year-btn:hover,
+  .ant-picker-month-btn:hover,
+  .ant-picker-decade-btn:hover {
+    color: var(--accent-color);
+  }
+
+  /* Range Picker */
+  .ant-picker-range .ant-picker-active-bar {
+    background: var(--accent-color);
+  }
+
+  .ant-picker-cell-range-start .ant-picker-cell-inner,
+  .ant-picker-cell-range-end .ant-picker-cell-inner {
+    background: var(--accent-color);
+    color: #fff;
+  }
+
+  .ant-picker-cell-in-range .ant-picker-cell-inner {
+    background: rgba(22, 119, 255, 0.1);
+  }
+
+  /* Custom components that need dark mode */
+  .content-inner {
+    background: var(--bg-primary);
+  }
+  
+  .app-header {
+    background: var(--header-bg) !important;
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .app-footer {
+    background: var(--footer-bg);
+    color: var(--text-tertiary);
+    border-top: 1px solid var(--border-light);
+  }
+
+  /* Badge & Tag text */
+  .ant-badge-status-text {
+    color: var(--text-secondary);
+  }
+
+  /* Pagination */
+  .ant-pagination-item a {
+    color: var(--text-primary);
+  }
+
+  .ant-pagination-item-active a {
+    color: var(--accent-color);
+  }
+
+  /* Popover */
+  .ant-popover-inner {
+    background: var(--bg-secondary);
+  }
+
+  .ant-popover-title {
+    color: var(--text-primary);
+  }
+
+  .ant-popover-inner-content {
+    color: var(--text-secondary);
+  }
+
+  /* List */
+  .ant-list-item {
+    border-color: var(--border-light);
+    color: var(--text-primary);
+  }
+
+  .ant-list-item-meta-title {
+    color: var(--text-primary);
+  }
+
+  .ant-list-item-meta-description {
+    color: var(--text-secondary);
+  }
+
+  /* Steps */
+  .ant-steps-item-title {
+    color: var(--text-primary);
+  }
+
+  .ant-steps-item-description {
+    color: var(--text-tertiary);
+  }
+
+  /* Drawer */
+  .ant-drawer-content {
+    background: var(--bg-secondary);
+  }
+
+  .ant-drawer-header {
+    border-color: var(--border-light);
+  }
+
+  .ant-drawer-title {
+    color: var(--text-primary);
+  }
+
+  .ant-drawer-body {
+    color: var(--text-primary);
+  }
+
+  /* Spin */
+  .ant-spin-text {
+    color: var(--text-secondary);
+  }
+
+  /* Breadcrumb */
+  .ant-breadcrumb {
+    color: var(--text-secondary);
+  }
+
+  .ant-breadcrumb a {
+    color: var(--accent-color);
+  }
+
+  /* Tree */
+  .ant-tree {
+    color: var(--text-primary);
+    background: transparent;
+  }
+
+  .ant-tree-node-content-wrapper:hover {
+    background: var(--bg-tertiary);
+  }
+
+  /* Select dropdown */
+  .ant-select-dropdown {
+    background: var(--bg-secondary);
+  }
+
+  .ant-select-item {
+    color: var(--text-primary);
+  }
+
+  .ant-select-item-option-active {
+    background: var(--bg-tertiary);
+  }
+
+  /* Cascader */
+  .ant-cascader-menu {
+    border-color: var(--border-light);
+  }
+
+  .ant-cascader-menu-item {
+    color: var(--text-primary);
+  }
+
+  .ant-cascader-menu-item:hover {
+    background: var(--bg-tertiary);
+  }
+
+  /* Common page elements dark mode */
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+  }
+
+  p, span, div, td, th, li, label {
+    color: inherit;
+  }
+
+  code {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-color: var(--border-light);
+  }
+
+  /* Card-based demo pages */
+  .chart-card,
+  .demo-card {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+  }
+}
+
+/* ========== Theme Toggle Button ========== */
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: var(--bg-tertiary);
+    color: var(--accent-color);
+  }
+  
+  .anticon {
+    font-size: 18px;
   }
 }

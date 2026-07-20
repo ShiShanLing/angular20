@@ -61,3 +61,6 @@ server/.env
 # SQLite database
 *.db
 *.db-journal
+crawler/email-config.json
+crawler/node_modules/
+crawler/package*.json

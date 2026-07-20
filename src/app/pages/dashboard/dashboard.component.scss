@@ -16,8 +16,8 @@
     .stat-trend {
       font-size: 12px;
       margin-top: 4px;
-      &.positive { color: #52c41a; }
-      &.negative { color: #ff4d4f; }
+      &.positive { color: var(--success-color, #52c41a); }
+      &.negative { color: var(--error-color, #ff4d4f); }
     }
   }
 

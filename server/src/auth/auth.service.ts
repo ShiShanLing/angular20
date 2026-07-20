@@ -35,6 +35,7 @@ export class AuthService {
       throw new UnauthorizedException('用户名或密码错误');
     }
     const payload = { sub: user.id, username: user.username };
+    const permissions = this.getPermissions(user.username);
     return {
       access_token: this.jwtService.sign(payload),
       user: {
@@ -42,6 +43,7 @@ export class AuthService {
         username: user.username,
         nickname: user.nickname,
       },
+      permissions,
     };
   }
 
@@ -52,6 +54,37 @@ export class AuthService {
       username: user.username,
       nickname: user.nickname,
       createdAt: user.createdAt,
+      permissions: this.getPermissions(user.username),
     };
+  }
+
+  /**
+   * 根据用户名返回权限列表
+   * admin 拥有所有权限，其他用户拥有基础权限
+   */
+  private getPermissions(username: string): string[] {
+    if (username === 'admin') {
+      return [
+        'market.view',
+        'practice.view',
+        'chart.showcase',
+        'snake.play',
+        'tetris.play',
+        'tools.mortgage', 'tools.salary', 'tools.accounting',
+        'tools.subscription', 'tools.saving', 'tools.fire', 'tools.anhui-pension',
+        'tools.bmi', 'tools.water', 'tools.weight', 'tools.sleep',
+        'tools.time', 'tools.weather', 'tools.calendar', 'tools.text',
+        'tools.qrcode', 'tools.notes', 'tools.dev',
+      ];
+    }
+    // 普通用户：基础权限（不含市场情绪）
+    return [
+      'tools.mortgage', 'tools.salary', 'tools.accounting',
+      'tools.subscription', 'tools.saving', 'tools.fire', 'tools.anhui-pension',
+      'tools.bmi', 'tools.water', 'tools.weight', 'tools.sleep',
+      'tools.time', 'tools.weather', 'tools.calendar', 'tools.text',
+      'tools.qrcode', 'tools.notes', 'tools.dev',
+      'snake.play', 'tetris.play',
+    ];
   }
 }

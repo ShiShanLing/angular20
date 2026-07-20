@@ -43,6 +43,10 @@ export const routes: Routes = [
         data: { practiceScope: 'angular-learning' }
       },
       {
+        path: 'practice-list',
+        loadComponent: () => import('./pages/practice/practice-list.component').then(m => m.PracticeListComponent),
+      },
+      {
         path: 'chart-showcase',
         loadComponent: () =>
           import('./pages/chart-showcase/chart-showcase.component').then(m => m.ChartShowcaseComponent)
@@ -51,6 +55,10 @@ export const routes: Routes = [
         path: 'html-preview',
         loadComponent: () =>
           import('./pages/html-preview/html-preview.component').then(m => m.HtmlPreviewComponent)
+      },
+      {
+        path: 'market',
+        loadChildren: () => import('./pages/market/market.routes').then(m => m.MARKET_ROUTES)
       },
       {
         path: 'no-access',

@@ -13,7 +13,7 @@
   .current-month {
     font-size: 16px;
     font-weight: bold;
-    color: #1a1a1a;
+    color: var(--text-primary, #1a1a1a);
   }
 }
 
@@ -27,7 +27,7 @@
 
 .lunar-date {
   font-size: 10px;
-  color: #aaa;
+  color: var(--text-tertiary, #aaa);
   margin-top: 2px;
 }
 
@@ -42,14 +42,14 @@
     width: 4px;
     height: 4px;
     border-radius: 50%;
-    &.is-holiday { background: #ff4d4f; }
-    &.is-work { background: #1890ff; }
+    &.is-holiday { background: var(--error-color, #ff4d4f); }
+    &.is-work { background: var(--accent-color, #1890ff); }
   }
 
   .holiday-name {
     font-size: 9px;
     transform: scale(0.9);
-    color: #666;
+    color: var(--text-secondary, #666);
   }
 }
 
@@ -57,7 +57,7 @@
   padding: 4px 8px;
   h3 {
     margin-bottom: 4px;
-    color: #1890ff;
+    color: var(--accent-color, #1890ff);
     font-size: 15px;
   }
   p {
@@ -86,4 +86,3 @@
     padding: 8px !important;
   }
 }
-

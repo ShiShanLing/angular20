@@ -6,49 +6,64 @@
   .detail-row {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 8px;
-    font-size: 14px;
-    
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-light, #f0f0f0);
+
+    &:last-of-type {
+      border-bottom: none;
+    }
+
     .label {
-      color: rgba(0,0,0,0.45);
+      color: var(--text-secondary, #595959);
+      font-size: 14px;
     }
+
     .value {
+      color: var(--text-primary, #262626);
       font-weight: 500;
-      color: rgba(0,0,0,0.85);
-    }
-  }
-}
-
-.support-panel {
-  text-align: center;
-  padding: 16px;
-  background: #f6faff;
-  border-radius: 8px;
-
-  .support-stat {
-    margin-bottom: 8px;
-    .main-val {
-      font-size: 32px;
-      font-weight: bold;
-      color: #1890ff;
-      line-height: 1;
-    }
-    .sub-label {
-      font-size: 12px;
-      color: #888;
+      font-variant-numeric: tabular-nums;
     }
   }
 
-  .support-info {
-    font-size: 14px;
-    margin-bottom: 12px;
+  .support-panel {
+    text-align: center;
+    padding: 16px;
+    background: var(--bg-tertiary, #f6faff);
+    border-radius: 8px;
+    border: 1px solid var(--border-light, #e6f4ff);
+
+    .support-stat {
+      margin-bottom: 8px;
+
+      .main-val {
+        font-size: 36px;
+        font-weight: 700;
+        color: var(--accent-color, #1677ff);
+        line-height: 1.2;
+      }
+
+      .sub-label {
+        font-size: 14px;
+        color: var(--text-tertiary, #888);
+      }
+    }
+
+    .support-info {
+      font-size: 14px;
+      color: var(--text-secondary, #595959);
+
+      strong {
+        color: var(--accent-color, #1677ff);
+        font-weight: 600;
+      }
+    }
   }
 
   .hint-text {
     font-size: 12px;
-    color: #999;
+    color: var(--text-quaternary, #bfbfbf);
     font-style: italic;
-    margin: 0;
+    margin-top: 12px;
   }
 }
 

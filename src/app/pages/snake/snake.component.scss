@@ -17,7 +17,7 @@
   flex-shrink: 0;
 
   .panel-card {
-    background: #fff;
+    background: var(--card-bg, #fff);
     border: 1px solid #f0f0f0;
     border-radius: 12px;
     padding: 20px;
@@ -26,7 +26,7 @@
 
   .panel-label {
     font-size: 12px;
-    color: #999;
+    color: var(--text-tertiary, #999);
     font-weight: 600;
     margin-bottom: 8px;
     letter-spacing: 1px;
@@ -37,7 +37,7 @@
 .score-display {
   font-size: 32px;
   font-weight: bold;
-  color: #1890ff;
+  color: var(--accent-color, #1890ff);
   margin-bottom: 12px;
 }
 .status-tags {
@@ -71,7 +71,7 @@
     height: 44px;
     border-radius: 8px;
     border: 1px solid #d9d9d9;
-    background: #fff;
+    background: var(--card-bg, #fff);
     font-size: 18px;
     cursor: pointer;
     transition: all 0.2s;
@@ -80,9 +80,9 @@
     justify-content: center;
 
     &:hover:not(:disabled) {
-      color: #1890ff;
-      border-color: #1890ff;
-      background: #e6f7ff;
+      color: var(--accent-color, #1890ff);
+      border-color: var(--accent-color, #1890ff);
+      background: var(--bg-tertiary, #e6f7ff);
     }
     &:active:not(:disabled) {
       transform: scale(0.95);
@@ -96,7 +96,7 @@
 
 .keyboard-hint {
   font-size: 11px;
-  color: #aaa;
+  color: var(--text-tertiary, #aaa);
   line-height: 1.5;
   text-align: center;
 }
@@ -118,7 +118,7 @@
   grid-template-rows: repeat(var(--rows), var(--cell));
   gap: 2px;
   padding: 12px;
-  background: #fdfdfd;
+  background: var(--card-bg, #fdfdfd);
   border: 4px solid #f0f0f0;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
@@ -127,13 +127,13 @@
 .cell {
   width: var(--cell);
   height: var(--cell);
-  background: #f0f0f0;
+  background: var(--border-light, #f0f0f0);
   border-radius: 2px;
   transition: all 0.1s;
 }
 
 .cell.snake {
-  background: #52c41a;
+  background: var(--success-color, #52c41a);
   border-radius: 4px;
 }
 
@@ -144,7 +144,7 @@
 }
 
 .cell.food {
-  background: #ff4d4f;
+  background: var(--error-color, #ff4d4f);
   border-radius: 50%;
   animation: pulse 1.5s infinite;
 }

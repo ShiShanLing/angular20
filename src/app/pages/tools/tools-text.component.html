@@ -19,7 +19,7 @@
   <ng-template #extraTpl>
     <nz-space>
       <a *nzSpaceItem (click)="copyToClipboard()"><nz-icon nzType="copy" /> 复制结果</a>
-      <a *nzSpaceItem (click)="clearText()" style="color: #ff4d4f"><nz-icon nzType="delete" /> 清空</a>
+      <a *nzSpaceItem (click)="clearText()" style="color: var(--error-color)"><nz-icon nzType="delete" /> 清空</a>
     </nz-space>
   </ng-template>
 </div>

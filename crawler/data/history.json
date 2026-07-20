@@ -1,0 +1,18 @@
+[
+  {
+    "date": "2026-07-20",
+    "aiIndex": 15,
+    "kwIndex": 53,
+    "totalPosts": 1057,
+    "bearFearPct": "77.3",
+    "panicTotal": 48
+  },
+  {
+    "date": "2026-07-17",
+    "aiIndex": 9,
+    "kwIndex": 55,
+    "totalPosts": 3584,
+    "bearFearPct": "77.5",
+    "panicTotal": 125
+  }
+]

@@ -1,0 +1,599 @@
+{
+  "generatedAt": "2026-07-20T06:30:30.373Z",
+  "dateRange": "2026-07-19 ~ 2026-07-20",
+  "marketIndex": {
+    "index": 53,
+    "level": "中性",
+    "emoji": "🟡",
+    "description": "市场情绪平稳，多空均衡",
+    "divergence": 14,
+    "divergenceLabel": "轻度分化",
+    "totalPosts": 1064,
+    "totalClicks": 125134,
+    "totalComments": 1437,
+    "validBarCount": 5
+  },
+  "bars": [
+    {
+      "code": "sh000001",
+      "name": "上证指数",
+      "postCount": 400,
+      "temperature": 48,
+      "avgScore": -0.034,
+      "distribution": {
+        "bullish": 64,
+        "bearish": 78,
+        "fear": 2,
+        "greed": 0,
+        "neutral": 256
+      },
+      "totalClicks": 13239,
+      "totalComments": 101,
+      "avgClicks": 33.1,
+      "avgComments": 0.3,
+      "fearGreedRatio": 1.25,
+      "topBullish": [
+        {
+          "title": "游资跑了，量化跑了，散户在跑，融资盘强平了，基金在赎回，只有国家队想满牛！！！拉",
+          "clicks": 1025,
+          "words": [
+            "牛"
+          ]
+        },
+        {
+          "title": "价值重塑，出海高增，创新药的中国力量！",
+          "clicks": 387,
+          "words": [
+            "价值"
+          ]
+        }
+      ],
+      "topBearish": [
+        {
+          "title": "亲爱的散户：由衷的感谢你们的支持与陪伴！我们跑路了，抱歉了！但是这个社会就是如此",
+          "clicks": 679,
+          "words": [
+            "跑路"
+          ]
+        },
+        {
+          "title": "国家队在哪？为什么说完我得股跌的更惨了",
+          "clicks": 215,
+          "words": [
+            "惨"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "sz399006",
+      "name": "创业板指",
+      "postCount": 404,
+      "temperature": 49,
+      "avgScore": -0.019,
+      "distribution": {
+        "bullish": 69,
+        "bearish": 75,
+        "fear": 3,
+        "greed": 0,
+        "neutral": 257
+      },
+      "totalClicks": 106756,
+      "totalComments": 1270,
+      "avgClicks": 264.2,
+      "avgComments": 3.1,
+      "fearGreedRatio": 1.13,
+      "topBullish": [
+        {
+          "title": "深夜重磅！两大国资平台联手“扫货”600亿，A股的“政策底”来了？",
+          "clicks": 39029,
+          "words": [
+            "涨"
+          ]
+        },
+        {
+          "title": "重磅利好来了，周末多个主力资金宣布了护盘计划，目前已经有超500亿的资金进场了，",
+          "clicks": 3071,
+          "words": [
+            "利好",
+            "护盘",
+            "主力"
+          ]
+        }
+      ],
+      "topBearish": [
+        {
+          "title": "让资本的时钟拨慢一些",
+          "clicks": 20726,
+          "words": [
+            "暴跌",
+            "跌停",
+            "下跌",
+            "惨",
+            "暴跌",
+            "惨烈"
+          ]
+        },
+        {
+          "title": "今天，请管住手！先看这两条命脉，别被诱多埋了",
+          "clicks": 13148,
+          "words": [
+            "诱多"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "BK0473",
+      "name": "证券Ⅱ",
+      "postCount": 100,
+      "temperature": 50,
+      "avgScore": -0.002,
+      "distribution": {
+        "bullish": 19,
+        "bearish": 19,
+        "fear": 0,
+        "greed": 0,
+        "neutral": 62
+      },
+      "totalClicks": 2013,
+      "totalComments": 11,
+      "avgClicks": 20.1,
+      "avgComments": 0.1,
+      "fearGreedRatio": 1,
+      "topBullish": [
+        {
+          "title": "未来属于科技，咱全换强大的TCL科技未来必超三星，全仓抄底了，机不可失时不再来，",
+          "clicks": 197,
+          "words": [
+            "抄底",
+            "全仓"
+          ]
+        },
+        {
+          "title": "这就结束了吗？别呀，主力你让我卖的最高点显得你。你得让我拍断大腿啊",
+          "clicks": 52,
+          "words": [
+            "主力"
+          ]
+        }
+      ],
+      "topBearish": [
+        {
+          "title": "快跑啊快跑啊无量天尊",
+          "clicks": 33,
+          "words": [
+            "无量"
+          ]
+        },
+        {
+          "title": "还以为券商也会为国争光努力一下，结果又是失望而归，还不如喝点酒了",
+          "clicks": 21,
+          "words": []
+        }
+      ]
+    },
+    {
+      "code": "BK0475",
+      "name": "银行Ⅱ",
+      "postCount": 157,
+      "temperature": 53,
+      "avgScore": 0.052,
+      "distribution": {
+        "bullish": 27,
+        "bearish": 20,
+        "fear": 0,
+        "greed": 1,
+        "neutral": 109
+      },
+      "totalClicks": 2980,
+      "totalComments": 52,
+      "avgClicks": 19,
+      "avgComments": 0.3,
+      "fearGreedRatio": 0.71,
+      "topBullish": [
+        {
+          "title": "来银行板块骂银行股上涨的小登们，增加点素质好不好？近一年的时间都是科技股大涨，银",
+          "clicks": 85,
+          "words": [
+            "大涨",
+            "涨"
+          ]
+        },
+        {
+          "title": "哪位有能力的兄弟解释一下：银行股和科技股走出了截然相反的k线图。关键是主力是怎么",
+          "clicks": 71,
+          "words": [
+            "主力"
+          ]
+        }
+      ],
+      "topBearish": [
+        {
+          "title": "这货一拉，所有都下跌，拉来有什么意义？",
+          "clicks": 57,
+          "words": [
+            "下跌"
+          ]
+        },
+        {
+          "title": "银行板块根本没有号召力，这时候拉银行就是掩护出货",
+          "clicks": 33,
+          "words": [
+            "出货"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "BK0477",
+      "name": "酿酒概念",
+      "postCount": 3,
+      "temperature": 85,
+      "avgScore": 0.702,
+      "distribution": {
+        "bullish": 2,
+        "bearish": 0,
+        "fear": 0,
+        "greed": 0,
+        "neutral": 1
+      },
+      "totalClicks": 146,
+      "totalComments": 3,
+      "avgClicks": 48.7,
+      "avgComments": 1,
+      "fearGreedRatio": 0,
+      "topBullish": [
+        {
+          "title": "拿住老登，科技崩塌了！高低切换已经到来了",
+          "clicks": 110,
+          "words": [
+            "拿住"
+          ]
+        },
+        {
+          "title": "7月20日大盘高开一路走高，稳市政策加持下资金大举进场，超跌医药迎来修复机会。创",
+          "clicks": 16,
+          "words": [
+            "机会"
+          ]
+        }
+      ],
+      "topBearish": []
+    },
+    {
+      "code": "BK0493",
+      "name": "新能源",
+      "postCount": 0,
+      "sentiment": null
+    },
+    {
+      "code": "BK0447",
+      "name": "互联网服务",
+      "postCount": 0,
+      "sentiment": null
+    }
+  ],
+  "hotTopics": [
+    {
+      "term": "银行",
+      "count": 86,
+      "totalClicks": 1764,
+      "hotScore": 118,
+      "samplePosts": [
+        {
+          "title": "这个跌法，现在怎么可能拉科技。科技是没戏了，只能银行和券商，保险保指数不太难看。",
+          "clicks": 9
+        },
+        {
+          "title": "郭嘉队只买保险银行护指数",
+          "clicks": 26
+        }
+      ]
+    },
+    {
+      "term": "科技",
+      "count": 76,
+      "totalClicks": 18640,
+      "hotScore": 119,
+      "samplePosts": [
+        {
+          "title": "满仓满融在科技应该怎么办？",
+          "clicks": 167
+        },
+        {
+          "title": "又不是没拉过科技，上次拉科技不就涨停了，又给摁下来，自己做的孽。拉老登只会把指数",
+          "clicks": 3
+        }
+      ]
+    },
+    {
+      "term": "大盘",
+      "count": 45,
+      "totalClicks": 15065,
+      "hotScore": 87,
+      "samplePosts": [
+        {
+          "title": "国家队救市太晚了！看看今天的大盘更是惨不忍睹啊！业绩这么好的千亿市值的都有几个跌",
+          "clicks": 4
+        },
+        {
+          "title": "大盘难以阻止减持抛售潮，你亏损，大股东成本一元甚至更底，大股东暴富！股市有风险，",
+          "clicks": 9
+        }
+      ]
+    },
+    {
+      "term": "国家队",
+      "count": 44,
+      "totalClicks": 20157,
+      "hotScore": 87,
+      "samplePosts": [
+        {
+          "title": "国家队哈哈",
+          "clicks": 1
+        },
+        {
+          "title": "国家队也想吃点",
+          "clicks": 1
+        }
+      ]
+    },
+    {
+      "term": "指数",
+      "count": 39,
+      "totalClicks": 279,
+      "hotScore": 63,
+      "samplePosts": [
+        {
+          "title": "大家注意到没有，上证指数月K线MACD要金叉向下了，开启月线级别大调整大下跌了，",
+          "clicks": 5
+        },
+        {
+          "title": "全网回复，投诉到证监会去，恶意操纵指数，打压股价。顶上去",
+          "clicks": 1
+        }
+      ]
+    },
+    {
+      "term": "散户",
+      "count": 35,
+      "totalClicks": 2488,
+      "hotScore": 69,
+      "samplePosts": [
+        {
+          "title": "最近看了一本书，说中说到：每次散户蜂拥而人买入股票的时候，往往就是市场的头部。这",
+          "clicks": 292
+        },
+        {
+          "title": "散户稳住，让国家队，险资，机构，大基金先走",
+          "clicks": 3
+        }
+      ]
+    },
+    {
+      "term": "量化",
+      "count": 30,
+      "totalClicks": 1385,
+      "hotScore": 61,
+      "samplePosts": [
+        {
+          "title": "指s涨不上去，本质是内部问题，量化控一控、上市公司财务造假管一管、大股东减持机制",
+          "clicks": 38
+        },
+        {
+          "title": "应该暂停量化卖出",
+          "clicks": 1
+        }
+      ]
+    },
+    {
+      "term": "跌停",
+      "count": 26,
+      "totalClicks": 20897,
+      "hotScore": 69,
+      "samplePosts": [
+        {
+          "title": "232家跌停，离千股跌停还远着了",
+          "clicks": 19
+        },
+        {
+          "title": "230家跌停，啧啧啧，这就是“出手（售）”哈哈哈哈",
+          "clicks": 13
+        }
+      ]
+    },
+    {
+      "term": "主力",
+      "count": 18,
+      "totalClicks": 3782,
+      "hotScore": 54,
+      "samplePosts": [
+        {
+          "title": "主力又流出500多亿，救什么呢？",
+          "clicks": 7
+        },
+        {
+          "title": "7月唯一真神，科技概念，涨得比券商银行金融多，不像创新药要筛选，散户少，主力格局",
+          "clicks": 47
+        }
+      ]
+    },
+    {
+      "term": "保险",
+      "count": 18,
+      "totalClicks": 367,
+      "hotScore": 44,
+      "samplePosts": [
+        {
+          "title": "这个跌法，现在怎么可能拉科技。科技是没戏了，只能银行和券商，保险保指数不太难看。",
+          "clicks": 9
+        },
+        {
+          "title": "郭嘉队只买保险银行护指数",
+          "clicks": 26
+        }
+      ]
+    },
+    {
+      "term": "抄底",
+      "count": 16,
+      "totalClicks": 329,
+      "hotScore": 41,
+      "samplePosts": [
+        {
+          "title": "牛市来赶紧抄底你抄底国家队抄你家",
+          "clicks": 3
+        },
+        {
+          "title": "又想来抄底，你妺的。",
+          "clicks": 4
+        }
+      ]
+    },
+    {
+      "term": "半导体",
+      "count": 13,
+      "totalClicks": 23694,
+      "hotScore": 57,
+      "samplePosts": [
+        {
+          "title": "重点操作思路：半导体CPO是走是留？一句话告诉你答案！",
+          "clicks": 559
+        },
+        {
+          "title": "半导体大幅冲高回落，怎么破？",
+          "clicks": 870
+        }
+      ]
+    },
+    {
+      "term": "融资",
+      "count": 12,
+      "totalClicks": 2056,
+      "hotScore": 45,
+      "samplePosts": [
+        {
+          "title": "相信国运，融资买入",
+          "clicks": 18
+        },
+        {
+          "title": "大部分的融资集中在科技赛道",
+          "clicks": 928
+        }
+      ]
+    },
+    {
+      "term": "证券",
+      "count": 10,
+      "totalClicks": 513,
+      "hotScore": 37,
+      "samplePosts": [
+        {
+          "title": "证监会今开座谈会促进市场稳定健康发展证券时报6小时前证监会召开座谈会，多家机构参",
+          "clicks": 231
+        },
+        {
+          "title": "证监会今开座谈会促进市场稳定健康发展证券时报6小时前证监会召开座谈会，多家机构参",
+          "clicks": 166
+        }
+      ]
+    },
+    {
+      "term": "创业板",
+      "count": 10,
+      "totalClicks": 20825,
+      "hotScore": 53,
+      "samplePosts": [
+        {
+          "title": "让资本的时钟拨慢一些",
+          "clicks": 20726
+        },
+        {
+          "title": "收盘，创业板指数跌200点。",
+          "clicks": 1
+        }
+      ]
+    },
+    {
+      "term": "基金",
+      "count": 7,
+      "totalClicks": 2142,
+      "hotScore": 40,
+      "samplePosts": [
+        {
+          "title": "散户稳住，让国家队，险资，机构，大基金先走",
+          "clicks": 3
+        },
+        {
+          "title": "大盘经历风暴！这批债券基金稳如",
+          "clicks": 543
+        }
+      ]
+    },
+    {
+      "term": "涨停",
+      "count": 7,
+      "totalClicks": 2335,
+      "hotScore": 41,
+      "samplePosts": [
+        {
+          "title": "又不是没拉过科技，上次拉科技不就涨停了，又给摁下来，自己做的孽。拉老登只会把指数",
+          "clicks": 3
+        },
+        {
+          "title": "从来没有200家涨停过，现在一两天就500家跌停，这是要人不要玩股票的节奏",
+          "clicks": 1
+        }
+      ]
+    },
+    {
+      "term": "白酒",
+      "count": 7,
+      "totalClicks": 110,
+      "hotScore": 27,
+      "samplePosts": [
+        {
+          "title": "都这个时候了，还不拉券商，还去拉白酒？真的是有意思，靠白酒能挽回现在的局面？",
+          "clicks": 1
+        },
+        {
+          "title": "白酒业绩啥样心里没数么",
+          "clicks": 20
+        }
+      ]
+    },
+    {
+      "term": "恐慌",
+      "count": 7,
+      "totalClicks": 155,
+      "hotScore": 29,
+      "samplePosts": [
+        {
+          "title": "市场不怕暴跌，就怕阴跌。因为阴跌过后，还有最后一轮恐慌暴跌。",
+          "clicks": 55
+        },
+        {
+          "title": "市场不怕暴跌，就怕阴跌。因为阴跌过后，还有最后一轮恐慌暴跌。",
+          "clicks": 55
+        }
+      ]
+    },
+    {
+      "term": "增持",
+      "count": 5,
+      "totalClicks": 56130,
+      "hotScore": 52,
+      "samplePosts": [
+        {
+          "title": "你不增持还好一点儿，你一增持，市场大跌",
+          "clicks": 16
+        },
+        {
+          "title": "继7月19日晚间中国诚通、中国国新官宣大额增持后，7月20日盘前五家央企上市公司",
+          "clicks": 140
+        }
+      ]
+    }
+  ]
+}

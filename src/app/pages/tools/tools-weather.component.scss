@@ -24,20 +24,20 @@
     .temp {
       font-size: 36px;
       font-weight: bold;
-      color: #1890ff;
+      color: var(--accent-color, #1890ff);
     }
   }
 
   .desc {
     font-size: 18px;
-    color: #666;
+    color: var(--text-secondary, #666);
   }
 
   .details {
     text-align: left;
     p {
       margin-bottom: 4px;
-      color: #777;
+      color: var(--text-secondary, #777);
     }
   }
 }
@@ -54,14 +54,14 @@
   max-width: 140px;
   text-align: center;
   padding: 12px 8px;
-  background: #f9f9f9;
+  background: var(--bg-tertiary, #f9f9f9);
   border-radius: 8px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border-light, #f0f0f0);
   
   .date {
     font-weight: bold;
     margin-bottom: 8px;
-    color: #333;
+    color: var(--text-primary, #333);
     font-size: 13px;
   }
 
@@ -85,7 +85,7 @@
 
   .f-desc {
     font-size: 12px;
-    color: #888;
+    color: var(--text-tertiary, #888);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -106,7 +106,7 @@
       height: 6px;
     }
     &::-webkit-scrollbar-thumb {
-      background: #e8e8e8;
+      background: var(--border-color, #e8e8e8);
       border-radius: 3px;
     }
 
@@ -116,7 +116,7 @@
       
       .h-time {
         font-size: 12px;
-        color: #999;
+        color: var(--text-tertiary, #999);
         margin-bottom: 4px;
       }
       
@@ -127,15 +127,124 @@
       
       .h-temp {
         font-weight: bold;
-        color: #333;
+        color: var(--text-primary, #333);
       }
     }
   }
 
   .hourly-chart {
     margin-top: 8px;
-    border-top: 1px dashed #f0f0f0;
+    border-top: 1px dashed var(--border-light, #f0f0f0);
   }
 }
 
+/* 最近搜索城市 */
+.recent-cities {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  
+  .recent-label {
+    font-size: 13px;
+    color: var(--text-tertiary, #999);
+  }
+  
+  .recent-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    background: var(--bg-tertiary, #f5f5f5);
+    border: 1px solid var(--border-light, #e8e8e8);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-primary, #333);
+    transition: all 0.2s;
+    
+    &:hover {
+      background: var(--accent-color, #1890ff);
+      border-color: var(--accent-color, #1890ff);
+      color: #fff;
+      
+      .tag-close {
+        color: #fff;
+        opacity: 0.8;
+      }
+    }
+    
+    .tag-text {
+      max-width: 100px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    .tag-close {
+      font-size: 14px;
+      line-height: 1;
+      color: var(--text-tertiary, #999);
+      padding: 0 2px;
+      
+      &:hover {
+        color: #fff;
+        opacity: 1;
+      }
+    }
+  }
+}
 
+/* 地名解析结果选择器 */
+.geocode-picker {
+  margin-bottom: 16px;
+  border: 1px solid var(--border-light, #e8e8e8);
+  border-radius: 8px;
+  background: var(--bg-secondary, #fff);
+  overflow: hidden;
+  
+  .picker-title {
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary, #333);
+    border-bottom: 1px solid var(--border-light, #e8e8e8);
+    background: var(--bg-tertiary, #fafafa);
+  }
+  
+  .picker-list {
+    max-height: 240px;
+    overflow-y: auto;
+  }
+  
+  .picker-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-light, #f0f0f0);
+    transition: background 0.2s;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    &:hover {
+      background: var(--bg-tertiary, #f5f5f5);
+    }
+    
+    .picker-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary, #333);
+      min-width: 80px;
+    }
+    
+    .picker-detail {
+      font-size: 12px;
+      color: var(--text-tertiary, #999);
+    }
+  }
+}
