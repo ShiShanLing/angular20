@@ -11,23 +11,19 @@ concurrency:
 
 jobs:
   deploy:
-    name: Deploy to production server
+    name: Trigger production deploy
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 5
 
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.2.2
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT || 22 }}
-          command_timeout: 25m
-          script: |
-            set -euo pipefail
-            cd /root/projects/angular20
-            git fetch origin master
-            git checkout master
-            git pull --ff-only origin master
-            bash scripts/deploy-full.sh
+      - name: Call server deploy hook
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          DEPLOY_HOOK_SECRET: ${{ secrets.DEPLOY_HOOK_SECRET }}
+        run: |
+          set -euo pipefail
+          response="$(curl -fsS -X POST "http://${SERVER_HOST}/api/deploy/hook" \
+            -H "X-Deploy-Token: ${DEPLOY_HOOK_SECRET}" \
+            -H "Content-Type: application/json")"
+          echo "$response"
+          echo "$response" | grep -q '"status":"started"\|"status":"already_running"'
