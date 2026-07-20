@@ -21,7 +21,10 @@ export class HtmlPreviewComponent {
     { label: '杨森.html', path: '/test/杨森.html' },
     { label: '个人信息处理授权同意书_杨森格式.html', path: '/test/个人信息处理授权同意书_杨森格式.html' }
   ];
-
+  //export class HtmlSample {
+  //  label:string,
+  //  path: string;
+  //}
   readonly selectedPath = signal(this.samples[0].path);
   readonly rawHtml = signal('');
   readonly decodedHtml = computed(() => this.decodeHtmlString(this.rawHtml()));
@@ -46,7 +49,32 @@ export class HtmlPreviewComponent {
     this.load(path);
   }
   
-  
+  /*
+### 7. Protocol 和 Class 继承有什么区别？为什么 Swift 强调面向协议编程？
+
+- 难度：Medium
+- ID：`ios-swift-protocol-vs-inheritance`
+- 口述一句话：继承表达类型层级，协议表达能力边界。
+
+**参考答案：**
+
+继承表达“是什么”，协议表达“能做什么”。Class 继承只能单继承，协议可以多遵循；继承复用实现但耦合更强，协议更适合抽象能力、依赖倒置和测试替换。Swift 面向协议编程的重点是用协议定义边界，用扩展提供默认实现。
+
+### 8. Protocol Extension 中的方法什么时候是静态派发，什么时候会动态派发？
+
+- 难度：Hard
+- ID：`ios-swift-protocol-extension-dispatch`
+- 口述一句话：协议要求的方法，通过协议类型调用通常走动态派发；协议扩展里的非要求方法，更偏静态派发。
+
+**参考答案：**
+
+协议要求的方法，也就是写在 protocol 声明里的 requirement，通过协议类型调用时通常走 witness table 动态派发，所以能调用到具体类型的实现。
+
+如果方法只是写在 protocol extension 里的额外方法，不是 requirement，那么它更偏静态派发，调用哪个实现取决于变量的静态类型，容易调用到扩展默认实现。
+
+可以这样收口：协议要求的方法，通过协议类型调用通常走动态派发；协议扩展里的非要求方法，更偏静态派发，容易调用到扩展默认实现。
+
+  */
   reload(): void {
     this.load(this.selectedPath());
   }

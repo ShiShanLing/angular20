@@ -18,6 +18,7 @@ export class GameScoresService {
       order: { score: 'DESC', playedAt: 'DESC' },
     });
   }
+  
 
   async getBest(userId: number, game: string) {
     const best = await this.scoreRepo.findOne({

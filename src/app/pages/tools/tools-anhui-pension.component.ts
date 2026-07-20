@@ -46,8 +46,9 @@ export class ToolsAnhuiPensionComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private recordService: RecordService,
   ) {}
-
+  
   ngOnInit(): void {
+
     this.form = this.fb.group({
       personalAccountTotal: [null, [Validators.required, Validators.min(0)]],
       basicPension: [200, [Validators.required, Validators.min(0)]]
@@ -71,13 +72,13 @@ export class ToolsAnhuiPensionComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
   }
-
+  //
   calculate(): void {
     if (this.form.invalid) {
       this.result = null;
       return;
     }
-
+    //
     const v = this.form.getRawValue();
     const personalAccountTotal = Number(v.personalAccountTotal);
     const basicPension = Number(v.basicPension);
@@ -89,9 +90,9 @@ export class ToolsAnhuiPensionComponent implements OnInit, OnDestroy {
 
     this.result = { monthlyPension, accountPart, paybackMonths, paybackYears };
   }
-
-  // === 持久化 ===
-
+  // 
+  // === 持久化 === 
+  
   private loadFromLocalStorage(): void {
     try {
       const saved = localStorage.getItem(LS_KEY);
@@ -102,7 +103,7 @@ export class ToolsAnhuiPensionComponent implements OnInit, OnDestroy {
   private saveToLocalStorage(): void {
     localStorage.setItem(LS_KEY, JSON.stringify(this.form.getRawValue()));
   }
-
+  
   private loadFromApi(): void {
     this.recordService.getAll(RECORD_TYPE).subscribe({
       next: (records) => {
@@ -116,6 +117,7 @@ export class ToolsAnhuiPensionComponent implements OnInit, OnDestroy {
       }
     });
   }
+  
 
   private saveToApi(): void {
     const data = this.form.getRawValue();

@@ -16,6 +16,7 @@ export class UsersService {
     if (existing) {
       throw new ConflictException('用户名已存在');
     }
+    
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = this.userRepo.create({
       username,
@@ -24,11 +25,11 @@ export class UsersService {
     });
     return this.userRepo.save(user);
   }
-
+  // 
   async findByUsername(username: string): Promise<User | null> {
     return this.userRepo.findOne({ where: { username } });
   }
-
+  
   async findById(id: number): Promise<User> {
     const user = await this.userRepo.findOne({ where: { id } });
     if (!user) {
