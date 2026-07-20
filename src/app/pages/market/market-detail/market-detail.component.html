@@ -1,0 +1,19 @@
+<div class="toolbar">
+  <button nz-button nzType="default" (click)="goBack()">
+    <span nz-icon nzType="arrow-left"></span>
+    返回列表
+  </button>
+  <h3>📊 市场情绪日报 · {{ date() }}</h3>
+</div>
+
+<nz-spin [nzSpinning]="loading()">
+  @if (error()) {
+    <nz-result nzStatus="warning" [nzTitle]="error()">
+      <div nz-result-extra>
+        <button nz-button nzType="primary" (click)="goBack()">返回列表</button>
+      </div>
+    </nz-result>
+  } @else if (report()) {
+    <div class="report-frame" [innerHTML]="safeHtml()"></div>
+  }
+</nz-spin>

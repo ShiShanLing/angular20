@@ -2,6 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { PermissionService } from './core/permission.service';
+import { AuthService } from './core/auth.service';
 
 /** 根组件：仅挂载路由出口，具体页面由各路由组件渲染。 */
 @Component({
@@ -14,8 +15,16 @@ import { PermissionService } from './core/permission.service';
 export class AppComponent {
   private readonly document = inject(DOCUMENT);
   private readonly permissionService = inject(PermissionService);
+  private readonly authService = inject(AuthService);
   
   constructor() {
+    // 优先从 AuthService 获取登录时返回的权限
+    const authPerms = this.authService.userPermissions();
+    if (authPerms.length > 0) {
+      this.permissionService.setPermissions(authPerms);
+      return;
+    }
+    // 回退：从 HTML data-permissions 属性读取
     const rootEl = this.document.querySelector('app-root');
     const raw = rootEl?.getAttribute('data-permissions') ?? null;
     const permissions = this.parsePermissions(raw);

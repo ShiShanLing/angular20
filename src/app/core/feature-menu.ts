@@ -64,5 +64,12 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
       { path: '/chart-showcase', label: '炫酷图表', permission: 'chart.showcase' },
       { path: '/html-preview', label: '条款预览' }
     ]
+  },
+  {
+    label: '数据分析',
+    icon: 'stock',
+    children: [
+      { path: '/market', label: '市场情绪', permission: 'market.view' },
+    ]
   }
 ];

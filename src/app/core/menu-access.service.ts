@@ -26,19 +26,29 @@ export class MenuAccessService {
   ) {}
 
   isManagedPath(path: string): boolean {
-    return this.leafRoutes.some((item) => item.path === path);
+    return this.findManagedRoute(path) !== null;
   }
 
   hasAccessToPath(path: string): boolean {
-    const route = this.leafRoutes.find((item) => item.path === path);
+    const route = this.findManagedRoute(path);
     if (!route) {
       return true;
     }
-    return (
-      this.permissionService.hasPermission(route.permission) &&
-      this.featureActivationService.isActive(route.activationCode) &&
-      this.menuVisibilityService.isVisible(route.path)
-    );
+    console.log('[MENU-ACCESS] matched route:', route.path, 'permission:', route.permission, 'activationCode:', route.activationCode);
+    const permOk = this.permissionService.hasPermission(route.permission);
+    const activeOk = this.featureActivationService.isActive(route.activationCode);
+    const visibleOk = this.menuVisibilityService.isVisible(route.path);
+    console.log('[MENU-ACCESS] perm:', permOk, 'active:', activeOk, 'visible:', visibleOk);
+    return permOk && activeOk && visibleOk;
+  }
+
+  /** 精确匹配或子路由匹配：/market/2026-07-17 匹配到 /market */
+  private findManagedRoute(path: string): FeatureLeafRoute | null {
+    // 1. 精确匹配
+    const exact = this.leafRoutes.find((item) => item.path === path);
+    if (exact) return exact;
+    // 2. 子路由匹配：/market/xxx → 匹配 /market
+    return this.leafRoutes.find((item) => path.startsWith(item.path + '/')) ?? null;
   }
 
   firstAccessiblePath(): string | null {

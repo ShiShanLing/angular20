@@ -57,6 +57,10 @@ export const routes: Routes = [
           import('./pages/html-preview/html-preview.component').then(m => m.HtmlPreviewComponent)
       },
       {
+        path: 'market',
+        loadChildren: () => import('./pages/market/market.routes').then(m => m.MARKET_ROUTES)
+      },
+      {
         path: 'no-access',
         loadComponent: () => import('./pages/no-access/no-access.component').then(m => m.NoAccessComponent)
       },

@@ -1,9 +1,11 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap, map, catchError, of } from 'rxjs';
+import { PermissionService } from './permission.service';
 
 const TOKEN_KEY = 'app.auth.token.v1';
 const USER_KEY = 'app.auth.user.v1';
+const PERM_KEY = 'app.auth.permissions.v1';
 
 export interface LoginRequest {
   username: string;
@@ -13,6 +15,7 @@ export interface LoginRequest {
 export interface LoginResponse {
   access_token: string;
   user: UserInfo;
+  permissions?: string[];
 }
 
 export interface UserInfo {
@@ -30,6 +33,7 @@ export interface UserInfo {
 export class AuthService {
   private readonly token = signal<string | null>(this.loadToken());
   private readonly user = signal<UserInfo | null>(this.loadUser());
+  private readonly permissions = signal<string[]>(this.loadPermissions());
 
   readonly isLoggedIn = computed(() => {
     const t = this.token();
@@ -38,6 +42,9 @@ export class AuthService {
     return !this.isTokenExpired(t);
   });
   readonly currentUser = computed(() => this.user());
+  readonly userPermissions = computed(() => this.permissions());
+
+  private readonly permissionService = inject(PermissionService);
 
   constructor(private readonly http: HttpClient) {}
 
@@ -54,9 +61,11 @@ export class AuthService {
   logout(): void {
     this.token.set(null);
     this.user.set(null);
+    this.permissions.set([]);
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
+      localStorage.removeItem(PERM_KEY);
     }
   }
 
@@ -67,6 +76,9 @@ export class AuthService {
   restoreSession(): void {
     this.token.set(this.loadToken());
     this.user.set(this.loadUser());
+    const perms = this.loadPermissions();
+    this.permissions.set(perms);
+    this.permissionService.setPermissions(perms);
   }
 
   /**
@@ -91,11 +103,15 @@ export class AuthService {
   // ─── private ────────────────────────────────────────────────────────────────
 
   private persistSession(res: LoginResponse): void {
+    const perms = res.permissions || [];
     this.token.set(res.access_token);
     this.user.set(res.user);
+    this.permissions.set(perms);
+    this.permissionService.setPermissions(perms);
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(TOKEN_KEY, res.access_token);
       localStorage.setItem(USER_KEY, JSON.stringify(res.user));
+      localStorage.setItem(PERM_KEY, JSON.stringify(perms));
     }
   }
 
@@ -111,6 +127,16 @@ export class AuthService {
       return raw ? (JSON.parse(raw) as UserInfo) : null;
     } catch {
       return null;
+    }
+  }
+
+  private loadPermissions(): string[] {
+    if (typeof localStorage === 'undefined') return [];
+    try {
+      const raw = localStorage.getItem(PERM_KEY);
+      return raw ? (JSON.parse(raw) as string[]) : [];
+    } catch {
+      return [];
     }
   }
 

@@ -9,14 +9,26 @@ export const menuAccessGuard: CanActivateChildFn = (_, state) => {
   const targetPath = normalizePath(state.url);
   const noAccessPath = '/no-access';
 
-  if (!menuAccessService.isManagedPath(targetPath)) {
+  console.log('[GUARD] targetPath:', targetPath);
+
+  const isManaged = menuAccessService.isManagedPath(targetPath);
+  console.log('[GUARD] isManagedPath:', isManaged);
+
+  if (!isManaged) {
+    console.log('[GUARD] → 非受管路径，放行');
     return true;
   }
-  if (menuAccessService.hasAccessToPath(targetPath)) {
+
+  const hasAccess = menuAccessService.hasAccessToPath(targetPath);
+  console.log('[GUARD] hasAccessToPath:', hasAccess);
+
+  if (hasAccess) {
+    console.log('[GUARD] → 有权限，放行');
     return true;
   }
 
   const fallback = menuAccessService.firstAccessiblePath();
+  console.log('[GUARD] → 无权限！fallback:', fallback);
   if (!fallback) {
     if (targetPath === noAccessPath) {
       return true;
@@ -26,6 +38,7 @@ export const menuAccessGuard: CanActivateChildFn = (_, state) => {
   if (fallback === targetPath) {
     return true;
   }
+  console.log('[GUARD] → 重定向到:', fallback);
   return router.parseUrl(fallback);
 };
 

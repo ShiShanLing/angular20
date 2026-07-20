@@ -150,6 +150,33 @@ function runAnalysis() {
 
 const PANIC_WORDS = ['销户', '爆仓', '天台', '家破人亡', '倾家荡产', '割肉', '清仓走人', '再也不炒', '血亏', '腰斩', '崩盘', '退市', '绝望', '完了', '救命', '活不下去', '跳楼', '躺平'];
 
+// 简单帖子情绪判断（基于关键词）
+const BULL_WORDS = ['牛市', '看涨', '反弹', '加仓', '抄底', '利好', '突破', '拉升', '底部', '起飞', '暴涨', '满仓', '大涨', '上攻', '翻红', '起涨'];
+const BEAR_WORDS = ['下跌', '暴跌', '割肉', '清仓', '套牢', '崩盘', '利空', '大跌', '破位', '跑路', '跳水', '绿盘', '阴跌', '杀跌', '跌停', '做空'];
+function guessPostSentiment(title, content) {
+  const text = (title || '') + (content || '');
+  let bull = 0, bear = 0, panic = 0;
+  for (const w of BULL_WORDS) if (text.includes(w)) bull++;
+  for (const w of BEAR_WORDS) if (text.includes(w)) bear++;
+  for (const w of PANIC_WORDS) if (text.includes(w)) panic++;
+  if (panic >= 2) return { label: '恐慌', color: '#dc2626', bg: '#fef2f2' };
+  if (bear > bull + panic) return { label: '看空', color: '#ea580c', bg: '#fff7ed' };
+  if (panic >= 1) return { label: '恐慌', color: '#dc2626', bg: '#fef2f2' };
+  if (bull > bear) return { label: '看多', color: '#059669', bg: '#ecfdf5' };
+  // 讽刺检测
+  const sarcasm = ['太漂亮了', '厉害了', '太牛了', '颤抖吧', '加速赶底', '老乡别走'];
+  for (const s of sarcasm) if (text.includes(s)) return { label: '讽刺', color: '#7c3aed', bg: '#f5f3ff' };
+  return { label: '中性', color: '#6b7280', bg: '#f9fafb' };
+}
+
+// 根据 barCode + postId 构建股吧帖子链接
+function buildPostUrl(barCode, postId) {
+  if (!barCode || !postId) return '';
+  // barCode 形如 "zssh000001"，URL 需要去掉 "zs" 前缀
+  const code = barCode.startsWith('zs') ? barCode.substring(2) : barCode;
+  return `https://guba.eastmoney.com/news,${code},${postId}.html`;
+}
+
 function computeEnrichedData(dateStr) {
   const enriched = {};
 
@@ -163,7 +190,7 @@ function computeEnrichedData(dateStr) {
         for (const p of bar.posts) {
           if (p.publishTime && p.publishTime.substring(0, 10) === dateStr && !seen.has(p.postId)) {
             seen.add(p.postId);
-            allPosts.push({ title: p.title, clicks: p.clicks || 0, comments: p.comments || 0, barName: bar.barName, publishTime: p.publishTime });
+            allPosts.push({ title: p.title, clicks: p.clicks || 0, comments: p.comments || 0, barName: p.barName || bar.barName, barCode: p.barCode || '', postId: p.postId, content: p.content || '', publishTime: p.publishTime });
           }
         }
       }
@@ -285,7 +312,7 @@ function buildHtmlEmail(analysisOutput, tradingInfo) {
   let html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
 <body style="font-family:-apple-system,'Microsoft YaHei',sans-serif;max-width:700px;margin:0 auto;padding:20px;background:#f5f5f5;">
 <div style="background:linear-gradient(135deg,#1e3a5f,#2563eb);color:white;padding:24px;border-radius:12px 12px 0 0;">
-  <h1 style="margin:0;font-size:22px;">📊 A股市场情绪日报</h1>
+  <h1 style="margin:0;font-size:22px;">📊 市场情绪日报</h1>
   <p style="margin:8px 0 0;opacity:0.85;">${dateStr} · ${tradingInfo.reason}</p>
 </div>
 <div style="background:white;padding:24px;border-radius:0 0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
@@ -448,22 +475,29 @@ function buildHtmlEmail(analysisOutput, tradingInfo) {
     html += `</div>`;
   }
 
-  // === 7. 热门帖子 Top 10 ===
+  // === 7. 热门帖子 Top 10（带链接+AI情绪标注） ===
   if (enriched.topPosts && enriched.topPosts.length > 0) {
     html += `<h2 style="color:#1e3a5f;border-bottom:2px solid #e5e7eb;padding-bottom:8px;margin-top:24px;">🏆 热门帖子 Top 10</h2>`;
     html += `<table style="width:100%;border-collapse:collapse;font-size:12px;">`;
-    html += `<tr style="background:#f1f5f9;"><th style="padding:6px;text-align:left;">帖子</th><th>板块</th><th>点击</th><th>评论</th></tr>`;
+    html += `<tr style="background:#f1f5f9;"><th style="padding:6px;text-align:left;">帖子</th><th>情绪</th><th>板块</th><th>点击</th><th>评论</th></tr>`;
     for (let i = 0; i < enriched.topPosts.length; i++) {
       const p = enriched.topPosts[i];
       const title = (p.title || '').substring(0, 40) + (p.title?.length > 40 ? '...' : '');
+      const sentiment = guessPostSentiment(p.title, p.content);
+      const url = buildPostUrl(p.barCode, p.postId);
+      const titleHtml = url
+        ? `<a href="${url}" target="_blank" style="color:#1e40af;text-decoration:none;border-bottom:1px dashed #93c5fd;" title="点击打开原文">${title}</a>`
+        : title;
       html += `<tr style="border-bottom:1px solid #f3f4f6;">
-        <td style="padding:5px 6px;"><span style="color:#2563eb;font-weight:bold;">${i + 1}.</span> ${title}</td>
+        <td style="padding:5px 6px;"><span style="color:#2563eb;font-weight:bold;">${i + 1}.</span> ${titleHtml}</td>
+        <td style="text-align:center;"><span style="background:${sentiment.bg};color:${sentiment.color};padding:2px 6px;border-radius:10px;font-size:11px;font-weight:600;">${sentiment.label}</span></td>
         <td style="text-align:center;font-size:11px;color:#6b7280;">${(p.barName || '').substring(0, 4)}</td>
         <td style="text-align:center;font-weight:bold;">${p.clicks}</td>
         <td style="text-align:center;">${p.comments}</td>
       </tr>`;
     }
     html += `</table>`;
+    html += `<div style="font-size:11px;color:#9ca3af;margin-top:4px;">💡 点击帖子标题可跳转原文查看详情</div>`;
   }
 
   // === 8. 关键发现 ===
@@ -532,7 +566,7 @@ async function sendEmail(htmlContent, subject) {
     const info = await transporter.sendMail({
       from: config.from,
       to: config.to,
-      subject: subject || `📊 A股情绪日报 ${dateStr}`,
+      subject: subject || `📊 市场情绪日报 ${dateStr}`,
       html: htmlContent,
     });
 
@@ -550,7 +584,7 @@ async function sendEmail(htmlContent, subject) {
 
 async function main() {
   console.log('╔══════════════════════════════════════════╗');
-  console.log('║  📬 A股情绪日报 · 定时任务              ║');
+  console.log('║  📬 市场情绪日报 · 定时任务              ║');
   console.log('╚══════════════════════════════════════════╝\n');
 
   // 交易日检查
@@ -594,11 +628,110 @@ async function main() {
     } catch {}
   }
 
-  const subject = `📊 A股情绪日报 ${dateStr} · AI指数${aiIndex}°`;
+  const subject = `📊 市场情绪日报 ${dateStr} · AI指数${aiIndex}°`;
   await sendEmail(html, subject);
+
+  // 推送到 API 入库
+  await pushToApi(dateStr, html);
 
   console.log(`\n💾 HTML报告: ${htmlFile}`);
   console.log('✅ 任务完成');
+}
+
+/**
+ * 推送分析结果到 NestJS API
+ */
+async function pushToApi(dateStr, htmlContent) {
+  if (!existsSync(EMAIL_CONFIG_FILE)) return;
+  const config = JSON.parse(readFileSync(EMAIL_CONFIG_FILE, 'utf-8'));
+  if (!config.api?.baseUrl) return;
+
+  console.log('\n📡 推送数据到 API...');
+  try {
+    // 1. 登录获取 token
+    const loginResp = await fetch(`${config.api.baseUrl}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: config.api.username, password: config.api.password }),
+    });
+    if (!loginResp.ok) {
+      console.error(`❌ API 登录失败: ${loginResp.status}`);
+      return;
+    }
+    const { access_token } = await loginResp.json();
+
+    // 2. 读取分析数据
+    let aiData = {};
+    const aiFile = join(DATA_DIR, 'qoder_ai_result.json');
+    if (existsSync(aiFile)) {
+      try { aiData = JSON.parse(readFileSync(aiFile, 'utf-8')); } catch {}
+    }
+
+    let kwData = {};
+    const kwFile = join(DATA_DIR, 'guba_analysis.json');
+    if (existsSync(kwFile)) {
+      try { kwData = JSON.parse(readFileSync(kwFile, 'utf-8')); } catch {}
+    }
+
+    const dist = aiData.distribution || {};
+    const total = aiData.totalPosts || 0;
+
+    // 3. 构建请求体
+    const body = {
+      date: dateStr,
+      aiIndex: aiData.marketIndex ?? null,
+      kwIndex: kwData.marketIndex?.index ?? null,
+      totalPosts: total,
+      bullish: dist.bullish || 0,
+      bearish: dist.bearish || 0,
+      fear: dist.fear || 0,
+      greed: dist.greed || 0,
+      neutral: dist.neutral || 0,
+      bearFearPct: total ? parseFloat(((dist.bearish + dist.fear) / total * 100).toFixed(1)) : 0,
+      panicTotal: enriched_panicTotal(),
+      sectors: aiData.sectors || null,
+      htmlContent,
+    };
+
+    // 4. POST 入库
+    const resp = await fetch(`${config.api.baseUrl}/market-reports`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${access_token}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (resp.ok) {
+      console.log(`✅ API 入库成功: ${dateStr}`);
+    } else {
+      console.error(`❌ API 入库失败: ${resp.status} ${await resp.text()}`);
+    }
+  } catch (err) {
+    console.error(`❌ API 推送异常: ${err.message}`);
+  }
+}
+
+/** 读取恐慌词总数（从已计算的 enriched 数据） */
+function enriched_panicTotal() {
+  const today = new Date();
+  const dateStr = new Date(today.getTime() + 8 * 60 * 60 * 1000).toISOString().substring(0, 10);
+  if (!existsSync(POSTS_FILE)) return 0;
+  try {
+    const data = JSON.parse(readFileSync(POSTS_FILE, 'utf-8'));
+    let total = 0;
+    for (const bar of data.bars) {
+      for (const p of bar.posts) {
+        if (!p.publishTime || p.publishTime.substring(0, 10) !== dateStr) continue;
+        const text = (p.title || '') + (p.content || '');
+        for (const word of PANIC_WORDS) {
+          if (text.includes(word)) total++;
+        }
+      }
+    }
+    return total;
+  } catch { return 0; }
 }
 
 main().catch(err => {
