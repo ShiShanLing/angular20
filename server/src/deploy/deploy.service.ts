@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { spawn } from 'child_process';
-import { createWriteStream, mkdirSync } from 'fs';
+import { appendFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 
 @Injectable()
@@ -21,31 +21,33 @@ export class DeployService {
     const logPath = this.config.get<string>('DEPLOY_LOG_PATH', '/var/log/angular20-deploy.log');
 
     mkdirSync('/var/log', { recursive: true });
-    const logStream = createWriteStream(logPath, { flags: 'a' });
-    logStream.write(`\n[${new Date().toISOString()}] deploy triggered\n`);
+    appendFileSync(logPath, `\n[${new Date().toISOString()}] deploy triggered\n`);
 
     this.running = true;
-    const child = spawn('bash', [scriptPath], {
-      cwd: projectDir,
-      detached: true,
-      stdio: ['ignore', logStream, logStream],
-    });
+    const child = spawn(
+      'bash',
+      ['-c', `"${scriptPath}" >> "${logPath}" 2>&1`],
+      {
+        cwd: projectDir,
+        detached: true,
+        stdio: 'ignore',
+      },
+    );
 
     child.unref();
 
     child.on('exit', (code) => {
       this.running = false;
-      logStream.write(
+      appendFileSync(
+        logPath,
         `[${new Date().toISOString()}] deploy finished with code ${code ?? 'unknown'}\n`,
       );
-      logStream.end();
       this.logger.log(`Deploy finished with code ${code ?? 'unknown'}`);
     });
 
     child.on('error', (err) => {
       this.running = false;
-      logStream.write(`[${new Date().toISOString()}] deploy error: ${err.message}\n`);
-      logStream.end();
+      appendFileSync(logPath, `[${new Date().toISOString()}] deploy error: ${err.message}\n`);
       this.logger.error(`Deploy failed to start: ${err.message}`);
     });
 
