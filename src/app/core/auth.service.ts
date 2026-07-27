@@ -45,19 +45,24 @@ export class AuthService {
   readonly userPermissions = computed(() => this.permissions());
 
   private readonly permissionService = inject(PermissionService);
+  private readonly http = inject(HttpClient);
 
-  constructor(private readonly http: HttpClient) {}
-
+  // MARK: 登录
+  // 调用登录接口并持久化 token、用户与权限
   login(req: LoginRequest): Observable<LoginResponse> {
     return this.http.post<LoginResponse>('/api/auth/login', req).pipe(
       tap((res) => this.persistSession(res))
     );
   }
 
+  // MARK: 注册
+  // 调用注册接口，需邀请码
   register(username: string, password: string, inviteCode: string, nickname?: string): Observable<any> {
     return this.http.post('/api/auth/register', { username, password, inviteCode, nickname });
   }
 
+  // MARK: 退出登录
+  // 清除本地登录态（不请求后端）
   logout(): void {
     this.token.set(null);
     this.user.set(null);
@@ -69,10 +74,14 @@ export class AuthService {
     }
   }
 
+  // MARK: 获取令牌
+  // 读取当前 JWT，供拦截器附加 Authorization
   getToken(): string | null {
     return this.token();
   }
 
+  // MARK: 恢复会话
+  // 从 localStorage 恢复会话到 signal 与权限服务
   restoreSession(): void {
     this.token.set(this.loadToken());
     this.user.set(this.loadUser());
@@ -81,10 +90,8 @@ export class AuthService {
     this.permissionService.setPermissions(perms);
   }
 
-  /**
-   * 启动时验证 token 有效性：调用后端 /api/auth/profile
-   * 如果返回 401（token 过期/无效），清除本地登录态
-   */
+  // MARK: 校验会话
+  // 启动时请求 /api/auth/profile 校验 token，401 或过期则退出登录
   validateSession(): Observable<boolean> {
     const t = this.getToken();
     if (!t || this.isTokenExpired(t)) {
@@ -102,6 +109,8 @@ export class AuthService {
 
   // ─── private ────────────────────────────────────────────────────────────────
 
+  // MARK: 持久会话
+  // 把登录响应写入 signal 与 localStorage
   private persistSession(res: LoginResponse): void {
     const perms = res.permissions || [];
     this.token.set(res.access_token);
@@ -115,11 +124,15 @@ export class AuthService {
     }
   }
 
+  // MARK: 加载令牌
+  // 从 localStorage 读取 token
   private loadToken(): string | null {
     if (typeof localStorage === 'undefined') return null;
     return localStorage.getItem(TOKEN_KEY);
   }
 
+  // MARK: 加载用户
+  // 从 localStorage 读取用户信息
   private loadUser(): UserInfo | null {
     if (typeof localStorage === 'undefined') return null;
     try {
@@ -130,6 +143,8 @@ export class AuthService {
     }
   }
 
+  // MARK: 加载权限
+  // 从 localStorage 读取权限列表
   private loadPermissions(): string[] {
     if (typeof localStorage === 'undefined') return [];
     try {
@@ -140,9 +155,8 @@ export class AuthService {
     }
   }
 
-  /**
-   * 解析 JWT payload 检查是否过期
-   */
+  // MARK: 令牌过期
+  // 解析 JWT exp，提前 60 秒视为过期；解析失败也视为过期
   private isTokenExpired(token: string): boolean {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));

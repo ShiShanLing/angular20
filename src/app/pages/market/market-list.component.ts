@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzTagModule } from 'ng-zorro-antd/tag';
@@ -13,6 +13,7 @@ import * as echartsDistNs from 'echarts/dist/echarts.js';
 import type { EChartsOption } from 'echarts';
 
 type EChartsNs = typeof import('echarts');
+// MARK: 图表
 function echartsFromDistBundle(ns: typeof echartsDistNs): EChartsNs {
   const root = ns as unknown as Record<string, unknown>;
   if (typeof root['init'] === 'function') return root as unknown as EChartsNs;
@@ -23,9 +24,13 @@ function echartsFromDistBundle(ns: typeof echartsDistNs): EChartsNs {
 const echarts = echartsFromDistBundle(echartsDistNs);
 import { MarketService, MarketReportItem, MarketReportDetail, TrendItem } from './market.service';
 
+/**
+ * 市场情绪列表页。
+ * - 顶部：最近 30 天 AI/关键词指数 + 恐慌词数趋势图
+ * - 下方：分页历史报告表格，点击日期可看详情 HTML
+ */
 @Component({
   selector: 'app-market-list',
-  standalone: true,
   imports: [
     CommonModule,
     NzTableModule, NzTagModule, NzSpinModule, NzEmptyModule, NzCardModule,
@@ -35,6 +40,7 @@ import { MarketService, MarketReportItem, MarketReportDetail, TrendItem } from '
   providers: [provideEchartsCore({ echarts })],
   templateUrl: './market-list.component.html',
   styleUrl: './market-list.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MarketListComponent implements OnInit {
   private readonly marketService = inject(MarketService);
@@ -59,11 +65,15 @@ export class MarketListComponent implements OnInit {
     return this.sanitizer.bypassSecurityTrustHtml(r.htmlContent);
   });
 
+  // MARK: 初始化
+  // 组件初始化：同步移动端断点、订阅视口变化与路由事件
   ngOnInit(): void {
     this.loadData();
     this.loadTrend();
   }
 
+  // MARK: 加载
+  // 分页加载市场情绪报告列表
   loadData(): void {
     this.loading.set(true);
     this.marketService.getList(this.page(), this.pageSize()).subscribe({
@@ -75,7 +85,9 @@ export class MarketListComponent implements OnInit {
       error: () => this.loading.set(false),
     });
   }
-
+  
+  // MARK: 加载
+  // 加载最近 30 天指数趋势并渲染图表
   loadTrend(): void {
     const days = 30;
     this.marketService.getTrend(days).subscribe({
@@ -86,11 +98,14 @@ export class MarketListComponent implements OnInit {
     });
   }
 
+  // MARK: 事件处理
   onPageChange(page: number): void {
     this.page.set(page);
     this.loadData();
   }
 
+  // MARK: 打开
+  // 按日期打开报告详情视图
   openDetail(date: string): void {
     this.showDetail.set(true);
     this.detailDate.set(date);
@@ -113,10 +128,12 @@ export class MarketListComponent implements OnInit {
     });
   }
 
+  // MARK: 列表
   backToList(): void {
     this.showDetail.set(false);
   }
 
+  // MARK: 获取
   getIndexColor(val: number | null): string {
     if (val == null) return '#999';
     if (val < 20) return '#dc2626';
@@ -126,6 +143,7 @@ export class MarketListComponent implements OnInit {
     return '#059669';
   }
 
+  // MARK: 获取
   getLevelLabel(val: number | null): string {
     if (val == null) return '-';
     if (val < 20) return '极度恐慌';
@@ -136,6 +154,7 @@ export class MarketListComponent implements OnInit {
     return '贪婪';
   }
 
+  // MARK: 获取
   getLevelColor(val: number | null): string {
     if (val == null) return 'default';
     if (val < 20) return 'red';
@@ -145,6 +164,7 @@ export class MarketListComponent implements OnInit {
     return 'green';
   }
 
+  // MARK: 格式化
   private formatLocalDate(d: Date): string {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -152,6 +172,7 @@ export class MarketListComponent implements OnInit {
     return `${y}-${m}-${day}`;
   }
 
+  // MARK: 构建
   private buildChartOptions(data: TrendItem[], days: number): EChartsOption {
     const byDate = new Map(data.map((d) => [d.date, d]));
     const filled: TrendItem[] = [];
@@ -172,7 +193,7 @@ export class MarketListComponent implements OnInit {
         },
       );
     }
-
+    
     const dates = filled.map((d) => d.date.substring(5));
     const aiValues = filled.map((d) => d.aiIndex);
     const kwValues = filled.map((d) => d.kwIndex);
@@ -232,7 +253,7 @@ export class MarketListComponent implements OnInit {
           smooth: true,
           connectNulls: true,
           showSymbol: true,
-          symbolSize: 6,
+          symbolSize: 6,//
           data: aiValues,
           itemStyle: { color: '#2563eb' },
           areaStyle: {
@@ -245,6 +266,7 @@ export class MarketListComponent implements OnInit {
             },
           },
         },
+        
         {
           name: '关键词指数',
           type: 'line',

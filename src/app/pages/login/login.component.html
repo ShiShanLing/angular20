@@ -1,8 +1,8 @@
 <div class="login-container">
   <div class="login-card">
-    <h2 class="login-title">Angular20 工具箱</h2>
+    <h2 class="login-title">Angular22 工具箱</h2>
 
-    <nz-tabs [(nzSelectedIndex)]="tabIndex">
+    <nz-tabs [nzSelectedIndex]="tabIndex()" (nzSelectedIndexChange)="tabIndex.set($event)">
       <nz-tab nzTitle="登录">
         <form nz-form [formGroup]="loginForm" (ngSubmit)="onLogin()" nzLayout="vertical">
           <nz-form-item>
@@ -21,7 +21,7 @@
               </nz-input-wrapper>
             </nz-form-control>
           </nz-form-item>
-          <button nz-button nzType="primary" nzBlock [nzLoading]="loading" [disabled]="loginForm.invalid">
+          <button nz-button nzType="primary" nzBlock [nzLoading]="loading()" [disabled]="loginForm.invalid">
             登 录
           </button>
         </form>
@@ -60,7 +60,7 @@
               </nz-input-wrapper>
             </nz-form-control>
           </nz-form-item>
-          <button nz-button nzType="primary" nzBlock [nzLoading]="loading" [disabled]="registerForm.invalid">
+          <button nz-button nzType="primary" nzBlock [nzLoading]="loading()" [disabled]="registerForm.invalid">
             注 册
           </button>
         </form>

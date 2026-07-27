@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -32,15 +32,19 @@ export interface User {
     FormsModule
   ],
   templateUrl: './table.component.html',
-  styleUrl: './table.component.scss'
+  styleUrl: './table.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TableComponent implements OnInit {
-  searchText = '';
+  private readonly modal = inject(NzModalService);
+  private readonly msg = inject(NzMessageService);
+
+  readonly searchText = signal('');
   sortName: string | null = null;
   sortValue: string | null = null;
 
   allData: User[] = [];
-  displayData: User[] = [];
+  readonly displayData = signal<User[]>([]);
 
   statusColorMap: Record<string, string> = {
     active: 'green',
@@ -53,9 +57,8 @@ export class TableComponent implements OnInit {
     pending: '待审'
   };
 
-  constructor(private modal: NzModalService, private msg: NzMessageService) {}
-
-  /** 生成示例用户列表并应用当前筛选/排序。 */
+  // MARK: 初始化
+  // 生成示例用户列表并应用当前筛选/排序。
   ngOnInit() {
     const names = ['张伟','李娜','王芳','刘洋','陈静','杨帆','赵磊','黄敏','吴浩','周婷',
                    '孙凯','徐梦','马超','朱玲','郭强','何秀','罗博','梁艺','宋涛','曾丽'];
@@ -74,11 +77,13 @@ export class TableComponent implements OnInit {
     this.applyFilter();
   }
 
-  /** 按搜索词与子段排序更新 `displayData`。 */
+  // MARK: 应用
+  // 按搜索词与子段排序更新 `displayData`。
   applyFilter() {
     let data = [...this.allData];
-    if (this.searchText.trim()) {
-      const kw = this.searchText.toLowerCase();
+    const searchText = this.searchText();
+    if (searchText.trim()) {
+      const kw = searchText.toLowerCase();
       data = data.filter(u =>
         u.name.toLowerCase().includes(kw) ||
         u.email.toLowerCase().includes(kw) ||
@@ -91,17 +96,19 @@ export class TableComponent implements OnInit {
         return this.sortValue === 'ascend' ? res : -res;
       });
     }
-    this.displayData = data;
+    this.displayData.set(data);
   }
 
-  /** 表格列排序变更回调。 */
+  // MARK: 事件处理
+  // 表格列排序变更回调。
   onSort(sortInfo: { key: string; value: string }) {
     this.sortName = sortInfo.key;
     this.sortValue = sortInfo.value;
     this.applyFilter();
   }
 
-  /** 删除前弹出确认框，成功后更新列表并提示。 */
+  // MARK: 删除
+  // 删除前弹出确认框，成功后更新列表并提示。
   deleteUser(user: User) {
     this.modal.confirm({
       nzTitle: `确定要删除用户「${user.name}」吗？`,
@@ -116,7 +123,8 @@ export class TableComponent implements OnInit {
     });
   }
 
-  /** 只读展示用户字段。 */
+  // MARK: 用户
+  // 只读展示用户字段。
   viewUser(user: User) {
     this.modal.info({
       nzTitle: `用户详情 — ${user.name}`,

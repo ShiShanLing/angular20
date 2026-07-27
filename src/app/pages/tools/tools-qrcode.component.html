@@ -15,7 +15,7 @@
           <div class="options-row">
             <div class="option-field">
               <span>尺寸</span>
-              <nz-select [ngModel]="qrSize()" (ngModelChange)="qrSize.set($event)" style="width: 100px;">
+              <nz-select [ngModel]="qrSize()" (ngModelChange)="qrSize.set($event)" [style]="{ width: '100px' }">
                 @for (size of sizeOptions; track size) {
                   <nz-option [nzValue]="size" [nzLabel]="size + ' px'"></nz-option>
                 }
@@ -23,7 +23,7 @@
             </div>
             <div class="option-field">
               <span>容错</span>
-              <nz-select [ngModel]="errorLevel()" (ngModelChange)="errorLevel.set($event)" style="width: 120px;">
+              <nz-select [ngModel]="errorLevel()" (ngModelChange)="errorLevel.set($event)" [style]="{ width: '120px' }">
                 @for (opt of levelOptions; track opt.value) {
                   <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
                 }
@@ -59,7 +59,7 @@
       <!-- 图片解码 -->
       <nz-tab nzTitle="图片解码">
         <div class="tab-panel">
-          <nz-space [nzWrap]="true" style="margin-bottom: 16px;">
+          <nz-space [nzWrap]="true" [style]="{ 'margin-bottom': '16px' }">
             <input #imageInput type="file" accept="image/*" (change)="onImageSelected($event)" hidden />
             <button *nzSpaceItem nz-button nzType="primary" type="button" [nzLoading]="decoding()" (click)="openImagePicker()">
               <nz-icon nzType="upload" /> 选择图片
@@ -101,7 +101,7 @@
       <!-- 摄像头扫描 -->
       <nz-tab nzTitle="摄像头扫描">
         <div class="tab-panel">
-          <nz-space [nzWrap]="true" style="margin-bottom: 16px;">
+          <nz-space [nzWrap]="true" [style]="{ 'margin-bottom': '16px' }">
             @if (!cameraActive()) {
               <button *nzSpaceItem nz-button nzType="primary" type="button" (click)="startCamera()">
                 <nz-icon nzType="video-camera" /> 开启摄像头
@@ -117,7 +117,7 @@
           </nz-space>
 
           @if (cameraError()) {
-            <nz-alert nzType="error" [nzMessage]="cameraError()" nzShowIcon style="margin-bottom: 16px;"></nz-alert>
+            <nz-alert nzType="error" [nzMessage]="cameraError()" nzShowIcon [style]="{ 'margin-bottom': '16px' }"></nz-alert>
           }
 
           <div class="camera-wrap" [class.active]="cameraActive()">
@@ -134,7 +134,7 @@
             (ngModelChange)="decodeResult.set($event)"
             cdkTextareaAutosize [cdkAutosizeMinRows]="3" [cdkAutosizeMaxRows]="8"
             placeholder="扫描结果将显示在这里..."
-            style="margin-top: 16px;"
+            [style]="{ 'margin-top': '16px' }"
           ></textarea>
         </div>
       </nz-tab>

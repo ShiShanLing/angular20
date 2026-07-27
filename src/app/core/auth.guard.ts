@@ -2,7 +2,8 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from './auth.service';
 
-/** 路由守卫：未登录时跳转到登录页 */
+// MARK: 登录守卫
+// 路由守卫：未登录时跳转到登录页
 export const authGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);

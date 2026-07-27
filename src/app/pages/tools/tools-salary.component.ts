@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Subscription, debounceTime } from 'rxjs';
@@ -24,7 +24,6 @@ const LS_KEY = 'tools_salary_template';
 /** 工资个税试算：五险一金扣除与税率阶梯表格。 */
 @Component({
   selector: 'app-tools-salary',
-  standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule,
     NzCardModule, NzFormModule, NzInputModule, NzInputNumberModule,
@@ -32,23 +31,24 @@ const LS_KEY = 'tools_salary_template';
     NzModalModule, NzTableModule
   ],
   templateUrl: './tools-salary.component.html',
-  styleUrl: './tools-salary.component.scss'
+  styleUrl: './tools-salary.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolsSalaryComponent implements OnInit, OnDestroy {
+  private readonly fb = inject(FormBuilder);
+  private readonly msg = inject(NzMessageService);
+  private readonly recordService = inject(RecordService);
+
   form!: FormGroup;
-  result: any = null;
-  isModalVisible = false;
-  monthlyProjection: any[] = [];
+  readonly result = signal<any>(null);
+  readonly isModalVisible = signal(false);
+  readonly monthlyProjection = signal<any[]>([]);
 
   private recordId: number | null = null;
   private sub?: Subscription;
 
-  constructor(
-    private fb: FormBuilder,
-    private msg: NzMessageService,
-    private recordService: RecordService,
-  ) {}
-
+  // MARK: 初始化
+  // 组件初始化：同步移动端断点、订阅视口变化与路由事件
   ngOnInit(): void {
     this.form = this.fb.group({
       grossPay: [10000, [Validators.required, Validators.min(0)]],
@@ -74,10 +74,13 @@ export class ToolsSalaryComponent implements OnInit, OnDestroy {
     });
   }
 
+  // MARK: 销毁清理
+  // 取消全部订阅，避免内存泄漏
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
   }
 
+  // MARK: 保存
   saveTemplate(showMsg = true): void {
     if (this.form.valid) {
       this.saveToLocalStorage();
@@ -86,6 +89,7 @@ export class ToolsSalaryComponent implements OnInit, OnDestroy {
     }
   }
 
+  // MARK: 计算
   calculate(): void {
     const val = this.form.value;
     const gross = val.grossPay || 0;
@@ -119,13 +123,14 @@ export class ToolsSalaryComponent implements OnInit, OnDestroy {
     const annualExpenses = monthlyExpense * 12;
     const annualSavings = annualNetPay - annualExpenses;
 
-    this.result = {
+    this.result.set({
       gross, pension, medical, unemployment, housing, deductions,
       taxable, tax, netPay, annualGross, annualNetPay, annualExpenses, annualSavings
-    };
+    });
     this.updateMonthlyProjection();
   }
 
+  // MARK: 更新
   updateMonthlyProjection(): void {
     const val = this.form.value;
     const gross = val.grossPay || 0;
@@ -169,14 +174,17 @@ export class ToolsSalaryComponent implements OnInit, OnDestroy {
         taxable: cumTaxable / i, tax: monthTax, netPay: gross - deductions - monthTax
       });
     }
-    this.monthlyProjection = projection;
+    this.monthlyProjection.set(projection);
   }
 
-  showModal(): void { this.isModalVisible = true; }
-  handleCancel(): void { this.isModalVisible = false; }
+  // MARK: 显示
+  showModal(): void { this.isModalVisible.set(true); }
+  // MARK: 处理
+  handleCancel(): void { this.isModalVisible.set(false); }
 
   // === 持久化 ===
 
+  // MARK: 加载
   private loadFromLocalStorage(): void {
     try {
       const data = localStorage.getItem(LS_KEY);
@@ -184,10 +192,12 @@ export class ToolsSalaryComponent implements OnInit, OnDestroy {
     } catch {}
   }
 
+  // MARK: 保存
   private saveToLocalStorage(): void {
     localStorage.setItem(LS_KEY, JSON.stringify(this.form.value));
   }
 
+  // MARK: 加载
   private loadFromApi(): void {
     this.recordService.getAll(RECORD_TYPE).subscribe({
       next: (records) => {
@@ -202,6 +212,7 @@ export class ToolsSalaryComponent implements OnInit, OnDestroy {
     });
   }
 
+  // MARK: 保存
   private saveToApi(): void {
     const data = this.form.value;
     if (this.recordId) {

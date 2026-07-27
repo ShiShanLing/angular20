@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
 import { NgxEchartsDirective, provideEchartsCore } from 'ngx-echarts';
 import * as echarts from 'echarts/core';
 import { LineChart, PieChart, BarChart } from 'echarts/charts';
@@ -34,22 +34,24 @@ echarts.use([
   ],
   providers: [provideEchartsCore({ echarts })],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.scss'
+  styleUrl: './dashboard.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent implements OnInit {
-  stats = [
+  readonly stats = [
     { title: '总用户数', value: 124560, prefix: '👥', color: '#1890ff', trend: '+12.3%' },
     { title: '本月订单', value: 8846,   prefix: '📦', color: '#52c41a', trend: '+8.6%' },
     { title: '月收入(元)', value: 358800, prefix: '💰', color: '#faad14', trend: '+5.2%' },
     { title: '待处理', value: 42,       prefix: '⏳', color: '#ff4d4f', trend: '-3.1%' },
   ];
 
-  lineOption: EChartsOption = {};
-  pieOption: EChartsOption = {};
+  readonly lineOption = signal<EChartsOption>({});
+  readonly pieOption = signal<EChartsOption>({});
 
-  /** 组装示例折线图与环形饼图的 option。 */
+  // MARK: 初始化
+  // 组装示例折线图与环形饼图的 option。
   ngOnInit() {
-    this.lineOption = {
+    this.lineOption.set({
       tooltip: { trigger: 'axis' },
       legend: { data: ['用户增长', '订单量'] },
       grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
@@ -77,9 +79,9 @@ export class DashboardComponent implements OnInit {
           itemStyle: { color: '#52c41a' }
         }
       ]
-    };
+    });
 
-    this.pieOption = {
+    this.pieOption.set({
       tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} ({d}%)' },
       legend: { orient: 'vertical', left: 'left' },
       series: [{
@@ -98,6 +100,6 @@ export class DashboardComponent implements OnInit {
           { value: 300,  name: '视频广告' },
         ]
       }]
-    };
+    });
   }
 }

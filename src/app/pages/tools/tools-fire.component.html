@@ -7,14 +7,15 @@
             按常见试算方式：<strong>从退休开始</strong>，每年先按通胀上调后提取年消费，再对<strong>剩余本金</strong>按名义年化计息；退休前按同一收益率复利当前存款至退休年龄。
             下方以表格逐年列出结余、利息与寿命统计参考。仅供学习，非投资建议。
           </p>
-          <nz-alert
-            *ngIf="form.value.retirementAge < form.value.currentAge"
-            nzType="info"
-            nzShowIcon
-            class="result-alert"
-            nzMessage="计划退休年龄小于当前年龄时，按「已处于退休状态」处理：不再做退休前复利，直接以当前存款为退休起点。"
-            style="margin-bottom: 16px"
-          ></nz-alert>
+          @if (form.value.retirementAge < form.value.currentAge) {
+            <nz-alert
+              nzType="info"
+              nzShowIcon
+              class="result-alert"
+              nzMessage="计划退休年龄小于当前年龄时，按「已处于退休状态」处理：不再做退休前复利，直接以当前存款为退休起点。"
+              [style]="{ 'margin-bottom': '16px' }"
+            ></nz-alert>
+          }
 
           <nz-row [nzGutter]="[16, 8]">
             <nz-col [nzSpan]="24" [nzSm]="8">
@@ -25,7 +26,7 @@
                     formControlName="currentSavings"
                     [nzMin]="0"
                     [nzStep]="50000"
-                    style="width: 100%"
+                    [style]="{ width: '100%' }"
                     (keydown.enter)="commitFocusedInput($event)"
                   ></nz-input-number>
                 </nz-form-control>
@@ -38,7 +39,7 @@
                   <nz-input-number
                     formControlName="nominalReturnPct"
                     [nzStep]="0.5"
-                    style="width: 100%"
+                    [style]="{ width: '100%' }"
                     (keydown.enter)="commitFocusedInput($event)"
                   ></nz-input-number>
                 </nz-form-control>
@@ -52,7 +53,7 @@
                     formControlName="inflationPct"
                     [nzMin]="0"
                     [nzStep]="0.25"
-                    style="width: 100%"
+                    [style]="{ width: '100%' }"
                     (keydown.enter)="commitFocusedInput($event)"
                   ></nz-input-number>
                 </nz-form-control>
@@ -69,7 +70,7 @@
                     formControlName="annualSpendingYear1"
                     [nzMin]="1"
                     [nzStep]="10000"
-                    style="width: 100%"
+                    [style]="{ width: '100%' }"
                     (keydown.enter)="commitFocusedInput($event)"
                   ></nz-input-number>
                 </nz-form-control>
@@ -84,7 +85,7 @@
                     [nzMin]="18"
                     [nzMax]="100"
                     [nzStep]="1"
-                    style="width: 100%"
+                    [style]="{ width: '100%' }"
                     (keydown.enter)="commitFocusedInput($event)"
                   ></nz-input-number>
                 </nz-form-control>
@@ -99,7 +100,7 @@
                     [nzMin]="18"
                     [nzMax]="100"
                     [nzStep]="1"
-                    style="width: 100%"
+                    [style]="{ width: '100%' }"
                     (keydown.enter)="commitFocusedInput($event)"
                   ></nz-input-number>
                 </nz-form-control>
@@ -114,7 +115,7 @@
           <nz-form-item>
             <nz-form-label>分性别参考</nz-form-label>
             <nz-form-control>
-              <nz-select formControlName="gender" style="width: 100%">
+              <nz-select formControlName="gender" [style]="{ width: '100%' }">
                 <nz-option nzValue="male" nzLabel="男性"></nz-option>
                 <nz-option nzValue="female" nzLabel="女性"></nz-option>
               </nz-select>
@@ -141,7 +142,8 @@
     </nz-row>
   </form>
 
-  <nz-row [nzGutter]="[16, 16]" class="fire-results" *ngIf="summary as s">
+  @if (summary(); as s) {
+  <nz-row [nzGutter]="[16, 16]" class="fire-results">
     <nz-col [nzSpan]="24">
       <nz-card nzTitle="模拟结论">
         <p class="summary-line">
@@ -149,20 +151,22 @@
           <strong>{{ s.yearsPreRetirement }}</strong> 年），退休当年可用于支出的账面本金约
           <strong>¥{{ s.balanceAtRetirement | number : '1.0-0' }}</strong>（当前存款按年化复利推估）。
         </p>
-        <nz-alert
-          *ngIf="s.depletionCalendarYear !== null"
-          nzType="warning"
-          nzShowIcon
-          class="result-alert"
-          [nzMessage]="depletionAlertMessage(s)"
-        ></nz-alert>
-        <nz-alert
-          *ngIf="s.depletionCalendarYear === null && s.finalBalanceIfNotDepleted !== null"
-          nzType="success"
-          nzShowIcon
-          class="result-alert"
-          [nzMessage]="successAlertMessage(s)"
-        ></nz-alert>
+        @if (s.depletionCalendarYear !== null) {
+          <nz-alert
+            nzType="warning"
+            nzShowIcon
+            class="result-alert"
+            [nzMessage]="depletionAlertMessage(s)"
+          ></nz-alert>
+        }
+        @if (s.depletionCalendarYear === null && s.finalBalanceIfNotDepleted !== null) {
+          <nz-alert
+            nzType="success"
+            nzShowIcon
+            class="result-alert"
+            [nzMessage]="successAlertMessage(s)"
+          ></nz-alert>
+        }
       </nz-card>
     </nz-col>
     
@@ -188,7 +192,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (row of rows; track row.calendarYear; let idx = $index) {
+              @for (row of rows(); track row.calendarYear; let idx = $index) {
                 <tr
                   [class.row-depleted]="row.depletedThisYear"
                   [class.row-zebra]="idx % 2 === 1">
@@ -225,4 +229,5 @@
       </nz-card>
     </nz-col>
   </nz-row>
+  }
 </div>

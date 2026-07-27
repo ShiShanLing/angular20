@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
@@ -28,7 +28,6 @@ interface TodoItem {
 /** 时间效率工具：待办清单、番茄钟相关能力与表单（见页面文案）。 */
 @Component({
   selector: 'app-tools-time',
-  standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule,
     NzCardModule, NzFormModule, NzInputModule, NzInputNumberModule,
@@ -36,39 +35,40 @@ interface TodoItem {
     NzListModule, NzCheckboxModule, NzSelectModule, NzIconModule, NzModalModule
   ],
   templateUrl: './tools-time.component.html',
-  styleUrl: './tools-time.component.scss'
+  styleUrl: './tools-time.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolsTimeComponent implements OnInit, OnDestroy {
+  private readonly fb = inject(FormBuilder);
+  private readonly message = inject(NzMessageService);
+  private readonly modal = inject(NzModalService);
+
   // Pomodoro
-  pomoMode: 'work' | 'break' | 'longBreak' = 'work';
-  pomoRound = 1;
-  pomoRemainingSec = 25 * 60;
-  pomoIsRunning = false;
+  readonly pomoMode = signal<'work' | 'break' | 'longBreak'>('work');
+  readonly pomoRound = signal(1);
+  readonly pomoRemainingSec = signal(25 * 60);
+  readonly pomoIsRunning = signal(false);
   pomoTimerId: ReturnType<typeof setInterval> | null = null;
   private deadlineTimerId: ReturnType<typeof setInterval> | null = null;
   private readonly subs = new Subscription();
   private originalTitle = '';
 
   // Todo
-  todoList: TodoItem[] = [];
-  newTodoText = '';
+  readonly todoList = signal<TodoItem[]>([]);
+  readonly newTodoText = signal('');
 
   // Deadline
   deadlineForm!: FormGroup;
-  scheduleResult: any = {
+  readonly scheduleResult = signal<any>({
     countdownStr: '-',
     remainHours: 0,
     remainDays: 0,
     needPerHour: 0,
     feasible: '-'
-  };
+  });
 
-  constructor(
-    private fb: FormBuilder,
-    private message: NzMessageService,
-    private modal: NzModalService
-  ) {}
-
+  // MARK: 初始化
+  // 组件初始化：同步移动端断点、订阅视口变化与路由事件
   ngOnInit(): void {
     this.originalTitle = document.title;
     this.deadlineForm = this.fb.group({
@@ -91,6 +91,8 @@ export class ToolsTimeComponent implements OnInit, OnDestroy {
     this.deadlineTimerId = setInterval(() => this.computeSchedule(), 1000);
   }
 
+  // MARK: 销毁清理
+  // 取消全部订阅，避免内存泄漏
   ngOnDestroy(): void {
     this.subs.unsubscribe();
     if (this.pomoTimerId !== null) clearInterval(this.pomoTimerId);
@@ -99,31 +101,35 @@ export class ToolsTimeComponent implements OnInit, OnDestroy {
   }
 
   // --- Pomodoro Logic ---
+  // MARK: 设置
   setPomoMode(mode: 'work' | 'break' | 'longBreak'): void {
-    this.pomoMode = mode;
+    this.pomoMode.set(mode);
     const settings = this.getPomoSettings();
     const mins = mode === 'work' ? settings.work : (mode === 'break' ? settings.break : settings.long);
-    this.pomoRemainingSec = mins * 60;
+    this.pomoRemainingSec.set(mins * 60);
     this.updateTitle();
   }
 
+  // MARK: 获取
   getPomoSettings() {
     return { work: 25, break: 5, long: 15, longEvery: 4 };
   }
 
+  // MARK: 切换
   togglePomo(): void {
-    if (this.pomoIsRunning) {
+    if (this.pomoIsRunning()) {
       this.pausePomo();
     } else {
       this.startPomo();
     }
   }
 
+  // MARK: 开始
   startPomo(): void {
-    this.pomoIsRunning = true;
+    this.pomoIsRunning.set(true);
     this.pomoTimerId = setInterval(() => {
-      if (this.pomoRemainingSec > 0) {
-        this.pomoRemainingSec--;
+      if (this.pomoRemainingSec() > 0) {
+        this.pomoRemainingSec.update(v => v - 1);
         this.updateTitle();
       } else {
         this.pausePomo();
@@ -132,34 +138,38 @@ export class ToolsTimeComponent implements OnInit, OnDestroy {
     }, 1000);
   }
 
+  // MARK: 暂停
   pausePomo(): void {
-    this.pomoIsRunning = false;
+    this.pomoIsRunning.set(false);
     if (this.pomoTimerId) {
       clearInterval(this.pomoTimerId);
       this.pomoTimerId = null;
     }
   }
 
+  // MARK: 重置
   resetPomo(): void {
     this.pausePomo();
-    this.pomoRound = 1;
+    this.pomoRound.set(1);
     this.setPomoMode('work');
   }
 
+  // MARK: 下个番茄
   nextPomo(): void {
     this.pausePomo();
     const settings = this.getPomoSettings();
-    if (this.pomoMode === 'work') {
-      const useLong = (this.pomoRound % settings.longEvery === 0);
+    if (this.pomoMode() === 'work') {
+      const useLong = (this.pomoRound() % settings.longEvery === 0);
       this.setPomoMode(useLong ? 'longBreak' : 'break');
     } else {
-      this.pomoRound++;
+      this.pomoRound.update(v => v + 1);
       this.setPomoMode('work');
     }
   }
 
+  // MARK: 事件处理
   onPomoFinished(): void {
-    const label = this.pomoMode === 'work' ? '工作' : '休息';
+    const label = this.pomoMode() === 'work' ? '工作' : '休息';
     this.modal.info({
       nzTitle: `${label}结束`,
       nzContent: `一段${label}已完成，点击确定进入下一阶段。`,
@@ -167,15 +177,17 @@ export class ToolsTimeComponent implements OnInit, OnDestroy {
     });
   }
 
+  // MARK: 更新
   updateTitle(): void {
-    const mm = Math.floor(this.pomoRemainingSec / 60);
-    const ss = this.pomoRemainingSec % 60;
+    const mm = Math.floor(this.pomoRemainingSec() / 60);
+    const ss = this.pomoRemainingSec() % 60;
     const timeStr = `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
-    const label = this.pomoMode === 'work' ? '工作' : '休息';
+    const label = this.pomoMode() === 'work' ? '工作' : '休息';
     // Accessing document globally is acceptable in Angular for title updates
     document.title = `${timeStr} - ${label}`;
   }
 
+  // MARK: 格式化
   formatTime(sec: number): string {
     const mm = Math.floor(sec / 60);
     const ss = sec % 60;
@@ -183,44 +195,50 @@ export class ToolsTimeComponent implements OnInit, OnDestroy {
   }
 
   // --- Todo Logic ---
+  // MARK: 获取
   getTodayKey(): string {
     const d = new Date();
     return `todo-${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
   }
 
+  // MARK: 添加
   addTodo(): void {
-    if (!this.newTodoText.trim()) return;
-    this.todoList.unshift({
+    if (!this.newTodoText().trim()) return;
+    this.todoList.update(list => [{
       id: Date.now().toString(),
-      text: this.newTodoText.trim(),
+      text: this.newTodoText().trim(),
       done: false
-    });
-    this.newTodoText = '';
+    }, ...list]);
+    this.newTodoText.set('');
     this.saveTodoState();
   }
 
+  // MARK: 删除
   deleteTodo(id: string): void {
-    this.todoList = this.todoList.filter(t => t.id !== id);
+    this.todoList.update(list => list.filter(t => t.id !== id));
     this.saveTodoState();
   }
 
+  // MARK: 切换
   toggleTodo(item: TodoItem): void {
-    item.done = !item.done;
+    this.todoList.update(list => list.map(t => t.id === item.id ? { ...t, done: !t.done } : t));
     this.saveTodoState();
   }
 
+  // MARK: 清空
   clearDoneTodos(): void {
-    this.todoList = this.todoList.filter(t => !t.done);
+    this.todoList.update(list => list.filter(t => !t.done));
     this.saveTodoState();
   }
 
   // --- Deadline Logic ---
+  // MARK: 计算
   computeSchedule(): void {
     const val = this.deadlineForm.value;
     const remain = Math.max(0, (val.totalHours || 0) - (val.doneHours || 0));
 
     if (!val.deadline) {
-      this.scheduleResult = { countdownStr: '-', remainHours: remain, remainDays: 0, needPerHour: 0, feasible: '-' };
+      this.scheduleResult.set({ countdownStr: '-', remainHours: remain, remainDays: 0, needPerHour: 0, feasible: '-' });
       return;
     }
 
@@ -229,22 +247,23 @@ export class ToolsTimeComponent implements OnInit, OnDestroy {
     const diffMs = target.getTime() - now.getTime();
 
     if (diffMs < 0) {
-      this.scheduleResult = { countdownStr: '已到期', remainHours: remain, remainDays: 0, needPerHour: remain > 0 ? 999 : 0, feasible: '来不及' };
+      this.scheduleResult.set({ countdownStr: '已到期', remainHours: remain, remainDays: 0, needPerHour: remain > 0 ? 999 : 0, feasible: '来不及' });
       return;
     }
 
     const daysAvail = this.countAvailableDays(now, target, val.workdaysOnly === 'yes');
     const needPerDay = daysAvail > 0 ? remain / daysAvail : (remain > 0 ? 999 : 0);
 
-    this.scheduleResult = {
+    this.scheduleResult.set({
       countdownStr: this.formatCountdown(diffMs),
       remainHours: remain,
       remainDays: daysAvail,
       needPerHour: needPerDay,
       feasible: (val.hoursPerDay >= needPerDay) ? '来得及' : '可能有压力'
-    };
+    });
   }
 
+  // MARK: 可用天数
   private countAvailableDays(from: Date, to: Date, workdaysOnly: boolean): number {
     let count = 0;
     const cur = new Date(from.getTime());
@@ -262,6 +281,7 @@ export class ToolsTimeComponent implements OnInit, OnDestroy {
     return count;
   }
 
+  // MARK: 格式化
   private formatCountdown(ms: number): string {
     const s = Math.floor(ms / 1000);
     const d = Math.floor(s / 86400);
@@ -272,18 +292,21 @@ export class ToolsTimeComponent implements OnInit, OnDestroy {
   }
 
   // --- Persistence ---
+  // MARK: 保存
   private saveTodoState(): void {
-    localStorage.setItem(this.getTodayKey(), JSON.stringify(this.todoList));
+    localStorage.setItem(this.getTodayKey(), JSON.stringify(this.todoList()));
   }
 
+  // MARK: 保存
   private saveDeadlineState(): void {
     localStorage.setItem('tools_time_deadline_state', JSON.stringify(this.deadlineForm.value));
   }
 
+  // MARK: 加载
   private loadAllStates(): void {
     // Load Todos
     const savedTodos = localStorage.getItem(this.getTodayKey());
-    if (savedTodos) this.todoList = JSON.parse(savedTodos);
+    if (savedTodos) this.todoList.set(JSON.parse(savedTodos));
 
     // Load Deadline
     const savedDeadline = localStorage.getItem('tools_time_deadline_state');

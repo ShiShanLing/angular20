@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
 import { NgxEchartsDirective, provideEchartsCore } from 'ngx-echarts';
 import * as echarts from 'echarts/core';
 import { LineChart, BarChart, ScatterChart, RadarChart, GaugeChart, HeatmapChart } from 'echarts/charts';
@@ -36,29 +36,32 @@ echarts.use([
   ],
   providers: [provideEchartsCore({ echarts })],
   templateUrl: './charts.component.html',
-  styleUrl: './charts.component.scss'
+  styleUrl: './charts.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChartsComponent implements OnInit {
-  darkMode = false;
+  readonly darkMode = signal(false);
 
-  lineOption: EChartsOption = {};
-  barOption: EChartsOption = {};
-  scatterOption: EChartsOption = {};
-  radarOption: EChartsOption = {};
-  stackAreaOption: EChartsOption = {};
-  gaugeOption: EChartsOption = {};
-  heatmapOption: EChartsOption = {};
+  readonly lineOption = signal<EChartsOption>({});
+  readonly barOption = signal<EChartsOption>({});
+  readonly scatterOption = signal<EChartsOption>({});
+  readonly radarOption = signal<EChartsOption>({});
+  readonly stackAreaOption = signal<EChartsOption>({});
+  readonly gaugeOption = signal<EChartsOption>({});
+  readonly heatmapOption = signal<EChartsOption>({});
 
   months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
   days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
   hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
 
-  /** 首次构建全部图表 option。 */
+  // MARK: 初始化
+  // 首次构建全部图表 option。
   ngOnInit() {
     this.buildCharts();
   }
 
 
+  // MARK: 构建
   private buildHeatmapData(): Array<[number, number, number]> {
     // x: hour, y: day 
     
@@ -75,12 +78,14 @@ export class ChartsComponent implements OnInit {
     return data;
   }
   
-  /** 根据 `darkMode` 重建各 chart 的配色与背景。 */
+  // MARK: 构建
+  // 根据 `darkMode` 重建各 chart 的配色与背景。
   buildCharts() {
-    const bg = this.darkMode ? '#1f1f1f' : 'transparent';
-    const textColor = this.darkMode ? '#ccc' : '#333';
+    const darkMode = this.darkMode();
+    const bg = darkMode ? '#1f1f1f' : 'transparent';
+    const textColor = darkMode ? '#ccc' : '#333';
 
-    this.lineOption = {
+    this.lineOption.set({
       backgroundColor: bg,
       tooltip: { trigger: 'axis' },
       legend: { data: ['产品A', '产品B', '产品C'], textStyle: { color: textColor } },
@@ -92,9 +97,9 @@ export class ChartsComponent implements OnInit {
         { name: '产品B', type: 'line', smooth: true, data: [60, 72, 85, 95, 78, 110, 120, 95, 88, 105, 98, 125] },
         { name: '产品C', type: 'line', smooth: true, data: [40, 55, 65, 80, 70, 90, 100, 82, 78, 92, 88, 110] },
       ]
-    };
+    });
 
-    this.barOption = {
+    this.barOption.set({
       backgroundColor: bg,
       tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
       legend: { data: ['直接访问', '邮件营销', '联盟广告'], textStyle: { color: textColor } },
@@ -106,9 +111,9 @@ export class ChartsComponent implements OnInit {
         { name: '邮件营销', type: 'bar', data: [120, 132, 101, 134, 90, 230, 210, 200, 188, 170, 178, 190] },
         { name: '联盟广告', type: 'bar', data: [220, 182, 191, 234, 290, 330, 310, 290, 278, 300, 288, 310] },
       ]
-    };
+    });
 
-    this.scatterOption = {
+    this.scatterOption.set({
       backgroundColor: bg,
       tooltip: { formatter: (p: any) => `(${p.data[0]}, ${p.data[1]})` },
       xAxis: { type: 'value', axisLabel: { color: textColor } },
@@ -132,9 +137,9 @@ export class ChartsComponent implements OnInit {
         ]),
         itemStyle: { color: '#52c41a', opacity: 0.7 }
       }]
-    };
+    });
 
-    this.radarOption = {
+    this.radarOption.set({
       backgroundColor: bg,
       legend: { data: ['预算分配', '实际开销'], textStyle: { color: textColor } },
       radar: {
@@ -156,8 +161,8 @@ export class ChartsComponent implements OnInit {
           { value: [5000, 14000, 28000, 26000, 42000, 21000], name: '实际开销' },
         ]
       }]
-    };
-    this.stackAreaOption = {
+    });
+    this.stackAreaOption.set({
       backgroundColor: bg,
       tooltip: { trigger: 'axis' },
       legend: { data: ['新增用户', '活跃用户', '付费用户'], textStyle: { color: textColor } },
@@ -201,12 +206,12 @@ export class ChartsComponent implements OnInit {
           data: [620, 700, 760, 820, 920, 1100, 1250, 1180, 1320, 1480, 1600, 1820]
         }
       ]
-    };
+    });
     /*
         
     */
     const gaugeValue = 72;
-    this.gaugeOption = {
+    this.gaugeOption.set({
       backgroundColor: bg,
       tooltip: { formatter: '{a}<br/>{b}: {c}%' },
       series: [
@@ -244,12 +249,12 @@ export class ChartsComponent implements OnInit {
           data: [{ value: gaugeValue, name: '系统健康度' }]
         }
       ]
-    };
+    });
 
-    const heatmapColors = this.darkMode
+    const heatmapColors = darkMode
       ? ['#2a2a2a', '#313f7a', '#2b78c4', '#2bc5bd', '#52c41a']
       : ['#f5f5f5', '#d6e4ff', '#91caff', '#73d13d', '#52c41a'];
-    this.heatmapOption = {
+    this.heatmapOption.set({
       backgroundColor: bg,
       
       tooltip: {
@@ -294,11 +299,12 @@ export class ChartsComponent implements OnInit {
           }
         }
       ]
-    };
+    });
   }
   
 
 
+  // MARK: 事件处理
   onThemeChange() {
     this.buildCharts();
   }

@@ -11,6 +11,7 @@
  *   node crawler/daily-report.mjs              # 正常运行
  *   node crawler/daily-report.mjs --force      # 强制运行（跳过交易日检查）
  *   node crawler/daily-report.mjs --test       # 仅测试邮件发送
+ *   node crawler/daily-report.mjs --email-only # 跳过分析，用已有结果发邮件+入库
  */
 
 import { readFileSync, writeFileSync, existsSync } from 'fs';
@@ -18,6 +19,7 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
 import nodemailer from 'nodemailer';
+import { mergeSectors } from './sector-utils.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = join(__dirname, '..');
@@ -31,6 +33,7 @@ const POSTS_FILE = join(DATA_DIR, 'guba_posts.json');
 const args = process.argv.slice(2);
 const forceRun = args.includes('--force');
 const testMode = args.includes('--test');
+const emailOnly = args.includes('--email-only');
 
 // ============================================================
 // 交易日判断
@@ -110,7 +113,7 @@ function isTradingDay(date = new Date()) {
 }
 
 // ============================================================
-// 运行分析
+// 运行分析 
 // ============================================================
 
 function runAnalysis() {
@@ -126,7 +129,7 @@ function runAnalysis() {
 
     output = execSync(`node ${ANALYSIS_SCRIPT} --pages=5 2>&1`, {
       encoding: 'utf-8',
-      timeout: 900000, // 15分钟超时
+      timeout: 2700000, // 45分钟超时（板块增多后 AI 分批更久）
       cwd: PROJECT_ROOT,
       maxBuffer: 20 * 1024 * 1024,
     });
@@ -287,7 +290,12 @@ function buildHtmlEmail(analysisOutput, tradingInfo) {
   let aiData = null;
   const aiJsonFile = join(DATA_DIR, 'qoder_ai_result.json');
   if (existsSync(aiJsonFile)) {
-    try { aiData = JSON.parse(readFileSync(aiJsonFile, 'utf-8')); } catch {}
+    try {
+      aiData = JSON.parse(readFileSync(aiJsonFile, 'utf-8'));
+      if (aiData?.sectors) {
+        aiData = { ...aiData, sectors: mergeSectors(aiData.sectors) };
+      }
+    } catch {}
   }
 
   let kwData = null;
@@ -603,8 +611,13 @@ async function main() {
     return;
   }
 
-  // 运行分析
-  const output = runAnalysis();
+  // 运行分析（--email-only 跳过，复用已有 qoder_ai_result.json）
+  let output = '';
+  if (emailOnly) {
+    console.log('⏭  --email-only：跳过抓取/分析，使用已有结果发邮件\n');
+  } else {
+    output = runAnalysis();
+  }
 
   // 生成HTML邮件
   console.log('📝 生成邮件内容...');
@@ -664,7 +677,12 @@ async function pushToApi(dateStr, htmlContent) {
     let aiData = {};
     const aiFile = join(DATA_DIR, 'qoder_ai_result.json');
     if (existsSync(aiFile)) {
-      try { aiData = JSON.parse(readFileSync(aiFile, 'utf-8')); } catch {}
+      try {
+        aiData = JSON.parse(readFileSync(aiFile, 'utf-8'));
+        if (aiData.sectors) {
+          aiData = { ...aiData, sectors: mergeSectors(aiData.sectors) };
+        }
+      } catch {}
     }
 
     let kwData = {};

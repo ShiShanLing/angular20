@@ -2,7 +2,8 @@ import { inject } from '@angular/core';
 import { CanActivateChildFn, Router } from '@angular/router';
 import { MenuAccessService } from './menu-access.service';
 
-/** 访问菜单受管页面时做权限/显示校验；无权则跳首个可访问功能。 */
+// MARK: 菜单守卫
+// 访问菜单受管页面时做权限/显示校验；无权则跳首个可访问功能。
 export const menuAccessGuard: CanActivateChildFn = (_, state) => {
   const router = inject(Router);
   const menuAccessService = inject(MenuAccessService);
@@ -42,6 +43,8 @@ export const menuAccessGuard: CanActivateChildFn = (_, state) => {
   return router.parseUrl(fallback);
 };
 
+// MARK: 规范路径
+// 去掉 query/hash，规范路径格式
 function normalizePath(url: string): string {
   const withoutQuery = url.split('?')[0] ?? '';
   const withoutFragment = withoutQuery.split('#')[0] ?? '';

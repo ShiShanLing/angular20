@@ -21,6 +21,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from '
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync, spawnSync } from 'child_process';
+import { mergeSectors } from './sector-utils.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, 'data');
@@ -245,7 +246,8 @@ const BATCH_SYSTEM_PROMPT = '你是中国A股市场情绪分析专家。对提�
   '2. 识别讽刺反语（如"相信牛市即便倾家荡产"=恐慌，"老乡别走"=讽刺看空）\n' +
   '3. 高点击帖子权重更高\n' +
   '4. 板块名必须严格使用以下固定名称，禁止自创名称或加后缀（如Ⅱ、2等）：\n' +
-  '   上证指数、创业板指、证券、银行、酿酒、新能源、互联网\n\n' +
+  '   上证指数、创业板指、证券、银行、酿酒、白酒、新能源、互联网、\n' +
+  '   半导体ETF、科技ETF、电力、芯片、半导体\n\n' +
   '严格按以下JSON格式输出，不要加其他内容：\n\n' +
   '```json\n' +
   '{\n' +
@@ -434,25 +436,9 @@ function extractJson(text) {
 }
 
 // 汇总所有批次结果并生成最终报告
-// 板块名归一化：去掉后缀（Ⅱ、2、II等），映射到固定名称
-const SECTOR_CANONICAL = {
-  '上证指数': '上证指数', '上证': '上证指数', '大盘': '上证指数',
-  '创业板指': '创业板指', '创业板': '创业板指',
-  '证券': '证券', '券商': '证券',
-  '银行': '银行',
-  '酿酒': '酿酒', '白酒': '酿酒',
-  '新能源': '新能源',
-  '互联网': '互联网', '科技': '互联网',
-};
-function normalizeSectorName(name) {
-  // 去掉罗马数字、数字后缀
-  const cleaned = name.replace(/[ⅡⅢⅣⅤ]+$/g, '').replace(/[2-9]$/g, '').replace(/\s*\(.*\)\s*$/g, '').trim();
-  return SECTOR_CANONICAL[cleaned] || cleaned;
-}
-
 function aggregateBatchResults(batchResults, kwResult) {
   const totalDist = { bullish: 0, bearish: 0, fear: 0, greed: 0, neutral: 0 };
-  const sectorData = {};
+  const rawSectors = {};
   const allSignals = [];
   let totalPosts = 0;
   let weightedMarketIndex = 0;
@@ -471,19 +457,9 @@ function aggregateBatchResults(batchResults, kwResult) {
 
     if (r.sectors) {
       for (const [rawName, data] of Object.entries(r.sectors)) {
-        const name = normalizeSectorName(rawName);
-        if (!sectorData[name]) {
-          sectorData[name] = { posts: 0, bullish: 0, bearish: 0, fear: 0, greed: 0, neutral: 0, weightedTemp: 0, signals: [] };
-        }
-        const s = sectorData[name];
-        s.posts += data.posts || 0;
-        s.bullish += data.bullish || 0;
-        s.bearish += data.bearish || 0;
-        s.fear += data.fear || 0;
-        s.greed += data.greed || 0;
-        s.neutral += data.neutral || 0;
-        s.weightedTemp += (data.temperature || 50) * (data.posts || 0);
-        if (data.topSignal) s.signals.push(data.topSignal);
+        rawSectors[rawName] = rawSectors[rawName]
+          ? mergeSectorEntry(rawSectors[rawName], data)
+          : { ...data };
       }
     }
 
@@ -492,25 +468,27 @@ function aggregateBatchResults(batchResults, kwResult) {
     }
   }
 
-  // 计算最终市场指数
   const marketIndex = totalPosts > 0 ? Math.round(weightedMarketIndex / totalPosts) : 50;
-
-  // 计算各板块温度
-  const sectors = {};
-  for (const [name, s] of Object.entries(sectorData)) {
-    sectors[name] = {
-      posts: s.posts,
-      temperature: s.posts > 0 ? Math.round(s.weightedTemp / s.posts) : 50,
-      bullish: s.bullish,
-      bearish: s.bearish,
-      fear: s.fear,
-      greed: s.greed,
-      neutral: s.neutral,
-      signals: s.signals.slice(0, 3),
-    };
-  }
+  const sectors = mergeSectors(rawSectors);
 
   return { totalPosts, marketIndex, distribution: totalDist, sectors, signals: allSignals };
+}
+
+/** 合并同一批次内的重复板块条目（归一化前可能仍有不同 raw key） */
+function mergeSectorEntry(a, b) {
+  const posts = (a.posts || 0) + (b.posts || 0);
+  const weightedTemp = (a.temperature ?? 50) * (a.posts || 0) + (b.temperature ?? 50) * (b.posts || 0);
+  return {
+    posts,
+    temperature: posts > 0 ? Math.round(weightedTemp / posts) : 50,
+    bullish: (a.bullish || 0) + (b.bullish || 0),
+    bearish: (a.bearish || 0) + (b.bearish || 0),
+    fear: (a.fear || 0) + (b.fear || 0),
+    greed: (a.greed || 0) + (b.greed || 0),
+    neutral: (a.neutral || 0) + (b.neutral || 0),
+    topSignal: a.topSignal || b.topSignal,
+    signals: [...(a.signals || []), ...(b.signals || []), a.topSignal, b.topSignal].filter(Boolean),
+  };
 }
 
 // 打印汇总报告

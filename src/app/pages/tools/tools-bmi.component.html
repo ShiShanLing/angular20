@@ -6,21 +6,21 @@
           <nz-form-item>
             <nz-form-label>身高 (cm)</nz-form-label>
             <nz-form-control>
-              <nz-input-number formControlName="height" [nzMin]="50" [nzMax]="250" style="width: 100%"></nz-input-number>
+              <nz-input-number formControlName="height" [nzMin]="50" [nzMax]="250" [style]="{ width: '100%' }"></nz-input-number>
             </nz-form-control>
           </nz-form-item>
 
           <nz-form-item>
             <nz-form-label>体重 (kg)</nz-form-label>
             <nz-form-control>
-              <nz-input-number formControlName="weight" [nzMin]="10" [nzMax]="300" [nzStep]="0.1" style="width: 100%"></nz-input-number>
+              <nz-input-number formControlName="weight" [nzMin]="10" [nzMax]="300" [nzStep]="0.1" [style]="{ width: '100%' }"></nz-input-number>
             </nz-form-control>
           </nz-form-item>
 
           <nz-form-item>
             <nz-form-label>年龄 (岁)</nz-form-label>
             <nz-form-control>
-              <nz-input-number formControlName="age" [nzMin]="1" [nzMax]="120" style="width: 100%"></nz-input-number>
+              <nz-input-number formControlName="age" [nzMin]="1" [nzMax]="120" [style]="{ width: '100%' }"></nz-input-number>
             </nz-form-control>
           </nz-form-item>
 
@@ -36,18 +36,18 @@
         </form>
       </nz-card>
     </nz-col>
-
+    
     <nz-col [nzXs]="24" [nzLg]="12">
       <nz-card nzTitle="分析结果">
         <div class="result-box">
           <nz-row [nzGutter]="16">
             <nz-col [nzSpan]="12">
-              <nz-statistic [nzValue]="(result.bmi | number:'1.1-1')!" nzTitle="BMI 指数"></nz-statistic>
+              <nz-statistic [nzValue]="(result().bmi | number:'1.1-1')!" nzTitle="BMI 指数"></nz-statistic>
             </nz-col>
             <nz-col [nzSpan]="12">
               <div class="stat-label">分类</div>
-              <nz-tag [nzColor]="result.categoryColor" style="font-size: 16px; padding: 4px 12px; margin-top: 4px;">
-                {{ result.category }}
+              <nz-tag [nzColor]="result().categoryColor" [style]="{ 'font-size': '16px', padding: '4px 12px', 'margin-top': '4px' }">
+                {{ result().category }}
               </nz-tag>
             </nz-col>
           </nz-row>
@@ -56,7 +56,7 @@
 
           <nz-row [nzGutter]="16">
             <nz-col [nzSpan]="24">
-              <nz-statistic [nzValue]="(result.bodyFat | number:'1.1-1')!" [nzPrefix]="prefixBf" nzSuffix="%" nzTitle="体脂率估算 (Deurenberg)"></nz-statistic>
+              <nz-statistic [nzValue]="(result().bodyFat | number:'1.1-1')!" [nzPrefix]="prefixBf" nzSuffix="%" nzTitle="体脂率估算 (Deurenberg)"></nz-statistic>
               <ng-template #prefixBf><span nz-icon nzType="dashboard"></span> </ng-template>
             </nz-col>
           </nz-row>

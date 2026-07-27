@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Subscription, debounceTime } from 'rxjs';
@@ -21,27 +21,27 @@ const LS_KEY = 'tools_saving_form';
 /** 存钱目标与定投进度条展示。 */
 @Component({
   selector: 'app-tools-saving',
-  standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule,
     NzCardModule, NzFormModule, NzInputModule, NzInputNumberModule,
     NzButtonModule, NzGridModule, NzProgressModule, NzStatisticModule, NzAlertModule
   ],
   templateUrl: './tools-saving.component.html',
-  styleUrl: './tools-saving.component.scss'
+  styleUrl: './tools-saving.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolsSavingComponent implements OnInit, OnDestroy {
+  private readonly fb = inject(FormBuilder);
+  private readonly recordService = inject(RecordService);
+
   form!: FormGroup;
-  result: any = null;
+  readonly result = signal<any>(null);
 
   private recordId: number | null = null;
   private sub?: Subscription;
 
-  constructor(
-    private fb: FormBuilder,
-    private recordService: RecordService,
-  ) {}
-
+  // MARK: 初始化
+  // 组件初始化：同步移动端断点、订阅视口变化与路由事件
   ngOnInit(): void {
     this.form = this.fb.group({
       targetAmount: [100000, [Validators.required, Validators.min(1)]],
@@ -63,10 +63,13 @@ export class ToolsSavingComponent implements OnInit, OnDestroy {
     });
   }
 
+  // MARK: 销毁清理
+  // 取消全部订阅，避免内存泄漏
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
   }
 
+  // MARK: 计算
   calculate(): void {
     const val = this.form.value;
     const target = val.targetAmount;
@@ -91,14 +94,15 @@ export class ToolsSavingComponent implements OnInit, OnDestroy {
       finishMonths = -1;
     }
 
-    this.result = {
+    this.result.set({
       target, months, monthly, current, finalAmount, gap,
       progress, requiredMonthly, extraMonthly, finishMonths
-    };
+    });
   }
 
   // === 持久化 ===
 
+  // MARK: 加载
   private loadFromLocalStorage(): void {
     try {
       const savedData = localStorage.getItem(LS_KEY);
@@ -106,10 +110,12 @@ export class ToolsSavingComponent implements OnInit, OnDestroy {
     } catch {}
   }
 
+  // MARK: 保存
   private saveToLocalStorage(): void {
     localStorage.setItem(LS_KEY, JSON.stringify(this.form.value));
   }
 
+  // MARK: 加载
   private loadFromApi(): void {
     this.recordService.getAll(RECORD_TYPE).subscribe({
       next: (records) => {
@@ -124,6 +130,7 @@ export class ToolsSavingComponent implements OnInit, OnDestroy {
     });
   }
 
+  // MARK: 保存
   private saveToApi(): void {
     const data = this.form.value;
     if (this.recordId) {

@@ -9,7 +9,6 @@
  * - 这样同一组测试数据可以反复给不同算法使用。
  */
 
-const { default: te } = require("@angular/common/locales/te");
 
 
 
@@ -28,13 +27,27 @@ const sampleNumbers = [64, 25, 12, 22, 11, 90, 34];
 // MARK: 冒泡2
 function bubbleSort2(numbers) {
   const arr = [...numbers];
-  
+  for (let i = 0; i < arr.length-1; i++) {
+    var sw = false;
+    for (let j = 0; j < arr.length-1-i; j++) {
+      if (arr[j] > arr[j+1]){
+        let temp = arr[j];
+        arr[j] = arr[j+1];
+        arr[j+1] = temp;
+        sw = true;
+      }
+    }
+    if (!sw){
+      break;
+    }
+    
+  }
   //冒泡排序
   return arr;
 }
 
 
-function bubbleSort(numbers) {
+function bubbleSjrt(numbers) {
   const arr = [...numbers];
   
   // 外层循环控制“比较几轮”。
@@ -67,7 +80,22 @@ function bubbleSort(numbers) {
 //每次循环都找到一个最小的放到最前面.
 function selectionSort2(numbers) {
   const arr = [...numbers];
+//选择排序
 
+  for (let i = 0; i < arr.length-1; i++) {
+    let  minIndex = i;
+    for (let j = i+1; j < arr.length; j++) {
+      if (arr[j] < arr[minIndex]){
+        minIndex = j;
+      }
+    }
+    if(i !== minIndex){
+      let temp = arr[i];
+      arr[i]  = arr[minIndex];
+      arr[minIndex] = temp
+    }
+    
+  }
   
 
   return arr;
@@ -112,6 +140,16 @@ function selectionSort(numbers) {
 function insertionSort2(numbers) {
   const arr = [...numbers];
 
+  for (let i = 1; i < arr.length; i++) {
+    let current = arr[i];
+    let j = i-1;
+    while (j >= 0 && arr[j] > current) {
+      arr[j+1] = arr[j];
+      j--;
+    }
+    arr[j+1] = current;    
+  }
+
   return arr;
 }
 //插入排序是默认 0 下标是最小的,然后拿着后面一个一个作对比如果找到比他小的就交换位置
@@ -138,7 +176,7 @@ function insertionSort(numbers) {
       arr[j + 1] = arr[j];
       j--;
     }
-    
+    //.
     // 循环结束后，j + 1 就是 current 应该放的位置。
     arr[j + 1] = current;
   }
@@ -147,12 +185,34 @@ function insertionSort(numbers) {
 }
 // MARK: 快速2
 function quickSort2(numbers) {
-  const arr = [...numbers];
+  const arr = [...numbers];  
 
+  if (arr.length <= 1) return arr;
+
+  let pIndex = Math.floor(arr.length/2);
+  let p = arr[pIndex];
+  let left = [];
+  let right = []
+
+  for (let i = 0; i < arr.length; i++) {
+    if (i == pIndex) continue;
+    if (arr[i] < p){
+      left.push(arr[i]);
+    }else{
+      right.push(arr[i])
+    }
+  }
   
-  return arr
-}
+  return [
+    ...quickSort2(left),
+    p,
+    ...quickSort2(right)
+  ]
 
+
+
+}
+// 
 /**
  * 4. 快速排序 Quick Sort
  * 思路:
@@ -197,12 +257,30 @@ function quickSort(numbers) {
 // MARK: 并归2
 function mergeSort2(numbers) {
   const arr = [...numbers];
-
-  
-  return [];
+  if (arr.length <= 1) return arr;
+  let middle = Math.floor(arr.length/2);
+  let left = arr.slice(0, middle);
+  let right = arr.slice(middle);
+  return merge2(...mergeSort2(left), ...mergeSort2(right));
 }
 
 function merge2(left, right) {
+  let leftIndex = 0;
+  let rightIndex = 0;
+  let result = [];
+  
+  while (leftIndex < left.length && rightIndex < right.length) {
+    if (left[leftIndex] <= right[rightIndex]){
+      result.push[left[leftIndex]];
+      leftIndex ++ ;
+    }else{
+      result.push(right(rightIndex));
+      rightIndex++;
+    }
+  }
+  
+
+  return [result,...left.slice(leftIndex), ...right.slice(rightIndex)]
 
 }
 //
@@ -236,6 +314,7 @@ function merge(left, right) {
   const result = [];
   let leftIndex = 0;
   let rightIndex = 0;
+  
 
   // 两边都有数字时，每次取较小的那个放进结果数组。
   while (leftIndex < left.length && rightIndex < right.length) {

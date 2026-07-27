@@ -1,6 +1,6 @@
 <div class="tool-content">
   <nz-card nzTitle="文本处理工具" [nzExtra]="extraTpl">
-    <div style="margin-bottom: 16px;">
+    <div [style]="{ 'margin-bottom': '16px' }">
       <nz-space [nzWrap]="true">
         <button *nzSpaceItem nz-button (click)="replacePunctuation(true)">英文标点 -> 中文</button>
         <button *nzSpaceItem nz-button (click)="replacePunctuation(false)">中文标点 -> 英文</button>
@@ -13,13 +13,13 @@
       </nz-space>
     </div>
 
-    <textarea nz-input [(ngModel)]="sourceText" cdkTextareaAutosize [cdkAutosizeMinRows]="15" [cdkAutosizeMaxRows]="30"
+    <textarea nz-input [ngModel]="sourceText()" (ngModelChange)="onSourceTextChange($event)" cdkTextareaAutosize [cdkAutosizeMinRows]="15" [cdkAutosizeMaxRows]="30"
       placeholder="在此打字或粘贴文本，点击上方按钮进行处理..."></textarea>
   </nz-card>
   <ng-template #extraTpl>
     <nz-space>
       <a *nzSpaceItem (click)="copyToClipboard()"><nz-icon nzType="copy" /> 复制结果</a>
-      <a *nzSpaceItem (click)="clearText()" style="color: var(--error-color)"><nz-icon nzType="delete" /> 清空</a>
+      <a *nzSpaceItem (click)="clearText()" [style]="{ color: 'var(--error-color)' }"><nz-icon nzType="delete" /> 清空</a>
     </nz-space>
   </ng-template>
 </div>

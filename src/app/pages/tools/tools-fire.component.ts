@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -63,7 +63,6 @@ const MAX_RETIREMENT_YEARS = 85;
 /** FIRE 退休模拟：储蓄、提取率、通胀与长寿参数下的逐年资产负债表。 */
 @Component({
   selector: 'app-tools-fire',
-  standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -81,11 +80,15 @@ const MAX_RETIREMENT_YEARS = 85;
   ],
   templateUrl: './tools-fire.component.html',
   styleUrl: './tools-fire.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ToolsFireComponent implements OnInit, OnDestroy {
+  private readonly fb = inject(FormBuilder);
+  private readonly recordService = inject(RecordService);
+
   form!: FormGroup;
-  rows: FireYearRow[] = [];
-  summary: FireSimSummary | null = null;
+  readonly rows = signal<FireYearRow[]>([]);
+  readonly summary = signal<FireSimSummary | null>(null);
 
   readonly longevity = CHINA_CENSUS_7TH_LIFE_EXPECTANCY;
   readonly deathMedian = CHINA_CENSUS_7TH_DEATH_AGE_MEDIAN_GROUP_MIDPOINT;
@@ -94,22 +97,18 @@ export class ToolsFireComponent implements OnInit, OnDestroy {
   private recordId: number | null = null;
   private sub?: Subscription;
 
-  constructor(
-    private fb: FormBuilder,
-    private recordService: RecordService,
-  ) {}
-
-  /**
-   * * nz-input-number 在部分浏览器下按回车不会失焦，内部值可能尚未写回 FormControl，
-   * 导致 valueChanges / run() 仍用旧值。失焦后会按设计同步并触发重算。
-   * 在 form 内按回车可能触发表单默认行为，故阻止默认。社会宣传
-   */
+  // MARK: 提交输入
+  // * nz-input-number 在部分浏览器下按回车不会失焦，内部值可能尚未写回 FormControl，
+  // 导致 valueChanges / run() 仍用旧值。失焦后会按设计同步并触发重算。
+  // 在 form 内按回车可能触发表单默认行为，故阻止默认。社会宣传
   commitFocusedInput(ev: Event): void {
     ev.preventDefault();
     const ae = document.activeElement as HTMLElement | null;
     ae?.blur();
   }
 
+  // MARK: 初始化
+  // 组件初始化：同步移动端断点、订阅视口变化与路由事件
   ngOnInit(): void {
     this.form = this.fb.group({
       gender: ['male'],
@@ -136,39 +135,48 @@ export class ToolsFireComponent implements OnInit, OnDestroy {
     });
   }
 
+  // MARK: 销毁清理
+  // 取消全部订阅，避免内存泄漏
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
   }
 
+  // MARK: 预期寿命
   referenceExpectancy(): number {
     return this.form?.value?.gender === 'female'
       ? this.longevity.atBirth.female
       : this.longevity.atBirth.male;
   }
 
+  // MARK: 死亡中位
   referenceDeathMedian(): number {
     return this.form?.value?.gender === 'female'
       ? this.deathMedian.female
       : this.deathMedian.male;
   }
 
+  // MARK: 备注文本
   remarkCellText(row: FireYearRow): string {
     return row.remarkTags.length ? row.remarkTags.join('，') : '—';
   }
 
+  // MARK: 备注提示
   remarkTooltip(row: FireYearRow): string {
     return row.milestoneNotes.length ? row.milestoneNotes.join('\n') : '';
   }
 
+  // MARK: 耗尽提示
   depletionAlertMessage(s: FireSimSummary): string {
     return `按当前假设，约在 ${s.depletionCalendarYear} 年（年龄 ${s.depletionAge} 岁）当年消费将穿仓，账户耗尽或不足。`;
   }
 
+  // MARK: 成功提示
   successAlertMessage(s: FireSimSummary): string {
     const tail = s.finalBalanceIfNotDepleted ?? 0;
-    return `在 ${this.rows.length} 年模拟期内未穿仓；末年账面余额约 ¥${tail.toLocaleString('zh-CN', { maximumFractionDigits: 0 })}。`;
+    return `在 ${this.rows().length} 年模拟期内未穿仓；末年账面余额约 ¥${tail.toLocaleString('zh-CN', { maximumFractionDigits: 0 })}。`;
   }
 
+  // MARK: 里程碑
   private pushMilestoneOnce(
     tags: string[],
     notes: string[],
@@ -184,6 +192,7 @@ export class ToolsFireComponent implements OnInit, OnDestroy {
     }
   }
 
+  // MARK: 运行模拟
   run(): void {
     const v = this.form.getRawValue();
     const pv = Number(v.currentSavings);
@@ -200,8 +209,8 @@ export class ToolsFireComponent implements OnInit, OnDestroy {
       !Number.isFinite(curAge) ||
       !Number.isFinite(retAge)
     ) {
-      this.rows = [];
-      this.summary = null;
+      this.rows.set([]);
+      this.summary.set(null);
       return;
     }
 
@@ -312,8 +321,8 @@ export class ToolsFireComponent implements OnInit, OnDestroy {
       }
     }
 
-    this.rows = rows;
-    this.summary = {
+    this.rows.set(rows);
+    this.summary.set({
       balanceAtRetirement,
       yearsPreRetirement: yearsPre,
       retirementCalendarYear,
@@ -321,11 +330,12 @@ export class ToolsFireComponent implements OnInit, OnDestroy {
       depletionAge,
       finalBalanceIfNotDepleted:
         depletionCalendarYear === null ? B : null,
-    };
+    });
   }
 
   // === 持久化 ===
 
+  // MARK: 加载
   private loadFromLocalStorage(): void {
     try {
       const raw = localStorage.getItem(LS_KEY);
@@ -333,10 +343,12 @@ export class ToolsFireComponent implements OnInit, OnDestroy {
     } catch {}
   }
 
+  // MARK: 保存
   private saveToLocalStorage(): void {
     localStorage.setItem(LS_KEY, JSON.stringify(this.form.value));
   }
 
+  // MARK: 加载
   private loadFromApi(): void {
     this.recordService.getAll(RECORD_TYPE).subscribe({
       next: (records) => {
@@ -351,6 +363,7 @@ export class ToolsFireComponent implements OnInit, OnDestroy {
     });
   }
 
+  // MARK: 保存
   private saveToApi(): void {
     const data = this.form.value;
     if (this.recordId) {

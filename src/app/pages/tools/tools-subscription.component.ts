@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule, DatePipe } from '@angular/common';
 
@@ -15,7 +15,6 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 /** 周期性订阅记账：名称、金额与下次扣款日。 */
 @Component({
   selector: 'app-tools-subscription',
-  standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule,
     NzCardModule, NzFormModule, NzInputModule, NzInputNumberModule,
@@ -23,19 +22,24 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
   ],
   providers: [DatePipe],
   templateUrl: './tools-subscription.component.html',
-  styleUrl: './tools-subscription.component.scss'
+  styleUrl: './tools-subscription.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolsSubscriptionComponent implements OnInit {
+  private readonly fb = inject(FormBuilder);
+  private readonly msg = inject(NzMessageService);
+  private readonly datePipe = inject(DatePipe);
+
   form!: FormGroup;
-  cycles = [
+  readonly cycles = [
     { label: '单次', value: 'once' },
     { label: '每月', value: 'monthly' },
     { label: '每季', value: 'quarterly' },
     { label: '每年', value: 'yearly' }
   ];
 
-  constructor(private fb: FormBuilder, private msg: NzMessageService, private datePipe: DatePipe) {}
-
+  // MARK: 初始化
+  // 组件初始化：同步移动端断点、订阅视口变化与路由事件
   ngOnInit(): void {
     this.form = this.fb.group({
       serviceName: [null, [Validators.required]],
@@ -59,6 +63,7 @@ export class ToolsSubscriptionComponent implements OnInit {
     });
   }
 
+  // MARK: 生成
   generateICS(): void {
     if (this.form.invalid) {
       Object.values(this.form.controls).forEach(control => {

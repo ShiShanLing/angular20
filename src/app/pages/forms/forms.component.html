@@ -57,7 +57,7 @@
                 nzMode="tags"
                 nzPlaceHolder="选择或输入技术栈"
                 (nzOnSearch)="addSkill($event)">
-                @for (skill of skills; track skill) {
+                @for (skill of skills(); track skill) {
                   <nz-option [nzValue]="skill" [nzLabel]="skill"></nz-option>
                 }
               </nz-select>
@@ -68,7 +68,7 @@
           <nz-form-item>
             <nz-form-label>生日</nz-form-label>
             <nz-form-control>
-              <nz-date-picker formControlName="birthday" style="width:100%"></nz-date-picker>
+              <nz-date-picker formControlName="birthday" [style]="{ width: '100%' }"></nz-date-picker>
             </nz-form-control>
           </nz-form-item>
 
@@ -115,7 +115,7 @@
           <nz-form-item>
             <nz-form-control>
               <button nz-button nzType="primary" type="submit">提交</button>
-              <button nz-button type="button" style="margin-left:12px" (click)="resetForm()">重置</button>
+              <button nz-button type="button" [style]="{ 'margin-left': '12px' }" (click)="resetForm()">重置</button>
             </nz-form-control>
           </nz-form-item>
         </form>
@@ -125,41 +125,41 @@
     <!-- Result Panel -->
     <div nz-col [nzXs]="24" [nzLg]="10">
       <nz-card nzTitle="表单数据预览" [nzBordered]="false">
-        @if (submitted && formValues) {
+        @if (submitted() && formValues(); as values) {
           <div class="result-panel">
             <div class="result-item">
               <span class="key">用户名：</span>
-              <nz-tag nzColor="blue">{{ formValues.username }}</nz-tag>
+              <nz-tag nzColor="blue">{{ values.username }}</nz-tag>
             </div>
             <div class="result-item">
-              <span class="key">邮箱：</span><span>{{ formValues.email }}</span>
+              <span class="key">邮箱：</span><span>{{ values.email }}</span>
             </div>
             <div class="result-item">
               <span class="key">角色：</span>
-              <nz-tag nzColor="purple">{{ formValues.role }}</nz-tag>
+              <nz-tag nzColor="purple">{{ values.role }}</nz-tag>
             </div>
             <div class="result-item">
-              <span class="key">性别：</span><span>{{ formValues.gender }}</span>
+              <span class="key">性别：</span><span>{{ values.gender }}</span>
             </div>
             <div class="result-item">
               <span class="key">技术栈：</span>
-              @for (s of formValues.skills; track s) {
+              @for (s of values.skills; track s) {
                 <nz-tag nzColor="cyan">{{ s }}</nz-tag>
               }
             </div>
             <div class="result-item">
               <span class="key">爱好：</span>
-              @for (h of formValues.hobbies; track h) {
+              @for (h of values.hobbies; track h) {
                 <nz-tag nzColor="geekblue">{{ h.value || h }}</nz-tag>
               }
             </div>
             <div class="result-item">
-              <span class="key">技术水平：</span><span>{{ formValues.level }}%</span>
+              <span class="key">技术水平：</span><span>{{ values.level }}%</span>
             </div>
             <div class="result-item">
               <span class="key">接收通知：</span>
-              <nz-tag [nzColor]="formValues.notifications ? 'green' : 'red'">
-                {{ formValues.notifications ? '是' : '否' }}
+              <nz-tag [nzColor]="values.notifications ? 'green' : 'red'">
+                {{ values.notifications ? '是' : '否' }}
               </nz-tag>
             </div>
           </div>
@@ -170,7 +170,7 @@
         }
       </nz-card>
 
-      <nz-card nzTitle="验证说明" [nzBordered]="false" style="margin-top:16px">
+      <nz-card nzTitle="验证说明" [nzBordered]="false" [style]="{ 'margin-top': '16px' }">
         <ul class="tips">
           <li>🔴 <strong>用户名</strong>：必填，至少2个字符</li>
           <li>🔴 <strong>邮箱</strong>：必填，需要正确格式</li>

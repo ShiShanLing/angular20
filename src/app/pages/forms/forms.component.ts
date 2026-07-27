@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
@@ -35,24 +35,22 @@ import { NzTagModule } from 'ng-zorro-antd/tag';
     NzTagModule
   ],
   templateUrl: './forms.component.html',
-  styleUrl: './forms.component.scss'
+  styleUrl: './forms.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FormsComponent {
-  form: FormGroup;
-  submitted = false;
-  formValues: any = null;
+  private readonly fb = inject(FormBuilder);
+  private readonly msg = inject(NzMessageService);
 
-  skills: string[] = ['Angular', 'React', 'Vue'];
-  hobbyOptions = ['阅读', '音乐', '旅行', '编程', '摄影'];
-  checkboxOptions = this.hobbyOptions.map(h => ({ label: h, value: h }));
+  readonly form: FormGroup;
+  readonly submitted = signal(false);
+  readonly formValues = signal<any>(null);
 
-  /** 模板中 `f.xxx` 访问各表单控件。 */
-  /** 滑块右侧百分比展示。 */
-  formatter(value: number): string {
-    return `${value}%`;
-  }
+  readonly skills = signal<string[]>(['Angular', 'React', 'Vue']);
+  readonly hobbyOptions = ['阅读', '音乐', '旅行', '编程', '摄影'];
+  readonly checkboxOptions = this.hobbyOptions.map(h => ({ label: h, value: h }));
 
-  constructor(private fb: FormBuilder, private msg: NzMessageService) {
+  constructor() {
     this.form = this.fb.group({
       username: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
@@ -70,14 +68,22 @@ export class FormsComponent {
   /** 模板中 `f.xxx` 访问各 `AbstractControl`。 */
   get f() { return this.form.controls; }
 
-  /** 动态追加技能选项到下拉数据源。 */
+  // MARK: 格式化
+  // 滑块右侧百分比展示。
+  formatter(value: number): string {
+    return `${value}%`;
+  }
+
+  // MARK: 添加
+  // 动态追加技能选项到下拉数据源。
   addSkill(skill: string) {
-    if (!this.skills.includes(skill)) {
-      this.skills = [...this.skills, skill];
+    if (!this.skills().includes(skill)) {
+      this.skills.update((list) => [...list, skill]);
     }
   }
 
-  /** 校验通过后展示表单快照并提示成功。 */
+  // MARK: 提交
+  // 校验通过后展示表单快照并提示成功。
   submitForm() {
     if (this.form.invalid) {
       Object.values(this.form.controls).forEach(c => {
@@ -87,18 +93,19 @@ export class FormsComponent {
       this.msg.error('请检查表单中的错误！');
       return;
     }
-    this.submitted = true;
-    this.formValues = this.form.value;
+    this.submitted.set(true);
+    this.formValues.set(this.form.value);
     this.msg.success('表单提交成功！🎉');
   }
 
-  /** 恢复默认值并清除提交状态。 */
+  // MARK: 重置
+  // 恢复默认值并清除提交状态。
   resetForm() {
     this.form.reset({
       role: 'developer', level: 50, notifications: true, gender: 'male',
       skills: [], hobbies: []
     });
-    this.submitted = false;
-    this.formValues = null;
+    this.submitted.set(false);
+    this.formValues.set(null);
   }
 }

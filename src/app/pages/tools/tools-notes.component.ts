@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime } from 'rxjs';
 
@@ -32,7 +32,6 @@ const Table = Quill.import('modules/table');
 
 @Component({
   selector: 'app-tools-notes',
-  standalone: true,
   imports: [
     CommonModule, FormsModule,
     NzButtonModule, NzIconModule, NzInputModule,
@@ -41,29 +40,30 @@ const Table = Quill.import('modules/table');
   ],
   templateUrl: './tools-notes.component.html',
   styleUrl: './tools-notes.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ToolsNotesComponent implements OnInit, OnDestroy {
-  @ViewChild('quillEditor') quillEditorRef?: any;
+  private readonly quillEditorRef = viewChild<any>('quillEditor');
 
   // Sidebar
-  notebooks: Notebook[] = [];
-  sidebarFilter: SidebarFilter = 'all';
-  allTags: string[] = [];
+  readonly notebooks = signal<Notebook[]>([]);
+  readonly sidebarFilter = signal<SidebarFilter>('all');
+  readonly allTags = signal<string[]>([]);
 
   // Note list
-  notes: Note[] = [];
-  selectedNoteId: number | null = null;
-  searchQuery = '';
+  readonly notes = signal<Note[]>([]);
+  readonly selectedNoteId = signal<number | null>(null);
+  readonly searchQuery = signal('');
   private searchSubject = new Subject<string>();
 
   // Editor
-  editTitle = '';
-  editTags: string[] = [];
-  newTag = '';
-  isDirty = false;
+  readonly editTitle = signal('');
+  readonly editTags = signal<string[]>([]);
+  readonly newTag = signal('');
+  readonly isDirty = signal(false);
   private autoSaveSubject = new Subject<void>();
   private quillInstance: any = null;
-  editorContent = '';
+  readonly editorContent = signal('');
 
   // Quill editor options
   editorModules = {
@@ -90,12 +90,12 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
     'blockquote', 'code-block', 'link', 'image', 'table',
   ];
 
-  constructor(
-    private noteService: NoteService,
-    private msg: NzMessageService,
-    private modal: NzModalService,
-  ) {}
+  private readonly noteService = inject(NoteService);
+  private readonly msg = inject(NzMessageService);
+  private readonly modal = inject(NzModalService);
 
+  // MARK: 初始化
+  // 组件初始化：同步移动端断点、订阅视口变化与路由事件
   ngOnInit(): void {
     this.loadNotebooks();
     this.loadNotes();
@@ -109,51 +109,59 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
     });
   }
 
+  // MARK: 销毁清理
+  // 取消全部订阅，避免内存泄漏
   ngOnDestroy(): void {
     this.searchSubject.complete();
     this.autoSaveSubject.complete();
-    if (this.isDirty && this.selectedNoteId) {
+    if (this.isDirty() && this.selectedNoteId()) {
       this.saveCurrentNote();
     }
   }
 
+  // MARK: 插入表格
   insertTable(): void {
-    this.tableRows = 3;
-    this.tableCols = 3;
-    this.showTableModal = true;
+    this.tableRows.set(3);
+    this.tableCols.set(3);
+    this.showTableModal.set(true);
   }
 
+  // MARK: 确认
   confirmInsertTable(): void {
     if (!this.quillInstance) return;
     const table = this.quillInstance.getModule('table');
     if (table) {
-      table.insertTable(this.tableRows, this.tableCols);
+      table.insertTable(this.tableRows(), this.tableCols());
     }
-    this.showTableModal = false;
+    this.showTableModal.set(false);
   }
 
+  // MARK: 事件处理
   onEditorCreated(editor: any): void {
     this.quillInstance = editor;
   }
 
+  // MARK: 事件处理
   onContentChanged(): void {
-    this.isDirty = true;
+    this.isDirty.set(true);
     this.autoSaveSubject.next();
   }
 
   // Table insert state
-  showTableModal = false;
-  tableRows = 3;
-  tableCols = 3;
+  readonly showTableModal = signal(false);
+  readonly tableRows = signal(3);
+  readonly tableCols = signal(3);
 
   // === Sidebar ===
 
+  // MARK: 加载
   loadNotebooks(): void {
     this.noteService.getNotebooks().subscribe(nbs => {
-      this.notebooks = nbs;
+      this.notebooks.set(nbs);
     });
   }
 
+  // MARK: 创建
   createNotebook(): void {
     this.modal.confirm({
       nzTitle: '新建文件夹',
@@ -170,6 +178,7 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
     });
   }
 
+  // MARK: 重命名本
   renameNotebook(nb: Notebook, event: Event): void {
     event.stopPropagation();
     this.modal.confirm({
@@ -186,6 +195,7 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
     });
   }
 
+  // MARK: 删除
   deleteNotebook(nb: Notebook, event: Event): void {
     event.stopPropagation();
     this.modal.confirm({
@@ -197,7 +207,7 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
         this.noteService.deleteNotebook(nb.id).subscribe(() => {
           this.loadNotebooks();
           if (this.isNotebookSelected(nb.id)) {
-            this.sidebarFilter = 'all';
+            this.sidebarFilter.set('all');
             this.loadNotes();
           }
           this.msg.success('文件夹已删除');
@@ -206,55 +216,65 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
     });
   }
 
+  // MARK: 选择
   selectSidebar(filter: SidebarFilter): void {
-    this.sidebarFilter = filter;
+    this.sidebarFilter.set(filter);
     this.loadNotes();
   }
 
+  // MARK: 判断
   isFilterActive(filter: SidebarFilter): boolean {
-    if (filter === 'all' && this.sidebarFilter === 'all') return true;
-    if (filter === 'favorite' && this.sidebarFilter === 'favorite') return true;
-    if (typeof filter === 'object' && typeof this.sidebarFilter === 'object') {
-      return JSON.stringify(filter) === JSON.stringify(this.sidebarFilter);
+    const current = this.sidebarFilter();
+    if (filter === 'all' && current === 'all') return true;
+    if (filter === 'favorite' && current === 'favorite') return true;
+    if (typeof filter === 'object' && typeof current === 'object') {
+      return JSON.stringify(filter) === JSON.stringify(current);
     }
     return false;
   }
 
+  // MARK: 判断
   isNotebookSelected(id: number): boolean {
-    return typeof this.sidebarFilter === 'object' && 'notebookId' in this.sidebarFilter && this.sidebarFilter.notebookId === id;
+    const current = this.sidebarFilter();
+    return typeof current === 'object' && 'notebookId' in current && current.notebookId === id;
   }
 
   // === Notes List ===
 
+  // MARK: 加载笔记
   loadNotes(): void {
     const params: any = {};
-    if (this.sidebarFilter === 'favorite') {
+    const filter = this.sidebarFilter();
+    if (filter === 'favorite') {
       params.isFavorite = true;
-    } else if (typeof this.sidebarFilter === 'object') {
-      if ('notebookId' in this.sidebarFilter) params.notebookId = this.sidebarFilter.notebookId;
-      if ('tag' in this.sidebarFilter) params.tag = this.sidebarFilter.tag;
+    } else if (typeof filter === 'object') {
+      if ('notebookId' in filter) params.notebookId = filter.notebookId;
+      if ('tag' in filter) params.tag = filter.tag;
     }
-    if (this.searchQuery) params.search = this.searchQuery;
+    if (this.searchQuery()) params.search = this.searchQuery();
 
     this.noteService.getNotes(params).subscribe(notes => {
-      this.notes = notes;
+      this.notes.set(notes);
       this.extractAllTags();
     });
   }
 
-  onSearch(): void {
-    this.searchSubject.next('');
+  // MARK: 事件处理
+  onSearchQueryChange(value: string): void {
+    this.searchQuery.set(value);
+    this.searchSubject.next(value);
   }
 
+  // MARK: 选择
   selectNote(note: Note): void {
-    if (this.isDirty && this.selectedNoteId) {
+    if (this.isDirty() && this.selectedNoteId()) {
       this.saveCurrentNote();
     }
-    this.selectedNoteId = note.id;
-    this.editTitle = note.title;
-    this.editTags = [...(note.tags || [])];
-    this.editorContent = note.content || '';
-    this.isDirty = false;
+    this.selectedNoteId.set(note.id);
+    this.editTitle.set(note.title);
+    this.editTags.set([...(note.tags || [])]);
+    this.editorContent.set(note.content || '');
+    this.isDirty.set(false);
 
     // Load content into existing editor instance
     if (this.quillInstance) {
@@ -262,14 +282,17 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
     }
   }
 
+  // MARK: 判断
   isSelected(note: Note): boolean {
-    return this.selectedNoteId === note.id;
+    return this.selectedNoteId() === note.id;
   }
 
+  // MARK: 创建
   createNote(): void {
     let notebookId: number | null = null;
-    if (typeof this.sidebarFilter === 'object' && 'notebookId' in this.sidebarFilter) {
-      notebookId = this.sidebarFilter.notebookId;
+    const filter = this.sidebarFilter();
+    if (typeof filter === 'object' && 'notebookId' in filter) {
+      notebookId = filter.notebookId;
     }
     this.noteService.createNote('无标题', '', notebookId).subscribe(note => {
       this.loadNotes();
@@ -277,6 +300,7 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
     });
   }
 
+  // MARK: 删除笔记
   deleteNote(note: Note, event: Event): void {
     event.stopPropagation();
     this.modal.confirm({
@@ -285,10 +309,10 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
       nzOkDanger: true,
       nzOnOk: () => {
         this.noteService.deleteNote(note.id).subscribe(() => {
-          if (this.selectedNoteId === note.id) {
-            this.selectedNoteId = null;
-            this.editTitle = '';
-            this.editTags = [];
+          if (this.selectedNoteId() === note.id) {
+            this.selectedNoteId.set(null);
+            this.editTitle.set('');
+            this.editTags.set([]);
           }
           this.loadNotes();
           this.msg.success('笔记已删除');
@@ -297,20 +321,25 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
     });
   }
 
+  // MARK: 切换
   togglePin(note: Note, event: Event): void {
     event.stopPropagation();
     this.noteService.updateNote(note.id, { isPinned: !note.isPinned }).subscribe(updated => {
       note.isPinned = updated.isPinned;
+      this.notes.update(list => [...list]);
     });
   }
 
+  // MARK: 切换
   toggleFavorite(note: Note, event: Event): void {
     event.stopPropagation();
     this.noteService.updateNote(note.id, { isFavorite: !note.isFavorite }).subscribe(updated => {
       note.isFavorite = updated.isFavorite;
+      this.notes.update(list => [...list]);
     });
   }
 
+  // MARK: 获取
   getNoteSummary(note: Note): string {
     const div = document.createElement('div');
     div.innerHTML = note.content || '';
@@ -318,6 +347,7 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
     return text.substring(0, 60) || '暂无内容';
   }
 
+  // MARK: 获取
   getRelativeTime(dateStr: string): string {
     const date = new Date(dateStr);
     const now = new Date();
@@ -334,86 +364,100 @@ export class ToolsNotesComponent implements OnInit, OnDestroy {
 
   // === Editor ===
 
+  // MARK: 获取
   private getEditorContent(): string {
     if (!this.quillInstance) return '';
     return this.quillInstance.root.innerHTML;
   }
 
-  onTitleChange(): void {
-    this.isDirty = true;
+  // MARK: 事件处理
+  onTitleChange(value: string): void {
+    this.editTitle.set(value);
+    this.isDirty.set(true);
     this.autoSaveSubject.next();
   }
 
+  // MARK: 保存
   saveCurrentNote(): void {
-    if (!this.selectedNoteId || !this.isDirty) return;
-    this.noteService.updateNote(this.selectedNoteId, {
-      title: this.editTitle,
+    const selectedNoteId = this.selectedNoteId();
+    if (!selectedNoteId || !this.isDirty()) return;
+    this.noteService.updateNote(selectedNoteId, {
+      title: this.editTitle(),
       content: this.getEditorContent(),
-      tags: this.editTags,
+      tags: this.editTags(),
     }).subscribe(() => {
-      this.isDirty = false;
+      this.isDirty.set(false);
       this.loadNotes();
     });
   }
 
-  get currentNotePinned(): boolean {
-    const note = this.notes.find(n => n.id === this.selectedNoteId);
+  readonly currentNotePinned = computed(() => {
+    const note = this.notes().find(n => n.id === this.selectedNoteId());
     return note?.isPinned || false;
-  }
+  });
 
+  // MARK: 切换
   togglePinCurrent(): void {
-    if (!this.selectedNoteId) return;
-    const note = this.notes.find(n => n.id === this.selectedNoteId);
+    const selectedNoteId = this.selectedNoteId();
+    if (!selectedNoteId) return;
+    const note = this.notes().find(n => n.id === selectedNoteId);
     if (!note) return;
     this.noteService.updateNote(note.id, { isPinned: !note.isPinned }).subscribe(updated => {
       note.isPinned = updated.isPinned;
+      this.notes.update(list => [...list]);
     });
   }
 
   // === Tags ===
 
+  // MARK: 添加
   addTag(): void {
-    const tag = this.newTag.trim();
-    if (tag && !this.editTags.includes(tag)) {
-      this.editTags.push(tag);
-      this.isDirty = true;
+    const tag = this.newTag().trim();
+    if (tag && !this.editTags().includes(tag)) {
+      this.editTags.update(tags => [...tags, tag]);
+      this.isDirty.set(true);
       this.autoSaveSubject.next();
     }
-    this.newTag = '';
+    this.newTag.set('');
   }
 
+  // MARK: 移除
   removeTag(tag: string): void {
-    this.editTags = this.editTags.filter(t => t !== tag);
-    this.isDirty = true;
+    this.editTags.update(tags => tags.filter(t => t !== tag));
+    this.isDirty.set(true);
     this.autoSaveSubject.next();
   }
 
+  // MARK: 过滤
   filterByTag(tag: string): void {
-    this.sidebarFilter = { tag };
+    this.sidebarFilter.set({ tag });
     this.loadNotes();
   }
 
+  // MARK: 提取标签
   private extractAllTags(): void {
     const tagSet = new Set<string>();
-    this.notes.forEach(n => n.tags?.forEach(t => tagSet.add(t)));
-    this.allTags = Array.from(tagSet).sort();
+    this.notes().forEach(n => n.tags?.forEach(t => tagSet.add(t)));
+    this.allTags.set(Array.from(tagSet).sort());
   }
 
   // === Export ===
 
+  // MARK: 导出
   exportNote(): void {
-    if (!this.selectedNoteId) return;
+    if (!this.selectedNoteId()) return;
     const content = this.getEditorContent();
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${this.editTitle}</title>
+    const editTitle = this.editTitle();
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${editTitle}</title>
 <style>body{font-family:sans-serif;max-width:800px;margin:40px auto;padding:0 20px;line-height:1.7;}
 table{border-collapse:collapse;width:100%;}th,td{border:1px solid #d9d9d9;padding:6px 10px;}
 th{background:#fafafa;font-weight:600;}</style></head><body>
-<h1>${this.editTitle}</h1>${content}</body></html>`;
+<h1>${editTitle}</h1>${content}</body></html>`;
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = (this.editTitle || 'note') + '.html';
+    a.download = (editTitle || 'note') + '.html';
     a.click();
     URL.revokeObjectURL(url);
   }

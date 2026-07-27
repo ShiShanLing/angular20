@@ -26,12 +26,12 @@
   <div nz-row [nzGutter]="[16, 16]" class="charts-row">
     <div nz-col [nzXs]="24" [nzLg]="16">
       <nz-card nzTitle="年度趋势" [nzBordered]="false">
-        <div echarts [options]="lineOption" class="chart-container"></div>
+        <div echarts [options]="lineOption()" class="chart-container"></div>
       </nz-card>
     </div>
     <div nz-col [nzXs]="24" [nzLg]="8">
       <nz-card nzTitle="流量来源分布" [nzBordered]="false">
-        <div echarts [options]="pieOption" class="chart-container"></div>
+        <div echarts [options]="pieOption()" class="chart-container"></div>
       </nz-card>
     </div>
   </div>

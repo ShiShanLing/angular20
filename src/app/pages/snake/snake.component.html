@@ -3,13 +3,13 @@
   <div class="side-panel left">
     <div class="panel-card">
       <div class="panel-label">SCORE</div>
-      <div class="score-display">{{ state.score }}</div>
+      <div class="score-display">{{ state().score }}</div>
       
       <div class="status-tags">
-        @if (state.isPaused) {
+        @if (state().isPaused) {
           <nz-tag nzColor="gold">PAUSED</nz-tag>
         }
-        @if (state.isGameOver) {
+        @if (state().isGameOver) {
           <nz-tag nzColor="red">GAME OVER</nz-tag>
         }
       </div>
@@ -37,20 +37,20 @@
     <div class="panel-card">
       <div class="panel-label">CONTROLS</div>
       <div class="action-buttons">
-        <button nz-button nzBlock nzType="default" (click)="pauseResume()" [disabled]="state.isGameOver">
-          {{ state.isPaused ? 'Resume' : 'Pause' }}
+        <button nz-button nzBlock nzType="default" (click)="pauseResume()" [disabled]="state().isGameOver">
+          {{ state().isPaused ? 'Resume' : 'Pause' }}
         </button>
         <button nz-button nzBlock nzType="primary" (click)="restart()">Restart</button>
       </div>
 
       <div class="d-pad">
         <div class="pad-row">
-          <button class="pad-btn" (click)="move('up')" [disabled]="state.isGameOver">↑</button>
+          <button class="pad-btn" (click)="move('up')" [disabled]="state().isGameOver">↑</button>
         </div>
         <div class="pad-row">
-          <button class="pad-btn" (click)="move('left')" [disabled]="state.isGameOver">←</button>
-          <button class="pad-btn" (click)="move('down')" [disabled]="state.isGameOver">↓</button>
-          <button class="pad-btn" (click)="move('right')" [disabled]="state.isGameOver">→</button>
+          <button class="pad-btn" (click)="move('left')" [disabled]="state().isGameOver">←</button>
+          <button class="pad-btn" (click)="move('down')" [disabled]="state().isGameOver">↓</button>
+          <button class="pad-btn" (click)="move('right')" [disabled]="state().isGameOver">→</button>
         </div>
       </div>
       

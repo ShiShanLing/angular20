@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -10,12 +10,12 @@ import { MarketService, MarketReportDetail } from '../market.service';
 
 @Component({
   selector: 'app-market-detail',
-  standalone: true,
   imports: [
     CommonModule,
     NzButtonModule, NzIconModule, NzSpinModule, NzResultModule,
   ],
   templateUrl: './market-detail.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     :host { display: block; padding: 16px; }
     .toolbar {
@@ -55,6 +55,8 @@ export class MarketDetailComponent implements OnInit {
     return this.sanitizer.bypassSecurityTrustHtml(r.htmlContent);
   });
 
+  // MARK: 初始化
+  // 根据路由 query 参数加载指定日期的报告
   ngOnInit(): void {
     console.log('[DETAIL] ngOnInit called');
     console.log('[DETAIL] route URL:', this.route.snapshot.url);
@@ -86,6 +88,7 @@ export class MarketDetailComponent implements OnInit {
     });
   }
 
+  // MARK: 返回上级
   goBack(): void {
     this.router.navigate(['/market']);
   }

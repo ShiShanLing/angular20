@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subscription, debounceTime } from 'rxjs';
 
@@ -22,31 +22,31 @@ const LS_KEY = 'tools_mortgage_state';
 /** 房贷月供试算：等额本息 / 等额本金、利率与期限。 */
 @Component({
   selector: 'app-tools-mortgage',
-  standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule,
     NzCardModule, NzFormModule, NzInputModule, NzInputNumberModule,
     NzButtonModule, NzSelectModule, NzGridModule, NzStatisticModule, NzDividerModule, NzRadioModule
   ],
   templateUrl: './tools-mortgage.component.html',
-  styleUrl: './tools-mortgage.component.scss'
+  styleUrl: './tools-mortgage.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolsMortgageComponent implements OnInit, OnDestroy {
+  private readonly fb = inject(FormBuilder);
+  private readonly recordService = inject(RecordService);
+
   form!: FormGroup;
-  result: any = {
+  readonly result = signal<any>({
     downPayment: 0, gjjPrincipal: 0, bizPrincipal: 0,
     gjjMonthly: 0, bizMonthly: 0, totalMonthly: 0,
     supportMonths: 0, supportYearsStr: ''
-  };
+  });
 
   private recordId: number | null = null;
   private sub?: Subscription;
 
-  constructor(
-    private fb: FormBuilder,
-    private recordService: RecordService,
-  ) {}
-
+  // MARK: 初始化
+  // 组件初始化：同步移动端断点、订阅视口变化与路由事件
   ngOnInit(): void {
     this.form = this.fb.group({
       housePrice: [1200000, [Validators.required, Validators.min(0)]],
@@ -77,10 +77,13 @@ export class ToolsMortgageComponent implements OnInit, OnDestroy {
     });
   }
 
+  // MARK: 销毁清理
+  // 取消全部订阅，避免内存泄漏
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
   }
 
+  // MARK: 计算
   calculate(): void {
     const val = this.form.value;
     const housePrice = val.housePrice || 0;
@@ -111,12 +114,13 @@ export class ToolsMortgageComponent implements OnInit, OnDestroy {
     const monthlyIn = val.gjjMonthlyIn || 0;
     const supportMonths = this.simulateSupportMonths(balance, monthlyIn, totalMonthly);
 
-    this.result = {
-      downPayment, bizPrincipal, gjjMonthly, bizMonthly, totalMonthly,
+    this.result.set({
+      downPayment, gjjPrincipal, bizPrincipal, gjjMonthly, bizMonthly, totalMonthly,
       supportMonths, supportYearsStr: this.formatMonthsToYears(supportMonths)
-    };
+    });
   }
 
+  // MARK: 计算
   private calculateEqualPI(principal: number, annualRatePct: number, years: number): number {
     const P = Math.max(0, principal);
     const n = Math.max(1, Math.floor(years * 12));
@@ -127,6 +131,7 @@ export class ToolsMortgageComponent implements OnInit, OnDestroy {
     return P * r * pow / (pow - 1);
   }
 
+  // MARK: 支撑月数
   private simulateSupportMonths(balance: number, monthlyIn: number, monthlyOut: number): number {
     if (monthlyOut <= 0) return 999;
     let b = balance;
@@ -140,12 +145,14 @@ export class ToolsMortgageComponent implements OnInit, OnDestroy {
     return months;
   }
 
+  // MARK: 格式化
   private formatMonthsToYears(m: number): string {
     return `${Math.floor(m / 12)} 年 ${m % 12} 个月`;
   }
 
   // === 持久化 ===
 
+  // MARK: 加载
   private loadFromLocalStorage(): void {
     try {
       const saved = localStorage.getItem(LS_KEY);
@@ -153,10 +160,12 @@ export class ToolsMortgageComponent implements OnInit, OnDestroy {
     } catch {}
   }
 
+  // MARK: 保存
   private saveToLocalStorage(): void {
     localStorage.setItem(LS_KEY, JSON.stringify(this.form.value));
   }
 
+  // MARK: 加载
   private loadFromApi(): void {
     this.recordService.getAll(RECORD_TYPE).subscribe({
       next: (records) => {
@@ -171,6 +180,7 @@ export class ToolsMortgageComponent implements OnInit, OnDestroy {
     });
   }
 
+  // MARK: 保存
   private saveToApi(): void {
     const data = this.form.value;
     if (this.recordId) {

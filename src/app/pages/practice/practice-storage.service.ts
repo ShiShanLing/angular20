@@ -32,10 +32,12 @@ const VALID_CATEGORIES: PracticeCategory[] = [
   'angular-css',
 ];
 
+// MARK: 判断
 function isPracticeCategory(x: string): x is PracticeCategory {
   return (VALID_CATEGORIES as string[]).includes(x);
 }
 
+// MARK: 新建
 function newId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
     return crypto.randomUUID();
@@ -43,10 +45,12 @@ function newId(): string {
   return `q-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+// MARK: 题目
 function normQuestion(q: string): string {
   return q.trim().replace(/\s+/g, ' ').toLowerCase();
 }
 
+// MARK: 键
 function scopedKey(key: string, scope: PracticeStorageScope): string {
   return scope === 'practice' ? key : `${key}_${scope}`;
 }
@@ -56,7 +60,8 @@ function scopedKey(key: string, scope: PracticeStorageScope): string {
  */
 @Injectable({ providedIn: 'root' })
 export class PracticeStorageService {
-  /** 读取本地题库；解析失败返回空数组。 */
+  // MARK: 加载数据
+  // 读取本地题库；解析失败返回空数组。
   load(scope: PracticeStorageScope = 'practice'): PracticeItem[] {
     try {
       const raw = localStorage.getItem(scopedKey(STORAGE_KEY, scope));
@@ -74,14 +79,14 @@ export class PracticeStorageService {
     }
   }
 
-  /** 全量覆盖保存题库。 */
+  // MARK: 保存
+  // 全量覆盖保存题库。
   save(items: PracticeItem[], scope: PracticeStorageScope = 'practice'): void {
     localStorage.setItem(scopedKey(STORAGE_KEY, scope), JSON.stringify(items));
   }
 
-  /**
-   * 将内置/打包好的题目合并进本地（与导入表格相同：按「分类 + 规范化题干」去重）。
-   */
+  // MARK: 合并
+  // 将内置/打包好的题目合并进本地（与导入表格相同：按「分类 + 规范化题干」去重）。
   mergeItems(
     incoming: PracticeItem[],
     scope: PracticeStorageScope = 'practice'
@@ -131,7 +136,8 @@ export class PracticeStorageService {
     return { added, updated, skipped };
   }
 
-  /** 将表格导入行转为题目并入库；结构与 {@link mergeItems} 类似但接受草稿类型。 */
+  // MARK: 导入
+  // 将表格导入行转为题目并入库；结构与 {@link mergeItems} 类似但接受草稿类型。
   importDrafts(
     drafts: PracticeItemDraft[],
     scope: PracticeStorageScope = 'practice'
@@ -173,13 +179,15 @@ export class PracticeStorageService {
     return { added, skipped };
   }
 
-  /** 清除题库与每日状态键。 */
+  // MARK: 清空
+  // 清除题库与每日状态键。
   clearAll(scope: PracticeStorageScope = 'practice'): void {
     localStorage.removeItem(scopedKey(STORAGE_KEY, scope));
     localStorage.removeItem(scopedKey(DAILY_STATE_KEY, scope));
   }
 
-  /** 读取每日刷题打卡记录。 */
+  // MARK: 读取
+  // 读取每日刷题打卡记录。
   readDailyState(scope: PracticeStorageScope = 'practice'): PracticeDailyState {
     try {
       const raw = localStorage.getItem(scopedKey(DAILY_STATE_KEY, scope));
@@ -199,12 +207,14 @@ export class PracticeStorageService {
     }
   }
 
-  /** 持久化每日刷题状态。 */
+  // MARK: 保存
+  // 持久化每日刷题状态。
   saveDailyState(state: PracticeDailyState, scope: PracticeStorageScope = 'practice'): void {
     localStorage.setItem(scopedKey(DAILY_STATE_KEY, scope), JSON.stringify(state));
   }
 
-  /** 上次在 UI 中选中的分类筛选（与题库数据分开存）。 */
+  // MARK: 读取
+  // 上次在 UI 中选中的分类筛选（与题库数据分开存）。
   readSavedFilterCategory(scope: PracticeStorageScope = 'practice'): PracticeFilterCategory {
     try {
       const raw = localStorage.getItem(scopedKey(PRACTICE_FILTER_CATEGORY_KEY, scope));
@@ -216,7 +226,8 @@ export class PracticeStorageService {
     }
   }
 
-  /** 记住分类筛选供下次进入页面恢复。 */
+  // MARK: 保存
+  // 记住分类筛选供下次进入页面恢复。
   saveFilterCategory(f: PracticeFilterCategory, scope: PracticeStorageScope = 'practice'): void {
     try {
       localStorage.setItem(scopedKey(PRACTICE_FILTER_CATEGORY_KEY, scope), f);
@@ -225,7 +236,8 @@ export class PracticeStorageService {
     }
   }
   
-  /** 将 localStorage 中的未知 JSON 解析为 {@link PracticeItem}；字段不全则丢弃。 */
+  // MARK: 解析
+  // 将 localStorage 中的未知 JSON 解析为 {@link PracticeItem}；字段不全则丢弃。
   private parseItem(x: unknown): PracticeItem | null {
     if (!x || typeof x !== 'object') return null;
     const o = x as Record<string, unknown>;
@@ -260,7 +272,8 @@ export class PracticeStorageService {
     return item;
   }
   
-  /** 解析单日打卡记录结构。 */
+  // MARK: 解析
+  // 解析单日打卡记录结构。
   private parseDayRecord(date: string, x: unknown): PracticeDayRecord | null {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
     if (!x || typeof x !== 'object') return null;
@@ -287,7 +300,8 @@ export class PracticeStorageService {
     return record;
   }
 
-  /** 统计各分类题目数量（用于 UI 徽章）。 */
+  // MARK: 计数
+  // 统计各分类题目数量（用于 UI 徽章）。
   countByCategory(items: PracticeItem[]): Record<PracticeCategory, number> {
     const base: Record<PracticeCategory, number> = {
       ios: 0,

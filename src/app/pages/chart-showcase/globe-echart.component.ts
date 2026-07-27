@@ -1,12 +1,12 @@
 import {
   AfterViewInit,
+  ChangeDetectionStrategy,
   Component,
   ElementRef,
-  Input,
-  OnChanges,
   OnDestroy,
-  SimpleChanges,
   ViewChild,
+  effect,
+  input,
 } from '@angular/core';
 import type { ECharts, EChartsOption } from 'echarts';
 
@@ -19,10 +19,8 @@ const SCRIPT_GL_ID = 'app-globe-echarts-gl-umd';
 
 let echartsGlGlobalReady: Promise<void> | null = null;
 
-/**
- * 同一 URL 只插入一次；若标签已存在仍在加载，则等待其 load/error。
- * 切勿在已有 globalThis.echarts 时直接 return：可能只有核心 UMD、尚未加载 echarts-gl，会导致 Unknown series scatter3D/lines3D。
- */
+// MARK: 注入脚本
+// 同一 URL 只插入一次；若标签已存在仍在加载，则等待其 load/error。
 function injectScriptOnce(id: string, src: string): Promise<void> {
   const existing = document.getElementById(id) as HTMLScriptElement | null;
   if (existing?.dataset['appLoaded'] === '1') {
@@ -36,6 +34,7 @@ function injectScriptOnce(id: string, src: string): Promise<void> {
       });
     });
   }
+  
   return new Promise((resolve, reject) => {
     const s = document.createElement('script');
     s.id = id;
@@ -50,6 +49,7 @@ function injectScriptOnce(id: string, src: string): Promise<void> {
   });
 }
 
+// MARK: 加载图表
 function ensureEchartsGlGlobal(): Promise<void> {
   if (!echartsGlGlobalReady) {
     echartsGlGlobalReady = (async () => {
@@ -71,7 +71,7 @@ function ensureEchartsGlGlobal(): Promise<void> {
  */
 @Component({
   selector: 'app-globe-echart',
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: '<div #host class="globe-host-inner"></div>',
   styles: [
     `
@@ -91,19 +91,34 @@ function ensureEchartsGlGlobal(): Promise<void> {
     `,
   ],
 })
-export class GlobeEchartComponent implements AfterViewInit, OnChanges, OnDestroy {
+export class GlobeEchartComponent implements AfterViewInit, OnDestroy {
   @ViewChild('host', { static: true }) hostRef!: ElementRef<HTMLDivElement>;
 
-  @Input() options: EChartsOption = {};
+  readonly options = input<EChartsOption>({});
 
   private chart: ECharts | null = null;
 
+  // MARK: 构造注入
+  // options 变化时同步到图表
+  constructor() {
+    effect(() => {
+      const next = this.options();
+      if (!this.chart || !next || Object.keys(next).length === 0) {
+        return;
+      }
+      this.chart.setOption(next, { notMerge: true });
+    });
+  }
+
+  // MARK: 获取
   private getEcharts(): typeof import('echarts') | null {
     const g = globalThis as unknown as { echarts?: typeof import('echarts') };
     const ec = g.echarts;
     return ec && typeof ec.init === 'function' ? ec : null;
   }
 
+  // MARK: 视图就绪
+  // 加载 ECharts GL 并初始化实例
   async ngAfterViewInit(): Promise<void> {
     try {
       await ensureEchartsGlGlobal();
@@ -118,24 +133,16 @@ export class GlobeEchartComponent implements AfterViewInit, OnChanges, OnDestroy
     }
     this.chart = ec.init(this.hostRef.nativeElement);
     queueMicrotask(() => this.chart?.resize());
-    this.applyOption();
-  }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['options'] && this.chart) {
-      this.applyOption();
+    const next = this.options();
+    if (next && Object.keys(next).length > 0) {
+      this.chart.setOption(next, { notMerge: true });
     }
   }
 
+  // MARK: 销毁清理
+  // 释放图表实例
   ngOnDestroy(): void {
     this.chart?.dispose();
     this.chart = null;
-  }
-
-  private applyOption(): void {
-    if (!this.chart || !this.options || Object.keys(this.options).length === 0) {
-      return;
-    }
-    this.chart.setOption(this.options, { notMerge: true });
   }
 }

@@ -57,14 +57,12 @@ export interface NewTetrisOptions {
   seed?: number;
 }
 
-/**
- * 创建一局新俄罗斯方块。
- *
- * 设计目标：
- * - 规则逻辑全部放在纯函数里，便于单测
- * - “随机”全部由 state.rngSeed 决定，做到可复现
- * - UI 只负责渲染与把输入转换成调用这些纯函数
- */
+// MARK: 新建状态
+// 创建一局新俄罗斯方块。
+// 设计目标：
+// - 规则逻辑全部放在纯函数里，便于单测
+// - “随机”全部由 state.rngSeed 决定，做到可复现
+// - UI 只负责渲染与把输入转换成调用这些纯函数
 export function newTetrisState(options: NewTetrisOptions = {}): TetrisState {
   const width = Math.max(6, Math.floor(options.width ?? 10));
   const height = Math.max(10, Math.floor(options.height ?? 20));
@@ -97,17 +95,15 @@ export function newTetrisState(options: NewTetrisOptions = {}): TetrisState {
   return spawned;
 }
 
-/** 暂停/继续。Game Over 后不再生效。 */
+// MARK: 切换
+// 暂停/继续。Game Over 后不再生效。
 export function togglePause(state: TetrisState): TetrisState {
   if (state.isGameOver) return state;
   return { ...state, isPaused: !state.isPaused };
 }
 
-/**
- * 游戏主循环：推进一帧“重力下落”。
- * - 能下落：active.y + 1
- * - 不能下落：锁定到 board，消行，然后生成新方块
- */
+// MARK: 节拍更新
+// 游戏主循环：推进一帧“重力下落”。能下落：active.y + 1；不能下落：锁定到 board，消行，然后生成新方块
 export function tick(state: TetrisState): TetrisState {
   if (state.isPaused || state.isGameOver) return state;
 
@@ -118,30 +114,28 @@ export function tick(state: TetrisState): TetrisState {
   return lockAndContinue(state);
 }
 
-/** 左移一格（如果可行）。 */
+// MARK: 移动
+// 左移一格（如果可行）。
 export function moveLeft(state: TetrisState): TetrisState {
   return state.isPaused || state.isGameOver ? state : tryMove(state, -1, 0);
 }
 
-/** 右移一格（如果可行）。 */
+// MARK: 移动
+// 右移一格（如果可行）。
 export function moveRight(state: TetrisState): TetrisState {
   return state.isPaused || state.isGameOver ? state : tryMove(state, 1, 0);
 }
 
-/**
- * 软降一格（等价于“尝试下落 1 格”）。
- * - 如果已经触底/被挡住：会直接锁定（更接近常见手感）
- */
+// MARK: 软降
+// 软降一格（等价于“尝试下落 1 格”）。如果已经触底/被挡住：会直接锁定（更接近常见手感）
 export function softDrop(state: TetrisState): TetrisState {
   if (state.isPaused || state.isGameOver) return state;
   const moved = tryMove(state, 0, 1);
   return moved !== state ? moved : lockAndContinue(state);
 }
 
-/**
- * 硬降：一直下落到不能再下落，然后锁定。
- * 这属于经典玩法常见能力（不加额外动画，保持 UI 简单）。
- */
+// MARK: 硬降
+// 硬降：一直下落到不能再下落，然后锁定。这属于经典玩法常见能力（不加额外动画，保持 UI 简单）。
 export function hardDrop(state: TetrisState): TetrisState {
   if (state.isPaused || state.isGameOver) return state;
 
@@ -154,13 +148,11 @@ export function hardDrop(state: TetrisState): TetrisState {
   return lockAndContinue(s);
 }
 
-/**
- * 顺时针旋转 90°。
- *
- * 这里实现一个“最小可用”的简化 wall-kick：
- * - 如果原地旋转冲突，则尝试左右平移 1/2 格，最后尝试上移 1 格
- * - 不是严格的 SRS，但足够可玩且实现简单、可测试
- */
+// MARK: 旋转
+// 顺时针旋转 90°。
+// 这里实现一个“最小可用”的简化 wall-kick：
+// - 如果原地旋转冲突，则尝试左右平移 1/2 格，最后尝试上移 1 格
+// - 不是严格的 SRS，但足够可玩且实现简单、可测试
 export function rotateCW(state: TetrisState): TetrisState {
   if (state.isPaused || state.isGameOver) return state;
 
@@ -190,34 +182,33 @@ export function rotateCW(state: TetrisState): TetrisState {
   return state;
 }
 
-/** 重开一局（seed 可用于复现）。 */
+// MARK: 重新开始
+// 重开一局（seed 可用于复现）。
 export function restart(state: TetrisState, seed = (Date.now() >>> 0)): TetrisState {
   return newTetrisState({ width: state.width, height: state.height, seed });
 }
 
-/**
- * 获取某个方块当前旋转状态下的 4 个绝对坐标（用于渲染/调试/测试）。
- * 注意：这里不会做任何碰撞判定。
- */
+// MARK: 获取
+// 获取某个方块当前旋转状态下的 4 个绝对坐标（用于渲染/调试/测试）。注意：这里不会做任何碰撞判定。
 export function getPieceCells(piece: ActivePiece): Point[] {
   return pieceCells(piece);
 }
 
-/**
- * 获取某种方块在指定旋转状态下的“相对坐标”（不包含 x/y 平移）。
- * 用途：预览下一块、UI 展示、调试等。
- */
+// MARK: 获取
+// 获取某种方块在指定旋转状态下的“相对坐标”（不包含 x/y 平移）。用途：预览下一块、UI 展示、调试等。
 export function getKindRelativeCells(kind: TetrominoKind, rotation: number = 0): Point[] {
   const r = ((rotation % 4) + 4) % 4;
   return shapes[kind][r].map(p => ({ x: p.x, y: p.y }));
 }
 
+// MARK: 尝试移动
 function tryMove(state: TetrisState, dx: number, dy: number): TetrisState {
   const candidate: ActivePiece = { ...state.active, x: state.active.x + dx, y: state.active.y + dy };
   if (collides(state, candidate)) return state;
   return { ...state, active: candidate };
 }
 
+// MARK: 锁定继续
 function lockAndContinue(state: TetrisState): TetrisState {
   const locked = lockPiece(state);
   if (locked.isGameOver) return locked;
@@ -227,6 +218,7 @@ function lockAndContinue(state: TetrisState): TetrisState {
   return spawned;
 }
 
+// MARK: 锁定方块
 function lockPiece(state: TetrisState): TetrisState {
   const cells = pieceCells(state.active);
   const nextBoard = state.board.slice();
@@ -247,6 +239,7 @@ function lockPiece(state: TetrisState): TetrisState {
   return { ...state, board: nextBoard, isGameOver: lockedAboveTop };
 }
 
+// MARK: 消除行
 function clearLines(state: TetrisState): TetrisState {
   const { width, height } = state;
 
@@ -284,6 +277,7 @@ function clearLines(state: TetrisState): TetrisState {
   };
 }
 
+// MARK: 消行计分
 function scoreForClears(cleared: number): number {
   // 常见计分：1/2/3/4 行分别给 100/300/500/800。
   switch (cleared) {
@@ -295,6 +289,7 @@ function scoreForClears(cleared: number): number {
   }
 }
 
+// MARK: 生成
 function spawnFromNext(state: TetrisState): TetrisState {
   const spawnX = Math.floor(state.width / 2) - 2;
   const spawnY = -2; // 允许部分在可视区上方生成
@@ -317,11 +312,13 @@ function spawnFromNext(state: TetrisState): TetrisState {
   return afterRoll;
 }
 
+// MARK: 滚动下块
 function rollNextInState(state: TetrisState): TetrisState {
   const { seed, next } = rollNextFrom(state.rngSeed, state.lastColor);
   return { ...state, rngSeed: seed, next };
 }
 
+// MARK: 下一个
 function rollNextFrom(seed0: number, lastColor: string | null): { seed: number; next: { kind: TetrominoKind; color: string } } {
   // 用 seed 推进两次：一次决定方块类型，一次决定颜色。
   const { seed: seed1, value: v1 } = nextRand(seed0);
@@ -333,6 +330,7 @@ function rollNextFrom(seed0: number, lastColor: string | null): { seed: number; 
   return { seed: seed2, next: { kind, color } };
 }
 
+// MARK: 列
 function randomColor(rand: number, lastColor: string | null): string {
   // 颜色生成策略：
   // - 用一个 0-359 的色相（hue）做 HSL，饱和度/亮度固定，观感一致
@@ -345,6 +343,7 @@ function randomColor(rand: number, lastColor: string | null): string {
   return base;
 }
 
+// MARK: 碰撞检测
 function collides(state: TetrisState, piece: ActivePiece): boolean {
   for (const p of pieceCells(piece)) {
     // 左右越界/下越界都算碰撞；上越界（y < 0）允许（生成/旋转时常见）。
@@ -358,11 +357,13 @@ function collides(state: TetrisState, piece: ActivePiece): boolean {
   return false;
 }
 
+// MARK: 方块格子
 function pieceCells(piece: ActivePiece): Point[] {
   const shape = shapes[piece.kind][piece.rotation];
   return shape.map(p => ({ x: piece.x + p.x, y: piece.y + p.y }));
 }
 
+// MARK: 棋盘
 function boardIndex(state: Pick<TetrisState, 'width'>, x: number, y: number): number {
   return y * state.width + x;
 }
@@ -422,10 +423,8 @@ const shapes: Record<TetrominoKind, Point[][]> = {
   ]
 };
 
-/**
- * 极小的确定性伪随机（LCG），使用无符号 32 位运算。
- * 对于“随机方块 + 随机颜色”足够用，而且不需要额外依赖。
- */
+// MARK: 下一个
+// 极小的确定性伪随机（LCG），使用无符号 32 位运算。对于“随机方块 + 随机颜色”足够用，而且不需要额外依赖。
 function nextRand(seed0: number): { seed: number; value: number } {
   const seed = (Math.imul(seed0, 1664525) + 1013904223) >>> 0;
   return { seed, value: seed };

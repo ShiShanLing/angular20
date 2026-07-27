@@ -56,12 +56,8 @@ export interface NewGameOptions {
   seed?: number;
 }
 
-/**
- * 创建一局新游戏：
- * - 蛇初始长度为 1，位于棋盘中心
- * - 初始方向为向右
- * - 食物刷新在空格（如果提供 seed，则落点是确定性的）
- */
+// MARK: 新建
+// 创建一局新游戏：；蛇初始长度为 1，位于棋盘中心；初始方向为向右；食物刷新在空格（如果提供 seed，则落点是确定性的）
 export function newGameState(options: NewGameOptions): SnakeGameState {
   // 设定最小棋盘尺寸，避免过小棋盘导致“无空位”等边界问题。
   const width = Math.max(4, Math.floor(options.width));
@@ -91,13 +87,11 @@ export function newGameState(options: NewGameOptions): SnakeGameState {
   return respawnFood(initial);
 }
 
-/**
- * 缓存一次方向变化，留到下一次 tick 再应用。
- *
- * 这里刻意“不立刻改变方向”，是为了避免：
- * - 同一个 tick 内多次改变方向（不稳定、难测）
- * - “瞬间反向”（例如正在向右立刻按向左）
- */
+// MARK: 处理
+// 缓存一次方向变化，留到下一次 tick 再应用。
+// 这里刻意“不立刻改变方向”，是为了避免：
+// - 同一个 tick 内多次改变方向（不稳定、难测）
+// - “瞬间反向”（例如正在向右立刻按向左）
 export function queueDirection(state: SnakeGameState, direction: Direction): SnakeGameState {
   // 游戏已结束则忽略输入。
   if (state.isGameOver) return state;
@@ -110,25 +104,24 @@ export function queueDirection(state: SnakeGameState, direction: Direction): Sna
   return { ...state, nextDirection: direction };
 }
 
-/** 暂停/继续。Game Over 后不再生效。 */
+// MARK: 切换
+// 暂停/继续。Game Over 后不再生效。
 export function togglePause(state: SnakeGameState): SnakeGameState {
   if (state.isGameOver) return state;
   return { ...state, isPaused: !state.isPaused };
 }
 
-/**
- * 推进游戏一步（每次 tick 移动 1 格）。
- *
- * tick 的职责：
- * 1) 选择方向（优先应用缓存方向）
- * 2) 计算下一步蛇头坐标
- * 3) 边界处理（穿墙环绕）
- * 4) 判断撞自己
- *    - 关键点：如果“这一口不吃食物”，允许蛇头进入“上一帧尾巴所在格”
- *      因为尾巴会在同一 tick 同步前移（经典贪吃蛇行为）
- * 5) 应用移动（如果吃到食物则增长）
- * 6) 如果吃到食物，刷新下一颗食物
- */
+// MARK: 节拍更新
+// 推进游戏一步（每次 tick 移动 1 格）。
+// tick 的职责：
+// 1) 选择方向（优先应用缓存方向）
+// 2) 计算下一步蛇头坐标
+// 3) 边界处理（穿墙环绕）
+// 4) 判断撞自己
+// - 关键点：如果“这一口不吃食物”，允许蛇头进入“上一帧尾巴所在格”
+// 因为尾巴会在同一 tick 同步前移（经典贪吃蛇行为）
+// 5) 应用移动（如果吃到食物则增长）
+// 6) 如果吃到食物，刷新下一颗食物
 export function tick(state: SnakeGameState): SnakeGameState {
   // 暂停或结束时不推进（纯函数：直接返回原引用，便于上层做引用判断）。
   if (state.isPaused || state.isGameOver) return state;
@@ -180,17 +173,14 @@ export function tick(state: SnakeGameState): SnakeGameState {
   return afterFood;
 }
 
-/**
- * 在随机空格放置食物（由 `rngSeed` 决定，保证确定性）。
- *
- * 方法：
- * - 计算空格数量 emptyCount
- * - 用 RNG 生成一个空格索引 targetIndex
- * - 按行优先（row-major）扫描整张棋盘，数到第 targetIndex 个空格即为食物落点
- *
- * 这是最直观且确定性的做法；由于扫描中用 `some()` 判断蛇身占用，
- * 复杂度大约是 O(width*height*snakeLength)。本项目棋盘很小，因此足够快。
- */
+// MARK: 食物
+// 在随机空格放置食物（由 `rngSeed` 决定，保证确定性）。
+// 方法：
+// - 计算空格数量 emptyCount
+// - 用 RNG 生成一个空格索引 targetIndex
+// - 按行优先（row-major）扫描整张棋盘，数到第 targetIndex 个空格即为食物落点
+// 这是最直观且确定性的做法；由于扫描中用 `some()` 判断蛇身占用，
+// 复杂度大约是 O(width*height*snakeLength)。本项目棋盘很小，因此足够快。
 export function respawnFood(state: SnakeGameState): SnakeGameState {
   const emptyCount = state.width * state.height - state.snake.length;
   if (emptyCount <= 0) {
@@ -218,29 +208,35 @@ export function respawnFood(state: SnakeGameState): SnakeGameState {
   return { ...state, rngSeed: seed, food: { x: 0, y: 0 } };
 }
 
+// MARK: 判断
 function isGridFull(state: SnakeGameState): boolean {
   return state.snake.length >= state.width * state.height;
 }
 
+// MARK: 判断
 function isInside(state: SnakeGameState, p: Point): boolean {
   return p.x >= 0 && p.x < state.width && p.y >= 0 && p.y < state.height;
 }
 
+// MARK: 环绕
 function wrapPoint(state: SnakeGameState, p: Point): Point {
   const x = mod(p.x, state.width);
   const y = mod(p.y, state.height);
   return { x, y };
 }
 
+// MARK: 处理
 function mod(n: number, m: number): number {
   // JS 的 % 可能返回负数；这里做数学意义上的模运算。
   return ((n % m) + m) % m;
 }
 
+// MARK: 时间戳
 function pointsEqual(a: Point, b: Point): boolean {
   return a.x === b.x && a.y === b.y;
 }
 
+// MARK: 处理
 function directionDelta(direction: Direction): Point {
   switch (direction) {
     case 'up': return { x: 0, y: -1 };
@@ -250,6 +246,7 @@ function directionDelta(direction: Direction): Point {
   }
 }
 
+// MARK: 判断
 function isOpposite(a: Direction, b: Direction): boolean {
   return (a === 'up' && b === 'down')
     || (a === 'down' && b === 'up')
@@ -257,10 +254,8 @@ function isOpposite(a: Direction, b: Direction): boolean {
     || (a === 'right' && b === 'left');
 }
 
-/**
- * 极小的确定性伪随机（LCG），使用无符号 32 位运算。
- * 对于“刷食物”足够用，而且不需要额外依赖。
- */
+// MARK: 下一个
+// 极小的确定性伪随机（LCG），使用无符号 32 位运算。对于“刷食物”足够用，而且不需要额外依赖。
 function nextRand(seed0: number): { seed: number; value: number } {
   const seed = (Math.imul(seed0, 1664525) + 1013904223) >>> 0;
   return { seed, value: seed };

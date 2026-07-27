@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { FEATURE_MENU_ITEMS, type FeatureMenuItem } from './feature-menu';
 import { FeatureActivationService } from './feature-activation.service';
 import { MenuVisibilityService } from './menu-visibility.service';
@@ -11,24 +11,26 @@ interface FeatureLeafRoute {
 }
 
 /**
- * 菜单访问判定（权限 + 本地显示设置）：
- * - 为路由守卫提供统一入口
- * - 避免在多处重复菜单访问逻辑
+ * 菜单访问判定服务（权限 + 激活码 + 本地显示设置）。
+ * 供 layout 侧栏过滤与 menuAccessGuard 共用，避免多处重复逻辑。
+ *
  */
 @Injectable({ providedIn: 'root' })
 export class MenuAccessService {
+  private readonly permissionService = inject(PermissionService);
+  private readonly featureActivationService = inject(FeatureActivationService);
+  private readonly menuVisibilityService = inject(MenuVisibilityService);
+
   private readonly leafRoutes: FeatureLeafRoute[] = this.collectLeafRoutes(FEATURE_MENU_ITEMS);
 
-  constructor(
-    private readonly permissionService: PermissionService,
-    private readonly featureActivationService: FeatureActivationService,
-    private readonly menuVisibilityService: MenuVisibilityService,
-  ) {}
-
+  // MARK: 路径受管
+  // 该路径是否在功能菜单中受管（需要做访问校验）。
   isManagedPath(path: string): boolean {
     return this.findManagedRoute(path) !== null;
   }
 
+  // MARK: 路径可访
+  // 综合权限、激活码、本地显隐，判断用户是否可访问该路径。
   hasAccessToPath(path: string): boolean {
     const route = this.findManagedRoute(path);
     if (!route) {
@@ -42,20 +44,23 @@ export class MenuAccessService {
     return permOk && activeOk && visibleOk;
   }
 
-  /** 精确匹配或子路由匹配：/market/2026-07-17 匹配到 /market */
+  // MARK: 匹配路由
+  // 精确匹配或前缀匹配受管菜单路由，如 /market/日期 匹配 /market
   private findManagedRoute(path: string): FeatureLeafRoute | null {
-    // 1. 精确匹配
     const exact = this.leafRoutes.find((item) => item.path === path);
     if (exact) return exact;
-    // 2. 子路由匹配：/market/xxx → 匹配 /market
     return this.leafRoutes.find((item) => path.startsWith(item.path + '/')) ?? null;
   }
 
+  // MARK: 首个可访
+  // 返回第一个可访问的菜单路径；都不可用时返回 null。
   firstAccessiblePath(): string | null {
     const match = this.leafRoutes.find((item) => this.hasAccessToPath(item.path));
     return match?.path ?? null;
   }
 
+  // MARK: 收集路由
+  // 从菜单树收集所有叶子路由。
   private collectLeafRoutes(items: FeatureMenuItem[]): FeatureLeafRoute[] {
     const result: FeatureLeafRoute[] = [];
     for (const item of items) {

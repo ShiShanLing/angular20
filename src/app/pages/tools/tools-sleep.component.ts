@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule, DatePipe } from '@angular/common';
 
@@ -26,7 +26,6 @@ interface SleepRecord {
 /** 睡眠记录：入睡/起床时间与时长汇总列表。 */
 @Component({
   selector: 'app-tools-sleep',
-  standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule,
     NzCardModule, NzFormModule, NzInputNumberModule,
@@ -35,7 +34,8 @@ interface SleepRecord {
   ],
   providers: [DatePipe],
   templateUrl: './tools-sleep.component.html',
-  styleUrl: './tools-sleep.component.scss'
+  styleUrl: './tools-sleep.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolsSleepComponent implements OnInit {
   private fb = inject(FormBuilder);
@@ -44,10 +44,12 @@ export class ToolsSleepComponent implements OnInit {
   private recordService = inject(RecordService);
 
   form!: FormGroup;
-  records: SleepRecord[] = [];
-  stats: any = null;
-  loading = false;
+  readonly records = signal<SleepRecord[]>([]);
+  readonly stats = signal<any>(null);
+  readonly loading = signal(false);
 
+  // MARK: 初始化
+  // 组件初始化：同步移动端断点、订阅视口变化与路由事件
   ngOnInit(): void {
     const today = new Date();
     const tonight = new Date(today);
@@ -81,6 +83,7 @@ export class ToolsSleepComponent implements OnInit {
     this.loadRecords();
   }
 
+  // MARK: 提交
   submitForm(): void {
     if (this.form.valid) {
       const val = this.form.value;
@@ -103,12 +106,14 @@ export class ToolsSleepComponent implements OnInit {
         totalSleep
       };
 
-      const existingIdx = this.records.findIndex(r => r.dateStr === dateStr);
+      const existingIdx = this.records().findIndex(r => r.dateStr === dateStr);
       if (existingIdx > -1) {
-        const existing = this.records[existingIdx];
+        const existing = this.records()[existingIdx];
         this.recordService.update(Number(existing.id), data, dateStr).subscribe({
           next: () => {
-            this.records[existingIdx] = { ...this.records[existingIdx], ...data };
+            const updated = this.records().slice();
+            updated[existingIdx] = { ...updated[existingIdx], ...data };
+            this.records.set(updated);
             this.msg.success('更新成功');
             this.calculateStats();
           },
@@ -117,8 +122,9 @@ export class ToolsSleepComponent implements OnInit {
       } else {
         this.recordService.create('sleep', data, dateStr).subscribe({
           next: (res) => {
-            this.records.push({ id: res.id, dateStr, ...data });
-            this.records.sort((a, b) => new Date(b.dateStr).getTime() - new Date(a.dateStr).getTime());
+            const updated = [...this.records(), { id: res.id, dateStr, ...data }];
+            updated.sort((a, b) => new Date(b.dateStr).getTime() - new Date(a.dateStr).getTime());
+            this.records.set(updated);
             this.msg.success('记录成功');
             this.calculateStats();
           },
@@ -128,10 +134,11 @@ export class ToolsSleepComponent implements OnInit {
     }
   }
 
+  // MARK: 删除记录
   deleteRecord(id: number | string): void {
     this.recordService.delete(Number(id)).subscribe({
       next: () => {
-        this.records = this.records.filter(r => r.id !== id);
+        this.records.set(this.records().filter(r => r.id !== id));
         this.msg.success('删除成功');
         this.calculateStats();
       },
@@ -139,11 +146,12 @@ export class ToolsSleepComponent implements OnInit {
     });
   }
 
+  // MARK: 加载记录
   loadRecords(): void {
-    this.loading = true;
+    this.loading.set(true);
     this.recordService.getAll('sleep').subscribe({
       next: (apiRecords) => {
-        this.records = apiRecords.map(r => ({
+        const updated = apiRecords.map(r => ({
           id: r.id,
           dateStr: r.recordDate || r.data?.dateStr || '',
           sleepTime: r.data?.sleepTime || '',
@@ -151,24 +159,26 @@ export class ToolsSleepComponent implements OnInit {
           napDuration: r.data?.napDuration || 0,
           totalSleep: r.data?.totalSleep || 0,
         }));
-        this.records.sort((a, b) => new Date(b.dateStr).getTime() - new Date(a.dateStr).getTime());
-        this.loading = false;
+        updated.sort((a, b) => new Date(b.dateStr).getTime() - new Date(a.dateStr).getTime());
+        this.records.set(updated);
+        this.loading.set(false);
         this.calculateStats();
       },
       error: () => {
-        this.loading = false;
+        this.loading.set(false);
         this.msg.error('加载记录失败');
       }
     });
   }
 
+  // MARK: 计算
   calculateStats(): void {
-    if (!this.records.length) {
-      this.stats = null;
+    if (!this.records().length) {
+      this.stats.set(null);
       return;
     }
 
-    const recent = this.records.slice(0, 7);
+    const recent = this.records().slice(0, 7);
 
     let totalDur = 0;
     let earliestSleepTime = 24;
@@ -196,11 +206,11 @@ export class ToolsSleepComponent implements OnInit {
       }
     });
 
-    this.stats = {
+    this.stats.set({
       avgSleep: totalDur / recent.length,
       earliestSleep: earliestSleepLabel,
       latestWake: latestWakeLabel,
       count: recent.length
-    };
+    });
   }
 }

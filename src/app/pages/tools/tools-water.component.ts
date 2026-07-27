@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule, formatDate } from '@angular/common';
 
@@ -19,7 +19,6 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 /** 每日饮水目标与喝水记录打卡。 */
 @Component({
   selector: 'app-tools-water',
-  standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule,
     NzCardModule, NzFormModule, NzInputModule, NzInputNumberModule,
@@ -27,20 +26,24 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
     NzAlertModule, NzIconModule, TextFieldModule
   ],
   templateUrl: './tools-water.component.html',
-  styleUrl: './tools-water.component.scss'
+  styleUrl: './tools-water.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolsWaterComponent implements OnInit {
+  private readonly fb = inject(FormBuilder);
+  private readonly message = inject(NzMessageService);
+
   form!: FormGroup;
-  result: any = {
+  readonly result = signal<any>({
     timesPerDay: 0,
     plannedMl: 0,
     diff: 0,
     status: 'info',
     hint: ''
-  };
+  });
 
-  constructor(private fb: FormBuilder, private message: NzMessageService) {}
-
+  // MARK: 初始化
+  // 组件初始化：同步移动端断点、订阅视口变化与路由事件
   ngOnInit(): void {
     const today = new Date();
     this.form = this.fb.group({
@@ -61,6 +64,7 @@ export class ToolsWaterComponent implements OnInit {
     });
   }
 
+  // MARK: 计算
   computePlan(): void {
     const val = this.form.value;
     const times = this.parseTimeLines(val.timeList);
@@ -87,15 +91,16 @@ export class ToolsWaterComponent implements OnInit {
       }
     }
     
-    this.result = {
+    this.result.set({
       timesPerDay: times.length,
       plannedMl: planned,
       diff,
       status,
       hint
-    };
+    });
   }
 
+  // MARK: 下载
   downloadIcs(): void {
     const { ok, error, ics } = this.buildIcs();
     if (!ok) {
@@ -112,6 +117,7 @@ export class ToolsWaterComponent implements OnInit {
     this.message.success('已导出日历提醒文件');
   }
 
+  // MARK: 解析
   private parseTimeLines(text: string): { hh: number; mm: number; raw: string }[] {
     const lines = (text || '').split(/\n/).map(s => s.trim()).filter(Boolean);
     const times: any[] = [];
@@ -131,6 +137,7 @@ export class ToolsWaterComponent implements OnInit {
     return uniq.sort((a, b) => (a.hh * 60 + a.mm) - (b.hh * 60 + b.mm));
   }
 
+  // MARK: 构建
   private buildIcs(): { ok: boolean; error: string; ics: string } {
     const val = this.form.value;
     const times = this.parseTimeLines(val.timeList);
@@ -179,10 +186,12 @@ export class ToolsWaterComponent implements OnInit {
     return { ok: true, error: '', ics: lines.join('\r\n') };
   }
 
+  // MARK: 保存
   private saveState(): void {
     localStorage.setItem('tools_water_state', JSON.stringify(this.form.getRawValue()));
   }
 
+  // MARK: 加载
   private loadState(): void {
     const saved = localStorage.getItem('tools_water_state');
     if (saved) {

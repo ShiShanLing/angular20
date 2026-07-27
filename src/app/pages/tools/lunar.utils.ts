@@ -26,40 +26,35 @@ export class LunarUtils {
   private static readonly DAY_STR = ['初', '十', '廿', '卅'];
   private static readonly NUMBER_STR = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
 
-  /**
-   * 返回农历年份的天数
-   */
+  // MARK: 农历年天
+  // 返回农历年份的天数
   private static lYearDays(y: number): number {
     let i, sum = 348;
     for (i = 0x8000; i > 0x8; i >>= 1) sum += (this.LUNAR_INFO[y - 1900] & i) ? 1 : 0;
     return sum + this.leapDays(y);
   }
 
-  /**
-   * 返回农历 y 年闰月的天数
-   */
+  // MARK: 闰月天数
+  // 返回农历 y 年闰月的天数
   private static leapDays(y: number): number {
     if (this.leapMonth(y)) return (this.LUNAR_INFO[y - 1900] & 0x10000) ? 30 : 29;
     else return 0;
   }
 
-  /**
-   * 返回农历 y 年闰哪个月 1-12 , 没闰返回 0
-   */
+  // MARK: 闰月月份
+  // 返回农历 y 年闰哪个月 1-12 , 没闰返回 0
   private static leapMonth(y: number): number {
     return this.LUNAR_INFO[y - 1900] & 0xf;
   }
 
-  /**
-   * 返回农历 y 年 m 月的天数
-   */
+  // MARK: 月天数
+  // 返回农历 y 年 m 月的天数
   private static monthDays(y: number, m: number): number {
     return (this.LUNAR_INFO[y - 1900] & (0x10000 >> m)) ? 30 : 29;
   }
 
-  /**
-   * 核心转换函数
-   */
+  // MARK: 农历信息
+  // 核心转换函数
   public static getLunar(date: Date): any {
     let i, leap = 0, temp = 0;
     const offset = (Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - Date.UTC(1900, 0, 31)) / 86400000;
@@ -121,6 +116,7 @@ export class LunarUtils {
     };
   }
 
+  // MARK: 获取
   private static getLunarDayStr(day: number): string {
     if (day === 10) return '初十';
     if (day === 20) return '二十';

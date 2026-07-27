@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule, DatePipe } from '@angular/common';
 
@@ -33,7 +33,6 @@ interface WeightRecord {
 /** 体重记录列表与折线图趋势（服务器持久化）。 */
 @Component({
   selector: 'app-tools-weight',
-  standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule,
     NzCardModule, NzFormModule, NzInputModule, NzInputNumberModule,
@@ -42,7 +41,8 @@ interface WeightRecord {
   ],
   providers: [DatePipe],
   templateUrl: './tools-weight.component.html',
-  styleUrl: './tools-weight.component.scss'
+  styleUrl: './tools-weight.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolsWeightComponent implements OnInit {
   private fb = inject(FormBuilder);
@@ -51,11 +51,13 @@ export class ToolsWeightComponent implements OnInit {
   private recordService = inject(RecordService);
 
   form!: FormGroup;
-  records: WeightRecord[] = [];
-  reversedRecords: WeightRecord[] = [];
-  chartOption: EChartsOption = {};
-  loading = false;
+  readonly records = signal<WeightRecord[]>([]);
+  readonly reversedRecords = signal<WeightRecord[]>([]);
+  readonly chartOption = signal<EChartsOption>({});
+  readonly loading = signal(false);
 
+  // MARK: 初始化
+  // 组件初始化：同步移动端断点、订阅视口变化与路由事件
   ngOnInit(): void {
     this.form = this.fb.group({
       date: [new Date(), [Validators.required]],
@@ -78,19 +80,22 @@ export class ToolsWeightComponent implements OnInit {
     this.loadRecords();
   }
 
+  // MARK: 提交
   submitForm(): void {
     if (this.form.valid) {
       const val = this.form.value;
       const dateStr = this.datePipe.transform(val.date, 'yyyy-MM-dd') || '';
-      const existingIdx = this.records.findIndex(r => r.date === dateStr);
+      const existingIdx = this.records().findIndex(r => r.date === dateStr);
 
       if (existingIdx > -1) {
-        const existing = this.records[existingIdx];
+        const existing = this.records()[existingIdx];
         // 更新已有记录
         this.recordService.update(Number(existing.id), { weight: val.weight }, dateStr).subscribe({
           next: (res) => {
-            this.records[existingIdx].weight = val.weight;
-            this.reversedRecords = [...this.records].reverse();
+            const updated = this.records().slice();
+            updated[existingIdx] = { ...updated[existingIdx], weight: val.weight };
+            this.records.set(updated);
+            this.reversedRecords.set([...updated].reverse());
             this.msg.success('更新成功');
             this.buildChart();
           },
@@ -100,9 +105,10 @@ export class ToolsWeightComponent implements OnInit {
         // 创建新记录
         this.recordService.create('weight', { weight: val.weight }, dateStr).subscribe({
           next: (res) => {
-            this.records.push({ id: res.id, date: dateStr, weight: val.weight });
-            this.records.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-            this.reversedRecords = [...this.records].reverse();
+            const updated = [...this.records(), { id: res.id, date: dateStr, weight: val.weight }];
+            updated.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            this.records.set(updated);
+            this.reversedRecords.set([...updated].reverse());
             this.msg.success('记录成功');
             this.buildChart();
           },
@@ -112,11 +118,13 @@ export class ToolsWeightComponent implements OnInit {
     }
   }
 
+  // MARK: 删除记录
   deleteRecord(id: number | string): void {
     this.recordService.delete(Number(id)).subscribe({
       next: () => {
-        this.records = this.records.filter(r => r.id !== id);
-        this.reversedRecords = [...this.records].reverse();
+        const updated = this.records().filter(r => r.id !== id);
+        this.records.set(updated);
+        this.reversedRecords.set([...updated].reverse());
         this.msg.success('删除成功');
         this.buildChart();
       },
@@ -124,35 +132,39 @@ export class ToolsWeightComponent implements OnInit {
     });
   }
 
+  // MARK: 加载记录
   loadRecords(): void {
-    this.loading = true;
+    this.loading.set(true);
     this.recordService.getAll('weight').subscribe({
       next: (apiRecords) => {
-        this.records = apiRecords.map(r => ({
+        const updated = apiRecords.map(r => ({
           id: r.id,
           date: r.recordDate || r.data?.date || '',
           weight: r.data?.weight || 0,
         }));
-        this.records.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-        this.reversedRecords = [...this.records].reverse();
-        this.loading = false;
+        updated.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        this.records.set(updated);
+        this.reversedRecords.set([...updated].reverse());
+        this.loading.set(false);
         this.buildChart();
       },
       error: () => {
-        this.loading = false;
+        this.loading.set(false);
         this.msg.error('加载记录失败');
       }
     });
   }
 
+  // MARK: 构建
   buildChart(): void {
-    if (this.records.length === 0) {
-      this.chartOption = {};
+    const records = this.records();
+    if (records.length === 0) {
+      this.chartOption.set({});
       return;
     }
 
-    const xAxisData = this.records.map(r => r.date);
-    const weightData = this.records.map(r => r.weight);
+    const xAxisData = records.map(r => r.date);
+    const weightData = records.map(r => r.weight);
 
     // Calculate 7-day moving average
     const maData = weightData.map((w, idx) => {
@@ -162,7 +174,7 @@ export class ToolsWeightComponent implements OnInit {
       return Number((sum / 7).toFixed(2));
     });
 
-    this.chartOption = {
+    this.chartOption.set({
       tooltip: { trigger: 'axis' },
       legend: { data: ['体重 (kg)', '7日均线'] },
       grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
@@ -185,16 +197,17 @@ export class ToolsWeightComponent implements OnInit {
           lineStyle: { type: 'dashed' }
         }
       ]
-    };
+    });
   }
 
+  // MARK: 导出
   exportCSV(): void {
-    if (!this.records.length) {
+    if (!this.records().length) {
       this.msg.warning('没有记录可导出');
       return;
     }
     const headers = ['日期', '体重(kg)'];
-    const rows = this.records.map(r => [r.date, r.weight.toString()]);
+    const rows = this.records().map(r => [r.date, r.weight.toString()]);
     const csvContent = "\uFEFF" + [headers, ...rows].map(e => e.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");

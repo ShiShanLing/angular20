@@ -1,6 +1,7 @@
 import type { PracticeItem } from './practice.types';
 import { stripMarkdownForSearch } from './practice-compare.util';
 
+// MARK: 搜索
 function searchHaystackForItem(it: PracticeItem): string {
   const q = it.question ?? '';
   const tag = it.tags ?? '';
@@ -9,7 +10,8 @@ function searchHaystackForItem(it: PracticeItem): string {
   return (q + '\n' + tag + '\n' + a + '\n' + o).toLowerCase();
 }
 
-/** 多词空格分隔，需同时包含（与扩展一致）。 */
+// MARK: 应用
+// 多词空格分隔，需同时包含（与扩展一致）。
 export function applyPracticeSearchFilter(items: PracticeItem[], rawQuery: string): PracticeItem[] {
   const raw = String(rawQuery ?? '').trim();
   if (!raw) return items;

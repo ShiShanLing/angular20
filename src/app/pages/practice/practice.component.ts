@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   HostListener,
   OnDestroy,
@@ -7,7 +8,6 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 
@@ -62,7 +62,8 @@ interface PracticeCalendarDay {
   done: boolean;
 }
 
-/** 将 Date 格式化为本地日期键，供每日刷题记录索引使用。 */
+// MARK: 格式化
+// 将 Date 格式化为本地日期键，供每日刷题记录索引使用。
 function formatLocalDate(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -70,7 +71,8 @@ function formatLocalDate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-/** 简单稳定哈希，用于按日期从题库里确定性抽取每日题目。 */
+// MARK: 判断
+// 简单稳定哈希，用于按日期从题库里确定性抽取每日题目。
 function hashString(s: string): number {
   let h = 2166136261;
   for (let i = 0; i < s.length; i++) {
@@ -86,10 +88,10 @@ function hashString(s: string): number {
  */
 @Component({
   selector: 'app-practice',
-  standalone: true,
-  imports: [CommonModule, FormsModule, NzButtonModule, NzIconModule, NzModalModule, MarkdPipe],
+  imports: [FormsModule, NzButtonModule, NzIconModule, NzModalModule, MarkdPipe],
   templateUrl: './practice.component.html',
   styleUrl: './practice.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PracticeComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
@@ -293,12 +295,14 @@ export class PracticeComponent implements OnInit, OnDestroy {
     return f === 'all' ? '类型' : PRACTICE_CATEGORY_LABELS[f];
   });
 
-  /** 将分类枚举转成界面展示文案。 */
+  // MARK: 标签
+  // 将分类枚举转成界面展示文案。
   categoryLabel(cat: PracticeCategory): string {
     return PRACTICE_CATEGORY_LABELS[cat];
   }
 
-  /** 初始化本地题库、内置题库、每日记录与上次保存的分类筛选。 */
+  // MARK: 初始化
+  // 初始化本地题库、内置题库、每日记录与上次保存的分类筛选。
   ngOnInit(): void {
     this.fontScale.set(this.readFontScale());
     this.speechRate.set(this.readSpeechRate());
@@ -322,19 +326,22 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.setFilter(this.storage.readSavedFilterCategory(this.storageScope));
   }
 
-  /** 组件销毁时停止浏览器语音，避免离开页面后仍继续播放。 */
+  // MARK: 销毁清理
+  // 组件销毁时停止浏览器语音，避免离开页面后仍继续播放。
   ngOnDestroy(): void {
     this.stopSpeech();
   }
 
   @HostListener('document:click', ['$event'])
-  /** 点击浮层之外时关闭分类菜单。 */
+  // MARK: 事件处理
+  // 点击浮层之外时关闭分类菜单。
   onDocumentClick(ev: MouseEvent): void {
     const t = ev.target as HTMLElement | null;
     if (t?.closest?.('.practice-fab-block')) return;
     this.categoryMenuOpen.set(false);
   }
-  /** 合并内置 iOS 题库到本地题库，重复题目会跳过。 */
+  // MARK: 合并
+  // 合并内置 iOS 题库到本地题库，重复题目会跳过。
   mergeBuiltinIosSeed(): void {
     const seeded = this.builtinSeedItems(Date.now());
     const { added, updated, skipped } = this.storage.mergeItems(seeded, this.storageScope);
@@ -350,7 +357,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     
   }
   
-  /** 切换分类筛选，并重置当前题的答案、自检和播放状态。*/
+  // MARK: 设置
+  // 切换分类筛选，并重置当前题的答案、自检和播放状态。
   setFilter(value: FilterValue): void {
     this.filterCategory.set(value);
     this.storage.saveFilterCategory(value, this.storageScope);
@@ -359,14 +367,16 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.resetQuestionUi();
   }
 
-  /** 更新搜索关键词，并让当前题索引保持在合法范围。 */
+  // MARK: 事件处理
+  // 更新搜索关键词，并让当前题索引保持在合法范围。
   onSearchInput(value: string): void {
     this.searchQuery.set(value);
     this.clampIndex();
     this.resetQuestionUi();
   }
 
-  /** 清空搜索条件并恢复当前导航列表。 */
+  // MARK: 清空
+  // 清空搜索条件并恢复当前导航列表。
   clearSearch(): void {
     this.searchQuery.set('');
     this.clampIndex();
@@ -374,7 +384,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
   }
   
 
-  /** 在当前导航列表中随机切到另一题。 */
+  // MARK: 随机
+  // 在当前导航列表中随机切到另一题。
   randomOne(): void {
     const list = this.listForNav();
     if (!list.length) {
@@ -392,7 +403,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.resetQuestionUi();
   }
 
-  /** 播放当前题目的分类、标签和题干。 */
+  // MARK: 题目
+  // 播放当前题目的分类、标签和题干。
   speakQuestion(): void {
     const item = this.currentItem();
     if (!item) return;
@@ -400,7 +412,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.speakText(this.questionSpeechText(item));
   }
 
-  /** 播放当前题目的口播一句和参考答案。 */
+  // MARK: 答案
+  // 播放当前题目的口播一句和参考答案。
   speakAnswer(): void {
     const item = this.currentItem();
     if (!item) return;
@@ -408,7 +421,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.speakText(this.answerSpeechText(item));
   }
 
-  /** 开关唱题模式；开启后自动按题目、答案、下一题循环播放。 */
+  // MARK: 切换
+  // 开关唱题模式；开启后自动按题目、答案、下一题循环播放。
   toggleChantMode(): void {
     if (this.chantMode()) {
       this.stopSpeech();
@@ -417,7 +431,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.startChantMode();
   }
   
-  /** 从当前题或当前筛选列表第一题开始唱题，不写入每日学习统计。 */
+  // MARK: 开始
+  // 从当前题或当前筛选列表第一题开始唱题，不写入每日学习统计。
   startChantMode(): void {
     const list = this.listenList();
     if (!list.length) {
@@ -435,7 +450,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.playChantQuestion();
   }
 
-  /** 将当前每日题目标记为已记住，并在今日题目完成时记录完成时间。 */
+  // MARK: 处理
+  // 将当前每日题目标记为已记住，并在今日题目完成时记录完成时间。
   markRemembered(): void {
     const item = this.currentItem();
     if (!item || !this.currentItemInDaily()) return;
@@ -459,7 +475,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** 将当前每日题目标记为还没记住，只增加尝试次数并进入下一道待练题。 */
+  // MARK: 处理
+  // 将当前每日题目标记为还没记住，只增加尝试次数并进入下一道待练题。
   markForgotten(): void {
     const item = this.currentItem();
     if (!item || !this.currentItemInDaily()) return;
@@ -469,7 +486,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.resetQuestionUi();
   }
 
-  /** 切换到上一题。 */
+  // MARK: 处理
+  // 切换到上一题。
   prev(): void {
     if (!this.canPrev()) return;
     this.currentIndex.update((i) => i - 1);
@@ -483,53 +501,62 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.resetQuestionUi();
   }
 
-  /** 打开或关闭右侧分类筛选菜单。 */
+  // MARK: 切换
+  // 打开或关闭右侧分类筛选菜单。
   toggleCategoryMenu(ev: Event): void {
     ev.stopPropagation();
     this.categoryMenuOpen.update((v) => !v);
   }
 
-  /** 从搜索结果下拉中跳转到指定题目。 */
+  // MARK: 选择
+  // 从搜索结果下拉中跳转到指定题目。
   pickSearchResult(index: number): void {
     this.currentIndex.set(index);
     this.resetQuestionUi();
   }
 
-  /** 显示或隐藏参考答案。 */
+  // MARK: 切换
+  // 显示或隐藏参考答案。
   toggleAnswer(): void {
     this.showAnswer.update((v) => !v);
   }
 
-  /** 缩小刷题区域字号。 */
+  // MARK: 时间戳
+  // 缩小刷题区域字号。
   fontSmaller(ev: Event): void {
     ev.stopPropagation();
     const p = Math.max(FONT_MIN, Math.round((this.fontScale() - 5) / 5) * 5);
     this.applyFontScale(p);
   }
 
-  /** 放大刷题区域字号。 */
+  // MARK: 处理
+  // 放大刷题区域字号。
   fontLarger(ev: Event): void {
     ev.stopPropagation();
     const p = Math.min(FONT_MAX, Math.round((this.fontScale() + 5) / 5) * 5);
     this.applyFontScale(p);
   }
 
-  /** 降低语音播报速度，新速度会在下一段朗读开始时生效。 */
+  // MARK: 小写
+  // 降低语音播报速度，新速度会在下一段朗读开始时生效。
   speechSlower(): void {
     this.applySpeechRate(this.speechRate() - 0.1);
   }
 
-  /** 提高语音播报速度，新速度会在下一段朗读开始时生效。 */
+  // MARK: 处理
+  // 提高语音播报速度，新速度会在下一段朗读开始时生效。
   speechFaster(): void {
     this.applySpeechRate(this.speechRate() + 0.1);
   }
 
-  /** 同步用户手写答案。 */
+  // MARK: 事件处理
+  // 同步用户手写答案。
   onUserAnswerInput(value: string): void {
     this.userAnswer.set(value);
   }
 
-  /** 将用户答案与参考答案做轻量相似度对比。 */
+  // MARK: 对比
+  // 将用户答案与参考答案做轻量相似度对比。
   compareAnswers(): void {
     const item = this.currentItem();
     if (!item) return;
@@ -545,7 +572,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
   }
 
 
-  /** 处理 Excel/CSV 文件选择、解析、导入与错误提示。 */
+  // MARK: 事件处理
+  // 处理 Excel/CSV 文件选择、解析、导入与错误提示。
   onFileSelected(ev: Event): void {
     const input = ev.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -591,6 +619,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
     reader.readAsArrayBuffer(file);
   }
 
+  // MARK: 确认
   confirmClear(): void {
     this.modal.confirm({
       nzTitle: '清空题库？',
@@ -613,7 +642,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
   泛型适合类型在编译期确定、追求类型安全和性能；协议类型适合异构集合和运行时替换。
   */
   
-  /** 展示导入格式、本地存储和内置题库说明。 */
+  // MARK: 显示
+  // 展示导入格式、本地存储和内置题库说明。
   showImportHelp(): void {
     this.modal.info({
       nzTitle: '导入与内置题库',
@@ -622,20 +652,23 @@ export class PracticeComponent implements OnInit, OnDestroy {
     });
   }
 
-  /** 日历切到上一个月。 */
+  // MARK: 月份
+  // 日历切到上一个月。
   prevCalendarMonth(): void {
     const d = this.calendarMonth();
     this.calendarMonth.set(new Date(d.getFullYear(), d.getMonth() - 1, 1));
   }
   
 
-  /** 日历切到下一个月。 */
+  // MARK: 月份
+  // 日历切到下一个月。
   nextCalendarMonth(): void {
     const d = this.calendarMonth();
     this.calendarMonth.set(new Date(d.getFullYear(), d.getMonth() + 1, 1));
   }
   
-  /** 停止所有语音播放，并退出唱题模式。 */
+  // MARK: 停止
+  // 停止所有语音播放，并退出唱题模式。
   stopSpeech(): void {
     this.speechRunId++;
     this.clearChantTimer();
@@ -647,7 +680,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     }
   }
   //
-  /** 唱题模式播放当前题目，结束后自动播放答案。 */
+  // MARK: 题目
+  // 唱题模式播放当前题目，结束后自动播放答案。
   private playChantQuestion(): void {
     if (!this.chantMode()) return;
     const item = this.chantItem();
@@ -663,7 +697,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     });
   }
 
-  /** 唱题模式播放当前答案，结束后自动推进下一题。 */
+  // MARK: 答案
+  // 唱题模式播放当前答案，结束后自动推进下一题。
   private playChantAnswer(): void {
     if (!this.chantMode()) return;
     const item = this.chantItem();
@@ -678,7 +713,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     });
   }
 
-  /** 唱题游标前进一位，到末尾后循环回第一题。 */
+  // MARK: 处理
+  // 唱题游标前进一位，到末尾后循环回第一题。
   private advanceChant(): void {
     const list = this.listenList();
     if (!this.chantMode() || !list.length) {
@@ -689,13 +725,15 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.playChantQuestion();
   }
 
-  /** 唱题切题时同步普通刷题游标，退出唱题后停在刚听到的题目附近。 */
+  // MARK: 同步
+  // 唱题切题时同步普通刷题游标，退出唱题后停在刚听到的题目附近。
   private syncPracticeIndexToChantItem(item: PracticeItem): void {
     const idx = this.listForNav().findIndex((candidate) => candidate.id === item.id);
     if (idx >= 0) this.currentIndex.set(idx);
   }
 
-  /** 统一封装浏览器语音播放，并用 runId 忽略过期回调。 */
+  // MARK: 文本
+  // 统一封装浏览器语音播放，并用 runId 忽略过期回调。
   private speakText(text: string, afterEnd?: () => void): void {
     if (!this.canUseSpeech()) {
       this.msg.warning('当前浏览器不支持语音播报。');
@@ -726,12 +764,14 @@ export class PracticeComponent implements OnInit, OnDestroy {
     window.speechSynthesis.speak(utterance);
   }
 
-  /** 生成适合朗读的题目文本：只读题目本体，跳过分类与标签。 */
+  // MARK: 文本
+  // 生成适合朗读的题目文本：只读题目本体，跳过分类与标签。
   private questionSpeechText(item: PracticeItem): string {
     return item.question;
   }
 
-  /** 生成适合朗读的答案文本，优先包含口播要点。 */
+  // MARK: 文本
+  // 生成适合朗读的答案文本，优先包含口播要点。
   private answerSpeechText(item: PracticeItem): string {
     const oneLiner = item.oralOneLiner?.trim();
     const answer = item.answer?.trim();
@@ -741,7 +781,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     return '本题暂未录入参考答案。';
   }
 
-  /** 清理 Markdown、代码片段、链接和多余符号，让 TTS 朗读更自然。 */
+  // MARK: 文本
+  // 清理 Markdown、代码片段、链接和多余符号，让 TTS 朗读更自然。
   private cleanSpeechText(text: string): string {
     const withoutCodeBlocks = String(text ?? '')
       .replace(/```[\s\S]*?```/g, ' ')
@@ -759,7 +800,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
       .trim();
   }
 
-  /** inline code 里普通术语保留，明显代码表达式跳过。 */
+  // MARK: 编码
+  // inline code 里普通术语保留，明显代码表达式跳过。
   private inlineCodeForSpeech(code: string): string {
     const raw = String(code ?? '').trim();
     if (!raw) return ' ';
@@ -768,19 +810,22 @@ export class PracticeComponent implements OnInit, OnDestroy {
     return raw;
   }
 
-  /** 检测当前运行环境是否可用 Web Speech API。 */
+  // MARK: 可否
+  // 检测当前运行环境是否可用 Web Speech API。
   private canUseSpeech(): boolean {
     return typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
   }
 
-  /** 单次手动播放前只退出唱题模式，不立即取消本次即将开始的播放。 */
+  // MARK: 停止
+  // 单次手动播放前只退出唱题模式，不立即取消本次即将开始的播放。
   private stopChantOnly(): void {
     this.chantMode.set(false);
     this.chantPhase.set('idle');
     this.clearChantTimer();
   }
 
-  /** 清理唱题模式的延迟任务。 */
+  // MARK: 清空
+  // 清理唱题模式的延迟任务。
   private clearChantTimer(): void {
     if (this.chantTimer) {
       clearTimeout(this.chantTimer);
@@ -788,7 +833,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** 从 sessionStorage 读取字号设置，并限制在允许范围内。 */
+  // MARK: 读取
+  // 从 sessionStorage 读取字号设置，并限制在允许范围内。
   private readFontScale(): number {
     try {
       const raw = sessionStorage.getItem(FONT_SCALE_KEY);
@@ -801,7 +847,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** 从 sessionStorage 读取语速设置，并限制在 TTS 适合的慢速区间内。 */
+  // MARK: 读取
+  // 从 sessionStorage 读取语速设置，并限制在 TTS 适合的慢速区间内。
   private readSpeechRate(): number {
     try {
       const raw = sessionStorage.getItem(SPEECH_RATE_KEY);
@@ -814,7 +861,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** 应用并保存字号设置。 */
+  // MARK: 应用
+  // 应用并保存字号设置。
   private applyFontScale(p: number): void {
     this.fontScale.set(p);
     try {
@@ -824,7 +872,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** 应用并保存语速设置。 */
+  // MARK: 应用
+  // 应用并保存语速设置。
   private applySpeechRate(rate: number): void {
     const normalized = this.normalizeSpeechRate(rate);
     this.speechRate.set(normalized);
@@ -835,19 +884,22 @@ export class PracticeComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** 将语速规整到 0.1 档位，避免界面出现长小数。 */
+  // MARK: 规范化
+  // 将语速规整到 0.1 档位，避免界面出现长小数。
   private normalizeSpeechRate(rate: number): number {
     const clamped = Math.min(SPEECH_RATE_MAX, Math.max(SPEECH_RATE_MIN, rate));
     return Math.round(clamped * 10) / 10;
   }
 
-  /** 从本地存储重新载入题库。 */
+  // MARK: 重载
+  // 从本地存储重新载入题库。
   private reloadFromStorage(): void {
     this.items.set(this.storage.load(this.storageScope));
     this.clampIndex();
   }
 
-  /** 确保今天有一组每日练习题，并清理已失效的题目 id。 */
+  // MARK: 日期
+  // 确保今天有一组每日练习题，并清理已失效的题目 id。
   private ensureTodayPractice(): void {
     const items = this.items();
     if (!items.length) return;
@@ -875,7 +927,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.clampIndex();
   }
 
-  /** 按日期和题目 id 稳定抽取每日题目，避免每天刷新后结果变化。 */
+  // MARK: 条目
+  // 按日期和题目 id 稳定抽取每日题目，避免每天刷新后结果变化。
   private pickDailyItems(items: PracticeItem[], date: string, count: number): PracticeItem[] {
     if (count <= 0) return [];
     return [...items]
@@ -883,7 +936,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
       .slice(0, count);
   }
 
-  /** 更新今天的练习记录并持久化。 */
+  // MARK: 更新
+  // 更新今天的练习记录并持久化。
   private updateTodayRecord(updater: (record: PracticeDayRecord) => PracticeDayRecord): void {
     const record = this.todayRecord();
     if (!record) return;
@@ -893,7 +947,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.storage.saveDailyState(state, this.storageScope);
   }
 
-  /** 每日题目标记后调整当前索引，并重置题目交互状态。 */
+  // MARK: 处理
+  // 每日题目标记后调整当前索引，并重置题目交互状态。
   private advanceAfterDailyAction(): void {
     const list = this.listForNav();
     if (!list.length) {
@@ -906,7 +961,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.resetQuestionUi();
   }
 
-  /** 当筛选、搜索或题库变化时，将当前索引夹在合法范围内。 */
+  // MARK: 限制
+  // 当筛选、搜索或题库变化时，将当前索引夹在合法范围内。
   private clampIndex(): void {
     const list = this.listForNav();
     if (!list.length) {
@@ -921,7 +977,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** 进入新题时重置答案显隐、自检内容和语音播放。 */
+  // MARK: 重置
+  // 进入新题时重置答案显隐、自检内容和语音播放。
   private resetQuestionUi(): void {
     this.stopSpeech();
     this.showAnswer.set(false);
@@ -929,12 +986,14 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.compareResult.set(null);
   }
 
+  // MARK: 条目
   private builtinSeedItems(importedAt: number): PracticeItem[] {
     if (this.isIosLearning) return iosJobSeedToPracticeItems(importedAt);
     if (this.isAngularLearning) return angularJobSeedToPracticeItems(importedAt);
     return iosSeedToPracticeItems(importedAt);
   }
 
+  // MARK: 读取
   private readPracticeScope(): PracticeStorageScope {
     const scope = this.route.snapshot.data['practiceScope'];
     return scope === 'ios-learning' || scope === 'angular-learning' ? scope : 'practice';

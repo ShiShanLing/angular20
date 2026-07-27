@@ -344,7 +344,13 @@ function aggregateResults(posts, aiResults, bars) {
 
   // 市场综合指数
   const validBars = [...barStats.values()].filter(b => b.postCount > 0);
-  const weights = { 'sh000001': 3.0, 'sz399006': 2.5, 'BK0473': 2.0, 'BK0475': 1.5, 'BK0477': 1.0, 'BK0493': 1.0, 'BK0447': 1.0 };
+  const weights = {
+    'sh000001': 3.0, 'sz399006': 2.5,
+    'BK0473': 2.0, 'BK0475': 1.5, 'BK0477': 1.0, 'BK0896': 1.2,
+    'BK0493': 1.0, 'BK0447': 1.0,
+    'of512480': 1.5, 'of515000': 1.5, 'BK0428': 1.2,
+    'BK0891': 1.5, 'BK0917': 1.3,
+  };
 
   let wSum = 0, wTotal = 0;
   for (const b of validBars) {

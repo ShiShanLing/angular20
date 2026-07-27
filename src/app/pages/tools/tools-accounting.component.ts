@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule, DatePipe } from '@angular/common';
 
@@ -37,7 +37,6 @@ interface AccountingRecord {
 /** 记账表单、流水列表与支出分类饼图。 */
 @Component({
   selector: 'app-tools-accounting',
-  standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule,
     NzCardModule, NzFormModule, NzInputModule, NzInputNumberModule,
@@ -47,7 +46,8 @@ interface AccountingRecord {
   ],
   providers: [DatePipe],
   templateUrl: './tools-accounting.component.html',
-  styleUrl: './tools-accounting.component.scss'
+  styleUrl: './tools-accounting.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolsAccountingComponent implements OnInit {
   private fb = inject(FormBuilder);
@@ -56,13 +56,15 @@ export class ToolsAccountingComponent implements OnInit {
   private recordService = inject(RecordService);
 
   form!: FormGroup;
-  categories = ['餐饮', '交通', '购物', '居住', '娱乐', '医疗', '其他'];
-  records: AccountingRecord[] = [];
+  readonly categories = ['餐饮', '交通', '购物', '居住', '娱乐', '医疗', '其他'];
+  readonly records = signal<AccountingRecord[]>([]);
 
-  chartOption: EChartsOption = {};
+  readonly chartOption = signal<EChartsOption>({});
   currentChartMode: 'week' | 'month' = 'week';
-  loading = false;
+  readonly loading = signal(false);
 
+  // MARK: 初始化
+  // 组件初始化：同步移动端断点、订阅视口变化与路由事件
   ngOnInit(): void {
     this.form = this.fb.group({
       amount: [null, [Validators.required, Validators.min(0.01)]],
@@ -88,6 +90,7 @@ export class ToolsAccountingComponent implements OnInit {
     setTimeout(() => this.buildChart(this.currentChartMode), 100);
   }
 
+  // MARK: 提交
   submitForm(): void {
     if (this.form.valid) {
       const val = this.form.value;
@@ -102,7 +105,7 @@ export class ToolsAccountingComponent implements OnInit {
       this.recordService.create('accounting', data, dateStr).subscribe({
         next: (res) => {
           const newRecord: AccountingRecord = { id: res.id, ...data };
-          this.records.unshift(newRecord);
+          this.records.set([newRecord, ...this.records()]);
           this.msg.success('记录成功');
           this.form.patchValue({ amount: null, remarks: '', date: new Date() });
           this.buildChart(this.currentChartMode);
@@ -112,10 +115,11 @@ export class ToolsAccountingComponent implements OnInit {
     }
   }
 
+  // MARK: 删除记录
   deleteRecord(id: number | string): void {
     this.recordService.delete(Number(id)).subscribe({
       next: () => {
-        this.records = this.records.filter(r => r.id !== id);
+        this.records.set(this.records().filter(r => r.id !== id));
         this.msg.success('删除成功');
         this.buildChart(this.currentChartMode);
       },
@@ -123,32 +127,34 @@ export class ToolsAccountingComponent implements OnInit {
     });
   }
 
+  // MARK: 加载记录
   loadRecords(): void {
-    this.loading = true;
+    this.loading.set(true);
     this.recordService.getAll('accounting').subscribe({
       next: (apiRecords) => {
-        this.records = apiRecords.map(r => ({
+        this.records.set(apiRecords.map(r => ({
           id: r.id,
           amount: r.data?.amount || 0,
           category: r.data?.category || '',
           remarks: r.data?.remarks || '',
           date: r.data?.date || r.recordDate || '',
-        }));
-        this.loading = false;
+        })));
+        this.loading.set(false);
         this.buildChart(this.currentChartMode);
       },
       error: () => {
-        this.loading = false;
+        this.loading.set(false);
         this.msg.error('加载记录失败');
       }
     });
   }
 
+  // MARK: 构建
   buildChart(mode: 'week' | 'month'): void {
     this.currentChartMode = mode;
     const now = new Date();
 
-    const filteredRecords = this.records.filter(r => {
+    const filteredRecords = this.records().filter(r => {
       const d = new Date(r.date);
       if (mode === 'month') {
         return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
@@ -166,7 +172,7 @@ export class ToolsAccountingComponent implements OnInit {
 
     const pieData = Object.keys(categorySum).map(k => ({ name: k, value: Number(categorySum[k].toFixed(2)) })).sort((a,b) => b.value - a.value);
 
-    this.chartOption = {
+    this.chartOption.set({
       tooltip: {
         trigger: 'item',
         formatter: '{a} <br/>{b} : ¥{c} ({d}%)'
@@ -183,16 +189,17 @@ export class ToolsAccountingComponent implements OnInit {
           }
         }
       ]
-    };
+    });
   }
 
+  // MARK: 导出
   exportCSV(): void {
-    if (!this.records.length) {
+    if (!this.records().length) {
       this.msg.warning('没有记录可导出');
       return;
     }
     const headers = ['时间', '分类', '金额', '备注'];
-    const rows = this.records.map(r => [
+    const rows = this.records().map(r => [
       this.datePipe.transform(r.date, 'yyyy-MM-dd HH:mm:ss') || '',
       r.category,
       r.amount.toString(),

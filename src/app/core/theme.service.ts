@@ -1,4 +1,4 @@
-import { Injectable, signal, effect } from '@angular/core';
+import { Injectable, effect, signal } from '@angular/core';
 
 export type ThemeMode = 'light' | 'dark';
 
@@ -12,45 +12,48 @@ const STORAGE_KEY = 'app.theme.mode.v1';
 export class ThemeService {
   readonly mode = signal<ThemeMode>(this.loadTheme());
 
+  // MARK: 构造注入
+  // 用 effect 同步 mode → DOM；监听系统主题变化
   constructor() {
-    // 初始化时立即应用主题
-    this.applyTheme(this.mode());
+    effect(() => {
+      this.applyTheme(this.mode());
+    });
 
-    // 监听系统主题变化（如果用户未手动设置过）
     if (typeof window !== 'undefined' && window.matchMedia) {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       mediaQuery.addEventListener('change', (e) => {
-        // 如果用户从未手动切换过，跟随系统
         if (!localStorage.getItem(STORAGE_KEY)) {
-          const newMode: ThemeMode = e.matches ? 'dark' : 'light';
-          this.mode.set(newMode);
+          this.mode.set(e.matches ? 'dark' : 'light');
         }
       });
     }
   }
 
-  /** 切换主题 */
+  // MARK: 切换
+  // 切换主题并持久化
   toggle(): void {
     const newMode: ThemeMode = this.mode() === 'light' ? 'dark' : 'light';
     this.mode.set(newMode);
     this.saveTheme(newMode);
   }
 
-  /** 设置指定主题 */
+  // MARK: 设置主题
+  // 设置指定主题并持久化
   setTheme(mode: ThemeMode): void {
     this.mode.set(mode);
     this.saveTheme(mode);
   }
 
-  /** 是否为深色模式 */
+  // MARK: 是否暗色
+  // 是否为深色模式
   isDark(): boolean {
     return this.mode() === 'dark';
   }
 
+  // MARK: 应用主题
   private applyTheme(mode: ThemeMode): void {
     if (typeof document === 'undefined') return;
     document.body.setAttribute('data-theme', mode);
-    // ng-zorro-antd 深色模式类名
     if (mode === 'dark') {
       document.body.classList.add('nz-theme-dark');
     } else {
@@ -58,12 +61,13 @@ export class ThemeService {
     }
   }
 
+  // MARK: 保存
   private saveTheme(mode: ThemeMode): void {
     if (typeof localStorage === 'undefined') return;
     localStorage.setItem(STORAGE_KEY, mode);
-    this.applyTheme(mode);
   }
 
+  // MARK: 加载主题
   private loadTheme(): ThemeMode {
     if (typeof localStorage === 'undefined') {
       return this.getSystemTheme();
@@ -72,10 +76,10 @@ export class ThemeService {
     if (saved === 'light' || saved === 'dark') {
       return saved;
     }
-    // 首次访问，跟随系统
     return this.getSystemTheme();
   }
 
+  // MARK: 获取
   private getSystemTheme(): ThemeMode {
     if (typeof window !== 'undefined' && window.matchMedia) {
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';

@@ -10,7 +10,8 @@ export class PermissionService {
   private readonly configured = signal(false);
   private readonly permissions = signal<Set<string>>(new Set());
 
-  /** 注入一组权限编码（白名单）。 */
+  // MARK: 设置权限
+  // 注入一组权限编码（白名单）。
   setPermissions(codes: string[]): void {
     const normalized = codes
       .map((code) => code.trim())
@@ -20,13 +21,15 @@ export class PermissionService {
     console.log('[PERM] setPermissions:', normalized);
   }
 
-  /** 清空权限配置：退回到“未配置即放行”的默认态。 */
+  // MARK: 清空权限
+  // 清空权限配置：退回到“未配置即放行”的默认态。
   clearPermissions(): void {
     this.permissions.set(new Set());
     this.configured.set(false);
   }
 
-  /** 判断当前用户是否有某个权限。 */
+  // MARK: 权限判断
+  // 判断当前用户是否有某个权限。
   hasPermission(code?: string): boolean {
     if (!code) {
       return true;

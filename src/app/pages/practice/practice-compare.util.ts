@@ -1,11 +1,12 @@
-/** 与 VS Code 扩展 practice.js 一致的文本规范化与相似度（bigram Jaccard）。 */
-
+// MARK: 规范化
+// 与 VS Code 扩展 practice.js 一致的文本规范化与相似度（bigram Jaccard）。
 export function normalizeText(s: string): string {
   return String(s ?? '')
     .trim()
     .replace(/\s+/g, ' ');
 }
 
+// MARK: 答案
 export function answerPlainForCompare(s: string): string {
   let t = String(s ?? '');
   t = t.replace(/```[\s\S]*?```/g, ' ');
@@ -15,6 +16,7 @@ export function answerPlainForCompare(s: string): string {
   return t;
 }
 
+// MARK: 向下
 export function stripMarkdownForSearch(s: string): string {
   let t = answerPlainForCompare(s);
   t = t.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1');
@@ -22,6 +24,7 @@ export function stripMarkdownForSearch(s: string): string {
   return t;
 }
 
+// MARK: 处理
 export function bigramJaccard(a: string, b: string): number {
   const x = normalizeText(a);
   const y = normalizeText(b);
@@ -46,6 +49,7 @@ export interface ComparePracticeResult {
   level: 'ok' | 'mid' | 'low';
 }
 
+// MARK: 对比
 export function compareUserAnswerToReference(userRaw: string, referenceRaw: string): ComparePracticeResult {
   const u = normalizeText(userRaw);
   const refPlain = answerPlainForCompare(referenceRaw);

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
@@ -15,26 +15,28 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 /** BMI、体脂估算与健康区间提示（含本地草稿缓存）。 */
 @Component({
   selector: 'app-tools-bmi',
-  standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule,
     NzCardModule, NzFormModule, NzInputNumberModule, NzRadioModule,
     NzStatisticModule, NzGridModule, NzDividerModule, NzTagModule, NzIconModule
   ],
   templateUrl: './tools-bmi.component.html',
-  styleUrl: './tools-bmi.component.scss'
+  styleUrl: './tools-bmi.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolsBmiComponent implements OnInit {
+  private readonly fb = inject(FormBuilder);
+
   form!: FormGroup;
-  result: any = {
+  readonly result = signal<any>({
     bmi: 0,
     category: '-',
     categoryColor: 'default',
     bodyFat: 0
-  };
-
-  constructor(private fb: FormBuilder) {}
+  });
   
+  // MARK: 初始化
+  // 组件初始化：同步移动端断点、订阅视口变化与路由事件
   ngOnInit(): void {
     this.form = this.fb.group({
       height: [170, [Validators.required, Validators.min(50), Validators.max(250)]],
@@ -53,8 +55,9 @@ export class ToolsBmiComponent implements OnInit {
       }
     });
   }
+  //
   
-
+  // MARK: 计算
   calculate(): void {
     const val = this.form.value;
     const hM = val.height / 100;
@@ -65,14 +68,15 @@ export class ToolsBmiComponent implements OnInit {
 
     const catInfo = this.getBmiCategory(bmi);
 
-    this.result = {
+    this.result.set({
       bmi,
       category: catInfo.text,
       categoryColor: catInfo.color,
       bodyFat: bf
-    };
+    });
   }
 
+  // MARK: 获取
   private getBmiCategory(bmi: number): { text: string; color: string } {
     if (bmi < 18.5) return { text: '偏瘦', color: 'warning' };
     if (bmi < 25) return { text: '正常', color: 'success' };
@@ -80,10 +84,12 @@ export class ToolsBmiComponent implements OnInit {
     return { text: '肥胖', color: 'error' };
   }
 
+  // MARK: 保存
   private saveState(): void {
     localStorage.setItem('tools_bmi_state', JSON.stringify(this.form.getRawValue()));
   }
 
+  // MARK: 加载
   private loadState(): void {
     const saved = localStorage.getItem('tools_bmi_state');
     if (saved) {

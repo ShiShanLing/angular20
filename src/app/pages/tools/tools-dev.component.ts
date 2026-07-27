@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -15,7 +15,6 @@ import { TextFieldModule } from '@angular/cdk/text-field';
 /** 开发常用小工具：时间戳/编码解码等（多 Tab）。 */
 @Component({
   selector: 'app-tools-dev',
-  standalone: true,
   imports: [
     CommonModule, FormsModule,
     NzCardModule, NzInputModule, NzButtonModule, NzSpaceModule,
@@ -23,98 +22,110 @@ import { TextFieldModule } from '@angular/cdk/text-field';
   ],
   providers: [DatePipe],
   templateUrl: './tools-dev.component.html',
-  styleUrl: './tools-dev.component.scss'
+  styleUrl: './tools-dev.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolsDevComponent implements OnInit, OnDestroy {
-  
+  private readonly msg = inject(NzMessageService);
+  private readonly datePipe = inject(DatePipe);
+
   // Timestamp
-  currentTimestamp: number = Date.now();
-  inputTimestamp: string = '';
-  outputTime: string = '';
-  inputTime: string = '';
-  outputTimestamp: string = '';
+  readonly currentTimestamp = signal(Date.now());
+  readonly inputTimestamp = signal('');
+  readonly outputTime = signal('');
+  readonly inputTime = signal('');
+  readonly outputTimestamp = signal('');
 
   // JSON
-  private _jsonInput: string = '';
-  get jsonInput(): string { return this._jsonInput; }
-  set jsonInput(v: string) {
-    this._jsonInput = v;
-    localStorage.setItem('tools_dev_json', v);
-  }
-  jsonOutput: string = '';
+  readonly jsonInput = signal('');
+  readonly jsonOutput = signal('');
 
   // Encoders
-  private _base64Input: string = '';
-  get base64Input(): string { return this._base64Input; }
-  set base64Input(v: string) {
-    this._base64Input = v;
-    localStorage.setItem('tools_dev_base64', v);
-  }
-  base64Output: string = '';
-  
-  private _urlInput: string = '';
-  get urlInput(): string { return this._urlInput; }
-  set urlInput(v: string) {
-    this._urlInput = v;
-    localStorage.setItem('tools_dev_url', v);
-  }
-  urlOutput: string = '';
+  readonly base64Input = signal('');
+  readonly base64Output = signal('');
+
+  readonly urlInput = signal('');
+  readonly urlOutput = signal('');
 
   private timer: any;
 
-  constructor(private msg: NzMessageService, private datePipe: DatePipe) {}
-  
+  // MARK: 初始化
+  // 组件初始化：同步移动端断点、订阅视口变化与路由事件
   ngOnInit(): void {
     this.timer = setInterval(() => {
-      this.currentTimestamp = Date.now();
+      this.currentTimestamp.set(Date.now());
     }, 1000);
 
-    this._jsonInput = localStorage.getItem('tools_dev_json') || '';
-    this._base64Input = localStorage.getItem('tools_dev_base64') || '';
-    this._urlInput = localStorage.getItem('tools_dev_url') || '';
+    this.jsonInput.set(localStorage.getItem('tools_dev_json') || '');
+    this.base64Input.set(localStorage.getItem('tools_dev_base64') || '');
+    this.urlInput.set(localStorage.getItem('tools_dev_url') || '');
   }
+  // MARK: 销毁清理
+  // 取消全部订阅，避免内存泄漏
   ngOnDestroy(): void {
     if (this.timer) {
       clearInterval(this.timer);
     }
   }
 
-
-  // --- Timestamp Methods ---
-  convertTsToTime(): void {
-    if (!this.inputTimestamp) return;
-    let ts = Number(this.inputTimestamp);
-    if (this.inputTimestamp.length <= 10) ts *= 1000; // handle seconds
-    this.outputTime = this.datePipe.transform(ts, 'yyyy-MM-dd HH:mm:ss') || '';
+  // MARK: 事件处理
+  onJsonInputChange(value: string): void {
+    this.jsonInput.set(value);
+    localStorage.setItem('tools_dev_json', value);
   }
 
+  // MARK: 事件处理
+  onBase64InputChange(value: string): void {
+    this.base64Input.set(value);
+    localStorage.setItem('tools_dev_base64', value);
+  }
+
+  // MARK: 事件处理
+  onUrlInputChange(value: string): void {
+    this.urlInput.set(value);
+    localStorage.setItem('tools_dev_url', value);
+  }
+
+  // --- Timestamp Methods ---
+  // MARK: 时间戳转
+  convertTsToTime(): void {
+    const inputTimestamp = this.inputTimestamp();
+    if (!inputTimestamp) return;
+    let ts = Number(inputTimestamp);
+    if (inputTimestamp.length <= 10) ts *= 1000; // handle seconds
+    this.outputTime.set(this.datePipe.transform(ts, 'yyyy-MM-dd HH:mm:ss') || '');
+  }
+
+  // MARK: 转时间戳
   convertTimeToTs(): void {
-    if (!this.inputTime) return;
-    const d = new Date(this.inputTime);
+    if (!this.inputTime()) return;
+    const d = new Date(this.inputTime());
     if (isNaN(d.getTime())) {
       this.msg.error('时间格式错误');
       return;
     }
-    this.outputTimestamp = d.getTime().toString();
+    this.outputTimestamp.set(d.getTime().toString());
   }
 
   // --- JSON Methods ---
+  // MARK: 格式化
   formatJson(): void {
-    if (!this.jsonInput) return;
+    if (!this.jsonInput()) return;
     try {
-      const obj = JSON.parse(this.jsonInput);
-      this.jsonOutput = JSON.stringify(obj, null, 2);
+      const obj = JSON.parse(this.jsonInput());
+      this.jsonOutput.set(JSON.stringify(obj, null, 2));
       this.msg.success('JSON 格式化成功');
     } catch (e) { 
       this.msg.error('JSON 格式无效');
     }
   }
 
+  // MARK: 压缩JSON
   compressJson(): void {
-    if (!this.jsonInput) return;
+    if (!this.jsonInput()) return;
     try {
-      const obj = JSON.parse(this.jsonInput);
-      this.jsonOutput = JSON.stringify(obj);
+      const obj = JSON.parse(this.jsonInput());
+      this.jsonOutput.set(JSON.stringify(obj));
       this.msg.success('JSON 压缩成功');
     } catch (e) {
       this.msg.error('JSON 格式无效');
@@ -122,45 +133,50 @@ export class ToolsDevComponent implements OnInit, OnDestroy {
   }
 
   // --- Base64 Methods ---
+  // MARK: 编码
   encodeBase64(): void {
-    if (!this.base64Input) return;
+    if (!this.base64Input()) return;
     try {
       // support unicode
-      this.base64Output = btoa(encodeURIComponent(this.base64Input).replace(/%([0-9A-F]{2})/g,
+      this.base64Output.set(btoa(encodeURIComponent(this.base64Input()).replace(/%([0-9A-F]{2})/g,
           (match, p1) => { return String.fromCharCode(Number('0x' + p1)); }
-      ));
+      )));
     } catch(e) {
       this.msg.error('编码失败');
     }
   }
 
+  // MARK: 解码
   decodeBase64(): void {
-    if (!this.base64Input) return;
+    if (!this.base64Input()) return;
     try {
-      this.base64Output = decodeURIComponent(Array.prototype.map.call(atob(this.base64Input),
+      this.base64Output.set(decodeURIComponent(Array.prototype.map.call(atob(this.base64Input()),
           (c) => { return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2); }
-      ).join(''));
+      ).join('')));
     } catch(e) {
       this.msg.error('解码失败，可能不是有效的 Base64 字符串');
     }
   }
 
   // --- URL Methods ---
+  // MARK: 编码
   encodeUrl(): void {
-    if (!this.urlInput) return;
-    this.urlOutput = encodeURIComponent(this.urlInput);
+    if (!this.urlInput()) return;
+    this.urlOutput.set(encodeURIComponent(this.urlInput()));
   }
 
+  // MARK: 解码
   decodeUrl(): void {
-    if (!this.urlInput) return;
+    if (!this.urlInput()) return;
     try {
-      this.urlOutput = decodeURIComponent(this.urlInput);
+      this.urlOutput.set(decodeURIComponent(this.urlInput()));
     } catch(e) {
       this.msg.error('解码失败');
     }
   }
 
   // Utils
+  // MARK: 复制
   copy(text: string): void {
     if (!text) {
       this.msg.warning('内容为空');

@@ -8,15 +8,18 @@ const HEADER_ALIASES = {
   tags: ['标签', '备注', 'tags', 'tag', 'notes'],
 };
 
+// MARK: 格子
 function normCell(v: unknown): string {
   if (v === null || v === undefined) return '';
   return String(v).replace(/\r\n/g, '\n').trim();
 }
 
+// MARK: 规范化
 function normalizeHeader(h: string): string {
   return h.trim().toLowerCase().replace(/\s+/g, '');
 }
 
+// MARK: 查找
 function findColumnIndex(headerRow: string[], aliases: string[]): number {
   const normalizedHeaders = headerRow.map(normalizeHeader);
   for (const alias of aliases) {
@@ -27,7 +30,8 @@ function findColumnIndex(headerRow: string[], aliases: string[]): number {
   return -1;
 }
 
-/** 表头行识别：至少命中「题目」列 */
+// MARK: 判断
+// 表头行识别：至少命中「题目」列
 function isHeaderRow(cells: string[]): boolean {
   return findColumnIndex(cells, HEADER_ALIASES.question) >= 0;
 }
@@ -61,6 +65,7 @@ const CATEGORY_ALIASES: { category: PracticeCategory; patterns: RegExp[] }[] = [
   },
 ];
 
+// MARK: 规范化
 export function normalizeCategory(raw: string): PracticeCategory | null {
   const s = normCell(raw);
   if (!s) return null;
@@ -78,10 +83,9 @@ export interface ParsePracticeFileResult {
   errors: string[];
 }
 
-/**
- * 解析 .xlsx / .xls / .csv（Excel 另存为 CSV 也可）。
- * 第一行表头，至少包含「题目」列；「分类」「答案」「标签」可选。
- */
+// MARK: 解析
+// 解析 .xlsx / .xls / .csv（Excel 另存为 CSV 也可）。
+// 第一行表头，至少包含「题目」列；「分类」「答案」「标签」可选。
 export function parsePracticeFile(buffer: ArrayBuffer): ParsePracticeFileResult {
   const drafts: PracticeItemDraft[] = [];
   const errors: string[] = [];

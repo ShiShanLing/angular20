@@ -1,12 +1,11 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   OnInit,
-  OnDestroy,
   inject,
   signal,
   computed,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 
@@ -39,9 +38,7 @@ type FilterValue = PracticeFilterCategory;
  */
 @Component({
   selector: 'app-practice-list',
-  standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     NzButtonModule,
     NzIconModule,
@@ -77,8 +74,8 @@ type FilterValue = PracticeFilterCategory;
             <input
               nz-input
               placeholder="搜索题目..."
-              [(ngModel)]="searchText"
-              (ngModelChange)="onSearchChange()"
+              [ngModel]="searchText()"
+              (ngModelChange)="searchText.set($event)"
             />
           </nz-input-wrapper>
         </div>
@@ -147,10 +144,11 @@ type FilterValue = PracticeFilterCategory;
                     nz-input
                     cdkTextareaAutosize [cdkAutosizeMinRows]="2" [cdkAutosizeMaxRows]="8"
                     placeholder="在这里默写答案，加深记忆..."
-                    [(ngModel)]="memoInputs[item.id]"
+                    [ngModel]="memoInputs()[item.id]"
+                    (ngModelChange)="setMemo(item.id, $event)"
                     (blur)="onMemoBlur(item.id)"
                   ></textarea>
-                  @if (memoInputs[item.id] && revealedIds().has(item.id)) {
+                  @if (memoInputs()[item.id] && revealedIds().has(item.id)) {
                     <button nz-button nzType="link" nzSize="small" (click)="compareAnswer(item)">
                       对比答案
                     </button>
@@ -359,9 +357,10 @@ type FilterValue = PracticeFilterCategory;
       .search-box { width: 100%; }
       .question-body { padding-left: 16px; }
     }
-  `],
+  `  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PracticeListComponent implements OnInit, OnDestroy {
+export class PracticeListComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly storage = inject(PracticeStorageService);
 
@@ -374,7 +373,7 @@ export class PracticeListComponent implements OnInit, OnDestroy {
   currentFilter = signal<FilterValue>('all');
 
   /** 搜索文本 */
-  searchText = '';
+  searchText = signal('');
 
   /** 展开的题目 ID 集合 */
   expandedIds = signal<Set<string>>(new Set());
@@ -383,7 +382,7 @@ export class PracticeListComponent implements OnInit, OnDestroy {
   revealedIds = signal<Set<string>>(new Set());
 
   /** 手写记忆输入 */
-  memoInputs: Record<string, string> = {};
+  memoInputs = signal<Record<string, string>>({});
 
   /** 分类筛选选项 */
   readonly filterCategories: FilterValue[] = ['all', ...PRACTICE_CATEGORY_LIST];
@@ -399,8 +398,9 @@ export class PracticeListComponent implements OnInit, OnDestroy {
     if (filter !== 'all') {
       items = items.filter(i => i.category === filter);
     }
-    if (this.searchText.trim()) {
-      const kw = this.searchText.trim().toLowerCase();
+    const searchText = this.searchText();
+    if (searchText.trim()) {
+      const kw = searchText.trim().toLowerCase();
       items = items.filter(i =>
         i.question.toLowerCase().includes(kw) ||
         i.answer.toLowerCase().includes(kw) ||
@@ -417,6 +417,8 @@ export class PracticeListComponent implements OnInit, OnDestroy {
     return items.every(i => this.expandedIds().has(i.id));
   });
 
+  // MARK: 初始化
+  // 组件初始化：同步移动端断点、订阅视口变化与路由事件
   ngOnInit() {
     // 先确保所有内置题库已注入 localStorage
     this.ensureAllSeeds();
@@ -437,7 +439,8 @@ export class PracticeListComponent implements OnInit, OnDestroy {
     this.allItems.set(merged);
   }
 
-  /** 确保所有内置题库已注入（首次访问时自动初始化） */
+  // MARK: 确保
+  // 确保所有内置题库已注入（首次访问时自动初始化）
   private ensureAllSeeds(): void {
     const now = Date.now();
     const scopes: Array<{ scope: PracticeStorageScope; seed: (t: number) => PracticeItem[] }> = [
@@ -455,17 +458,17 @@ export class PracticeListComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnDestroy() {}
-
   get pageTitle(): string {
     return '列表刷题';
   }
 
+  // MARK: 获取
   getCategoryLabel(cat: FilterValue): string {
     if (cat === 'all') return '全部';
     return PRACTICE_CATEGORY_LABELS[cat] || cat;
   }
 
+  // MARK: 获取
   getCategoryColor(cat: PracticeCategory): string {
     const colors: Record<string, string> = {
       ios: 'blue',
@@ -478,14 +481,12 @@ export class PracticeListComponent implements OnInit, OnDestroy {
     return colors[cat] || 'default';
   }
 
+  // MARK: 设置
   setFilter(cat: FilterValue) {
     this.currentFilter.set(cat);
   }
 
-  onSearchChange() {
-    // 触发 computed 重新计算
-  }
-
+  // MARK: 切换
   toggleExpand(id: string) {
     const set = this.expandedIds();
     if (set.has(id)) {
@@ -499,6 +500,7 @@ export class PracticeListComponent implements OnInit, OnDestroy {
     }
   }
 
+  // MARK: 切换
   toggleAnswer(id: string) {
     const set = new Set(this.revealedIds());
     if (set.has(id)) {
@@ -509,6 +511,7 @@ export class PracticeListComponent implements OnInit, OnDestroy {
     this.revealedIds.set(set);
   }
 
+  // MARK: 切换
   toggleAllAnswers() {
     if (this.allExpanded()) {
       // 全部隐藏答案
@@ -521,14 +524,22 @@ export class PracticeListComponent implements OnInit, OnDestroy {
     }
   }
 
+  // MARK: 列
   collapseAll() {
     this.expandedIds.set(new Set());
     this.revealedIds.set(new Set());
   }
 
+  // MARK: 设置
+  // 更新指定题目的手写记忆输入。
+  setMemo(id: string, value: string) {
+    this.memoInputs.update((memos) => ({ ...memos, [id]: value }));
+  }
+
+  // MARK: 事件处理
   onMemoBlur(id: string) {
     // 可扩展：保存到 localStorage 或后端
-    const value = this.memoInputs[id];
+    const value = this.memoInputs()[id];
     if (value) {
       const memos = JSON.parse(localStorage.getItem('practice_list_memos') || '{}');
       memos[id] = value;
@@ -536,8 +547,9 @@ export class PracticeListComponent implements OnInit, OnDestroy {
     }
   }
 
+  // MARK: 对比
   compareAnswer(item: PracticeItem) {
-    const userAnswer = (this.memoInputs[item.id] || '').trim().toLowerCase();
+    const userAnswer = (this.memoInputs()[item.id] || '').trim().toLowerCase();
     const refAnswer = item.answer.trim().toLowerCase();
     if (!userAnswer) return;
 
@@ -546,15 +558,19 @@ export class PracticeListComponent implements OnInit, OnDestroy {
     const percent = Math.round(similarity * 100);
 
     if (percent >= 80) {
+      // MARK: 处理
       alert(`优秀！相似度 ${percent}%`);
     } else if (percent >= 50) {
+      // MARK: 处理
       alert(`不错！相似度 ${percent}%，继续加油`);
     } else {
+      // MARK: 处理
       alert(`相似度 ${percent}%，建议多看看答案`);
     }
   }
 
-  /** 简单字符相似度（Jaccard 系数） */
+  // MARK: 计算
+  // 简单字符相似度（Jaccard 系数）
   private calcSimilarity(a: string, b: string): number {
     const setA = new Set(a.split(''));
     const setB = new Set(b.split(''));

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { NzCalendarModule } from 'ng-zorro-antd/calendar';
@@ -13,16 +13,16 @@ import { LunarUtils } from './lunar.utils';
 /** 日历视图 + 农历 `LunarUtils` 标注演示。 */
 @Component({
   selector: 'app-tools-calendar',
-  standalone: true,
   imports: [
     CommonModule, FormsModule,
     NzCalendarModule, NzBadgeModule, NzCardModule, NzGridModule, NzTagModule
   ],
   templateUrl: './tools-calendar.component.html',
-  styleUrl: './tools-calendar.component.scss'
+  styleUrl: './tools-calendar.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ToolsCalendarComponent implements OnInit {
-  selectedDate = new Date();
+export class ToolsCalendarComponent {
+  readonly selectedDate = signal(new Date());
   
   // 简易 2026 节假日映射 (Key: YYYY-MM-DD, Value: { name: string, type: 'holiday' | 'work' })
   // 数据来源：国办 2026 放假安排
@@ -69,29 +69,32 @@ export class ToolsCalendarComponent implements OnInit {
     '2026-10-10': { name: '补班', type: 'work' }
   };
 
-  ngOnInit(): void {}
-
+  // MARK: 上一月
   prevMonth(): void {
-    const d = new Date(this.selectedDate);
+    const d = new Date(this.selectedDate());
     d.setMonth(d.getMonth() - 1);
-    this.selectedDate = d;
+    this.selectedDate.set(d);
   }
 
+  // MARK: 下一月
   nextMonth(): void {
-    const d = new Date(this.selectedDate);
+    const d = new Date(this.selectedDate());
     d.setMonth(d.getMonth() + 1);
-    this.selectedDate = d;
+    this.selectedDate.set(d);
   }
 
+  // MARK: 获取
   getLunarInfo(date: Date): any {
     return LunarUtils.getLunar(date);
   }
 
+  // MARK: 获取
   getHolidayInfo(date: Date): any {
     const key = this.formatDate(date);
     return this.holidays2026[key];
   }
 
+  // MARK: 格式化
   private formatDate(date: Date): string {
     const y = date.getFullYear();
     const m = (date.getMonth() + 1).toString().padStart(2, '0');

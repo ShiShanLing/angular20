@@ -1,98 +1,124 @@
 <div class="tool-content">
-  <nz-row [nzGutter]="16" style="margin-bottom: 16px;">
+  <nz-row [nzGutter]="16" [style]="{ 'margin-bottom': '16px' }">
     <nz-col [nzSpan]="18">
       <nz-input-search>
-        <input type="text" nz-input [(ngModel)]="city" (keyup.enter)="searchWeather()" placeholder="输入城市名称（拼音或英文，如: Beijing, Shanghai）" />
-        <button nzInputAddonAfter nz-button nzType="primary" (click)="searchWeather()" [nzLoading]="loading">搜索</button>
+        <input
+          type="text"
+          nz-input
+          [ngModel]="city()"
+          (ngModelChange)="city.set($event)"
+          (keyup.enter)="searchWeather()"
+          placeholder="输入城市名称（拼音或英文，如: Beijing, Shanghai）"
+        />
+        <button nzInputAddonAfter nz-button nzType="primary" (click)="searchWeather()" [nzLoading]="loading()">
+          搜索
+        </button>
       </nz-input-search>
     </nz-col>
   </nz-row>
-  
-  <!-- 最近搜索的城市 -->
-  <div class="recent-cities" *ngIf="recentCities.length > 0">
-    <span class="recent-label">最近搜索：</span>
-    <span class="recent-tag" *ngFor="let c of recentCities" (click)="selectRecentCity(c)">
-      <span class="tag-text">{{ c.name }}</span>
-      <span class="tag-close" (click)="removeRecentCity(c.id, $event)">×</span>
-    </span>
-  </div>
 
-  <!-- 地名解析结果选择 -->
-  <div class="geocode-picker" *ngIf="showGeocodePicker">
-    <div class="picker-title">找到多个匹配城市，请选择：</div>
-    <div class="picker-list">
-      <div class="picker-item" *ngFor="let r of geocodeResults" (click)="pickGeocodeResult(r)">
-        <span class="picker-name">{{ r.name }}</span>
-        <span class="picker-detail">{{ r.admin2 || '' }} {{ r.admin1 || '' }} {{ r.country || '' }} ({{ r.latitude | number:'1.2-2' }}, {{ r.longitude | number:'1.2-2' }})</span>
+  @if (recentCities().length > 0) {
+    <div class="recent-cities">
+      <span class="recent-label">最近搜索：</span>
+      @for (c of recentCities(); track c.id) {
+        <span class="recent-tag" (click)="selectRecentCity(c)">
+          <span class="tag-text">{{ c.name }}</span>
+          <span class="tag-close" (click)="removeRecentCity(c.id, $event)">×</span>
+        </span>
+      }
+    </div>
+  }
+
+  @if (showGeocodePicker()) {
+    <div class="geocode-picker">
+      <div class="picker-title">找到多个匹配城市，请选择：</div>
+      <div class="picker-list">
+        @for (r of geocodeResults(); track r.id ?? r.name + r.latitude) {
+          <div class="picker-item" (click)="pickGeocodeResult(r)">
+            <span class="picker-name">{{ r.name }}</span>
+            <span class="picker-detail">
+              {{ r.admin2 || '' }} {{ r.admin1 || '' }} {{ r.country || '' }}
+              ({{ r.latitude | number:'1.2-2' }}, {{ r.longitude | number:'1.2-2' }})
+            </span>
+          </div>
+        }
       </div>
     </div>
-  </div>
+  }
 
-  <nz-spin [nzSpinning]="loading">
-    <div *ngIf="weatherData">
+  <nz-spin [nzSpinning]="loading()">
+    @if (weatherData(); as data) {
       <nz-row [nzGutter]="16">
-        <!-- 当前天气 -->
         <nz-col [nzSpan]="24" [nzLg]="8">
-          <nz-card [nzTitle]="'当前天气: ' + (weatherData.location.name || city)" class="current-card">
+          <nz-card [nzTitle]="'当前天气: ' + (data.location.name || city())" class="current-card">
             <div class="current-weather">
               <div class="temp-box">
-                <span class="condition-icon">{{ getConditionIcon(weatherData.current.weathercode) }}</span>
-                <span class="temp">{{ weatherData.current.temperature }}°C</span>
+                <span class="condition-icon">{{ getConditionIcon(data.current.weathercode) }}</span>
+                <span class="temp">{{ data.current.temperature }}°C</span>
               </div>
-              <div class="desc">{{ getConditionDesc(weatherData.current.weathercode) }}</div>
-              
+              <div class="desc">{{ getConditionDesc(data.current.weathercode) }}</div>
+
               <nz-divider></nz-divider>
-              
+
               <div class="details">
-                <p>风速: {{ weatherData.current.windspeed }} km/h</p>
-                <p>位置: {{ weatherData.location.admin1 || '' }} {{ weatherData.location.country }}</p>
-                <p>经纬度: {{ weatherData.location.latitude | number:'1.2-2' }}, {{ weatherData.location.longitude | number:'1.2-2' }}</p>
+                <p>风速: {{ data.current.windspeed }} km/h</p>
+                <p>位置: {{ data.location.admin1 || '' }} {{ data.location.country }}</p>
+                <p>
+                  经纬度: {{ data.location.latitude | number:'1.2-2' }},
+                  {{ data.location.longitude | number:'1.2-2' }}
+                </p>
               </div>
             </div>
           </nz-card>
         </nz-col>
 
-        <!-- 未来预报 -->
         <nz-col [nzSpan]="24" [nzLg]="16">
           <nz-card nzTitle="未来 7 日预报">
             <div class="forecast-container">
-              <div class="forecast-day" *ngFor="let day of getForecastArray()">
-                <div class="date">{{ day.date | date:'MM-dd' }}</div>
-                <div class="icon">{{ getConditionIcon(day.weatherCode) }}</div>
-                <div class="range">
-                  <nz-tag nzColor="orange">{{ day.maxTemp }}°</nz-tag>
-                  <nz-tag nzColor="blue">{{ day.minTemp }}°</nz-tag>
+              @for (day of forecastDays(); track day.date) {
+                <div class="forecast-day">
+                  <div class="date">{{ day.date | date:'MM-dd' }}</div>
+                  <div class="icon">{{ getConditionIcon(day.weatherCode) }}</div>
+                  <div class="range">
+                    <nz-tag nzColor="orange">{{ day.maxTemp }}°</nz-tag>
+                    <nz-tag nzColor="blue">{{ day.minTemp }}°</nz-tag>
+                  </div>
+                  <div class="f-desc">{{ getConditionDesc(day.weatherCode) }}</div>
                 </div>
-                <div class="f-desc">{{ getConditionDesc(day.weatherCode) }}</div>
-              </div>
+              }
             </div>
           </nz-card>
         </nz-col>
       </nz-row>
 
-      <!-- 逐小时预报 -->
-      <nz-row style="margin-top: 16px;">
+      <nz-row [style]="{ 'margin-top': '16px' }">
         <nz-col [nzSpan]="24">
           <nz-card nzTitle="24 小时逐小时预报">
             <div class="hourly-container">
               <div class="hourly-list">
-                <div class="hourly-item" *ngFor="let h of getHourlyForecastArray()">
-                  <div class="h-time">{{ h.time | date:'HH:mm' }}</div>
-                  <div class="h-icon">{{ getConditionIcon(h.weatherCode) }}</div>
-                  <div class="h-temp">{{ h.temp }}°</div>
+                @for (h of hourlyForecast(); track h.time) {
+                  <div class="hourly-item">
+                    <div class="h-time">{{ h.time | date:'HH:mm' }}</div>
+                    <div class="h-icon">{{ getConditionIcon(h.weatherCode) }}</div>
+                    <div class="h-temp">{{ h.temp }}°</div>
+                  </div>
+                }
+              </div>
+              @if (chartOptions(); as options) {
+                <div class="hourly-chart">
+                  <div echarts [options]="options" [style]="{ height: '180px' }"></div>
                 </div>
-              </div>
-              <div class="hourly-chart" *ngIf="chartOptions">
-                <div echarts [options]="chartOptions" style="height: 180px;"></div>
-              </div>
+              }
             </div>
           </nz-card>
         </nz-col>
       </nz-row>
-    </div>
+    }
   </nz-spin>
 
-  <div style="margin-top: 16px;">
-    <p style="color: var(--text-tertiary); font-size: 12px;">注：天气数据来自 Open-Meteo 免费 API。支持全球城市搜索，建议输入拼音或英文。</p>
+  <div [style]="{ 'margin-top': '16px' }">
+    <p [style]="{ color: 'var(--text-tertiary)', 'font-size': '12px' }">
+      注：天气数据来自 Open-Meteo 免费 API。支持全球城市搜索，建议输入拼音或英文。
+    </p>
   </div>
 </div>

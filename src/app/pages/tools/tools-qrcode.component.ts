@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, OnInit, inject, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import jsQR from 'jsqr';
@@ -28,7 +28,6 @@ const DECODE_SCALES = [1, 1.5, 2, 0.75];
 /** 二维码工具：文本生成二维码、图片解码、摄像头扫描。 */
 @Component({
   selector: 'app-tools-qrcode',
-  standalone: true,
   imports: [
     CommonModule,
     FormsModule,
@@ -44,9 +43,13 @@ const DECODE_SCALES = [1, 1.5, 2, 0.75];
     TextFieldModule
   ],
   templateUrl: './tools-qrcode.component.html',
-  styleUrl: './tools-qrcode.component.scss'
+  styleUrl: './tools-qrcode.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolsQrcodeComponent implements OnInit, OnDestroy {
+  private readonly msg = inject(NzMessageService);
+  private readonly recordService = inject(RecordService);
+
   private readonly imageInputRef = viewChild<ElementRef<HTMLInputElement>>('imageInput');
   private readonly videoRef = viewChild<ElementRef<HTMLVideoElement>>('scanVideo');
   private readonly canvasRef = viewChild<ElementRef<HTMLCanvasElement>>('scanCanvas');
@@ -76,11 +79,8 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     { label: '高 (H)', value: 'H' }
   ];
 
-  constructor(
-    private readonly msg: NzMessageService,
-    private readonly recordService: RecordService,
-  ) {}
-
+  // MARK: 初始化
+  // 组件初始化：同步移动端断点、订阅视口变化与路由事件
   ngOnInit(): void {
     // 加载上次生成的文本
     this.recordService.getAll(RECORD_TYPE).subscribe({
@@ -98,10 +98,13 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     }
   }
 
+  // MARK: 销毁清理
+  // 取消全部订阅，避免内存泄漏
   ngOnDestroy(): void {
     this.stopCamera();
   }
 
+  // MARK: 事件处理
   onGenerateTextChange(value: string): void {
     this.generateText.set(value);
     localStorage.setItem(STORAGE_KEY, value);
@@ -117,6 +120,7 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     });
   }
 
+  // MARK: 生成
   async generateQrCode(): Promise<void> {
     const text = this.generateText().trim();
     if (!text) {
@@ -140,6 +144,7 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     }
   }
 
+  // MARK: 下载
   downloadQrCode(): void {
     const dataUrl = this.qrDataUrl();
     if (!dataUrl) {
@@ -155,6 +160,7 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     link.click();
     this.msg.success('已开始下载');
   }
+  // MARK: 复制
   async copyText(value: string, emptyTip: string): Promise<void> {
     if (!value.trim()) {
       this.msg.warning(emptyTip);
@@ -168,43 +174,26 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     }
   }
   
-  /*
-
-
-
-可以先这样说：避免卡帧的核心是减少每一帧主线程和渲染管线的工作量，重活后台化，UI 更新轻量化，列表、图片、布局和图层效果重点优化，并用工具量化验证。
-
-常见原因包括：主线程做大量计算、同步文件 IO、同步数据库查询、大 JSON 解析、复杂 Auto Layout、列表 Cell 太重、大图解码、频繁 reloadData、频繁 layoutIfNeeded、圆角阴影导致离屏渲染、透明视图过多导致混合成本高、主线程等待锁或信号量。
-
-优化可以从这些方向做：
-
-1. 主线程只做 UI 和轻量逻辑：计算、JSON 解析、文件读写、数据库查询、图片处理等不要放在主线程。后台处理完成后再回主线程更新 UI。
-
-2. 列表要轻：UITableView/UICollectionView 的 cellForRow 或 cellForItem 里不要做同步 IO、复杂计算、大图解码。要复用 Cell，异步加载图片，取消复用前的旧请求，缓存图片和布局结果，必要时预计算高度，避免每次滑动都重新算复杂布局。
-
-
-3. 图片要小、要缓存、尽量后台解码：服务端最好返回合适尺寸的图片，列表不要加载原图。客户端可以使用缩略图、内存/磁盘缓存、后台解码和按需加载，避免大图在主线程解码造成瞬间卡顿。
-
-4. 布局要简单：减少 view 层级和约束数量，避免 Cell 内嵌套过深；不要频繁调用 setNeedsLayout/layoutIfNeeded；复杂列表可以缓存高度或考虑手动布局；StackView 很方便，但在特别复杂和高频复用场景也要注意开销。
-
-5. 减少无效 UI 刷新：不要动不动全量 reloadData。优先局部刷新、批量更新、Diffable Data Source 或差量更新；高频输入、滚动、搜索场景可以用防抖/节流；多次状态变化可以合并成一次 UI 刷新。
-
-6. 控制渲染成本：避免大量透明视图重叠，减少 alpha 混合；谨慎使用圆角加阴影、mask、shouldRasterize、模糊效果等可能增加渲染成本的效果；圆角阴影可以用阴影路径 shadowPath、预渲染图片或拆分图层优化。
-
-7. 避免主线程等待：不要在主线程等待网络、数据库、锁、信号量或异步任务结果。比如 DispatchSemaphore.wait、DispatchQueue.sync、锁竞争都可能让主线程卡住甚至死锁。
-
-8. 分批和懒加载：首屏只加载当前可见内容，非首屏模块延迟加载；大量数据分页加载；复杂任务分批处理，避免一次性把所有工作压到同一帧。
-
-排查工具也很重要：Time Profiler 看主线程 CPU 耗时函数；Core Animation 看 FPS、掉帧和渲染问题；Xcode Debug Navigator 看 CPU/内存粗略变化；View Debugger 看 UI 层级和遮挡；Instruments Allocations 看对象分配是否异常；卡住时可以暂停 App，用 LLDB 的 thread backtrace all 看主线程是否卡在 IO、锁、数据库、JSON 解析或布局里；线上可以用 MetricKit、RunLoop 卡顿监控、FPS 监控和主线程堆栈采样。
-
-一个常见回答模板是：我会先确认卡顿场景，比如列表滑动、页面转场还是启动首屏；然后用 Time Profiler 和 Core Animation 找主线程或渲染瓶颈；优化上把重活后台化，减少 cell 内同步工作，图片缩放缓存和后台解码，减少约束和层级，局部刷新代替全量刷新，避免主线程等锁；最后用 FPS、耗时和线上卡顿率对比优化前后效果。
-
-总结：避免卡帧就是守住每帧时间预算。主线程少做事，列表和图片重点优化，布局和渲染尽量简单，刷新要合并，锁和同步等待不能卡主线程，最终用 Instruments、MetricKit 和卡顿监控验证。
-  */
+  // MARK: 打开
+  // 可以先这样说：避免卡帧的核心是减少每一帧主线程和渲染管线的工作量，重活后台化，UI 更新轻量化，列表、图片、布局和图层效果重点优化，并用工具量化验证。
+  // 常见原因包括：主线程做大量计算、同步文件 IO、同步数据库查询、大 JSON 解析、复杂 Auto Layout、列表 Cell 太重、大图解码、频繁 reloadData、频繁 layoutIfNeeded、圆角阴影导致离屏渲染、透明视图过多导致混合成本高、主线程等待锁或信号量。
+  // 优化可以从这些方向做：
+  // 1. 主线程只做 UI 和轻量逻辑：计算、JSON 解析、文件读写、数据库查询、图片处理等不要放在主线程。后台处理完成后再回主线程更新 UI。
+  // 2. 列表要轻：UITableView/UICollectionView 的 cellForRow 或 cellForItem 里不要做同步 IO、复杂计算、大图解码。要复用 Cell，异步加载图片，取消复用前的旧请求，缓存图片和布局结果，必要时预计算高度，避免每次滑动都重新算复杂布局。
+  // 3. 图片要小、要缓存、尽量后台解码：服务端最好返回合适尺寸的图片，列表不要加载原图。客户端可以使用缩略图、内存/磁盘缓存、后台解码和按需加载，避免大图在主线程解码造成瞬间卡顿。
+  // 4. 布局要简单：减少 view 层级和约束数量，避免 Cell 内嵌套过深；不要频繁调用 setNeedsLayout/layoutIfNeeded；复杂列表可以缓存高度或考虑手动布局；StackView 很方便，但在特别复杂和高频复用场景也要注意开销。
+  // 5. 减少无效 UI 刷新：不要动不动全量 reloadData。优先局部刷新、批量更新、Diffable Data Source 或差量更新；高频输入、滚动、搜索场景可以用防抖/节流；多次状态变化可以合并成一次 UI 刷新。
+  // 6. 控制渲染成本：避免大量透明视图重叠，减少 alpha 混合；谨慎使用圆角加阴影、mask、shouldRasterize、模糊效果等可能增加渲染成本的效果；圆角阴影可以用阴影路径 shadowPath、预渲染图片或拆分图层优化。
+  // 7. 避免主线程等待：不要在主线程等待网络、数据库、锁、信号量或异步任务结果。比如 DispatchSemaphore.wait、DispatchQueue.sync、锁竞争都可能让主线程卡住甚至死锁。
+  // 8. 分批和懒加载：首屏只加载当前可见内容，非首屏模块延迟加载；大量数据分页加载；复杂任务分批处理，避免一次性把所有工作压到同一帧。
+  // 排查工具也很重要：Time Profiler 看主线程 CPU 耗时函数；Core Animation 看 FPS、掉帧和渲染问题；Xcode Debug Navigator 看 CPU/内存粗略变化；View Debugger 看 UI 层级和遮挡；Instruments Allocations 看对象分配是否异常；卡住时可以暂停 App，用 LLDB 的 thread backtrace all 看主线程是否卡在 IO、锁、数据库、JSON 解析或布局里；线上可以用 MetricKit、RunLoop 卡顿监控、FPS 监控和主线程堆栈采样。
+  // 一个常见回答模板是：我会先确认卡顿场景，比如列表滑动、页面转场还是启动首屏；然后用 Time Profiler 和 Core Animation 找主线程或渲染瓶颈；优化上把重活后台化，减少 cell 内同步工作，图片缩放缓存和后台解码，减少约束和层级，局部刷新代替全量刷新，避免主线程等锁；最后用 FPS、耗时和线上卡顿率对比优化前后效果。
+  // 总结：避免卡帧就是守住每帧时间预算。主线程少做事，列表和图片重点优化，布局和渲染尽量简单，刷新要合并，锁和同步等待不能卡主线程，最终用 Instruments、MetricKit 和卡顿监控验证。
   openImagePicker(): void {
     this.imageInputRef()?.nativeElement.click();
   }
 
+  // MARK: 事件处理
   onImageSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -216,6 +205,7 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     this.readAndDecodeImageFile(file, '请选择图片文件');
   }
 
+  // MARK: 事件处理
   onImagePasted(event: ClipboardEvent): void {
     const imageFile = this.getPastedImageFile(event);
     if (!imageFile) {
@@ -227,6 +217,7 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     this.readAndDecodeImageFile(imageFile, '剪贴板内容不是图片');
   }
 
+  // MARK: 读取
   private readAndDecodeImageFile(file: File, invalidTip: string): void {
     if (!file.type.startsWith('image/')) {
       this.msg.warning(invalidTip);
@@ -243,6 +234,7 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     reader.readAsDataURL(file);
   }
 
+  // MARK: 获取
   private getPastedImageFile(event: ClipboardEvent): File | null {
     const items = Array.from(event.clipboardData?.items ?? []);
     for (const item of items) {
@@ -255,6 +247,7 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     return files.find((file) => file.type.startsWith('image/')) ?? null;
   }
 
+  // MARK: 解码
   async decodeFromDataUrl(dataUrl: string): Promise<void> {
     this.decoding.set(true);
     this.decodeResult.set('');
@@ -275,6 +268,7 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     }
   }
 
+  // MARK: 开始
   async startCamera(): Promise<void> {
     if (this.cameraActive()) {
       return;
@@ -306,6 +300,7 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     }
   }
 
+  // MARK: 停止
   stopCamera(): void {
     if (this.scanFrameId !== null) {
       cancelAnimationFrame(this.scanFrameId);
@@ -321,6 +316,7 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     this.cameraActive.set(false);
   }
 
+  // MARK: 扫描循环
   private scanLoop(): void {
     const video = this.videoRef()?.nativeElement;
     const canvas = this.canvasRef()?.nativeElement;
@@ -350,6 +346,7 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     this.scanFrameId = requestAnimationFrame(() => this.scanLoop());
   }
 
+  // MARK: 解码
   private async decodeImageDataUrl(dataUrl: string): Promise<string | null> {
     const image = await this.loadImage(dataUrl);
     const nativeResult = await this.decodeWithBarcodeDetector(image);
@@ -378,6 +375,7 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     return null;
   }
 
+  // MARK: 加载
   private loadImage(dataUrl: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
       const image = new Image();
@@ -389,6 +387,7 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     });
   }
 
+  // MARK: 解码
   private async decodeWithBarcodeDetector(image: HTMLImageElement): Promise<string | null> {
     const Detector = (globalThis as { BarcodeDetector?: new (options: { formats: string[] }) => { detect(source: CanvasImageSource): Promise<Array<{ rawValue?: string }>> } }).BarcodeDetector;
     if (!Detector) {
@@ -404,6 +403,7 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     }
   }
 
+  // MARK: 创建
   private createDecodeCanvas(image: HTMLImageElement, scale: number): HTMLCanvasElement {
     const baseScale = Math.min(1, MAX_DECODE_SIDE / Math.max(image.naturalWidth, image.naturalHeight));
     const finalScale = baseScale * scale;
@@ -422,6 +422,7 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     return canvas;
   }
 
+  // MARK: 解码
   private decodeCanvasWithJsQr(canvas: HTMLCanvasElement): string | null {
     const context = canvas.getContext('2d', { willReadFrequently: true });
     if (!context) {
@@ -432,6 +433,7 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     return code?.data ?? null;
   }
 
+  // MARK: 解码
   private decodeEnhancedCanvas(canvas: HTMLCanvasElement): string | null {
     const context = canvas.getContext('2d', { willReadFrequently: true });
     if (!context) {
@@ -450,6 +452,7 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     return code?.data ?? null;
   }
 
+  // MARK: 解码
   private decodeCanvasTiles(canvas: HTMLCanvasElement): string | null {
     const tileSize = Math.min(Math.max(Math.round(Math.min(canvas.width, canvas.height) * 0.9), 360), 900);
     const step = Math.max(180, Math.round(tileSize * 0.55));
@@ -486,6 +489,7 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     return null;
   }
 
+  // MARK: 创建
   private createHighContrastImageData(source: ImageData): ImageData {
     const output = new ImageData(new Uint8ClampedArray(source.data), source.width, source.height);
     const data = output.data;
@@ -501,6 +505,7 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     return output;
   }
 
+  // MARK: 创建
   private createThresholdImageData(source: ImageData): ImageData {
     const output = new ImageData(new Uint8ClampedArray(source.data), source.width, source.height);
     const data = output.data;
@@ -522,14 +527,17 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     return output;
   }
 
+  // MARK: 亮度计算
   private luminance(red: number, green: number, blue: number): number {
     return 0.299 * red + 0.587 * green + 0.114 * blue;
   }
 
+  // MARK: 限制
   private clampColor(value: number): number {
     return Math.max(0, Math.min(255, Math.round(value)));
   }
 
+  // MARK: 打开
   private async openCameraStream(): Promise<MediaStream> {
     try {
       return await navigator.mediaDevices.getUserMedia({
@@ -544,6 +552,7 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     }
   }
 
+  // MARK: 等待视频
   private waitForVideoReady(video: HTMLVideoElement): Promise<void> {
     if (video.readyState >= video.HAVE_METADATA && video.videoWidth && video.videoHeight) {
       return Promise.resolve();
@@ -583,6 +592,7 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     });
   }
 
+  // MARK: 获取
   private getCameraErrorMessage(error: unknown): string {
     if (error instanceof DOMException) {
       if (error.name === 'NotAllowedError' || error.name === 'SecurityError') {

@@ -6,21 +6,23 @@
           <nz-form-item>
             <nz-form-label nzRequired>金额</nz-form-label>
             <nz-form-control nzErrorTip="请输入有效金额">
-              <nz-input-number formControlName="amount" [nzMin]="0.01" [nzStep]="1" style="width: 100%" nzPlaceHolder="0.00"></nz-input-number>
+              <nz-input-number formControlName="amount" [nzMin]="0.01" [nzStep]="1" [style]="{ width: '100%' }" nzPlaceHolder="0.00"></nz-input-number>
             </nz-form-control>
           </nz-form-item>
           <nz-form-item>
             <nz-form-label nzRequired>分类</nz-form-label>
             <nz-form-control>
               <nz-select formControlName="category" nzPlaceHolder="选择分类">
-                <nz-option *ngFor="let c of categories" [nzValue]="c" [nzLabel]="c"></nz-option>
+                @for (c of categories; track c) {
+                  <nz-option [nzValue]="c" [nzLabel]="c"></nz-option>
+                }
               </nz-select>
             </nz-form-control>
           </nz-form-item>
           <nz-form-item>
             <nz-form-label>时间</nz-form-label>
             <nz-form-control>
-              <nz-date-picker formControlName="date" style="width: 100%" nzShowTime></nz-date-picker>
+              <nz-date-picker formControlName="date" [style]="{ width: '100%' }" nzShowTime></nz-date-picker>
             </nz-form-control> 
           </nz-form-item>
           <nz-form-item>
@@ -42,13 +44,13 @@
         <nz-tabs>
           
           <nz-tab nzTitle="本周饼图" (nzClick)="buildChart('week')">
-             <div echarts [options]="chartOption" style="height: 350px;"></div>
+             <div echarts [options]="chartOption()" [style]="{ height: '350px' }"></div>
           </nz-tab>
           <nz-tab nzTitle="本月饼图" (nzClick)="buildChart('month')">
-             <div echarts [options]="chartOption" style="height: 350px;"></div>
+             <div echarts [options]="chartOption()" [style]="{ height: '350px' }"></div>
           </nz-tab>
           <nz-tab nzTitle="历史记录">
-            <nz-table #basicTable [nzData]="records" [nzPageSize]="5">
+            <nz-table #basicTable [nzData]="records()" [nzPageSize]="5">
               <thead>
                 <tr>
                   <th>时间</th>
@@ -59,13 +61,15 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let data of basicTable.data">
-                  <td>{{ data.date | date:'MM-dd HH:mm' }}</td>
-                  <td><nz-tag>{{ data.category }}</nz-tag></td>
-                  <td style="color: var(--error-color); font-weight: bold;">-¥{{ data.amount }}</td>
-                  <td>{{ data.remarks }}</td>
-                  <td><a (click)="deleteRecord(data.id)">删除</a></td>
-                </tr>
+                @for (data of basicTable.data; track data.id) {
+                  <tr>
+                    <td>{{ data.date | date:'MM-dd HH:mm' }}</td>
+                    <td><nz-tag>{{ data.category }}</nz-tag></td>
+                    <td [style]="{ color: 'var(--error-color)', 'font-weight': 'bold' }">-¥{{ data.amount }}</td>
+                    <td>{{ data.remarks }}</td>
+                    <td><a (click)="deleteRecord(data.id)">删除</a></td>
+                  </tr>
+                }
               </tbody>
             </nz-table>
           </nz-tab>

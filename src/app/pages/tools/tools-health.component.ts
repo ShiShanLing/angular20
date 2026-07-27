@@ -1,18 +1,15 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 /** 身体健康工具聚合页：iframe 嵌入 `public/health-tools.html`。 */
 @Component({
   selector: 'app-tools-health',
   templateUrl: './tools-health.component.html',
-  styleUrl: './tools-health.component.scss'
+  styleUrl: './tools-health.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolsHealthComponent {
-  url: SafeResourceUrl;
-
-  constructor(sanitizer: DomSanitizer) {
-    // 通过 iframe 嵌入 public 下的独立页面，避免重复实现 UI 与计算逻辑。
-    this.url = sanitizer.bypassSecurityTrustResourceUrl('./health-tools.html');
-  }
+  // 通过 iframe 嵌入 public 下的独立页面，避免重复实现 UI 与计算逻辑。
+  readonly url: SafeResourceUrl = inject(DomSanitizer).bypassSecurityTrustResourceUrl('./health-tools.html');
 }
 

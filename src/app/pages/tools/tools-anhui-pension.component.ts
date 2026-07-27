@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subscription, debounceTime } from 'rxjs';
 
@@ -26,27 +26,27 @@ const DIVISOR = 139;
 /** 安徽城乡居民养老金粗算（个人账户与回本周期展示）。 */
 @Component({
   selector: 'app-tools-anhui-pension',
-  standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule,
     NzCardModule, NzFormModule, NzInputNumberModule,
     NzGridModule, NzStatisticModule, NzAlertModule
   ],
   templateUrl: './tools-anhui-pension.component.html',
-  styleUrl: './tools-anhui-pension.component.scss'
+  styleUrl: './tools-anhui-pension.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolsAnhuiPensionComponent implements OnInit, OnDestroy {
+  private readonly fb = inject(FormBuilder);
+  private readonly recordService = inject(RecordService);
+
   form!: FormGroup;
-  result: PensionResult | null = null;
+  readonly result = signal<PensionResult | null>(null);
 
   private recordId: number | null = null;
   private sub?: Subscription;
-
-  constructor(
-    private fb: FormBuilder,
-    private recordService: RecordService,
-  ) {}
   
+  // MARK: 初始化
+  // 组件初始化：同步移动端断点、订阅视口变化与路由事件
   ngOnInit(): void {
 
     this.form = this.fb.group({
@@ -64,18 +64,21 @@ export class ToolsAnhuiPensionComponent implements OnInit, OnDestroy {
         this.saveToApi();
         this.calculate();
       } else {
-        this.result = null;
+        this.result.set(null);
       }
     });
   }
 
+  // MARK: 销毁清理
+  // 取消全部订阅，避免内存泄漏
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
   }
   //
+  // MARK: 计算
   calculate(): void {
     if (this.form.invalid) {
-      this.result = null;
+      this.result.set(null);
       return;
     }
     //
@@ -88,22 +91,25 @@ export class ToolsAnhuiPensionComponent implements OnInit, OnDestroy {
     const paybackMonths = monthlyPension > 0 ? personalAccountTotal / monthlyPension : 0;
     const paybackYears = paybackMonths / 12;
 
-    this.result = { monthlyPension, accountPart, paybackMonths, paybackYears };
+    this.result.set({ monthlyPension, accountPart, paybackMonths, paybackYears });
   }
   // 
   // === 持久化 === 
   
+  // MARK: 加载
   private loadFromLocalStorage(): void {
     try {
       const saved = localStorage.getItem(LS_KEY);
       if (saved) this.form.patchValue(JSON.parse(saved), { emitEvent: false });
     } catch {}
   }
-
+  
+  // MARK: 保存
   private saveToLocalStorage(): void {
     localStorage.setItem(LS_KEY, JSON.stringify(this.form.getRawValue()));
   }
   
+  // MARK: 加载
   private loadFromApi(): void {
     this.recordService.getAll(RECORD_TYPE).subscribe({
       next: (records) => {
@@ -119,6 +125,7 @@ export class ToolsAnhuiPensionComponent implements OnInit, OnDestroy {
   }
   
 
+  // MARK: 保存
   private saveToApi(): void {
     const data = this.form.getRawValue();
     if (this.recordId) {
