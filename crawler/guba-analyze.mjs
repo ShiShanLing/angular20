@@ -9,7 +9,9 @@
  *   node crawler/guba-analyze.mjs --crawl            # 先抓取再分析
  *   node crawler/guba-analyze.mjs --crawl --pages=10 # 抓更多页
  *   node crawler/guba-analyze.mjs --json             # 输出JSON格式（供前端调用）
- *   node crawler/guba-analyze.mjs --days=3           # 分析最近N天数据
+ *   node crawler/guba-analyze.mjs --days=3           # 最近N天，每天仅 09:00–15:00
+ *
+ * 默认时间窗: 东八区当天 09:00–15:00
  *
  * 分析模式:
  *   关键词(默认) - 快速免费，适合趋势对比，绝对值有偏差
@@ -27,6 +29,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
+import { isInAnalysisWindow, analysisWindowLabel } from './time-window.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, 'data');
@@ -46,8 +49,8 @@ const DICTIONARY = {
       '机会', '利好', '加仓', '满仓', '金叉', '突破', '新高', '强势', '拉升', '起爆',
       '大牛', '翻红', '红盘', '大涨', '上攻', '启动', '爆发', '做多', '建仓', '抄底',
       '护盘', '撑住', '止跌', '企稳', '回踩', '蓄力', '放量', '主力', '吸筹', '洗盘',
-      '慢牛', '长牛', '低估', '价值', '洼地', '低估', '安全', '底部区域', '底部放量',
-      '稳了', '必涨', '翻倍', '大肉', '上车', '冲冲冲', '梭哈', '牛', '涨',
+      '慢牛', '长牛', '低估', '价值', '洼地', '安全', '底部区域', '底部放量',
+      '稳了', '必涨', '翻倍', '大肉', '上车', '冲冲冲', '梭哈', '大牛市', '看涨',
     ],
   },
 
@@ -56,11 +59,11 @@ const DICTIONARY = {
     weight: 1,
     words: [
       '割肉', '清仓', '崩盘', '暴跌', '熊市', '套牢', '跌停', '大跌', '利空', '减仓',
-      '空仓', '死叉', '破位', '新低', '弱势', '砸盘', '跳水', '血崩', '暴跌', '做空',
-      '阴跌', '下跌', '杀跌', '出逃', '跑路', '站岗', '高位', '套人', '骗', '割韭菜',
-      '亏损', '亏钱', '血亏', '巨亏', '爆仓', '完了', '完蛋', '绝望', '末日', '惨',
-      '凉凉', 'GG', 'gg', '药丸', '完了', '跑路', '清仓走人', '见顶', '顶部',
-      '诱多', '出货', '派发', '缩量', '无量', '阴跌', '漫漫', '深不见底',
+      '空仓', '死叉', '破位', '新低', '弱势', '砸盘', '跳水', '血崩', '做空',
+      '阴跌', '下跌', '杀跌', '出逃', '跑路', '站岗', '高位', '套人', '割韭菜',
+      '亏损', '亏钱', '血亏', '巨亏', '爆仓', '完蛋', '绝望', '末日',
+      '凉凉', 'GG', 'gg', '药丸', '清仓走人', '见顶', '顶部',
+      '诱多', '出货', '派发', '缩量', '无量', '深不见底',
     ],
   },
 
@@ -71,7 +74,7 @@ const DICTIONARY = {
       '恐慌', '恐惧', '踩踏', '熔断', '千股跌停', '股灾', '黑天鹅', '暴跌',
       '血洗', '崩了', '完了', '跑吧', '别接刀', '飞刀', '接飞刀', '送命',
       '末日', '灾难', '浩劫', '惨烈', '血流成河', '尸横遍野', '哀嚎',
-      '绝望', '麻木', '麻木了', '无底洞', '深不见底',
+      '绝望', '麻木', '麻木了', '无底洞', '深不见底', '销户', '上天台', '腰斩',
     ],
   },
 
@@ -82,7 +85,7 @@ const DICTIONARY = {
       '梭哈', '满仓干', '全仓', '重仓', 'all in', 'All in', 'ALL IN',
       '必涨', '翻倍', '十倍股', '百倍股', '暴富', '财务自由', '发财',
       '稳赚', '稳了', '冲冲冲', '不卖', '死拿', '拿住', '钻石手',
-      'to the moon', '火箭', '起飞', '一飞冲天',
+      'to the moon', '火箭', '一飞冲天',
     ],
   },
 
@@ -92,7 +95,7 @@ const DICTIONARY = {
     words: [
       '呵呵', '哈哈', '笑死', '果然', '又是', '又是这样', '一如既往',
       '果然如此', '每次都', '永远', '又来了', '老样子', '习惯就好',
-      '绿油油', '韭菜', '被割', '又被割', '套路',
+      '绿油油', '韭菜', '被割', '又被割', '套路', '老乡别走',
     ],
   },
 };
@@ -180,12 +183,13 @@ function analyzePostSentiment(post) {
     3.0  // 最多加权3倍
   );
 
-  // 分类标签
+  // 分类标签（fear/greed：命中 ≥1 个词即可，权重 1.8 > 1.5）
   let label = 'neutral';
-  if (scores.fear > 2) label = 'fear';
-  else if (scores.greed > 2) label = 'greed';
-  else if (rawScore > 0.3) label = 'bullish';
-  else if (rawScore < -0.3) label = 'bearish';
+  if (scores.fear > 1.5) label = 'fear';
+  else if (scores.greed > 1.5) label = 'greed';
+  else if (rawScore > 0.25) label = 'bullish';
+  else if (rawScore < -0.25) label = 'bearish';
+  else if (scores.sarcastic > 0 && rawScore <= 0) label = 'bearish';
 
   return {
     postId: post.postId,
@@ -301,25 +305,37 @@ function extractHotTopics(allPosts) {
 
 /** 计算市场综合情绪指数 */
 function calculateMarketIndex(barResults) {
-  // 只计算有数据的板块
-  const validBars = barResults.filter(b => b.postCount > 0 && b.temperature !== null);
-  if (validBars.length === 0) return null;
+  // 只计算有足够样本的板块（避免 2–3 帖板块扭曲指数）
+  const MIN_POSTS = 20;
+  const validBars = barResults.filter(
+    b => b.postCount >= MIN_POSTS && b.temperature !== null && b.temperature !== undefined
+  );
+  if (validBars.length === 0) {
+    // 回退：用所有有数据板块按帖子数加权
+    const fallback = barResults.filter(b => b.postCount > 0 && b.temperature != null);
+    if (fallback.length === 0) return null;
+    return buildMarketIndexResult(fallback, true);
+  }
 
-  // 权重配置：指数权重最高
-  const weights = {
-    'sh000001': 3.0,   // 上证指数 - 最重要的市场指标
-    'sz399006': 2.5,   // 创业板指 - 成长股代表
-    'BK0473': 2.0,     // 证券 - 散户情绪晴雨表
-    'BK0475': 1.5,     // 银行 - 防御板块
-    'BK0477': 1.0,     // 酿酒 - 消费
-    'BK0896': 1.2,     // 白酒 - 消费
-    'BK0493': 1.0,     // 新能源 - 赛道
-    'BK0447': 1.0,     // 互联网 - 科技
-    'of512480': 1.5,   // 半导体ETF
-    'of515000': 1.5,   // 科技ETF
-    'BK0428': 1.2,     // 电力
-    'BK0891': 1.5,     // 国产芯片
-    'BK0917': 1.3,     // 半导体概念
+  return buildMarketIndexResult(validBars, false);
+}
+
+function buildMarketIndexResult(validBars, isFallback) {
+  // 板块权重 × √posts，兼顾板块重要性与样本量
+  const baseWeights = {
+    'sh000001': 3.0,
+    'sz399006': 2.5,
+    'BK0473': 2.0,
+    'BK0475': 1.5,
+    'BK0477': 1.0,
+    'BK0896': 1.2,
+    'BK0493': 1.0,
+    'BK0447': 1.0,
+    'of512480': 1.5,
+    'of515000': 1.5,
+    'BK0428': 1.2,
+    'BK0891': 1.5,
+    'BK0917': 1.3,
   };
 
   let totalWeight = 0;
@@ -329,47 +345,53 @@ function calculateMarketIndex(barResults) {
   let totalComments = 0;
 
   for (const bar of validBars) {
-    const w = weights[bar.code] || 1.0;
+    const base = baseWeights[bar.code] || 1.0;
+    const w = base * Math.sqrt(Math.max(bar.postCount, 1));
     weightedSum += bar.temperature * w;
     totalWeight += w;
     totalPosts += bar.postCount;
-    totalClicks += bar.totalClicks;
-    totalComments += bar.totalComments;
+    totalClicks += bar.totalClicks || 0;
+    totalComments += bar.totalComments || 0;
   }
 
   const index = Math.round(weightedSum / totalWeight);
 
-  // 情绪等级
   let level, emoji, description;
-  if (index >= 75) {
+  if (index >= 80) {
     level = '极度贪婪'; emoji = '🔴🔴🔴'; description = '市场极度乐观，注意过热风险';
-  } else if (index >= 60) {
+  } else if (index >= 70) {
     level = '贪婪'; emoji = '🟠'; description = '市场偏多，情绪积极';
-  } else if (index >= 45) {
+  } else if (index >= 60) {
+    level = '略偏贪婪'; emoji = '🟠'; description = '市场略偏乐观';
+  } else if (index >= 50) {
     level = '中性'; emoji = '🟡'; description = '市场情绪平稳，多空均衡';
+  } else if (index >= 40) {
+    level = '略偏恐慌'; emoji = '🟢'; description = '市场略偏悲观';
   } else if (index >= 30) {
-    level = '恐惧'; emoji = '🟢'; description = '市场偏空，情绪谨慎（可能是机会）';
+    level = '偏恐慌'; emoji = '🟢'; description = '市场偏空，情绪谨慎';
+  } else if (index >= 20) {
+    level = '恐慌'; emoji = '🟢🟢'; description = '市场恐慌（可能是机会，仍需谨慎）';
   } else {
-    level = '极度恐惧'; emoji = '🟢🟢🟢'; description = '市场极度悲观（历史上往往是底部区域）';
+    level = '极度恐慌'; emoji = '🟢🟢🟢'; description = '市场极度悲观（历史上往往接近情绪底部）';
   }
 
-  // 板块分化度（标准差）
   const temps = validBars.map(b => b.temperature);
   const mean = temps.reduce((a, b) => a + b, 0) / temps.length;
   const variance = temps.reduce((sum, t) => sum + Math.pow(t - mean, 2), 0) / temps.length;
   const divergence = Math.round(Math.sqrt(variance));
 
   return {
-    index,          // 0~100 市场情绪指数
-    level,          // 情绪等级
+    index,
+    level,
     emoji,
     description,
-    divergence,     // 板块分化度（越高越分化）
+    divergence,
     divergenceLabel: divergence > 20 ? '严重分化' : divergence > 10 ? '轻度分化' : '基本一致',
     totalPosts,
     totalClicks,
     totalComments,
-    validBarCount: validBars.length,
+    barCount: validBars.length,
+    fallback: isFallback,
   };
 }
 
@@ -687,21 +709,15 @@ async function main() {
     process.exit(1);
   }
 
-  // 过滤最近N天数据
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days);
-  const cutoffStr = cutoff.toISOString().substring(0, 10);
+  // 过滤：当天/最近N天，仅 09:00–15:00
+  const windowLabel = analysisWindowLabel({ days });
 
   // 分析每个板块
   const barResults = [];
   let allPostsForTopics = [];
 
   for (const bar of data.bars) {
-    // 过滤时间范围
-    const filteredPosts = bar.posts.filter(p => {
-      if (!p.publishTime) return false;
-      return p.publishTime.substring(0, 10) >= cutoffStr;
-    });
+    const filteredPosts = bar.posts.filter(p => isInAnalysisWindow(p.publishTime, { days }));
 
     // 分析每个帖子
     const analyzedPosts = filteredPosts.map(analyzePostSentiment);
@@ -727,7 +743,7 @@ async function main() {
     });
     const report = {
       generatedAt: new Date().toISOString(),
-      dateRange: `${cutoffStr} ~ ${new Date().toISOString().substring(0, 10)}`,
+      dateRange: windowLabel,
       marketIndex,
       bars: cleanResults,
       hotTopics,
@@ -748,7 +764,7 @@ async function main() {
     });
     const report = {
       generatedAt: new Date().toISOString(),
-      dateRange: `${cutoffStr} ~ ${new Date().toISOString().substring(0, 10)}`,
+      dateRange: windowLabel,
       marketIndex,
       bars: cleanResults,
       hotTopics,

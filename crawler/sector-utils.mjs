@@ -1,6 +1,10 @@
 /**
  * 板块名归一化与合并工具
  * 解决 AI 输出「银行」「银行Ⅱ」「银行II」等重复板块的问题
+ *
+ * 温度公式（与 AI prompt / 本地重算共用）：
+ *   score = (bullish + greed - bearish - fear) / max(posts, 1)
+ *   temperature = clamp(round(50 + score * 50), 0, 100)
  */
 
 export const SECTOR_CANONICAL = {
@@ -18,6 +22,9 @@ export const SECTOR_CANONICAL = {
   '芯片': '芯片', '国产芯片': '芯片', '芯片ETF': '芯片',
   '半导体': '半导体', '半导体概念': '半导体',
 };
+
+/** 参与市场指数加权的最小帖子数 */
+export const MIN_POSTS_FOR_INDEX = 20;
 
 /** 去掉后缀并映射到固定板块名 */
 export function normalizeSectorName(name) {
@@ -47,7 +54,30 @@ export function normalizeSectorName(name) {
   return SECTOR_CANONICAL[cleaned] || cleaned;
 }
 
-/** 合并同板块的多条记录（按帖子数加权平均温度） */
+/** 由情绪计数计算温度（0–100） */
+export function temperatureFromCounts(data) {
+  const posts = Math.max(Number(data?.posts) || 0, 1);
+  const bullish = Number(data?.bullish) || 0;
+  const greed = Number(data?.greed) || 0;
+  const bearish = Number(data?.bearish) || 0;
+  const fear = Number(data?.fear) || 0;
+  const score = (bullish + greed - bearish - fear) / posts;
+  return Math.max(0, Math.min(100, Math.round(50 + score * 50)));
+}
+
+/** 由全局 distribution 计算市场指数（帖子不足时回退用此） */
+export function marketIndexFromDistribution(dist, totalPosts) {
+  const t = Math.max(Number(totalPosts) || 0, 1);
+  const bullish = Number(dist?.bullish) || 0;
+  const greed = Number(dist?.greed) || 0;
+  const bearish = Number(dist?.bearish) || 0;
+  const fear = Number(dist?.fear) || 0;
+  return temperatureFromCounts({ posts: t, bullish, greed, bearish, fear });
+}
+
+/**
+ * 合并同板块，并按情绪计数重算温度（忽略模型自报 temperature）
+ */
 export function mergeSectors(sectorsObj) {
   if (!sectorsObj || typeof sectorsObj !== 'object') return {};
 
@@ -60,7 +90,7 @@ export function mergeSectors(sectorsObj) {
     if (!sectorData[name]) {
       sectorData[name] = {
         posts: 0, bullish: 0, bearish: 0, fear: 0, greed: 0, neutral: 0,
-        weightedTemp: 0, signals: [],
+        signals: [],
       };
     }
 
@@ -72,7 +102,6 @@ export function mergeSectors(sectorsObj) {
     s.fear += data.fear || 0;
     s.greed += data.greed || 0;
     s.neutral += data.neutral || 0;
-    s.weightedTemp += (data.temperature ?? 50) * (posts || 1);
     if (data.topSignal) s.signals.push(data.topSignal);
     if (Array.isArray(data.signals)) s.signals.push(...data.signals);
   }
@@ -81,7 +110,7 @@ export function mergeSectors(sectorsObj) {
   for (const [name, s] of Object.entries(sectorData)) {
     sectors[name] = {
       posts: s.posts,
-      temperature: s.posts > 0 ? Math.round(s.weightedTemp / s.posts) : 50,
+      temperature: temperatureFromCounts(s),
       bullish: s.bullish,
       bearish: s.bearish,
       fear: s.fear,
@@ -92,4 +121,39 @@ export function mergeSectors(sectorsObj) {
   }
 
   return sectors;
+}
+
+/**
+ * 市场指数：各板块温度按 posts 加权；posts < minPosts 不参与指数
+ * 若无合格板块，回退到全局 distribution
+ */
+export function marketIndexFromSectors(sectors, dist, totalPosts, minPosts = MIN_POSTS_FOR_INDEX) {
+  let weightSum = 0;
+  let weightedTemp = 0;
+
+  for (const s of Object.values(sectors || {})) {
+    const posts = s.posts || 0;
+    if (posts < minPosts) continue;
+    weightedTemp += (s.temperature ?? 50) * posts;
+    weightSum += posts;
+  }
+
+  if (weightSum > 0) {
+    return Math.round(weightedTemp / weightSum);
+  }
+
+  return marketIndexFromDistribution(dist, totalPosts);
+}
+
+/** 统一等级文案（与日报/关键词对齐） */
+export function sentimentLevel(index) {
+  const mi = Number(index) || 50;
+  if (mi < 20) return { level: '极度恐慌', short: '极度恐慌' };
+  if (mi < 30) return { level: '恐慌', short: '恐慌' };
+  if (mi < 40) return { level: '偏恐慌', short: '偏恐慌' };
+  if (mi < 50) return { level: '略偏恐慌', short: '略偏恐慌' };
+  if (mi < 60) return { level: '中性', short: '中性' };
+  if (mi < 70) return { level: '略偏贪婪', short: '略偏贪婪' };
+  if (mi < 80) return { level: '贪婪', short: '贪婪' };
+  return { level: '极度贪婪', short: '极度贪婪' };
 }

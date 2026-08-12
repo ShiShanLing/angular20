@@ -8,7 +8,9 @@
  * 用法:
  *   node crawler/guba-ai.mjs                           # 分析已有数据
  *   node crawler/guba-ai.mjs --crawl                   # 先抓取再分析
- *   node crawler/guba-ai.mjs --days=3                  # 分析最近N天
+ *   node crawler/guba-ai.mjs --days=3                  # 最近N天，每天仅 09:00–15:00
+ *
+ * 默认时间窗: 东八区当天 09:00–15:00
  *   node crawler/guba-ai.mjs --json                    # 仅输出JSON
  *   node crawler/guba-ai.mjs --provider=deepseek       # 指定提供商
  *
@@ -26,6 +28,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
+import { isInAnalysisWindow, analysisWindowLabel } from './time-window.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, 'data');
@@ -589,17 +592,13 @@ async function main() {
   }
 
   const data = JSON.parse(readFileSync(DATA_FILE, 'utf-8'));
+  const windowLabel = analysisWindowLabel({ days });
 
-  // 过滤时间
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days);
-  const cutoffStr = cutoff.toISOString().substring(0, 10);
-
-  // 收集所有帖子
+  // 收集所有帖子（当天/最近N天，仅 09:00–15:00）
   const allPosts = [];
   for (const bar of data.bars) {
     for (const p of bar.posts) {
-      if (p.publishTime && p.publishTime.substring(0, 10) >= cutoffStr) {
+      if (isInAnalysisWindow(p.publishTime, { days })) {
         allPosts.push(p);
       }
     }
@@ -615,7 +614,7 @@ async function main() {
     }
   }
 
-  console.log(`📊 数据准备: ${uniquePosts.length}条独立帖子 (最近${days}天)`);
+  console.log(`📊 数据准备: ${uniquePosts.length}条独立帖子 (${windowLabel})`);
 
   if (uniquePosts.length === 0) {
     console.log('ℹ 没有需要分析的数据');
@@ -627,7 +626,7 @@ async function main() {
 
   // 聚合
   const report = aggregateResults(uniquePosts, aiResults, data.bars);
-  report.dateRange = `${cutoffStr} ~ ${new Date().toISOString().substring(0, 10)}`;
+  report.dateRange = windowLabel;
 
   // 输出
   if (outputJson) {

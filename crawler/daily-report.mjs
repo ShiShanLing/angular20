@@ -19,7 +19,13 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
 import nodemailer from 'nodemailer';
-import { mergeSectors } from './sector-utils.mjs';
+import { mergeSectors, marketIndexFromSectors, sentimentLevel } from './sector-utils.mjs';
+import { isInAnalysisWindow } from './time-window.mjs';
+import {
+  getMarketFundFlow,
+  getIndustryFundFlow,
+  getConceptFundFlow,
+} from './eastmoney-market.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = join(__dirname, '..');
@@ -153,6 +159,93 @@ function runAnalysis() {
 
 const PANIC_WORDS = ['销户', '爆仓', '天台', '家破人亡', '倾家荡产', '割肉', '清仓走人', '再也不炒', '血亏', '腰斩', '崩盘', '退市', '绝望', '完了', '救命', '活不下去', '跳楼', '躺平'];
 
+/** 话题词 → 分类（用于热门话题饼图） */
+const TOPIC_CATEGORY_MAP = {
+  '科技': ['科技', 'AI', '人工智能', '芯片', '半导体', '互联网', '机器人', '无人驾驶', '科创板', '低空经济'],
+  '金融': ['银行', '证券', '保险', '券商', '非银'],
+  '消费': ['白酒', '酿酒', '消费', '医药'],
+  '新能源': ['新能源', '光伏', '锂电', '电力', '煤炭'],
+  '军工有色': ['军工', '稀土', '有色', '钢铁'],
+  '地产': ['地产', '房地产'],
+  '大盘指数': ['上证指数', '大盘', '指数', '创业板', '北证', '沪深300', '中证500'],
+  '资金': ['主力', '庄家', '量化', '外资', '北向', '融资', '基金', '散户', '游资', '国家队', '汇金', '证金'],
+  '政策宏观': ['降息', '降准', '加息', 'LPR', 'MLF', '逆回购', '国常会', '政治局'],
+  '情绪操作': ['加仓', '减仓', '满仓', '空仓', '抄底', '割肉', '恐慌', '贪婪', '观望', '涨停', '跌停', '放量', '缩量'],
+};
+
+const TOPIC_PIE_COLORS = [
+  '#2563eb', '#16a34a', '#dc2626', '#d97706', '#7c3aed',
+  '#0891b2', '#db2777', '#65a30d', '#ea580c', '#4f46e5', '#64748b',
+];
+
+/** 将热门话题词按分类汇总 */
+function aggregateTopicCategories(hotTopics) {
+  const termToCat = new Map();
+  for (const [cat, terms] of Object.entries(TOPIC_CATEGORY_MAP)) {
+    for (const t of terms) termToCat.set(t.toLowerCase(), cat);
+  }
+
+  const counts = {};
+  let total = 0;
+  for (const item of hotTopics || []) {
+    const term = String(item.term || '');
+    const count = Number(item.count) || 0;
+    if (!count) continue;
+    const cat = termToCat.get(term.toLowerCase()) || termToCat.get(term) || '其他';
+    counts[cat] = (counts[cat] || 0) + count;
+    total += count;
+  }
+
+  const slices = Object.entries(counts)
+    .map(([name, count]) => ({
+      name,
+      count,
+      pct: total > 0 ? Math.round((count / total) * 1000) / 10 : 0,
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  return { total, slices };
+}
+
+/** 生成话题分类饼图 SVG（邮件内嵌） */
+function buildTopicPieSvg(slices, size = 200) {
+  if (!slices.length) return '';
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = size / 2 - 4;
+  const sum = slices.reduce((s, x) => s + x.count, 0) || 1;
+
+  let angle = -Math.PI / 2;
+  const paths = [];
+
+  for (let i = 0; i < slices.length; i++) {
+    const slice = slices[i];
+    const frac = slice.count / sum;
+    const sweep = frac * Math.PI * 2;
+    const x1 = cx + r * Math.cos(angle);
+    const y1 = cy + r * Math.sin(angle);
+    angle += sweep;
+    const x2 = cx + r * Math.cos(angle);
+    const y2 = cy + r * Math.sin(angle);
+    const large = sweep > Math.PI ? 1 : 0;
+    const color = TOPIC_PIE_COLORS[i % TOPIC_PIE_COLORS.length];
+
+    if (frac >= 0.999) {
+      // 整圆
+      paths.push(
+        `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}"/>`
+      );
+    } else if (frac > 0.001) {
+      paths.push(
+        `<path d="M ${cx} ${cy} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z" fill="${color}"/>`
+      );
+    }
+  }
+
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto;">${paths.join('')}</svg>`;
+}
+
+
 // 简单帖子情绪判断（基于关键词）
 const BULL_WORDS = ['牛市', '看涨', '反弹', '加仓', '抄底', '利好', '突破', '拉升', '底部', '起飞', '暴涨', '满仓', '大涨', '上攻', '翻红', '起涨'];
 const BEAR_WORDS = ['下跌', '暴跌', '割肉', '清仓', '套牢', '崩盘', '利空', '大跌', '破位', '跑路', '跳水', '绿盘', '阴跌', '杀跌', '跌停', '做空'];
@@ -191,7 +284,7 @@ function computeEnrichedData(dateStr) {
       const seen = new Set();
       for (const bar of data.bars) {
         for (const p of bar.posts) {
-          if (p.publishTime && p.publishTime.substring(0, 10) === dateStr && !seen.has(p.postId)) {
+          if (isInAnalysisWindow(p.publishTime, { dateStr }) && !seen.has(p.postId)) {
             seen.add(p.postId);
             allPosts.push({ title: p.title, clicks: p.clicks || 0, comments: p.comments || 0, barName: p.barName || bar.barName, barCode: p.barCode || '', postId: p.postId, content: p.content || '', publishTime: p.publishTime });
           }
@@ -218,7 +311,7 @@ function computeEnrichedData(dateStr) {
       let totalPanic = 0;
       for (const bar of data.bars) {
         for (const p of bar.posts) {
-          if (!p.publishTime || p.publishTime.substring(0, 10) !== dateStr) continue;
+          if (!isInAnalysisWindow(p.publishTime, { dateStr })) continue;
           const text = (p.title || '') + (p.content || '');
           for (const word of PANIC_WORDS) {
             if (text.includes(word)) {
@@ -238,19 +331,36 @@ function computeEnrichedData(dateStr) {
     try {
       const kw = JSON.parse(readFileSync(kwFile, 'utf-8'));
       enriched.hotTopics = (kw.hotTopics || []).slice(0, 15);
+      enriched.topicCategories = aggregateTopicCategories(kw.hotTopics || []);
     } catch {}
   }
 
-  // 5. 操作建议
+  // 5. 资金流向（东财估算：大盘 + 行业/概念主力净流入）
+  try {
+    const market = getMarketFundFlow();
+    const industry = getIndustryFundFlow(8);
+    const concept = getConceptFundFlow(8);
+    enriched.fundFlow = { market, industry, concept };
+    writeFileSync(join(DATA_DIR, 'fund_flow.json'), JSON.stringify({
+      date: dateStr,
+      generatedAt: new Date().toISOString(),
+      ...enriched.fundFlow,
+    }, null, 2), 'utf-8');
+  } catch (err) {
+    enriched.fundFlow = { market: { available: false, reason: err.message }, industry: null, concept: null };
+  }
+
   return enriched;
 }
 
 function getActionSuggestion(aiIndex) {
-  if (aiIndex < 15) return { label: '极度谨慎', color: '#dc2626', emoji: '🚨', desc: '市场极度恐慌，建议观望为主，等待企稳信号。历史极端恐慌常预示阶段底部，但可能仍有惯性下杀。' };
-  if (aiIndex < 25) return { label: '谨慎观望', color: '#ea580c', emoji: '⚠️', desc: '恐慌情绪浓厚，建议控制仓位，不盲目抄底。关注政策面和资金面变化。' };
+  if (aiIndex < 20) return { label: '极度谨慎', color: '#dc2626', emoji: '🚨', desc: '市场极度恐慌，建议观望为主，等待企稳信号。历史极端恐慌常预示阶段底部，但可能仍有惯性下杀。' };
+  if (aiIndex < 30) return { label: '谨慎观望', color: '#ea580c', emoji: '⚠️', desc: '恐慌情绪浓厚，建议控制仓位，不盲目抄底。关注政策面和资金面变化。' };
   if (aiIndex < 40) return { label: '轻仓试探', color: '#d97706', emoji: '👀', desc: '情绪偏悲观，可少量布局被错杀的优质标的，但需严格止损。' };
+  if (aiIndex < 50) return { label: '偏谨慎', color: '#ca8a04', emoji: '👀', desc: '略偏恐慌，仓位不宜过重，等待更明确方向。' };
   if (aiIndex < 60) return { label: '正常操作', color: '#0891b2', emoji: '✅', desc: '市场情绪中性，按个人策略正常操作，关注板块轮动机会。' };
-  if (aiIndex < 75) return { label: '积极乐观', color: '#059669', emoji: '📈', desc: '市场偏贪婪，可适当加仓，但注意追高风险。' };
+  if (aiIndex < 70) return { label: '略偏积极', color: '#059669', emoji: '📈', desc: '略偏贪婪，可按计划参与，注意节奏。' };
+  if (aiIndex < 80) return { label: '积极乐观', color: '#059669', emoji: '📈', desc: '市场偏贪婪，可适当加仓，但注意追高风险。' };
   return { label: '警惕过热', color: '#dc2626', emoji: '🔥', desc: '极度贪婪，市场可能过热，注意止盈和风险控制。' };
 }
 
@@ -268,6 +378,8 @@ function saveToHistory(dateStr, aiData, kwData, enriched) {
     totalPosts: aiData?.totalPosts ?? kwData?.marketIndex?.totalPosts ?? 0,
     bearFearPct: aiData ? ((aiData.distribution.bearish + aiData.distribution.fear) / aiData.totalPosts * 100).toFixed(1) : null,
     panicTotal: enriched.panicSignals?.total ?? 0,
+    mainNetYi: enriched.fundFlow?.market?.mainNetYi ?? null,
+    topInflow: (enriched.fundFlow?.industry?.inflowTop || []).slice(0, 3).map(b => b.name),
   };
   // 去重并追加
   const filtered = history.filter(h => h.date !== dateStr);
@@ -293,7 +405,13 @@ function buildHtmlEmail(analysisOutput, tradingInfo) {
     try {
       aiData = JSON.parse(readFileSync(aiJsonFile, 'utf-8'));
       if (aiData?.sectors) {
-        aiData = { ...aiData, sectors: mergeSectors(aiData.sectors) };
+        const sectors = mergeSectors(aiData.sectors);
+        const marketIndex = marketIndexFromSectors(
+          sectors,
+          aiData.distribution,
+          aiData.totalPosts
+        );
+        aiData = { ...aiData, sectors, marketIndex };
       }
     } catch {}
   }
@@ -329,9 +447,9 @@ function buildHtmlEmail(analysisOutput, tradingInfo) {
   // === 1. AI 核心指数 + 操作建议 ===
   if (aiData) {
     const mi = aiData.marketIndex;
-    const level = mi < 20 ? '极度恐慌' : mi < 30 ? '恐慌' : mi < 40 ? '偏恐慌' : mi < 50 ? '略偏恐慌' : mi < 60 ? '中性' : mi < 70 ? '偏贪婪' : '贪婪';
+    const level = sentimentLevel(mi).level;
     const d = aiData.distribution;
-    const t = aiData.totalPosts;
+    const t = aiData.totalPosts || 1;
 
     html += `
 <h2 style="color:#1e3a5f;border-bottom:2px solid #e5e7eb;padding-bottom:8px;">🤖 AI 情绪分析</h2>
@@ -362,6 +480,83 @@ function buildHtmlEmail(analysisOutput, tradingInfo) {
   <p style="margin:8px 0 0;font-size:13px;color:#374151;line-height:1.6;">${suggestion.desc}</p>
 </div>`;
     }
+
+    // 今天涨跌原因（优先新闻）
+    const mr = aiData.moveReason || { direction: '未知', reason: '未知', points: [], sources: [] };
+    const dirColor = mr.direction === '涨' ? '#16a34a' : mr.direction === '跌' ? '#dc2626' : '#6b7280';
+    html += `
+<h2 style="color:#1e3a5f;border-bottom:2px solid #e5e7eb;padding-bottom:8px;margin-top:24px;">📌 今天涨跌原因</h2>
+<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;margin:12px 0;">
+  <div style="font-size:13px;margin-bottom:8px;">
+    方向：<strong style="color:${dirColor};">${mr.direction || '未知'}</strong>
+    ${Array.isArray(mr.indices) && mr.indices[0] ? `<span style="color:#94a3b8;margin-left:8px;font-size:12px;">上证 ${mr.indices[0].pct != null ? mr.indices[0].pct + '%' : ''}</span>` : ''}
+  </div>
+  <div style="font-size:14px;color:#1e293b;line-height:1.7;">${mr.reason || '未知'}</div>`;
+    if (Array.isArray(mr.points) && mr.points.length > 0 && mr.reason !== '未知') {
+      html += `<ul style="margin:10px 0 0;padding-left:18px;font-size:13px;color:#475569;line-height:1.7;">`;
+      for (const p of mr.points.slice(0, 5)) {
+        html += `<li>${p}</li>`;
+      }
+      html += `</ul>`;
+    }
+    if (Array.isArray(mr.sources) && mr.sources.length > 0) {
+      html += `<div style="margin-top:10px;font-size:12px;color:#64748b;">参考新闻：`;
+      html += mr.sources.map(s => `「${s}」`).join(' ');
+      html += `</div>`;
+    }
+    html += `</div>`;
+  }
+
+  // === 1b. 资金流向（收盘口径更准，配合 15:00 定时） ===
+  if (enriched.fundFlow) {
+    const ff = enriched.fundFlow;
+    const m = ff.market || {};
+    const mainColor = (m.mainNetYi ?? 0) > 0 ? '#dc2626' : (m.mainNetYi ?? 0) < 0 ? '#16a34a' : '#6b7280';
+    const fmtYi = (v) => (v == null ? '未知' : `${v > 0 ? '+' : ''}${v}亿`);
+    html += `
+<h2 style="color:#1e3a5f;border-bottom:2px solid #e5e7eb;padding-bottom:8px;margin-top:24px;">💰 今日资金流向</h2>
+<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;margin:12px 0;">`;
+    if (m.available) {
+      html += `
+  <div style="font-size:14px;margin-bottom:10px;">
+    沪深主力净流入：<strong style="color:${mainColor};font-size:18px;">${fmtYi(m.mainNetYi)}</strong>
+    <span style="color:#94a3b8;font-size:12px;margin-left:8px;">${m.direction || ''} · ${m.time || ''}</span>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:#475569;margin-bottom:8px;">
+    <span>超大单 ${fmtYi(m.superNetYi)}</span>
+    <span>大单 ${fmtYi(m.bigNetYi)}</span>
+    <span>中单 ${fmtYi(m.midNetYi)}</span>
+    <span>小单 ${fmtYi(m.smallNetYi)}</span>
+  </div>`;
+    } else {
+      html += `<div style="font-size:13px;color:#6b7280;">大盘资金流向：${m.reason || '未知'}</div>`;
+    }
+    html += `<p style="font-size:11px;color:#94a3b8;margin:0 0 12px;">数据来源：东方财富估算（非交易所官方），主力≈超大单+大单</p>`;
+
+    const renderFlowTable = (title, side, rows) => {
+      if (!rows || !rows.length) return '';
+      const isIn = side === 'in';
+      let block = `<div style="flex:1;min-width:240px;"><div style="font-size:13px;font-weight:600;color:${isIn ? '#dc2626' : '#16a34a'};margin-bottom:6px;">${title}</div>`;
+      block += `<table style="width:100%;border-collapse:collapse;font-size:12px;">`;
+      block += `<tr style="background:#f1f5f9;"><th style="padding:4px;text-align:left;">板块</th><th>涨跌</th><th>主力净流入</th></tr>`;
+      for (const b of rows.slice(0, 8)) {
+        const pct = b.pct == null ? '-' : `${b.pct > 0 ? '+' : ''}${b.pct}%`;
+        const net = fmtYi(b.mainNetYi);
+        const nc = (b.mainNetYi ?? 0) > 0 ? '#dc2626' : '#16a34a';
+        block += `<tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:4px;">${(b.name || '').substring(0, 10)}</td><td style="text-align:center;">${pct}</td><td style="text-align:right;font-weight:600;color:${nc};">${net}</td></tr>`;
+      }
+      block += `</table></div>`;
+      return block;
+    };
+
+    html += `<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">`;
+    html += renderFlowTable('行业流入 Top', 'in', ff.industry?.inflowTop);
+    html += renderFlowTable('行业流出 Top', 'out', ff.industry?.outflowTop);
+    html += `</div>`;
+    html += `<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">`;
+    html += renderFlowTable('概念流入 Top', 'in', ff.concept?.inflowTop);
+    html += renderFlowTable('概念流出 Top', 'out', ff.concept?.outflowTop);
+    html += `</div></div>`;
   }
 
   // === 2. 历史趋势（5天） ===
@@ -470,7 +665,7 @@ function buildHtmlEmail(analysisOutput, tradingInfo) {
     html += `</table>`;
   }
 
-  // === 6. 热门话题词 ===
+  // === 6. 热门话题词 + 分类占比饼图 ===
   if (enriched.hotTopics && enriched.hotTopics.length > 0) {
     html += `<h2 style="color:#1e3a5f;border-bottom:2px solid #e5e7eb;padding-bottom:8px;margin-top:24px;">🔥 热门话题</h2>`;
     html += `<div style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0;">`;
@@ -481,6 +676,27 @@ function buildHtmlEmail(analysisOutput, tradingInfo) {
       html += `<span style="background:#eff6ff;color:#1e40af;padding:4px 10px;border-radius:16px;font-size:${size}px;opacity:${opacity};font-weight:${t.count > maxCount * 0.5 ? 'bold' : 'normal'};">${t.term} <small style="opacity:0.6;">${t.count}</small></span>`;
     }
     html += `</div>`;
+
+    const cats = enriched.topicCategories || aggregateTopicCategories(enriched.hotTopics);
+    if (cats.slices && cats.slices.length > 0) {
+      const topSlices = cats.slices.slice(0, 8);
+      html += `<div style="margin:16px 0;padding:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">`;
+      html += `<div style="font-size:13px;font-weight:600;color:#334155;margin-bottom:10px;">话题分类占比（按提及次数，合计 ${cats.total}）</div>`;
+      html += `<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">`;
+      html += `<div style="flex:0 0 200px;">${buildTopicPieSvg(topSlices, 180)}</div>`;
+      html += `<div style="flex:1;min-width:180px;font-size:12px;line-height:1.9;">`;
+      for (let i = 0; i < topSlices.length; i++) {
+        const s = topSlices[i];
+        const color = TOPIC_PIE_COLORS[i % TOPIC_PIE_COLORS.length];
+        html += `<div style="display:flex;align-items:center;gap:8px;">`;
+        html += `<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${color};"></span>`;
+        html += `<span style="flex:1;color:#334155;">${s.name}</span>`;
+        html += `<span style="color:#64748b;">${s.count}次</span>`;
+        html += `<span style="width:48px;text-align:right;font-weight:600;color:#1e293b;">${s.pct}%</span>`;
+        html += `</div>`;
+      }
+      html += `</div></div></div>`;
+    }
   }
 
   // === 7. 热门帖子 Top 10（带链接+AI情绪标注） ===
@@ -523,6 +739,9 @@ function buildHtmlEmail(analysisOutput, tradingInfo) {
     const kwMi = kwData.marketIndex.index;
     const aiMi = aiData.marketIndex;
     const diff = aiMi - kwMi;
+    const dist = aiData.distribution || {};
+    const total = Math.max(aiData.totalPosts || 1, 1);
+    const aiNeutralPct = ((dist.neutral || 0) / total * 100).toFixed(1);
     html += `
 <h2 style="color:#1e3a5f;border-bottom:2px solid #e5e7eb;padding-bottom:8px;margin-top:24px;">⚖️ 关键词 vs AI 对比</h2>
 <div style="display:flex;gap:12px;margin:12px 0;">
@@ -535,11 +754,11 @@ function buildHtmlEmail(analysisOutput, tradingInfo) {
   <div style="flex:1;background:#f8fafc;border-radius:8px;padding:14px;text-align:center;">
     <div style="font-size:12px;color:#6b7280;">AI指数</div>
     <div style="font-size:28px;font-weight:bold;color:${indexColor(aiMi)};">${aiMi}°</div>
-    <div style="font-size:12px;color:#6b7280;">${aiMi < 30 ? '恐慌' : aiMi < 50 ? '偏恐慌' : '中性'}</div>
+    <div style="font-size:12px;color:#6b7280;">${sentimentLevel(aiMi).short}</div>
   </div>
 </div>
 <div style="background:#fffbeb;border:1px solid #fbbf24;border-radius:8px;padding:10px;margin:8px 0;font-size:12px;color:#92400e;">
-  💡 差异 ${Math.abs(diff)}° — AI识别了讽刺、反语等隐藏情绪，关键词方案将 ${(kwData.marketIndex.totalPosts * 0.63).toFixed(0)} 条帖子归为"中性"，实际包含大量隐藏的看空/恐慌情绪。
+  💡 差异 ${Math.abs(diff)}° — AI 更擅长识别讽刺/反语；AI 中性占比 ${aiNeutralPct}%，指数已按情绪计数公式重算。
 </div>`;
   }
 
@@ -680,7 +899,13 @@ async function pushToApi(dateStr, htmlContent) {
       try {
         aiData = JSON.parse(readFileSync(aiFile, 'utf-8'));
         if (aiData.sectors) {
-          aiData = { ...aiData, sectors: mergeSectors(aiData.sectors) };
+          const sectors = mergeSectors(aiData.sectors);
+          const marketIndex = marketIndexFromSectors(
+            sectors,
+            aiData.distribution,
+            aiData.totalPosts
+          );
+          aiData = { ...aiData, sectors, marketIndex };
         }
       } catch {}
     }
@@ -741,7 +966,7 @@ function enriched_panicTotal() {
     let total = 0;
     for (const bar of data.bars) {
       for (const p of bar.posts) {
-        if (!p.publishTime || p.publishTime.substring(0, 10) !== dateStr) continue;
+        if (!isInAnalysisWindow(p.publishTime, { dateStr })) continue;
         const text = (p.title || '') + (p.content || '');
         for (const word of PANIC_WORDS) {
           if (text.includes(word)) total++;
