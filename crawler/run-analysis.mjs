@@ -9,7 +9,9 @@
  *   node crawler/run-analysis.mjs --no-ai            # 仅关键词分析（跳过AI）
  *   node crawler/run-analysis.mjs --pages=10         # 抓更多页
  *   node crawler/run-analysis.mjs --json             # 输出JSON格式
- *   node crawler/run-analysis.mjs --days=3           # 分析最近N天
+ *   node crawler/run-analysis.mjs --days=3           # 最近N天，每天仅 09:00–15:00
+ *
+ * 默认时间窗: 东八区当天 09:00–15:00（对齐 15:00 日报）
  *
  * 前提:
  *   1. 安装 Qoder CLI: curl -fsSL https://qoder.com/install | bash
@@ -21,7 +23,9 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from '
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync, spawnSync } from 'child_process';
-import { mergeSectors } from './sector-utils.mjs';
+import { mergeSectors, marketIndexFromSectors, sentimentLevel } from './sector-utils.mjs';
+import { isInAnalysisWindow, analysisWindowLabel } from './time-window.mjs';
+import { httpGetText, getTodayNews } from './eastmoney-market.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, 'data');
@@ -32,7 +36,7 @@ const AI_BATCH_SIZE = 500;  // 每批AI分析帖子数（减小避免超时）
 const AI_BATCH_TIMEOUT = 480000;  // 每批超时8分钟
 const AI_BATCH_DELAY = 15000;  // 批次间延迟15秒（防限流）
 const AI_MAX_RETRIES = 2;  // 每批最多重试次数
-const MAX_POST_TEXT_LEN = 50;  // 帖子文本最大长度
+const MAX_POST_TEXT_LEN = 180;  // 帖子文本最大长度（提高以保留反讽/语境）
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -71,17 +75,14 @@ function generateQoderInput(days) {
   }
 
   const data = JSON.parse(readFileSync(DATA_FILE, 'utf-8'));
+  const windowLabel = analysisWindowLabel({ days });
 
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days);
-  const cutoffStr = cutoff.toISOString().substring(0, 10);
-
-  // 收集所有帖子
+  // 收集所有帖子（当天/最近N天，仅 09:00–15:00）
   const allPosts = [];
   const seen = new Set();
   for (const bar of data.bars) {
     for (const p of bar.posts) {
-      if (p.publishTime && p.publishTime.substring(0, 10) >= cutoffStr && !seen.has(p.postId)) {
+      if (isInAnalysisWindow(p.publishTime, { days }) && !seen.has(p.postId)) {
         seen.add(p.postId);
         allPosts.push({ ...p, barName: bar.barName, barCode: bar.code });
       }
@@ -94,7 +95,7 @@ function generateQoderInput(days) {
   // 生成Qoder输入文件
   const lines = [];
   lines.push(`# 股吧帖子数据 - 请对以下帖子进行AI情绪分析`);
-  lines.push(`# 日期: ${cutoffStr} ~ ${new Date().toISOString().substring(0, 10)}`);
+  lines.push(`# 时间窗: ${windowLabel}`);
   lines.push(`# 总帖子数: ${allPosts.length}`);
   lines.push(`# 要求: 对每条帖子判断情绪(看多/看空/恐慌/贪婪/中性)，给出置信度和得分(-1~+1)`);
   lines.push(`# 注意识别讽刺、反语、混合情绪`);
@@ -244,10 +245,14 @@ const BATCH_SYSTEM_PROMPT = '你是中国A股市场情绪分析专家。对提�
   '规则：\n' +
   '1. 判断每条帖子情绪: bullish(看多)/bearish(看空)/fear(恐慌)/greed(贪婪)/neutral(中性)\n' +
   '2. 识别讽刺反语（如"相信牛市即便倾家荡产"=恐慌，"老乡别走"=讽刺看空）\n' +
-  '3. 高点击帖子权重更高\n' +
+  '3. 高点击帖子对情绪判断权重更高，但仍须如实计入 distribution 计数\n' +
   '4. 板块名必须严格使用以下固定名称，禁止自创名称或加后缀（如Ⅱ、2等）：\n' +
   '   上证指数、创业板指、证券、银行、酿酒、白酒、新能源、互联网、\n' +
-  '   半导体ETF、科技ETF、电力、芯片、半导体\n\n' +
+  '   半导体ETF、科技ETF、电力、芯片、半导体\n' +
+  '5. temperature 与 marketIndex 必须用计数公式计算，禁止凭感觉编造：\n' +
+  '   score = (bullish + greed - bearish - fear) / max(posts, 1)\n' +
+  '   temperature = clamp(round(50 + score * 50), 0, 100)\n' +
+  '   marketIndex 用各板块 temperature 按 posts 加权平均\n\n' +
   '严格按以下JSON格式输出，不要加其他内容：\n\n' +
   '```json\n' +
   '{\n' +
@@ -263,11 +268,11 @@ const BATCH_SYSTEM_PROMPT = '你是中国A股市场情绪分析专家。对提�
   '    "<板块名>": {\n' +
   '      "posts": <数量>,\n' +
   '      "bullish": 0, "bearish": 0, "fear": 0, "greed": 0, "neutral": 0,\n' +
-  '      "temperature": <0-100>,\n' +
+  '      "temperature": <按公式计算的0-100>,\n' +
   '      "topSignal": "<最典型帖子描述>"\n' +
   '    }\n' +
   '  },\n' +
-  '  "marketIndex": <0-100综合指数>,\n' +
+  '  "marketIndex": <按公式计算的0-100综合指数>,\n' +
   '  "keySignals": ["<关键发现1>", "<关键发现2>", "<关键发现3>"]\n' +
   '}\n' +
   '```';
@@ -323,11 +328,15 @@ function ensureQoderCli() {
 }
 
 // 调用 qodercli 单次分析
+// 模型档位参考（Credit）：lite=免费, efficient≈0.3x, auto≈1.0x, Kimi-K3≈0.8x
+// 可用环境变量 QODER_MODEL 覆盖，例如：QODER_MODEL=lite
+const QODER_MODEL = process.env.QODER_MODEL || 'Kimi-K3';
+
 function callQoderCli(inputFile, systemPrompt, timeout = AI_BATCH_TIMEOUT) {
   const prompt = `请阅读附件数据并分析。\n\n附件路径: ${inputFile}`;
   const result = spawnSync('qodercli', [
     '-p',
-    '-m', 'Kimi-K3',
+    '-m', QODER_MODEL,
     '--permission-mode', 'bypass_permissions',
     '--system-prompt', systemPrompt,
     '--attachment', inputFile,
@@ -352,20 +361,163 @@ function callQoderCli(inputFile, systemPrompt, timeout = AI_BATCH_TIMEOUT) {
   return { error: 'empty response' };
 }
 
-// 从 guba_posts.json 读取帖子并按板块分组
+const MOVE_REASON_SYSTEM_PROMPT = `你是中国A股市场分析助手。根据「今日财经新闻」为主、「股吧热门帖」为辅，判断今天大盘涨跌的主要原因。
+
+规则：
+1. 优先依据【今日财经新闻】中的政策、资金、外围、板块、业绩、宏观等新闻归纳原因
+2. 股吧帖子仅作情绪佐证；若新闻与帖子矛盾，以新闻为准
+3. 若新闻里找不到可信的涨跌原因，reason 必须填「未知」，不要编造
+4. direction 只能是：涨、跌、震荡、未知（可结合指数涨跌幅判断）
+5. sources 填写你实际引用的新闻标题（最多3条）；若原因未知则 sources=[] 
+6. 不要投资建议；只输出 JSON
+
+输出格式：
+\`\`\`json
+{
+  "direction": "涨|跌|震荡|未知",
+  "reason": "一句话原因，或未知",
+  "points": ["补充要点1", "补充要点2"],
+  "sources": ["引用的新闻标题1", "引用的新闻标题2"]
+}
+\`\`\``;
+
+/** 上证/创业板指当日涨跌快照 */
+function fetchIndexSnapshot() {
+  const specs = [
+    { name: '上证指数', secid: '1.000001' },
+    { name: '创业板指', secid: '0.399006' },
+  ];
+  const out = [];
+  for (const s of specs) {
+    const raw = httpGetText(
+      `https://push2.eastmoney.com/api/qt/stock/get?secid=${s.secid}&fields=f43,f58,f169,f170,f60`
+    );
+    try {
+      const data = JSON.parse(raw)?.data;
+      if (!data) continue;
+      const pct = typeof data.f170 === 'number' ? data.f170 / 100 : null;
+      const chg = typeof data.f169 === 'number' ? data.f169 / 100 : null;
+      const price = typeof data.f43 === 'number' ? data.f43 / 100 : null;
+      out.push({
+        name: data.f58 || s.name,
+        price,
+        change: chg,
+        pct,
+        direction: pct == null ? '未知' : pct > 0.05 ? '涨' : pct < -0.05 ? '跌' : '震荡',
+      });
+    } catch { /* ignore */ }
+  }
+  return out;
+}
+
+/** 分析今天涨跌原因（优先新闻；找不到则 reason=未知） */
+function analyzeMoveReason(agg, allPosts) {
+  console.log('\n  📌 分析今天涨跌原因（优先参考新闻）...\n');
+
+  const news = getTodayNews(30);
+  const indices = fetchIndexSnapshot();
+  console.log(`  新闻 ${news.length} 条，指数快照 ${indices.length} 个`);
+
+  const topPosts = (allPosts || []).slice(0, 25);
+  const sectorLines = Object.entries(agg.sectors || {})
+    .sort((a, b) => b[1].posts - a[1].posts)
+    .slice(0, 8)
+    .map(([name, s]) => `${name}: ${s.temperature}° 多${s.bullish} 空${s.bearish} 恐${s.fear} (${s.posts}帖)`);
+
+  const lines = [
+    '# 今日涨跌原因分析材料',
+    '',
+    '## 指数涨跌（权威参考）',
+    ...(indices.length
+      ? indices.map(i => `${i.name}: ${i.price ?? '-'}  涨跌 ${i.change ?? '-'}  涨跌幅 ${i.pct ?? '-'}%  方向=${i.direction}`)
+      : ['（未获取到指数数据）']),
+    '',
+    `市场情绪指数: ${agg.marketIndex}/100`,
+    `帖子数: ${agg.totalPosts}`,
+    `分布: 多${agg.distribution?.bullish || 0} 贪${agg.distribution?.greed || 0} 中${agg.distribution?.neutral || 0} 空${agg.distribution?.bearish || 0} 恐${agg.distribution?.fear || 0}`,
+    '',
+    '## 今日财经新闻（优先依据，请主要引用此处）',
+  ];
+
+  if (news.length === 0) {
+    lines.push('（未抓到新闻；若仅靠股吧无法判断原因，请输出未知）');
+  } else {
+    news.forEach((n, i) => {
+      const dig = n.digest && n.digest !== n.title ? ` | ${n.digest.substring(0, 80)}` : '';
+      lines.push(`${i + 1}. [${n.channel}|${n.time || ''}] ${n.title}${dig}`);
+    });
+  }
+
+  lines.push('', '## 板块温度', ...sectorLines);
+  lines.push('', '## 关键发现', ...(agg.signals || []).slice(0, 6).map((s, i) => `${i + 1}. ${s}`));
+  lines.push('', '## 热门帖子（辅助，按点击）');
+  topPosts.forEach((p, i) => {
+    const text = ((p.title || '') + (p.content ? ` | ${p.content}` : '')).substring(0, 100);
+    lines.push(`${i + 1}. [${p.barName}|${p.clicks}击] ${text}`);
+  });
+
+  const inputFile = join(DATA_DIR, 'ai_move_reason_input.txt');
+  writeFileSync(inputFile, lines.join('\n'), 'utf-8');
+  writeFileSync(join(DATA_DIR, 'today_news.json'), JSON.stringify({ indices, news }, null, 2), 'utf-8');
+
+  const fallback = { direction: '未知', reason: '未知', points: [], sources: [], indices, newsCount: news.length };
+  const result = callQoderCli(inputFile, MOVE_REASON_SYSTEM_PROMPT, 180000);
+
+  if (result.error || !result.output) {
+    console.log(`  ⚠️ 涨跌原因分析失败: ${result.error || 'empty'}，记为未知`);
+    return fallback;
+  }
+
+  const parsed = extractJson(result.output);
+  if (!parsed) {
+    console.log('  ⚠️ 涨跌原因输出非JSON，记为未知');
+    return fallback;
+  }
+
+  // 若有指数方向且模型写未知，可用指数方向补全 direction
+  let direction = ['涨', '跌', '震荡', '未知'].includes(parsed.direction)
+    ? parsed.direction
+    : '未知';
+  if (direction === '未知' && indices[0]?.direction && indices[0].direction !== '未知') {
+    direction = indices[0].direction;
+  }
+
+  let reason = String(parsed.reason || '').trim() || '未知';
+  if (!reason || /找不到|无法判断|没有明确|无明确|不清楚/.test(reason)) {
+    reason = '未知';
+  }
+  // 无新闻且原因不是未知时更谨慎：若模型瞎编，无 sources 则降为未知
+  const sources = Array.isArray(parsed.sources)
+    ? parsed.sources.map(s => String(s).trim()).filter(Boolean).slice(0, 3)
+    : [];
+  if (reason !== '未知' && news.length > 0 && sources.length === 0) {
+    // 允许无 sources，但鼓励有；不强制降级
+  }
+  if (reason !== '未知' && news.length === 0) {
+    // 没有新闻时，仅当材料里有明确事件才保留；否则未知
+    // 保守：无新闻一律未知（用户要求尽量参考新闻）
+    reason = '未知';
+    direction = indices[0]?.direction || '未知';
+  }
+
+  const points = Array.isArray(parsed.points)
+    ? parsed.points.map(p => String(p).trim()).filter(Boolean).slice(0, 5)
+    : [];
+
+  console.log(`  ✓ 涨跌方向: ${direction} | 原因: ${reason}`);
+  return { direction, reason, points, sources, indices, newsCount: news.length };
+}
+
+// 从 guba_posts.json 读取帖子（默认当天 09:00–15:00）
 function loadPosts(days) {
   if (!existsSync(DATA_FILE)) return null;
   const data = JSON.parse(readFileSync(DATA_FILE, 'utf-8'));
-
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days);
-  const cutoffStr = cutoff.toISOString().substring(0, 10);
 
   const allPosts = [];
   const seen = new Set();
   for (const bar of data.bars) {
     for (const p of bar.posts) {
-      if (p.publishTime && p.publishTime.substring(0, 10) >= cutoffStr && !seen.has(p.postId)) {
+      if (isInAnalysisWindow(p.publishTime, { days }) && !seen.has(p.postId)) {
         seen.add(p.postId);
         allPosts.push({
           postId: p.postId,
@@ -404,7 +556,7 @@ function generateBatchFile(batchPosts, batchIndex, totalBatches, totalPosts) {
     lines.push('');
     for (let i = 0; i < bar.posts.length; i++) {
       const p = bar.posts[i];
-      // 截断到50字以内：优先标题，标题不够再补内容
+      // 截断：优先标题，标题不够再补内容
       let text = p.title || '';
       if (text.length < MAX_POST_TEXT_LEN && p.content && p.content !== p.title) {
         text += ' | ' + p.content;
@@ -436,22 +588,21 @@ function extractJson(text) {
 }
 
 // 汇总所有批次结果并生成最终报告
+// 温度/市场指数一律按情绪计数本地重算，忽略模型自报数值
 function aggregateBatchResults(batchResults, kwResult) {
   const totalDist = { bullish: 0, bearish: 0, fear: 0, greed: 0, neutral: 0 };
   const rawSectors = {};
   const allSignals = [];
   let totalPosts = 0;
-  let weightedMarketIndex = 0;
 
   for (const r of batchResults) {
     if (!r) continue;
     const posts = r.posts || 0;
     totalPosts += posts;
-    weightedMarketIndex += (r.marketIndex || 50) * posts;
 
     if (r.distribution) {
       for (const [k, v] of Object.entries(r.distribution)) {
-        if (totalDist.hasOwnProperty(k)) totalDist[k] += v;
+        if (Object.prototype.hasOwnProperty.call(totalDist, k)) totalDist[k] += v;
       }
     }
 
@@ -468,19 +619,16 @@ function aggregateBatchResults(batchResults, kwResult) {
     }
   }
 
-  const marketIndex = totalPosts > 0 ? Math.round(weightedMarketIndex / totalPosts) : 50;
   const sectors = mergeSectors(rawSectors);
+  const marketIndex = marketIndexFromSectors(sectors, totalDist, totalPosts);
 
   return { totalPosts, marketIndex, distribution: totalDist, sectors, signals: allSignals };
 }
 
-/** 合并同一批次内的重复板块条目（归一化前可能仍有不同 raw key） */
+/** 合并同一批次内的重复板块条目（只累加计数，温度由 mergeSectors 重算） */
 function mergeSectorEntry(a, b) {
-  const posts = (a.posts || 0) + (b.posts || 0);
-  const weightedTemp = (a.temperature ?? 50) * (a.posts || 0) + (b.temperature ?? 50) * (b.posts || 0);
   return {
-    posts,
-    temperature: posts > 0 ? Math.round(weightedTemp / posts) : 50,
+    posts: (a.posts || 0) + (b.posts || 0),
     bullish: (a.bullish || 0) + (b.bullish || 0),
     bearish: (a.bearish || 0) + (b.bearish || 0),
     fear: (a.fear || 0) + (b.fear || 0),
@@ -494,10 +642,10 @@ function mergeSectorEntry(a, b) {
 // 打印汇总报告
 function printAggregatedReport(agg, kwResult) {
   const mi = agg.marketIndex;
-  const level = mi < 20 ? '极度恐慌' : mi < 30 ? '恐慌' : mi < 40 ? '偏恐慌' : mi < 50 ? '略偏恐慌' : mi < 60 ? '中性' : mi < 70 ? '略偏贪婪' : mi < 80 ? '贪婪' : '极度贪婪';
+  const level = sentimentLevel(mi).level;
   const emoji = mi < 30 ? '🟢🟢' : mi < 40 ? '🟢' : mi < 60 ? '🟡' : mi < 70 ? '🟠' : '🔴🔴';
   const d = agg.distribution;
-  const t = agg.totalPosts;
+  const t = agg.totalPosts || 1;
 
   console.log('\n' + '='.repeat(55));
   console.log('  🤖 Qoder AI 情绪分析报告（分批汇总）');
@@ -506,6 +654,16 @@ function printAggregatedReport(agg, kwResult) {
   console.log(`\n  市场情绪指数: ${mi}/100  ${emoji}`);
   console.log(`  等级: ${level}`);
   console.log(`  分析帖子数: ${t}`);
+
+  if (agg.moveReason) {
+    console.log(`\n  今天涨跌原因: [${agg.moveReason.direction}] ${agg.moveReason.reason}`);
+    for (const p of agg.moveReason.points || []) {
+      console.log(`    · ${p}`);
+    }
+    for (const s of agg.moveReason.sources || []) {
+      console.log(`    📰 ${s}`);
+    }
+  }
 
   console.log('\n  全局情绪分布:');
   console.log(`    看多: ${d.bullish} (${(d.bullish / t * 100).toFixed(1)}%)`);
@@ -553,6 +711,7 @@ function printAggregatedReport(agg, kwResult) {
 // 主函数：分批AI分析
 function runBatchedAIAnalysis(days) {
   console.log('\n🤖 Step 4/4: Qoder AI 情绪分析（分批模式）...\n');
+  console.log(`  模型: ${QODER_MODEL}${process.env.QODER_MODEL ? ' (来自环境变量)' : ' (默认 Kimi-K3)'}\n`);
 
   if (!ensureQoderCli()) return null;
 
@@ -562,6 +721,8 @@ function runBatchedAIAnalysis(days) {
     console.error('  ❌ 无帖子数据');
     return null;
   }
+
+  console.log(`  ⏱ 时间窗: ${analysisWindowLabel({ days })}`);
 
   // 分批
   const batches = [];
@@ -656,6 +817,8 @@ function runBatchedAIAnalysis(days) {
   const allParsed = batchResults.every(r => r !== null);
   if (allParsed) {
     const agg = aggregateBatchResults(batchResults, kwResult);
+    const moveReason = analyzeMoveReason(agg, allPosts);
+    agg.moveReason = moveReason;
     printAggregatedReport(agg, kwResult);
 
     // 保存汇总结果
