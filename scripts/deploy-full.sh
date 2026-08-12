@@ -3,7 +3,8 @@
 set -euo pipefail
 
 PROJECT_DIR="${PROJECT_DIR:-/root/projects/angular20}"
-WEB_ROOT="${WEB_ROOT:-/var/www/angular20}"
+WEB_ROOT="${WEB_ROOT:-/var/www/projects/angular20}"
+BASE_HREF="${BASE_HREF:-/angular20/}"
 BRANCH="${DEPLOY_BRANCH:-master}"
 SERVICE_NAME="${NEST_SERVICE:-nest-server}"
 
@@ -32,9 +33,9 @@ require_cmd() {
 
 health_check() {
   local code
-  code="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1/api/docs || true)"
+  code="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1${BASE_HREF}api/docs || true)"
   if [ "$code" != "200" ]; then
-    echo "Health check failed: /api/docs returned HTTP $code" >&2
+    echo "Health check failed: ${BASE_HREF}api/docs returned HTTP $code" >&2
     exit 1
   fi
   log "Health check passed (HTTP $code)"
@@ -60,7 +61,7 @@ main() {
   npm install
 
   log "Build frontend"
-  npm run build
+  npx ng build --base-href "$BASE_HREF"
 
   log "Publish frontend to $WEB_ROOT"
   rsync -a --delete dist/angular20/browser/ "$WEB_ROOT/"
