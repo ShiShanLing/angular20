@@ -14,6 +14,7 @@ import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { FormsModule } from '@angular/forms';
+import { ChartStageComponent } from '../../shared/chart-stage/chart-stage.component';
 
 echarts.use([
   LineChart, BarChart, ScatterChart, RadarChart, GaugeChart, HeatmapChart,
@@ -32,7 +33,8 @@ echarts.use([
     NzGridModule,
     NzSwitchModule,
     NzIconModule,
-    FormsModule
+    FormsModule,
+    ChartStageComponent,
   ],
   providers: [provideEchartsCore({ echarts })],
   templateUrl: './charts.component.html',
@@ -173,7 +175,7 @@ export class ChartsComponent implements OnInit {
         boundaryGap: false,
         data: this.months,
         axisLabel: { color: textColor }
-        //拐弯不让执行扣分
+        
       },
 
       yAxis: { type: 'value', axisLabel: { color: textColor } },

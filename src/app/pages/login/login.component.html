@@ -24,6 +24,17 @@
           <button nz-button nzType="primary" nzBlock [nzLoading]="loading()" [disabled]="loginForm.invalid">
             登 录
           </button>
+          <button
+            type="button"
+            nz-button
+            nzBlock
+            class="guest-btn"
+            [disabled]="loading()"
+            (click)="onGuestEnter()"
+          >
+            游客访问
+          </button>
+          <p class="guest-hint">游客可使用工具与游戏，使用记录不会保存到服务器</p>
         </form>
       </nz-tab>
 

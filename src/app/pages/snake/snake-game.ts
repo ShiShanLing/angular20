@@ -245,7 +245,6 @@ function directionDelta(direction: Direction): Point {
     case 'right': return { x: 1, y: 0 };
   }
 }
-
 // MARK: 判断
 function isOpposite(a: Direction, b: Direction): boolean {
   return (a === 'up' && b === 'down')
@@ -253,6 +252,8 @@ function isOpposite(a: Direction, b: Direction): boolean {
     || (a === 'left' && b === 'right')
     || (a === 'right' && b === 'left');
 }
+
+
 
 // MARK: 下一个
 // 极小的确定性伪随机（LCG），使用无符号 32 位运算。对于“刷食物”足够用，而且不需要额外依赖。

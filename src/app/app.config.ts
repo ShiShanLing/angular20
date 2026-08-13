@@ -22,6 +22,7 @@ import {
   UserOutline, LockOutline, LogoutOutline, KeyOutline,
   BulbOutline, EditOutline, UpOutline, DownOutline, SunOutline, MoonOutline,
   StockOutline, ArrowLeftOutline,
+  ExpandOutline, CompressOutline,
 } from '@ant-design/icons-angular/icons';
 import { registerLocaleData } from '@angular/common';
 import zh from '@angular/common/locales/zh';
@@ -44,11 +45,14 @@ const icons = [
   UserOutline, LockOutline, LogoutOutline, KeyOutline,
   BulbOutline, EditOutline, UpOutline, DownOutline, SunOutline, MoonOutline,
   StockOutline, ArrowLeftOutline,
+  ExpandOutline, CompressOutline,
 ];
 
 
 import { routes } from './app.routes';
+import { apiBaseInterceptor } from './services/api-base.interceptor';
 import { authInterceptor } from './services/auth.interceptor';
+import { guestApiInterceptor } from './services/guest-api.interceptor';
 import { AuthService } from './core/auth.service';
 import { ThemeService } from './core/theme.service';
 
@@ -72,7 +76,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, withComponentInputBinding(), withHashLocation()),
     provideAnimationsAsync(),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([apiBaseInterceptor, guestApiInterceptor, authInterceptor])),
     provideNzI18n(zh_CN),
     provideNzConfig({
       message: { nzTop: 80 }

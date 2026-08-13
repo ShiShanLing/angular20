@@ -345,14 +345,16 @@ function aggregateResults(posts, aiResults, bars) {
     }
   }
 
-  // 市场综合指数
-  const validBars = [...barStats.values()].filter(b => b.postCount > 0);
+  // 市场综合指数（帖子数 < 5 的板块热度不参与）
+  const validBars = [...barStats.values()].filter(b => b.postCount >= 5);
   const weights = {
     'sh000001': 3.0, 'sz399006': 2.5,
     'BK0473': 2.0, 'BK0475': 1.5, 'BK0477': 1.0, 'BK0896': 1.2,
     'BK0493': 1.0, 'BK0447': 1.0,
     'of512480': 1.5, 'of515000': 1.5, 'BK0428': 1.2,
     'BK0891': 1.5, 'BK0917': 1.3,
+    'BK1216': 1.5, 'BK1041': 1.3, 'BK0727': 1.2,
+    'of512170': 1.2, 'of159938': 1.5,
   };
 
   let wSum = 0, wTotal = 0;
@@ -450,7 +452,9 @@ function printReport(report) {
   console.log('📈 板块情绪对比:');
   console.log(`${'─'.repeat(60)}`);
 
-  const sortedBars = report.bars.sort((a, b) => b.temperature - a.temperature);
+  const sortedBars = report.bars
+    .filter(b => b.postCount >= 5)
+    .sort((a, b) => b.temperature - a.temperature);
   for (const bar of sortedBars) {
     const tempEmoji = bar.temperature >= 60 ? '🟠' : bar.temperature >= 45 ? '🟡' : '🟢';
     console.log(`\n  ${tempEmoji} ${bar.name} (${bar.code})  温度:${bar.temperature}°  置信度:${bar.avgConfidence}`);
@@ -463,6 +467,10 @@ function printReport(report) {
       console.log(`    ${se} [${r.clicks}点击] ${r.title.substring(0, 45)}`);
       console.log(`       → ${r.reason} (${r.score > 0 ? '+' : ''}${r.score})`);
     }
+  }
+  const lowSample = report.bars.filter(b => b.postCount > 0 && b.postCount < 5);
+  if (lowSample.length) {
+    console.log(`\n  ℹ 样本不足不计热度（<5帖）: ${lowSample.map(b => `${b.name}(${b.postCount})`).join(', ')}`);
   }
 
   // 热门关键词

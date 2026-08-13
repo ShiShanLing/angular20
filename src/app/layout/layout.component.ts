@@ -116,7 +116,7 @@ export class LayoutComponent {
           this.isMobileDrawerOpen.set(false);
         }
       });
-
+      
     this.router.events
       .pipe(
         filter((e): e is NavigationEnd => e instanceof NavigationEnd),

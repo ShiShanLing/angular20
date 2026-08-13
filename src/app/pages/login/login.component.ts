@@ -46,6 +46,14 @@ export class LoginComponent {
     nickname: [''],
   });
 
+  // MARK: 游客访问
+  onGuestEnter(): void {
+    this.authService.enterAsGuest();
+    this.message.success('已进入游客模式（使用记录不会保存）');
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/';
+    void this.router.navigateByUrl(returnUrl);
+  }
+
   // MARK: 提交登录
   // 提交登录表单并跳转回 returnUrl
   onLogin(): void {

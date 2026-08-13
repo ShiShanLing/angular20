@@ -85,6 +85,7 @@ export class AuthService {
       'tools.time', 'tools.weather', 'tools.calendar', 'tools.text',
       'tools.qrcode', 'tools.notes', 'tools.dev',
       'snake.play', 'tetris.play',
+      'chart.showcase',
     ];
   }
 }

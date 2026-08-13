@@ -18,7 +18,9 @@
             </p>
           </div>
         </div>
-        <div echarts [options]="geoProvinceHeatOption()" class="echart echart--prov-heat"></div>
+        <app-chart-stage>
+          <div echarts [options]="geoProvinceHeatOption()" class="echart echart--prov-heat"></div>
+        </app-chart-stage>
       </nz-card>
     </div>
     
@@ -33,7 +35,9 @@
             </p>
           </div>
         </div>
-        <div echarts [options]="glCartesian3DOption()" class="echart echart--gl3d"></div>
+        <app-chart-stage>
+          <div echarts [options]="glCartesian3DOption()" class="echart echart--gl3d"></div>
+        </app-chart-stage>
       </nz-card>
     </div>
 
@@ -48,7 +52,9 @@
             </p>
           </div>
         </div>
-        <div echarts [options]="geoFlightLinesOption()" class="echart echart--geo-flight"></div>
+        <app-chart-stage>
+          <div echarts [options]="geoFlightLinesOption()" class="echart echart--geo-flight"></div>
+        </app-chart-stage>
       </nz-card>
     </div>
 
@@ -63,7 +69,9 @@
             </p>
           </div>
         </div>
-        <div echarts [options]="pictorialBarsOption()" class="echart echart--pictorial"></div>
+        <app-chart-stage>
+          <div echarts [options]="pictorialBarsOption()" class="echart echart--pictorial"></div>
+        </app-chart-stage>
       </nz-card>
     </div>
 
@@ -78,7 +86,9 @@
             </p>
           </div>
         </div>
-        <div echarts [options]="liquidFillOption()" class="echart echart--liquid"></div>
+        <app-chart-stage>
+          <div echarts [options]="liquidFillOption()" class="echart echart--liquid"></div>
+        </app-chart-stage>
       </nz-card>
     </div>
 
@@ -93,7 +103,9 @@
             </p>
           </div>
         </div>
-        <div echarts [options]="themeRiverOption()" class="echart echart--theme-river"></div>
+        <app-chart-stage>
+          <div echarts [options]="themeRiverOption()" class="echart echart--theme-river"></div>
+        </app-chart-stage>
       </nz-card>
     </div>
 
@@ -108,7 +120,9 @@
             </p>
           </div>
         </div>
-        <div echarts [options]="barRaceOption()" class="echart echart--bar-race"></div>
+        <app-chart-stage>
+          <div echarts [options]="barRaceOption()" class="echart echart--bar-race"></div>
+        </app-chart-stage>
       </nz-card>
     </div>
 
@@ -123,7 +137,9 @@
             </p>
           </div>
         </div>
-        <div echarts [options]="calendarHeatOption()" class="echart echart--calendar-heat"></div>
+        <app-chart-stage>
+          <div echarts [options]="calendarHeatOption()" class="echart echart--calendar-heat"></div>
+        </app-chart-stage>
       </nz-card>
     </div>
 
@@ -138,7 +154,9 @@
             </p>
           </div>
         </div>
-        <app-globe-echart [options]="globeOption()" />
+        <app-chart-stage>
+          <app-globe-echart [options]="globeOption()" />
+        </app-chart-stage>
       </nz-card>
     </div>
 
@@ -151,7 +169,9 @@
             <p class="viz-desc">lineStyle <code>shadowBlur</code> + 纵向线性 <code>areaStyle</code>，模拟实时监控感</p>
           </div>
         </div>
-        <div echarts [options]="neonStreamOption()" class="echart echart--stream"></div>
+        <app-chart-stage>
+          <div echarts [options]="neonStreamOption()" class="echart echart--stream"></div>
+        </app-chart-stage>
       </nz-card>
     </div>
 
@@ -166,7 +186,9 @@
             </p>
           </div>
         </div>
-        <div echarts [options]="parallelCyberOption()" class="echart"></div>
+        <app-chart-stage>
+          <div echarts [options]="parallelCyberOption()" class="echart"></div>
+        </app-chart-stage>
       </nz-card>
     </div>
 
@@ -181,7 +203,9 @@
             </p>
           </div>
         </div>
-        <div echarts [options]="gaugeHudOption()" class="echart echart--gauge"></div>
+        <app-chart-stage>
+          <div echarts [options]="gaugeHudOption()" class="echart echart--gauge"></div>
+        </app-chart-stage>
       </nz-card>
     </div>
 
@@ -194,7 +218,9 @@
             <p class="viz-desc"><code>effectScatter</code> + <code>visualMap</code> 映射粒子大小与色相</p>
           </div>
         </div>
-        <div echarts [options]="pulseScatterOption()" class="echart"></div>
+        <app-chart-stage>
+          <div echarts [options]="pulseScatterOption()" class="echart"></div>
+        </app-chart-stage>
       </nz-card>
     </div>
 
@@ -207,7 +233,9 @@
             <p class="viz-desc"><code>roseType: 'area'</code> + 径向渐变填色</p>
           </div>
         </div>
-        <div echarts [options]="nightRoseOption()" class="echart"></div>
+        <app-chart-stage>
+          <div echarts [options]="nightRoseOption()" class="echart"></div>
+        </app-chart-stage>
       </nz-card>
     </div>
 
@@ -220,7 +248,9 @@
             <p class="viz-desc"><code>sunburst</code> · 点击扇区可强调祖先链</p>
           </div>
         </div>
-        <div echarts [options]="sunburstOption()" class="echart"></div>
+        <app-chart-stage>
+          <div echarts [options]="sunburstOption()" class="echart"></div>
+        </app-chart-stage>
       </nz-card>
     </div>
 
@@ -233,7 +263,9 @@
             <p class="viz-desc"><code>graph</code> + <code>force</code>，节点可拖拽、可缩放平移画布</p>
           </div>
         </div>
-        <div echarts [options]="forceGraphOption()" class="echart"></div>
+        <app-chart-stage>
+          <div echarts [options]="forceGraphOption()" class="echart"></div>
+        </app-chart-stage>
       </nz-card>
     </div>
 
@@ -246,7 +278,9 @@
             <p class="viz-desc"><code>lineStyle.color: 'gradient'</code> 沿线着色</p>
           </div>
         </div>
-        <div echarts [options]="sankeyOption()" class="echart echart--sankey"></div>
+        <app-chart-stage>
+          <div echarts [options]="sankeyOption()" class="echart echart--sankey"></div>
+        </app-chart-stage>
       </nz-card>
     </div>
 
@@ -259,7 +293,9 @@
             <p class="viz-desc"><code>treemap</code> 层级钻取 + 圆角分块</p>
           </div>
         </div>
-        <div echarts [options]="treemapOption()" class="echart"></div>
+        <app-chart-stage>
+          <div echarts [options]="treemapOption()" class="echart"></div>
+        </app-chart-stage>
       </nz-card>
     </div>
   </div>

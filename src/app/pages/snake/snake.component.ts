@@ -108,7 +108,7 @@ export class SnakeComponent implements OnInit, OnDestroy {
       error: () => {}
     });
   }
-
+  //
   // MARK: 开始
   private startLoop(): void {
     this.stopLoop();
@@ -122,7 +122,7 @@ export class SnakeComponent implements OnInit, OnDestroy {
     this.intervalId = null;
   }
 
-  // MARK: 按键处理
+  // MARK: 按键处理 
   private onKeyDown = (e: KeyboardEvent) => {
     const key = e.key.toLowerCase();
     if (key === 'arrowup' || key === 'w') { e.preventDefault(); this.move('up'); }

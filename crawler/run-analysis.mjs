@@ -23,7 +23,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from '
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync, spawnSync } from 'child_process';
-import { mergeSectors, marketIndexFromSectors, sentimentLevel } from './sector-utils.mjs';
+import { mergeSectors, marketIndexFromSectors, sentimentLevel, heatSectors, MIN_POSTS_FOR_HEAT, canonicalSectorFromBar } from './sector-utils.mjs';
 import { isInAnalysisWindow, analysisWindowLabel } from './time-window.mjs';
 import { httpGetText, getTodayNews } from './eastmoney-market.mjs';
 
@@ -78,13 +78,15 @@ function generateQoderInput(days) {
   const windowLabel = analysisWindowLabel({ days });
 
   // 收集所有帖子（当天/最近N天，仅 09:00–15:00）
+  // ETF 帖子归入统计板块名（医疗ETF→医疗服务，医药ETF→医药生物）
   const allPosts = [];
   const seen = new Set();
   for (const bar of data.bars) {
+    const sectorName = canonicalSectorFromBar(bar) || bar.barName;
     for (const p of bar.posts) {
       if (isInAnalysisWindow(p.publishTime, { days }) && !seen.has(p.postId)) {
         seen.add(p.postId);
-        allPosts.push({ ...p, barName: bar.barName, barCode: bar.code });
+        allPosts.push({ ...p, barName: sectorName, barCode: bar.code });
       }
     }
   }
@@ -100,17 +102,19 @@ function generateQoderInput(days) {
   lines.push(`# 要求: 对每条帖子判断情绪(看多/看空/恐慌/贪婪/中性)，给出置信度和得分(-1~+1)`);
   lines.push(`# 注意识别讽刺、反语、混合情绪`);
   lines.push(`# 最终给出: 全局情绪分布比例、各板块情绪对比、市场综合指数`);
+  lines.push(`# 说明: 医疗ETF并入医疗服务、医药ETF并入医药生物统计`);
   lines.push('');
 
-  // 按板块分组输出
-  const byBar = {};
+  // 按统计板块名分组输出（同主题 ETF 与行业帖合并展示）
+  const bySector = {};
   for (const p of allPosts) {
-    if (!byBar[p.barCode]) byBar[p.barCode] = { name: p.barName, posts: [] };
-    byBar[p.barCode].posts.push(p);
+    const key = p.barName || p.barCode;
+    if (!bySector[key]) bySector[key] = { name: key, posts: [] };
+    bySector[key].posts.push(p);
   }
 
-  for (const [code, bar] of Object.entries(byBar)) {
-    lines.push(`## ${bar.name} (${code}) - ${bar.posts.length}条`);
+  for (const [name, bar] of Object.entries(bySector)) {
+    lines.push(`## ${bar.name} - ${bar.posts.length}条`);
     lines.push('');
 
     // 输出全部帖子（高点击完整显示，低点击紧凑显示）
@@ -248,7 +252,7 @@ const BATCH_SYSTEM_PROMPT = '你是中国A股市场情绪分析专家。对提�
   '3. 高点击帖子对情绪判断权重更高，但仍须如实计入 distribution 计数\n' +
   '4. 板块名必须严格使用以下固定名称，禁止自创名称或加后缀（如Ⅱ、2等）：\n' +
   '   上证指数、创业板指、证券、银行、酿酒、白酒、新能源、互联网、\n' +
-  '   半导体ETF、科技ETF、电力、芯片、半导体\n' +
+  '   半导体ETF、科技ETF、电力、芯片、半导体、医药生物、医疗器械、医疗服务\n' +
   '5. temperature 与 marketIndex 必须用计数公式计算，禁止凭感觉编造：\n' +
   '   score = (bullish + greed - bearish - fear) / max(posts, 1)\n' +
   '   temperature = clamp(round(50 + score * 50), 0, 100)\n' +
@@ -419,7 +423,7 @@ function analyzeMoveReason(agg, allPosts) {
   console.log(`  新闻 ${news.length} 条，指数快照 ${indices.length} 个`);
 
   const topPosts = (allPosts || []).slice(0, 25);
-  const sectorLines = Object.entries(agg.sectors || {})
+  const sectorLines = heatSectors(agg.sectors || {})
     .sort((a, b) => b[1].posts - a[1].posts)
     .slice(0, 8)
     .map(([name, s]) => `${name}: ${s.temperature}° 多${s.bullish} 空${s.bearish} 恐${s.fear} (${s.posts}帖)`);
@@ -516,6 +520,7 @@ function loadPosts(days) {
   const allPosts = [];
   const seen = new Set();
   for (const bar of data.bars) {
+    const sectorName = canonicalSectorFromBar(bar) || bar.barName;
     for (const p of bar.posts) {
       if (isInAnalysisWindow(p.publishTime, { days }) && !seen.has(p.postId)) {
         seen.add(p.postId);
@@ -525,7 +530,7 @@ function loadPosts(days) {
           content: p.content || '',
           clicks: p.clicks || 0,
           comments: p.comments || 0,
-          barName: bar.barName,
+          barName: sectorName,
           barCode: bar.code,
           publishTime: p.publishTime,
         });
@@ -544,15 +549,16 @@ function generateBatchFile(batchPosts, batchIndex, totalBatches, totalPosts) {
   lines.push(`# 批次 ${batchIndex + 1}/${totalBatches} (总计 ${totalPosts} 条帖子中的第 ${(batchIndex * AI_BATCH_SIZE) + 1}-${Math.min((batchIndex + 1) * AI_BATCH_SIZE, totalPosts)} 条)`);
   lines.push('');
 
-  // 按板块分组
-  const byBar = {};
+  // 按统计板块名分组（医疗ETF/医药ETF已并入对应行业名）
+  const bySector = {};
   for (const p of batchPosts) {
-    if (!byBar[p.barCode]) byBar[p.barCode] = { name: p.barName, posts: [] };
-    byBar[p.barCode].posts.push(p);
+    const key = p.barName || p.barCode;
+    if (!bySector[key]) bySector[key] = { name: key, posts: [] };
+    bySector[key].posts.push(p);
   }
 
-  for (const [code, bar] of Object.entries(byBar)) {
-    lines.push(`## ${bar.name} (${code}) - ${bar.posts.length}条`);
+  for (const [, bar] of Object.entries(bySector)) {
+    lines.push(`## ${bar.name} - ${bar.posts.length}条`);
     lines.push('');
     for (let i = 0; i < bar.posts.length; i++) {
       const p = bar.posts[i];
@@ -673,11 +679,14 @@ function printAggregatedReport(agg, kwResult) {
   console.log(`    恐慌: ${d.fear} (${(d.fear / t * 100).toFixed(1)}%)`);
 
   console.log('\n  各板块情绪:');
-  const sortedSectors = Object.entries(agg.sectors).sort((a, b) => b[1].posts - a[1].posts);
+  const sortedSectors = heatSectors(agg.sectors).sort((a, b) => b[1].posts - a[1].posts);
+  const skippedHeat = Object.entries(agg.sectors || {}).filter(([, s]) => (s.posts || 0) < MIN_POSTS_FOR_HEAT);
   for (const [name, s] of sortedSectors) {
-    if (s.posts === 0) continue;
     const sLevel = s.temperature < 30 ? '恐慌' : s.temperature < 50 ? '偏空' : s.temperature < 70 ? '中性' : '偏多';
     console.log(`    ${name}: ${s.temperature}° ${sLevel} | 多${s.bullish} 贪${s.greed} 中${s.neutral} 空${s.bearish} 恐${s.fear} (${s.posts}帖)`);
+  }
+  if (skippedHeat.length) {
+    console.log(`    （已排除 <${MIN_POSTS_FOR_HEAT} 帖: ${skippedHeat.map(([n, s]) => `${n}:${s.posts}`).join(', ')}）`);
   }
 
   // 关键词 vs AI 对比

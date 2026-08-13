@@ -70,6 +70,7 @@ export class DashboardComponent implements OnInit {
           data: [4200, 5320, 6180, 7340, 8100, 9780, 10500, 11200, 12800, 14300, 16000, 18200],
           itemStyle: { color: '#1890ff' }
         },
+        
         {
           name: '订单量',
           type: 'line',
@@ -80,7 +81,6 @@ export class DashboardComponent implements OnInit {
         }
       ]
     });
-
     this.pieOption.set({
       tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} ({d}%)' },
       legend: { orient: 'vertical', left: 'left' },

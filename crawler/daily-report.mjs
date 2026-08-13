@@ -19,7 +19,7 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
 import nodemailer from 'nodemailer';
-import { mergeSectors, marketIndexFromSectors, sentimentLevel } from './sector-utils.mjs';
+import { mergeSectors, marketIndexFromSectors, sentimentLevel, heatSectors, MIN_POSTS_FOR_HEAT } from './sector-utils.mjs';
 import { isInAnalysisWindow } from './time-window.mjs';
 import {
   getMarketFundFlow,
@@ -163,7 +163,8 @@ const PANIC_WORDS = ['销户', '爆仓', '天台', '家破人亡', '倾家荡产
 const TOPIC_CATEGORY_MAP = {
   '科技': ['科技', 'AI', '人工智能', '芯片', '半导体', '互联网', '机器人', '无人驾驶', '科创板', '低空经济'],
   '金融': ['银行', '证券', '保险', '券商', '非银'],
-  '消费': ['白酒', '酿酒', '消费', '医药'],
+  '消费': ['白酒', '酿酒', '消费'],
+  '医药医疗': ['医药', '医药生物', '医药ETF', '医疗', '医疗器械', '医疗服务', '医疗ETF', '中药', '生物制品', '化学制药'],
   '新能源': ['新能源', '光伏', '锂电', '电力', '煤炭'],
   '军工有色': ['军工', '稀土', '有色', '钢铁'],
   '地产': ['地产', '房地产'],
@@ -217,7 +218,7 @@ function buildTopicPieSvg(slices, size = 200) {
 
   let angle = -Math.PI / 2;
   const paths = [];
-
+  
   for (let i = 0; i < slices.length; i++) {
     const slice = slices[i];
     const frac = slice.count / sum;
@@ -225,6 +226,7 @@ function buildTopicPieSvg(slices, size = 200) {
     const x1 = cx + r * Math.cos(angle);
     const y1 = cy + r * Math.sin(angle);
     angle += sweep;
+    
     const x2 = cx + r * Math.cos(angle);
     const y2 = cy + r * Math.sin(angle);
     const large = sweep > Math.PI ? 1 : 0;
@@ -630,16 +632,20 @@ function buildHtmlEmail(analysisOutput, tradingInfo) {
 </div>`;
   }
 
-  // === 5. 板块分化 ===
+  // === 5. 板块分化（帖子数 < 5 的板块热度不参与排名） ===
   if (aiData && aiData.sectors && Object.keys(aiData.sectors).length > 0) {
-    const sorted = Object.entries(aiData.sectors).sort((a, b) => a[1].temperature - b[1].temperature);
-    const coldest = sorted.slice(0, 3);
-    const hottest = sorted.slice(-3).reverse();
+    const ranked = heatSectors(aiData.sectors).sort((a, b) => a[1].temperature - b[1].temperature);
+    const skipped = Object.entries(aiData.sectors).filter(([, s]) => (s.posts || 0) < MIN_POSTS_FOR_HEAT);
+    const coldest = ranked.slice(0, 3);
+    const hottest = ranked.slice(-3).reverse();
 
     html += `<h2 style="color:#1e3a5f;border-bottom:2px solid #e5e7eb;padding-bottom:8px;margin-top:24px;">🌡️ 板块分化</h2>`;
+    if (ranked.length === 0) {
+      html += `<p style="font-size:13px;color:#6b7280;">有效样本板块不足（需至少 ${MIN_POSTS_FOR_HEAT} 条帖子）</p>`;
+    } else {
     html += `<div style="display:flex;gap:12px;margin:12px 0;">`;
 
-    // 最恐慌
+    // 最乐观
     html += `<div style="flex:1;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;">`;
     html += `<div style="font-size:13px;font-weight:600;color:#16a34a;margin-bottom:8px;">🟢 最乐观</div>`;
     for (const [name, s] of hottest) {
@@ -647,22 +653,26 @@ function buildHtmlEmail(analysisOutput, tradingInfo) {
     }
     html += `</div>`;
 
-    // 最乐观
+    // 最恐慌
     html += `<div style="flex:1;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;">`;
-    html += `<div style="font-size:13px;font-weight:600;color:#dc2626;margin-bottom:8px;">🟢 最恐慌</div>`;
+    html += `<div style="font-size:13px;font-weight:600;color:#dc2626;margin-bottom:8px;">🔴 最恐慌</div>`;
     for (const [name, s] of coldest) {
       html += `<div style="font-size:12px;padding:3px 0;display:flex;justify-content:space-between;"><span>${name.substring(0, 8)}</span><span style="color:#22c55e;font-weight:bold;">${s.temperature}°</span></div>`;
     }
     html += `</div></div>`;
 
-    // 完整板块表
+    // 完整板块表（仅 ≥5 帖）
     html += `<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;">`;
     html += `<tr style="background:#f1f5f9;"><th style="padding:6px;text-align:left;">板块</th><th>温度</th><th>帖子</th><th>看空</th><th>恐慌</th><th>中性</th><th>看多</th></tr>`;
-    for (const [name, s] of Object.entries(aiData.sectors).sort((a, b) => b[1].posts - a[1].posts).slice(0, 10)) {
+    for (const [name, s] of [...ranked].sort((a, b) => b[1].posts - a[1].posts).slice(0, 10)) {
       const tc = s.temperature < 30 ? '#22c55e' : s.temperature < 50 ? '#eab308' : '#ef4444';
       html += `<tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:5px 6px;">${name}</td><td style="text-align:center;font-weight:bold;color:${tc};">${s.temperature}°</td><td style="text-align:center;">${s.posts}</td><td style="text-align:center;">${s.bearish}</td><td style="text-align:center;">${s.fear}</td><td style="text-align:center;">${s.neutral}</td><td style="text-align:center;">${s.bullish}</td></tr>`;
     }
     html += `</table>`;
+    if (skipped.length > 0) {
+      html += `<p style="font-size:11px;color:#94a3b8;margin:8px 0 0;">已排除样本不足板块（&lt;${MIN_POSTS_FOR_HEAT}帖）：${skipped.map(([n, s]) => `${n}(${s.posts})`).join('、')}</p>`;
+    }
+    }
   }
 
   // === 6. 热门话题词 + 分类占比饼图 ===

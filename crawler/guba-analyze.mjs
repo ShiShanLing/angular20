@@ -30,6 +30,7 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
 import { isInAnalysisWindow, analysisWindowLabel } from './time-window.mjs';
+import { mergeBarsByCanonicalSector } from './sector-utils.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, 'data');
@@ -113,7 +114,7 @@ const FINANCIAL_TERMS = [
   '高抛低吸', '波段', '短线', '中线', '长线',
   // 板块/概念
   '银行', '证券', '保险', '新能源', '光伏', '锂电', '芯片', '半导体', 'AI', '人工智能',
-  '机器人', '低空经济', '无人驾驶', '医药', '白酒', '消费', '地产', '房地产',
+  '机器人', '低空经济', '无人驾驶', '医药', '医疗', '医疗器械', '医疗服务', '生物医药', '白酒', '消费', '地产', '房地产',
   '科技', '军工', '稀土', '有色', '煤炭', '钢铁', '电力',
   // 资金
   '主力', '庄家', '量化', '外资', '北向', '融资', '基金', '散户', '大户', '游资',
@@ -305,8 +306,8 @@ function extractHotTopics(allPosts) {
 
 /** 计算市场综合情绪指数 */
 function calculateMarketIndex(barResults) {
-  // 只计算有足够样本的板块（避免 2–3 帖板块扭曲指数）
-  const MIN_POSTS = 20;
+  // 帖子数 < 5 的板块热度不参与指数
+  const MIN_POSTS = 5;
   const validBars = barResults.filter(
     b => b.postCount >= MIN_POSTS && b.temperature !== null && b.temperature !== undefined
   );
@@ -336,6 +337,11 @@ function buildMarketIndexResult(validBars, isFallback) {
     'BK0428': 1.2,
     'BK0891': 1.5,
     'BK0917': 1.3,
+    'BK1216': 1.5,
+    'BK1041': 1.3,
+    'BK0727': 1.2,
+    'of512170': 1.2,
+    'of159938': 1.5,
   };
 
   let totalWeight = 0;
@@ -420,7 +426,7 @@ function printReport(marketIndex, barResults, hotTopics, allPostsCount) {
   console.log(`${'─'.repeat(60)}`);
 
   const sortedBars = barResults
-    .filter(b => b.postCount > 0)
+    .filter(b => b.postCount >= 5)
     .sort((a, b) => b.temperature - a.temperature);
 
   for (const bar of sortedBars) {
@@ -436,6 +442,11 @@ function printReport(marketIndex, barResults, hotTopics, allPostsCount) {
     if (bar.topBearish.length > 0) {
       console.log(`    🔴 看空代表: ${bar.topBearish[0].title.substring(0, 40)} [${bar.topBearish[0].clicks}点击]`);
     }
+  }
+
+  const lowSampleBars = barResults.filter(b => b.postCount > 0 && b.postCount < 5);
+  if (lowSampleBars.length > 0) {
+    console.log(`\n  ℹ 样本不足不计热度（<5帖）: ${lowSampleBars.map(b => `${b.name}(${b.postCount})`).join(', ')}`);
   }
 
   // 无数据的板块
@@ -712,11 +723,14 @@ async function main() {
   // 过滤：当天/最近N天，仅 09:00–15:00
   const windowLabel = analysisWindowLabel({ days });
 
+  // ETF/同主题股吧并入统一板块后再分析（医疗ETF→医疗服务，医药ETF→医药生物）
+  const mergedBars = mergeBarsByCanonicalSector(data.bars);
+
   // 分析每个板块
   const barResults = [];
   let allPostsForTopics = [];
 
-  for (const bar of data.bars) {
+  for (const bar of mergedBars) {
     const filteredPosts = bar.posts.filter(p => isInAnalysisWindow(p.publishTime, { days }));
 
     // 分析每个帖子
@@ -725,6 +739,9 @@ async function main() {
 
     const result = analyzeBar(bar, analyzedPosts);
     result._analyzedPosts = analyzedPosts; // 临时存储用于报告
+    if (bar.sourceCodes?.length > 1) {
+      result.mergedFrom = bar.sourceCodes;
+    }
     barResults.push(result);
   }
 

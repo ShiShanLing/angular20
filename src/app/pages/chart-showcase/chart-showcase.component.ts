@@ -26,6 +26,7 @@ function echartsFromDistBundle(ns: typeof echartsDistNs): EChartsNs {
 const echarts = echartsFromDistBundle(echartsDistNs);
 
 import { GlobeEchartComponent } from './globe-echart.component';
+import { ChartStageComponent } from '../../shared/chart-stage/chart-stage.component';
 
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzGridModule } from 'ng-zorro-antd/grid';
@@ -47,6 +48,7 @@ const SPLIT_LINE = 'rgba(15, 23, 42, 0.06)';
   imports: [
     NgxEchartsDirective,
     GlobeEchartComponent,
+    ChartStageComponent,
     NzCardModule,
     NzGridModule,
     NzIconModule,
@@ -105,9 +107,10 @@ export class ChartShowcaseComponent implements OnInit {
   }
 
   // MARK: 加载
-  // 拉取阿里云 DataV 国界 GeoJSON 并注册地图；失败时仅展示占位文案
+  // 从本地 public/geo 加载国界 GeoJSON（避免跨域 DataV OPTIONS 403）；失败时仅展示占位文案
   private loadChinaGeoAndFlightLines(): void {
-    const url = 'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json';
+    // 相对 base-href，部署在 /angular20/ 时为 /angular20/geo/...
+    const url = 'geo/china_100000_full.json';
     this.http.get<unknown>(url).subscribe({
       next: (geo) => {
         try {
@@ -122,7 +125,7 @@ export class ChartShowcaseComponent implements OnInit {
       },
       error: () => {
         const err = this.buildGeoFlightMapErrorOption(
-          '地图数据加载失败（请检查网络，或改为使用本地 GeoJSON）',
+          '地图数据加载失败（本地 GeoJSON 缺失或路径不正确）',
         );
         this.geoFlightLinesOption.set(err);
         this.geoProvinceHeatOption.set(err);
@@ -222,6 +225,8 @@ export class ChartShowcaseComponent implements OnInit {
         roam: true,
         zoom: 1.08,
         scaleLimit: { min: 0.82, max: 4 },
+        layoutCenter: ['50%', '50%'],
+        layoutSize: '100%',
         itemStyle: {
           areaColor: '#0f172a',
           borderColor: 'rgba(148, 163, 184, 0.32)',
@@ -423,6 +428,9 @@ export class ChartShowcaseComponent implements OnInit {
         scaleLimit: { min: 0.85, max: 4 },
         zoom: 1.12,
         center: [105, 35.5],
+        // 全屏时按容器铺满，避免只按宽高比居中留下大片黑边（象形柱等直角坐标图不会有这个问题）
+        layoutCenter: ['50%', '50%'],
+        layoutSize: '100%',
         itemStyle: {
           areaColor: '#1e293b',
           borderColor: 'rgba(148, 163, 184, 0.45)',

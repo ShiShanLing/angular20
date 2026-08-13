@@ -1,0 +1,314 @@
+{
+  "generatedAt": "2026-08-05T03:22:45.099Z",
+  "date": "2026-08-05",
+  "question": "今天量能怎么样，哪些板块最强",
+  "model": "Kimi-K3",
+  "tools": [
+    "get_indices",
+    "get_market_breadth",
+    "get_industry_boards",
+    "get_concept_boards",
+    "get_today_news",
+    "read_sentiment_today"
+  ],
+  "analysis": {
+    "summary": "工具数据已拉取，模型分析未完成，以下为行情摘要。",
+    "indices": "上证指数 1.31% 成交额7426.8亿；深证成指 1.41% 成交额8989.63亿；创业板指 0.64% 成交额4494.23亿；沪深300 0.88% 成交额5464.13亿",
+    "volume": "沪深成交额约 16416.43 亿元",
+    "sectors": "行业板块 492 个，上涨415 下跌73。领涨: 钨 9.03%，半导体设备 8.13%，半导体材料 7.81%，白银 7.37%，电子化学品Ⅲ 6.8%",
+    "breadth": "上涨3691 下跌1385；涨停86 跌停1",
+    "news": "沪指涨幅扩大至1%；中国AI大模型惊艳华尔街？高盛盘点五大趋势 点名这些投资机会；大基金三期新动作！旗下基金入股富创精密关联SPV沈阳正芯 多家央企、地方国资亦加码",
+    "conclusion": "未知",
+    "unknowns": [
+      "模型未给出完整分析"
+    ]
+  },
+  "snapshot": {
+    "indices": [
+      {
+        "name": "上证指数",
+        "code": "1.000001",
+        "price": 3872.45,
+        "change": 50.17,
+        "pct": 1.31,
+        "amountYi": 7426.8,
+        "upCount": 1550,
+        "downCount": 704,
+        "flatCount": 96,
+        "direction": "涨"
+      },
+      {
+        "name": "深证成指",
+        "code": "0.399001",
+        "price": 14081.88,
+        "change": 196.17,
+        "pct": 1.41,
+        "amountYi": 8989.63,
+        "upCount": 2144,
+        "downCount": 675,
+        "flatCount": 108,
+        "direction": "涨"
+      },
+      {
+        "name": "创业板指",
+        "code": "0.399006",
+        "price": 3511.46,
+        "change": 22.49,
+        "pct": 0.64,
+        "amountYi": 4494.23,
+        "upCount": 1142,
+        "downCount": 224,
+        "flatCount": 31,
+        "direction": "涨"
+      },
+      {
+        "name": "沪深300",
+        "code": "1.000300",
+        "price": 4641.5,
+        "change": 40.57,
+        "pct": 0.88,
+        "amountYi": 5464.13,
+        "upCount": 160,
+        "downCount": 135,
+        "flatCount": 5,
+        "direction": "涨"
+      }
+    ],
+    "breadth": {
+      "hsAmountYi": 16416.43,
+      "upCount": 3691,
+      "downCount": 1385,
+      "limitUp": 86,
+      "limitDown": 1
+    },
+    "industry": {
+      "total": 492,
+      "up": 415,
+      "down": 73,
+      "topGainers": [
+        {
+          "code": "BK1625",
+          "name": "钨",
+          "price": 8257.28,
+          "pct": 9.03,
+          "change": 684.08,
+          "amountYi": 105.38,
+          "turnover": 5.27,
+          "leader": "翔鹭钨业",
+          "leaderPct": 9.99
+        },
+        {
+          "code": "BK1326",
+          "name": "半导体设备",
+          "price": 47366.98,
+          "pct": 8.13,
+          "change": 3562.78,
+          "amountYi": 450.94,
+          "turnover": 3.03,
+          "leader": "金海通",
+          "leaderPct": 10
+        },
+        {
+          "code": "BK1325",
+          "name": "半导体材料",
+          "price": 12198.33,
+          "pct": 7.81,
+          "change": 884.04,
+          "amountYi": 307.79,
+          "turnover": 5,
+          "leader": "有研新材",
+          "leaderPct": 10
+        },
+        {
+          "code": "BK1616",
+          "name": "白银",
+          "price": 4643.56,
+          "pct": 7.37,
+          "change": 318.92,
+          "amountYi": 42.28,
+          "turnover": 4.31,
+          "leader": "盛达资源",
+          "leaderPct": 10
+        },
+        {
+          "code": "BK1332",
+          "name": "电子化学品Ⅲ",
+          "price": 3050.82,
+          "pct": 6.8,
+          "change": 194.37,
+          "amountYi": 291.94,
+          "turnover": 5.23,
+          "leader": "江化微",
+          "leaderPct": 10.02
+        },
+        {
+          "code": "BK1039",
+          "name": "电子化学品Ⅱ",
+          "price": 3050.82,
+          "pct": 6.8,
+          "change": 194.37,
+          "amountYi": 291.94,
+          "turnover": 5.23,
+          "leader": "江化微",
+          "leaderPct": 10.02
+        },
+        {
+          "code": "BK1462",
+          "name": "玻纤制造",
+          "price": 15121.21,
+          "pct": 6.47,
+          "change": 918.39,
+          "amountYi": 182.1,
+          "turnover": 5.17,
+          "leader": "国际复材",
+          "leaderPct": 11.34
+        },
+        {
+          "code": "BK0732",
+          "name": "贵金属",
+          "price": 2339.31,
+          "pct": 6.29,
+          "change": 138.4,
+          "amountYi": 159.48,
+          "turnover": 2.88,
+          "leader": "盛达资源",
+          "leaderPct": 10
+        },
+        {
+          "code": "BK1624",
+          "name": "其他小金属",
+          "price": 5202.68,
+          "pct": 6.25,
+          "change": 306.05,
+          "amountYi": 105.88,
+          "turnover": 4.17,
+          "leader": "云南锗业",
+          "leaderPct": 10
+        },
+        {
+          "code": "BK1412",
+          "name": "氨纶",
+          "price": 2904.16,
+          "pct": 6.07,
+          "change": 166.1,
+          "amountYi": 4.94,
+          "turnover": 0.89,
+          "leader": "华峰化学",
+          "leaderPct": 6.07
+        }
+      ],
+      "topLosers": [
+        {
+          "code": "BK1611",
+          "name": "国有大型银行Ⅲ",
+          "price": 3074.13,
+          "pct": -1.61,
+          "change": -50.16,
+          "amountYi": 82.08,
+          "turnover": 0.13,
+          "leader": "邮储银行",
+          "leaderPct": -0.8
+        },
+        {
+          "code": "BK1489",
+          "name": "快递",
+          "price": 5337.06,
+          "pct": -1.47,
+          "change": -79.74,
+          "amountYi": 12.56,
+          "turnover": 0.58,
+          "leader": "圆通速递",
+          "leaderPct": -0.65
+        },
+        {
+          "code": "BK1610",
+          "name": "股份制银行Ⅲ",
+          "price": 2364.62,
+          "pct": -1.45,
+          "change": -34.9,
+          "amountYi": 61.21,
+          "turnover": 0.28,
+          "leader": "招商银行",
+          "leaderPct": -0.94
+        },
+        {
+          "code": "BK1573",
+          "name": "油田服务",
+          "price": 1644,
+          "pct": -1.39,
+          "change": -23.17,
+          "amountYi": 13.43,
+          "turnover": 0.54,
+          "leader": "贝肯能源",
+          "leaderPct": 1.91
+        },
+        {
+          "code": "BK1275",
+          "name": "油服工程",
+          "price": 1864.62,
+          "pct": -1.33,
+          "change": -25.15,
+          "amountYi": 30.73,
+          "turnover": 0.79,
+          "leader": "贝肯能源",
+          "leaderPct": 1.91
+        },
+        {
+          "code": "BK1376",
+          "name": "核力发电",
+          "price": 609.94,
+          "pct": -1.26,
+          "change": -7.8,
+          "amountYi": 13.56,
+          "turnover": 0.32,
+          "leader": "电投产融",
+          "leaderPct": -1.08
+        },
+        {
+          "code": "BK1572",
+          "name": "油气及炼化工程",
+          "price": 1741.11,
+          "pct": -1.25,
+          "change": -22.06,
+          "amountYi": 17.3,
+          "turnover": 1.35,
+          "leader": "潜能恒信",
+          "leaderPct": 1.59
+        },
+        {
+          "code": "BK1579",
+          "name": "保健品",
+          "price": 3305.24,
+          "pct": -1.17,
+          "change": -39.22,
+          "amountYi": 3.55,
+          "turnover": 1.24,
+          "leader": "康比特",
+          "leaderPct": 1.68
+        },
+        {
+          "code": "BK0475",
+          "name": "银行Ⅱ",
+          "price": 4188.33,
+          "pct": -1.04,
+          "change": -44.04,
+          "amountYi": 192.51,
+          "turnover": 0.19,
+          "leader": "江苏银行",
+          "leaderPct": 0.79
+        },
+        {
+          "code": "BK1283",
+          "name": "银行",
+          "price": 4188.33,
+          "pct": -1.04,
+          "change": -44.04,
+          "amountYi": 192.51,
+          "turnover": 0.19,
+          "leader": "江苏银行",
+          "leaderPct": 0.79
+        }
+      ]
+    }
+  }
+}

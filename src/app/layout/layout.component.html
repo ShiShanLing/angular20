@@ -15,7 +15,7 @@
   <ul nz-menu nzTheme="dark" nzMode="inline" [nzInlineCollapsed]="isCollapsed() && !isMobile()">
     @for (item of visibleMenuItems(); track item.label) {
       @if (item.children) {
-        <!-- 有子菜单：桌面折叠时收起，移动端始终展开 -->
+        <!-- 有子菜单：桌面折叠时收起，移动端始终展开  -->
         <li nz-submenu [nzTitle]="item.label" [nzIcon]="item.icon || ''" [nzOpen]="!isCollapsed() || isMobile()">
           <ul>
             @for (child of item.children; track child.path) {
@@ -35,6 +35,7 @@
         </li>
       }
     }
+    
   </ul>
 </ng-template>
 
@@ -162,10 +163,19 @@
         <span class="header-user">
           <span nz-icon nzType="user" nzTheme="outline"></span>
           <span class="header-user-name">{{ authService.currentUser()?.nickname || authService.currentUser()?.username }}</span>
+          @if (authService.isGuest()) {
+            <span class="header-guest-badge">游客</span>
+          }
         </span>
-        <button type="button" class="logout-btn" nz-tooltip nzTooltipTitle="退出登录" (click)="logout()">
+        <button
+          type="button"
+          class="logout-btn"
+          nz-tooltip
+          [nzTooltipTitle]="authService.isGuest() ? '退出游客' : '退出登录'"
+          (click)="logout()"
+        >
           <span nz-icon nzType="logout" nzTheme="outline"></span>
-          <span class="logout-text">退出</span>
+          <span class="logout-text">{{ authService.isGuest() ? '退出游客' : '退出' }}</span>
         </button>
       </div>
     </nz-header>
