@@ -135,8 +135,8 @@ export class LayoutComponent {
 
   // MARK: 退出登录
   // 清除 session 并跳转到登录页
-  logout(): void {
-    this.authService.logout();
+  async logout(): Promise<void> {
+    await this.authService.logout();
     void this.router.navigateByUrl('/login');
   }
 

@@ -5,9 +5,10 @@ import { Note } from './entities/note.entity';
 import { NoteTag } from './entities/note-tag.entity';
 import { NotesController } from './notes.controller';
 import { NotesService } from './notes.service';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Notebook, Note, NoteTag])],
+  imports: [TypeOrmModule.forFeature([Notebook, Note, NoteTag]), AuthModule],
   controllers: [NotesController],
   providers: [NotesService],
   exports: [NotesService],
