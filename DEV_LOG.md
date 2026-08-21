@@ -20,7 +20,7 @@
 | UI 框架 | NG-ZORRO (Ant Design) 19.x |
 | 图表库 | ECharts 5.6 + ngx-echarts 19 + echarts-gl + echarts-liquidfill |
 | 后端框架 | NestJS + TypeORM + SQLite |
-| 认证方案 | JWT (前端 localStorage + authInterceptor，后端 Passport-JWT) |
+| 认证方案 | Agent Cookie（`hello_agent_login`）+ 本地用户映射；不再签发 JWT |
 | 路由策略 | Hash 路由 (withHashLocation)，全部懒加载 |
 | 部署方式 | GitHub Pages (`npm run publish:gh-pages`) / 自建服务器 (systemd) |
 | 开发代理 | proxy.conf.json → `/api` 代理到 `http://localhost:3000` |
@@ -60,7 +60,7 @@
 
 | 模块 | 职责 | 主要实体 |
 |------|------|----------|
-| Auth | 登录/注册/JWT 签发与校验 | — |
+| Auth | 校验 Agent Cookie、映射本地用户、返回权限 | User |
 | Users | 用户管理 | User |
 | Records | 记账/体重等通用记录 CRUD | Record |
 | GameScores | 游戏分数提交与查询 | GameScore |
@@ -69,8 +69,7 @@
 
 **安全配置**：
 - 全局限流 60 次/分钟/IP
-- 登录限流 10 次/10 分钟/IP
-- 注册限流 3 次/10 分钟/IP
+- 旧登录/注册接口已停用（410）
 - Helmet 安全 HTTP 头
 - Swagger 文档 `/api/docs`
 
@@ -82,11 +81,13 @@
 ## 关键架构设计
 
 ### 认证流程
-1. 用户登录 → 后端签发 JWT → 前端存 localStorage
-2. `authInterceptor` 自动为每个 `/api` 请求附带 `Authorization: Bearer <token>`
-3. `APP_INITIALIZER` 启动时调用 `validateSession()` 校验 token 有效性
-4. `authGuard` 拦截路由，未登录跳 `/login`
-5. `menuAccessGuard` 校验菜单级权限
+1. 登录页「使用统一账号登录」跳转到 `/agent/?next=/angular20/#...`，在 Hello Agent 登录或注册
+2. Agent 写入 Cookie `hello_agent_login`（`path=/`），登录成功后按 `next` 回到工坊
+3. 前端 `authInterceptor` 对 `/api` 请求带 `credentials: include`，不再附加 JWT
+4. 后端 `AuthGuard` 读取 Cookie，请求 Agent `/auth/me`；通过后按邮箱/`agentUserId` 建立或更新本地用户
+5. `APP_INITIALIZER` 启动时调用 `/api/auth/profile` 恢复会话；`authGuard` 未登录跳 `/login`
+6. 游客模式仍可进应用，写操作由 `guestApiInterceptor` 拦截不落库
+7. 退出工坊时会请求 `/agent/api/auth/logout` 清掉 Agent Cookie
 
 ### 菜单权限三层过滤
 1. **权限过滤** (`PermissionService`)：基于用户角色判断是否有权访问
@@ -412,6 +413,19 @@
 
 ---
 
+### 2026-08-21
+
+`[功能开发]` **接入 Hello Agent 统一账号登录**
+
+- 工坊不再维护独立用户名/密码；登录、注册都跳到 Agent
+- 后端用 Cookie `hello_agent_login` 调用 Agent `/auth/me` 识别用户，并在本地 `users` 表按 `agentUserId`/邮箱映射
+- 前端拦截器改为 `withCredentials`，去掉 JWT；登录页改为「使用统一账号登录」+ 游客访问
+- Agent 登录成功后可通过 `?next=/angular20/` 安全跳回工坊
+- Agent 管理员在工坊获得完整菜单权限；旧 JWT 登录/邀请码注册接口返回 410
+- 涉及文件：`src/app/core/auth.service.ts`、`src/app/pages/login/`、`src/app/services/auth.interceptor.ts`、`server/src/auth/`、`server/src/users/`
+
+---
+
 ## 架构演进
 
 ### v0.1 (2026-04-17) — 纯前端工具集
@@ -440,6 +454,11 @@
 - 列表刷题模式
 - 记事本功能（Quill 富文本编辑器）
 - 代码质量优化
+
+### v0.5 (2026-08-21) — 统一账号
+- 登录体系并入 Hello Agent Cookie 会话
+- 工坊后端只负责识别 Agent 账号并映射本地业务用户
+- 注册入口收口到 Agent；工坊保留游客模式
 
 ---
 
