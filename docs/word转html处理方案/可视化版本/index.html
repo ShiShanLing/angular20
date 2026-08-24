@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Word HTML 转换器</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">WORD HTML · 本地转换</p>
+        <h1>把复杂的 Word HTML，<span>变成可直接使用的结果。</span></h1>
+        <p class="lead">从 Word HTML 开始，生成正文、按需编辑，再完成 TXT 转码或反向解析。转换、校验与下载均在本机完成。</p>
+      </div>
+      <div class="privacy-badge" aria-label="本地离线处理">
+        <span class="privacy-dot" aria-hidden="true"></span>
+        <div><strong>本地离线</strong><small>文件不会上传到互联网</small></div>
+      </div>
+    </header>
+
+    <nav class="mode-tabs" role="tablist" aria-label="转换方式">
+      <button class="mode-tab is-active" id="wordTab" type="button" role="tab" aria-selected="true" aria-controls="wordPanel"><span>01</span>Word HTML 处理</button>
+      <button class="mode-tab" id="encodeTab" type="button" role="tab" aria-selected="false" aria-controls="encodePanel"><span>02</span>HTML → TXT</button>
+      <button class="mode-tab" id="decodeTab" type="button" role="tab" aria-selected="false" aria-controls="decodePanel"><span>03</span>TXT → HTML</button>
+    </nav>
+
+    <div class="tab-panel is-active" id="wordPanel" role="tabpanel" aria-labelledby="wordTab">
+    <section class="workspace" aria-labelledby="workspaceTitle">
+      <div class="section-heading">
+        <div><span class="step">01</span><h2 id="workspaceTitle">选择源文件</h2></div>
+        <button class="text-button" id="resetButton" type="button" hidden>重新选择</button>
+      </div>
+
+      <div class="pick-grid">
+        <button class="picker picker-workspace" id="workspaceFolderButton" type="button">
+          <span class="picker-icon folder-icon" aria-hidden="true">W</span>
+          <span class="picker-copy">
+            <strong>选择工作文件夹（推荐）</strong>
+            <small id="workspaceFolderHint">选择 HTML，并把结果保存回此文件夹</small>
+          </span>
+          <span class="workspace-folder-state">
+            <span class="workspace-selected-folder" id="workspaceFolderName" hidden></span>
+            <span class="picker-action" id="workspaceFolderAction">选择文件夹</span>
+          </span>
+        </button>
+
+        <input class="hidden-file-input" id="htmlInput" type="file" accept=".html,.htm,text/html">
+        <div class="picker picker-primary picker-file is-browse-mode" id="htmlDropZone" role="button" tabindex="0" aria-label="选择 Word HTML 文件">
+          <span class="picker-icon" aria-hidden="true">H</span>
+          <span class="picker-copy">
+            <strong>选择 Word HTML</strong>
+            <small>必选 · .html 或 .htm</small>
+          </span>
+          <span class="html-file-state">
+            <span class="selected-html-name" id="selectedHtmlName" hidden></span>
+            <span class="picker-action picker-browse" id="htmlBrowseAction">浏览文件</span>
+            <select class="picker-select" id="workspaceHtmlSelect" aria-label="选择工作文件夹中的 Word HTML" hidden></select>
+          </span>
+        </div>
+
+      </div>
+
+      <div class="output-name-field">
+        <label for="outputBaseName">生成文件名称</label>
+        <input id="outputBaseName" type="text" value="转换结果" maxlength="120" autocomplete="off" spellcheck="false">
+        <small id="outputNamePreview">选择源文件后会自动使用源文件名，您也可以自行修改。</small>
+      </div>
+
+      <div class="notice" id="notice" role="alert" aria-live="polite" hidden></div>
+
+      <button class="convert-button" id="convertButton" type="button" disabled>
+        <span id="convertButtonLabel">开始转换并校验</span>
+        <span class="button-arrow" aria-hidden="true">→</span>
+      </button>
+    </section>
+
+    <section class="result" id="resultPanel" aria-labelledby="resultTitle" hidden>
+      <div class="result-head">
+        <div class="success-icon" aria-hidden="true">✓</div>
+        <div><p class="result-kicker">转换完成</p><h2 id="resultTitle">两个文件已准备好</h2></div>
+      </div>
+
+      <div class="result-warning" role="note" aria-label="HTML 使用提醒">
+        <span class="warning-icon" aria-hidden="true">!</span>
+        <div>
+          <strong>HTML 不一定可以直接投入使用</strong>
+          <p>Word/WPS 导出的原始样式可能存在兼容问题。请务必对照原 Word 文档检查页面效果，并根据实际展示环境调试排版后再使用。</p>
+        </div>
+      </div>
+
+      <div class="download-grid">
+        <div class="file-actions">
+          <button class="download-card" id="downloadHtmlButton" type="button">
+            <span class="download-type html-type">HTML</span>
+            <span><strong id="htmlSaveLabel">下载正文片段</strong><small id="htmlDownloadName"></small></span>
+            <span class="download-symbol" aria-hidden="true">↓</span>
+            <span class="file-save-status" id="htmlFileSaveStatus" role="status" aria-live="polite" hidden></span>
+          </button>
+          <button class="copy-button" id="copyHtmlButton" type="button">复制 HTML 内容</button>
+        </div>
+        <div class="file-actions">
+          <button class="download-card" id="downloadTxtButton" type="button">
+            <span class="download-type txt-type">TXT</span>
+            <span><strong id="txtSaveLabel">下载转码文本</strong><small id="txtDownloadName"></small></span>
+            <span class="download-symbol" aria-hidden="true">↓</span>
+            <span class="file-save-status" id="txtFileSaveStatus" role="status" aria-live="polite" hidden></span>
+          </button>
+          <button class="copy-button" id="copyTxtButton" type="button">复制 TXT 内容</button>
+        </div>
+      </div>
+
+      <button class="handoff-button" id="editHtmlButton" type="button">在页面中编辑 HTML，然后重新生成 TXT <span aria-hidden="true">→</span></button>
+
+      <div class="report-box">
+        <div class="report-title"><span class="step">02</span><h3>校验报告</h3></div>
+        <div class="metrics" id="metrics"></div>
+        <div class="checks" id="checks"></div>
+      </div>
+    </section>
+    </div>
+
+    <div class="tab-panel" id="encodePanel" role="tabpanel" aria-labelledby="encodeTab" hidden>
+      <section class="workspace" aria-labelledby="encodeTitle">
+        <div class="section-heading">
+          <div><span class="step">02</span><h2 id="encodeTitle">HTML 转码加转义</h2></div>
+          <button class="text-button" id="encodeResetButton" type="button">清空内容</button>
+        </div>
+        <p class="panel-intro">上传处理后的 HTML，或者直接在下方编辑。生成 TXT 前会移除图片引用，并验证结构、链接和 JSON 往返一致性。</p>
+        <label class="compact-picker" for="encodeInput">
+          <input id="encodeInput" type="file" accept=".html,.htm,text/html">
+          <span class="file-kind">HTML</span><strong>上传需要转码的 HTML</strong><span>浏览文件</span>
+        </label>
+        <label class="editor-label" for="encodeEditor">HTML 内容</label>
+        <textarea class="code-editor" id="encodeEditor" spellcheck="false" placeholder="在这里粘贴或编辑 legal_permission HTML 正文片段…"></textarea>
+        <div class="notice" id="encodeNotice" role="alert" aria-live="polite" hidden></div>
+        <button class="convert-button" id="encodeButton" type="button" disabled>
+          <span id="encodeButtonLabel">生成并校验 TXT</span><span class="button-arrow" aria-hidden="true">→</span>
+        </button>
+      </section>
+
+      <section class="result compact-result" id="encodeResult" aria-labelledby="encodeResultTitle" hidden>
+        <div class="result-head">
+          <div class="success-icon" aria-hidden="true">✓</div>
+          <div><p class="result-kicker">转码完成</p><h2 id="encodeResultTitle">TXT 已准备好</h2></div>
+        </div>
+        <button class="download-card full-download" id="encodeDownloadButton" type="button">
+          <span class="download-type txt-type">TXT</span>
+          <span><strong>下载转码加转义文本</strong><small id="encodeDownloadName"></small></span>
+          <span class="download-symbol" aria-hidden="true">↓</span>
+        </button>
+        <button class="copy-button full-copy" id="encodeCopyButton" type="button">复制 TXT 内容</button>
+        <button class="handoff-button" id="openDecodeButton" type="button">把本次 TXT 带入反向解析 <span aria-hidden="true">→</span></button>
+        <div class="checks" id="encodeChecks"></div>
+      </section>
+    </div>
+
+    <div class="tab-panel" id="decodePanel" role="tabpanel" aria-labelledby="decodeTab" hidden>
+      <section class="workspace" aria-labelledby="decodeTitle">
+        <div class="section-heading">
+          <div><span class="step">03</span><h2 id="decodeTitle">TXT 反向解析 HTML</h2></div>
+          <button class="text-button" id="decodeResetButton" type="button">清空内容</button>
+        </div>
+        <p class="panel-intro">上传转码 TXT，或者直接粘贴 JSON 字符串。解析后会验证重新编码结果是否完全一致。</p>
+        <label class="compact-picker" for="decodeInput">
+          <input id="decodeInput" type="file" accept=".txt,text/plain,application/json">
+          <span class="file-kind txt-kind">TXT</span><strong>上传需要解析的 TXT</strong><span>浏览文件</span>
+        </label>
+        <label class="editor-label" for="decodeEditor">TXT 内容</label>
+        <textarea class="code-editor" id="decodeEditor" spellcheck="false" placeholder="在这里粘贴转码加转义 TXT…"></textarea>
+        <div class="notice" id="decodeNotice" role="alert" aria-live="polite" hidden></div>
+        <button class="convert-button" id="decodeButton" type="button" disabled>
+          <span id="decodeButtonLabel">解析并校验 HTML</span><span class="button-arrow" aria-hidden="true">→</span>
+        </button>
+      </section>
+
+      <section class="result compact-result" id="decodeResult" aria-labelledby="decodeResultTitle" hidden>
+        <div class="result-head">
+          <div class="success-icon" aria-hidden="true">✓</div>
+          <div><p class="result-kicker">解析完成</p><h2 id="decodeResultTitle">HTML 已准备好</h2></div>
+        </div>
+        <button class="download-card full-download" id="decodeDownloadButton" type="button">
+          <span class="download-type html-type">HTML</span>
+          <span><strong>下载还原后的 HTML</strong><small id="decodeDownloadName"></small></span>
+          <span class="download-symbol" aria-hidden="true">↓</span>
+        </button>
+        <button class="copy-button full-copy" id="decodeCopyButton" type="button">复制 HTML 内容</button>
+        <div class="checks" id="decodeChecks"></div>
+      </section>
+    </div>
+
+    <footer>
+      <span id="serverStatus"><i></i>正在连接本地处理服务…</span>
+      <span>与命令行版共用同一转换核心</span>
+    </footer>
+  </main>
+  <script src="/app.js" defer></script>
+</body>
+</html>
