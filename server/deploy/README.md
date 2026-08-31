@@ -1,65 +1,46 @@
-# Angular20 服务器部署修复说明
+# Angular20 无常驻源码自动发布
 
-## 问题原因
+## 目标
 
-后端服务使用低权限账号运行，并启用了 `NoNewPrivileges=true` 时，进程不能再通过 `sudo` 提权。部署钩子如果执行 `sudo systemctl start angular20-deploy.service`，会直接失败。GitHub Actions 过去只检查接口返回 `started`，所以会误判为发布成功。
+服务器不再保存 Git 工作副本。代码只在本地和 GitHub 维护；每次发布时，服务器在隔离临时目录中获取 GitHub Actions 指定的完整提交号，使用无特权账号构建，原子替换生产文件，健康检查通过后删除临时源码。
 
-## 推荐结构
+## 发布结构
 
-- Nest 后端继续低权限运行，保留 `NoNewPrivileges=true`。
-- 部署接口只写入请求文件，不执行 `sudo`。
-- `angular20-deploy.path` 由 systemd 以 root 权限监听请求目录。
-- `angular20-deploy.service` 以 root 权限运行 `angular20-deploy-worker.sh`。
-- GitHub Actions 拿到 `runId` 后轮询 `/api/deploy/runs/:runId`，只有状态为 `success` 才算成功。
+- Nest 后端继续使用 `angular20` 低权限账号，并保留 `NoNewPrivileges=true`。
+- 部署接口验证 `X-Deploy-Token` 和 `X-Deploy-Commit`，写入请求文件并返回 `runId`，不执行 `sudo`。
+- `angular20-deploy.path` 监听请求文件，由 systemd 启动 root 管理的固定 Worker。
+- Worker 本身安装在 `/usr/local/lib/angular20-deploy/worker.sh`，不可由应用账号修改。
+- Git 获取、`npm ci` 和构建均由无特权账号 `angular20-build` 执行。
+- root 只负责原子替换 `/var/www/projects/angular20`、`/opt/angular20-server` 和重启 `nest-server.service`。
+- GitHub Actions 轮询运行状态；只有健康检查成功并返回 `success` 才算发布成功。
 
-## 服务器安装步骤
+生产运行数据仍位于 `/var/lib/mydata` 和 `/var/www/uploads`，不在发布替换范围内。后端环境变量继续使用 `/etc/angular20-server.env`。
 
-在 BCC 服务器上执行：
+## 首次安装或修复
 
-```bash
-sudo mkdir -p /var/lib/angular20-deploy/requests /var/lib/angular20-deploy/status
-sudo chown -R angular20:angular20 /var/lib/angular20-deploy
-
-sudo cp /root/projects/angular20/server/deploy/angular20-deploy.service /etc/systemd/system/angular20-deploy.service
-sudo cp /root/projects/angular20/server/deploy/angular20-deploy.path /etc/systemd/system/angular20-deploy.path
-sudo chmod +x /root/projects/angular20/server/deploy/angular20-deploy-worker.sh
-
-sudo systemctl daemon-reload
-sudo systemctl enable --now angular20-deploy.path
-```
-
-后端 `.env` 增加：
+把仓库临时下载到服务器后，以 root 执行：
 
 ```bash
-DEPLOY_REQUEST_DIR=/var/lib/angular20-deploy/requests
-DEPLOY_STATUS_DIR=/var/lib/angular20-deploy/status
-DEPLOY_LOG_PATH=/var/log/angular20-deploy.log
-PROJECT_DIR=/root/projects/angular20
+bash server/deploy/install-angular20-deploy.sh FULL_40_CHARACTER_COMMIT_SHA
 ```
 
-然后重启后端：
+安装器会：
+
+1. 创建无登录权限的 `angular20-build` 构建账号；
+2. 安装 root 所有的 Worker 和 systemd 单元；
+3. 创建请求、状态和备份目录；
+4. 更新 `/etc/angular20-server.env`；
+5. 排队部署指定提交，以便把支持 `runId` 的后端首次发布上线。
+
+部署进度：
 
 ```bash
-sudo systemctl restart nest-server
+systemctl status angular20-deploy.service --no-pager
+tail -n 200 /var/log/angular20-deploy.log
 ```
 
-## 处理部署目录脏状态
+## 发布和回滚
 
-`scripts/deploy-full.sh` 会在拉取代码前检测部署目录是否有本地修改。如果有，会备份到：
+每次构建使用 `/var/tmp/angular20-deploy-build/<runId>/`，结束后自动删除。生产目录切换前会保留旧网页和后端；健康检查失败会立即回滚。成功版本备份位于 `/var/lib/angular20-deploy/backups/`，默认保留最近 3 份。
 
-```text
-/root/deploy-backups/angular20/<时间戳>/
-```
-
-备份后执行 `git reset --hard` 和 `git clean -fd`，让 `/root/projects/angular20` 成为专用、干净的部署副本。
-
-## 验证
-
-触发部署后可以查看：
-
-```bash
-sudo journalctl -u angular20-deploy.service -n 100 --no-pager
-sudo tail -n 200 /var/log/angular20-deploy.log
-```
-
-线上资源哈希应从旧版本更新为最新构建输出。
+不再使用或创建 `/root/projects/angular20`，旧的 `scripts/deploy-full.sh` 也不属于这条生产发布链路。

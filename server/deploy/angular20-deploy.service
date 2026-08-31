@@ -1,12 +1,17 @@
 [Unit]
 Description=Run Angular20 production deploy
-After=network.target
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=oneshot
 User=root
-Environment=PROJECT_DIR=/root/projects/angular20
+UMask=0022
+Environment=ANGULAR20_REPO_URL=https://github.com/ShiShanLing/angular20.git
+Environment=ANGULAR20_BUILD_USER=angular20-build
 Environment=DEPLOY_REQUEST_DIR=/var/lib/angular20-deploy/requests
 Environment=DEPLOY_STATUS_DIR=/var/lib/angular20-deploy/status
 Environment=DEPLOY_LOG_PATH=/var/log/angular20-deploy.log
-ExecStart=/root/projects/angular20/server/deploy/angular20-deploy-worker.sh
+Environment=DEPLOY_BUILD_ROOT=/var/tmp/angular20-deploy-build
+Environment=DEPLOY_BACKUP_ROOT=/var/lib/angular20-deploy/backups
+ExecStart=/usr/local/lib/angular20-deploy/worker.sh

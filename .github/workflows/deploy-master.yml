@@ -13,7 +13,7 @@ jobs:
   deploy:
     name: Trigger production deploy
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 35
 
     steps:
       - name: Call server deploy hook
@@ -24,13 +24,18 @@ jobs:
           set -euo pipefail
           response="$(curl -fsS -X POST "https://${SERVER_HOST}/angular20/api/deploy/hook" \
             -H "X-Deploy-Token: ${DEPLOY_HOOK_SECRET}" \
+            -H "X-Deploy-Commit: ${GITHUB_SHA}" \
             -H "Content-Type: application/json")"
           echo "$response"
           run_id="$(node -e 'const data=JSON.parse(process.argv[1]); if (!data.runId) process.exit(1); process.stdout.write(data.runId);' "$response")"
 
-          for i in $(seq 1 60); do
-            status_response="$(curl -fsS "https://${SERVER_HOST}/angular20/api/deploy/runs/${run_id}" \
-              -H "X-Deploy-Token: ${DEPLOY_HOOK_SECRET}")"
+          for i in $(seq 1 180); do
+            if ! status_response="$(curl -fsS "https://${SERVER_HOST}/angular20/api/deploy/runs/${run_id}" \
+              -H "X-Deploy-Token: ${DEPLOY_HOOK_SECRET}")"; then
+              echo "Status endpoint temporarily unavailable; retrying."
+              sleep 10
+              continue
+            fi
             echo "$status_response"
             state="$(node -e 'const data=JSON.parse(process.argv[1]); process.stdout.write(data.state || "unknown");' "$status_response")"
             if [ "$state" = "success" ]; then
