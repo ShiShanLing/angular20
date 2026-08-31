@@ -16,6 +16,17 @@ bash /path/to/project/deploy/install-deploy-access.sh
 
 本机 SSH 别名 `baidu-bcc` 必须连接普通账号 `deploy`。发布时必须明确目标：
 
+```sshconfig
+Host baidu-bcc
+  HostName 106.13.175.227
+  User deploy
+  Port 22022
+  IdentityFile ~/.ssh/baidu_bcc_codex
+  IdentitiesOnly yes
+```
+
+生产服务器同时保留 22 和 22022；当前发布通道使用 22022，以避开本地网络或代理线路对 22 端口的限制。两个端口都必须保持公钥专用登录，并由 Fail2ban 保护。
+
 ```bash
 ./deploy/publish.sh publish --targets frontend
 ./deploy/publish.sh publish --targets backend
