@@ -1,6 +1,8 @@
 import {
   Controller,
+  Get,
   Headers,
+  Param,
   Post,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -26,5 +28,16 @@ export class DeployController {
       throw new UnauthorizedException('Invalid deploy token');
     }
     return this.deployService.triggerDeploy();
+  }
+
+  @Get('runs/:runId')
+  @SkipThrottle()
+  @ApiOperation({ summary: '查询生产部署结果（需 X-Deploy-Token）' })
+  status(@Param('runId') runId: string, @Headers('x-deploy-token') token?: string) {
+    const secret = this.config.get<string>('DEPLOY_HOOK_SECRET');
+    if (!secret || token !== secret) {
+      throw new UnauthorizedException('Invalid deploy token');
+    }
+    return this.deployService.readDeployStatus(runId);
   }
 }

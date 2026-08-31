@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Angular20 production deploy
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+Environment=PROJECT_DIR=/root/projects/angular20
+Environment=DEPLOY_REQUEST_DIR=/var/lib/angular20-deploy/requests
+Environment=DEPLOY_STATUS_DIR=/var/lib/angular20-deploy/status
+Environment=DEPLOY_LOG_PATH=/var/log/angular20-deploy.log
+ExecStart=/root/projects/angular20/server/deploy/angular20-deploy-worker.sh

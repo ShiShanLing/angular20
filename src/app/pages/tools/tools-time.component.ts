@@ -166,7 +166,7 @@ export class ToolsTimeComponent implements OnInit, OnDestroy {
       this.setPomoMode('work');
     }
   }
-
+  
   // MARK: 事件处理
   onPomoFinished(): void {
     const label = this.pomoMode() === 'work' ? '工作' : '休息';

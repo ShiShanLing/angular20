@@ -7,6 +7,7 @@ WEB_ROOT="${WEB_ROOT:-/var/www/projects/angular20}"
 BASE_HREF="${BASE_HREF:-/angular20/}"
 BRANCH="${DEPLOY_BRANCH:-master}"
 SERVICE_NAME="${NEST_SERVICE:-nest-server}"
+BACKUP_ROOT="${DEPLOY_BACKUP_ROOT:-/root/deploy-backups/angular20}"
 
 log() {
   echo "[deploy] $(date '+%Y-%m-%d %H:%M:%S') $*"
@@ -41,6 +42,31 @@ health_check() {
   log "Health check passed (HTTP $code)"
 }
 
+backup_and_clean_worktree() {
+  local status
+  status="$(git status --porcelain)"
+  if [ -z "$status" ]; then
+    return
+  fi
+
+  local backup_dir
+  backup_dir="$BACKUP_ROOT/$(date '+%Y%m%d-%H%M%S')"
+  mkdir -p "$backup_dir"
+
+  log "Dirty deploy worktree detected; backing up local changes to $backup_dir"
+  git status --short > "$backup_dir/status.txt"
+  git diff > "$backup_dir/tracked.diff" || true
+  git diff --staged > "$backup_dir/staged.diff" || true
+  git ls-files --others --exclude-standard -z > "$backup_dir/untracked-files.zlist"
+  if [ -s "$backup_dir/untracked-files.zlist" ]; then
+    tar --null -czf "$backup_dir/untracked-files.tgz" -T "$backup_dir/untracked-files.zlist"
+  fi
+
+  log "Reset deploy worktree to a clean Git state"
+  git reset --hard HEAD
+  git clean -fd
+}
+
 main() {
   require_cmd git
   require_cmd npm
@@ -52,6 +78,7 @@ main() {
 
   cd "$PROJECT_DIR"
   log "Pull latest $BRANCH in $PROJECT_DIR"
+  backup_and_clean_worktree
   git fetch origin "$BRANCH"
   git checkout "$BRANCH"
   git pull --ff-only origin "$BRANCH"
