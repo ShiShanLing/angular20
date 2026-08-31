@@ -108,7 +108,11 @@ if $want_frontend; then
   log "building frontend"
   npm run build -- --base-href /angular20/
   test -f "$ROOT/dist/angular20/browser/index.html"
-  grep -q 'src="/angular20/' "$ROOT/dist/angular20/browser/index.html"
+  grep -q '<base href="/angular20/">' "$ROOT/dist/angular20/browser/index.html"
+  if grep -Eq '(src|href)="/(assets/|main-|polyfills-|styles-)' \
+    "$ROOT/dist/angular20/browser/index.html"; then
+    fail "frontend build contains root-relative assets outside /angular20/"
+  fi
 fi
 
 if $want_backend; then
