@@ -1,0 +1,35 @@
+[Unit]
+Description=Angular20 NestJS Backend API Server
+Documentation=https://github.com/ShiShanLing/angular20
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=angular20
+Group=angular20
+WorkingDirectory=/opt/angular20-server
+ExecStart=/usr/bin/node dist/main.js
+Environment=NODE_ENV=production
+EnvironmentFile=/etc/angular20-server.env
+Restart=on-failure
+RestartSec=5
+UMask=0027
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/var/lib/mydata /var/www/uploads
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

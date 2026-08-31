@@ -57,6 +57,7 @@ __pycache__/
 server/node_modules/
 server/dist/
 server/.env
+/.angular20-release-*.json
 
 # SQLite database
 *.db

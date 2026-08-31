@@ -1,0 +1,2 @@
+Cmnd_Alias ANGULAR20_RELEASE = /usr/local/sbin/angular20-release apply *
+deploy ALL=(root) NOPASSWD: ANGULAR20_RELEASE

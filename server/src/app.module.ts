@@ -12,7 +12,6 @@ import { ExportModule } from './export/export.module';
 import { NotesModule } from './notes/notes.module';
 import { WeatherModule } from './weather/weather.module';
 import { MarketReportsModule } from './market-reports/market-reports.module';
-import { DeployModule } from './deploy/deploy.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -32,7 +31,6 @@ import { AppController } from './app.controller';
     NotesModule,
     WeatherModule,
     MarketReportsModule,
-    DeployModule,
   ],
   controllers: [AppController],
   providers: [

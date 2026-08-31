@@ -1,7 +1,9 @@
 # 工坊
 
-## 接口文档
-http://106.13.175.227/api/docs
+## 线上入口
+
+- 工坊：<https://shishanling.cn/angular20/>
+- 接口文档：<https://shishanling.cn/angular20/api/docs>
 
 二维码功能
 1.还需要优化,图片高度会影响下方结果展示位置,
@@ -30,10 +32,7 @@ http://106.13.175.227/api/docs
 - Agent 管理员（`can_access_admin`）在工坊拥有完整菜单权限；普通成员只有基础工具权限。
 - 旧的工坊用户名/密码登录和邀请码注册已停用，请到 Agent 注册新账号。
 
-线上入口：
-
-- 工坊：https://106.13.175.227/angular20/
-- Agent：https://106.13.175.227/agent/
+统一账号入口：<https://shishanling.cn/agent/>
 
 ## 技术栈
 
@@ -91,6 +90,18 @@ npm run publish:gh-pages
 ```
 
 等价命令：`npm run deploy`。若仓库名或 GitHub Pages 路径变更，请同步修改 `package.json` 中 `build:gh` 的 `--base-href`。
+
+## 发布到生产服务器
+
+生产服务器不保存 Git 仓库，也不接受公网部署 webhook。代码在本地构建后，通过普通账号 `deploy` 上传；服务器只允许该账号调用一个参数和目标均受校验的固定发布工具。后端以独立的低权限账号 `angular20` 运行，发布失败会自动恢复上一个版本。
+
+```bash
+./deploy/publish.sh publish --targets frontend
+./deploy/publish.sh publish --targets backend
+./deploy/publish.sh publish --targets frontend,backend
+```
+
+完整安装方式、安全边界和回滚目录见 [`deploy/README.md`](deploy/README.md)。旧的 GitHub Actions webhook 发布通道已经移除。
 
 ---
 

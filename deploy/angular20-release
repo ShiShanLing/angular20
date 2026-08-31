@@ -1,0 +1,196 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+PATH=/usr/bin:/bin:/usr/sbin:/sbin
+STAGING_ROOT=/var/lib/angular20-deploy/staging
+RELEASE_ROOT=/var/lib/angular20-deploy/releases
+WEB_ROOT=/var/www/projects/angular20
+BACKEND_ROOT=/opt/angular20-server
+SERVICE=nest-server.service
+LOCK_FILE=/run/angular20-release.lock
+KEEP_RELEASES=3
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo "angular20-release must run as root" >&2
+  exit 1
+fi
+if [ "$#" -ne 3 ] || [ "$1" != apply ]; then
+  echo "usage: angular20-release apply RELEASE_ID TARGETS" >&2
+  exit 2
+fi
+
+release_id="$2"
+targets="$3"
+[[ "$release_id" =~ ^[0-9]{8}-[0-9]{6}-[0-9a-f]{12}$ ]] || {
+  echo "invalid release id" >&2
+  exit 2
+}
+case "$targets" in
+  frontend|backend|frontend,backend) ;;
+  *) echo "invalid targets" >&2; exit 2 ;;
+esac
+
+stage="$STAGING_ROOT/$release_id"
+[ "$(readlink -f -- "$stage")" = "$stage" ] || {
+  echo "invalid staging path" >&2
+  exit 2
+}
+[ -d "$stage" ] && [ ! -L "$stage" ] || {
+  echo "staging release does not exist" >&2
+  exit 3
+}
+[ -f "$stage/release.json" ] || {
+  echo "release metadata is missing" >&2
+  exit 3
+}
+
+stage_owner="$(stat -c '%U' -- "$stage")"
+[ "$stage_owner" = deploy ] || {
+  echo "staging release must be owned by deploy" >&2
+  exit 3
+}
+
+python3 - "$stage/release.json" "$release_id" "$targets" <<'PY'
+import json
+import re
+import sys
+
+metadata_path, expected_release, expected_targets = sys.argv[1:]
+with open(metadata_path, encoding="utf-8") as handle:
+    metadata = json.load(handle)
+if metadata.get("releaseId") != expected_release:
+    raise SystemExit("release metadata id does not match")
+if metadata.get("targets") != expected_targets:
+    raise SystemExit("release metadata targets do not match")
+if not re.fullmatch(r"[0-9a-f]{40}", str(metadata.get("commit", ""))):
+    raise SystemExit("release metadata commit is invalid")
+PY
+
+case ",$targets," in
+  *,frontend,*) want_frontend=true ;;
+  *) want_frontend=false ;;
+esac
+case ",$targets," in
+  *,backend,*) want_backend=true ;;
+  *) want_backend=false ;;
+esac
+
+$want_frontend && test -f "$stage/frontend/index.html"
+$want_backend && test -f "$stage/backend/dist/main.js"
+$want_backend && test -d "$stage/backend/node_modules"
+
+python3 - "$stage" <<'PY'
+from pathlib import Path
+import sys
+
+root = Path(sys.argv[1]).resolve()
+for item in root.rglob("*"):
+    if not item.is_symlink():
+        continue
+    resolved = item.resolve()
+    if resolved != root and root not in resolved.parents:
+        raise SystemExit(f"unsafe symlink in release: {item}")
+PY
+
+exec 9>"$LOCK_FILE"
+flock -n 9 || {
+  echo "another Angular20 release is active" >&2
+  exit 4
+}
+
+mkdir -p "$RELEASE_ROOT"
+snapshot="$RELEASE_ROOT/$release_id/snapshot"
+mkdir -p "$snapshot"
+
+web_parent="$(dirname "$WEB_ROOT")"
+backend_parent="$(dirname "$BACKEND_ROOT")"
+next_web="$web_parent/.angular20.next-$release_id"
+previous_web="$web_parent/.angular20.previous-$release_id"
+next_backend="$backend_parent/.angular20-server.next-$release_id"
+previous_backend="$backend_parent/.angular20-server.previous-$release_id"
+switched_frontend=false
+switched_backend=false
+
+rollback() {
+  local code=$?
+  trap - ERR
+  set +e
+  echo "release failed; restoring the previous Angular20 version" >&2
+  if $switched_backend; then
+    systemctl stop "$SERVICE"
+    rm -rf --one-file-system -- "$BACKEND_ROOT"
+    [ -d "$previous_backend" ] && mv "$previous_backend" "$BACKEND_ROOT"
+    systemctl start "$SERVICE"
+  fi
+  if $switched_frontend; then
+    rm -rf --one-file-system -- "$WEB_ROOT"
+    [ -d "$previous_web" ] && mv "$previous_web" "$WEB_ROOT"
+  fi
+  rm -rf --one-file-system -- "$next_web" "$next_backend"
+  exit "$code"
+}
+trap rollback ERR
+
+if $want_frontend; then
+  rm -rf --one-file-system -- "$next_web" "$previous_web"
+  mkdir -p "$next_web"
+  rsync -a --delete "$stage/frontend/" "$next_web/"
+  chown -R root:root "$next_web"
+fi
+
+if $want_backend; then
+  rm -rf --one-file-system -- "$next_backend" "$previous_backend"
+  mkdir -p "$next_backend"
+  rsync -a --delete "$stage/backend/" "$next_backend/"
+  chown -R root:root "$next_backend"
+fi
+
+if $want_backend; then
+  systemctl stop "$SERVICE"
+fi
+if $want_frontend; then
+  [ ! -e "$previous_web" ]
+  [ -d "$WEB_ROOT" ] && mv "$WEB_ROOT" "$previous_web"
+  mv "$next_web" "$WEB_ROOT"
+  switched_frontend=true
+fi
+if $want_backend; then
+  [ ! -e "$previous_backend" ]
+  [ -d "$BACKEND_ROOT" ] && mv "$BACKEND_ROOT" "$previous_backend"
+  mv "$next_backend" "$BACKEND_ROOT"
+  switched_backend=true
+  systemctl start "$SERVICE"
+fi
+
+if $want_backend; then
+  for _ in $(seq 1 30); do
+    if systemctl is-active --quiet "$SERVICE" && \
+       curl -fsS http://127.0.0.1/angular20/api/docs >/dev/null; then
+      backend_healthy=true
+      break
+    fi
+    backend_healthy=false
+    sleep 2
+  done
+  $backend_healthy
+fi
+if $want_frontend; then
+  curl -fsS http://127.0.0.1/angular20/ >/dev/null
+fi
+
+trap - ERR
+if [ -d "$previous_web" ]; then mv "$previous_web" "$snapshot/frontend"; fi
+if [ -d "$previous_backend" ]; then mv "$previous_backend" "$snapshot/backend"; fi
+cp "$stage/release.json" "$RELEASE_ROOT/$release_id/release.json"
+rm -rf --one-file-system -- "$stage"
+
+find "$RELEASE_ROOT" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' \
+  | sort -rn \
+  | awk -v keep="$KEEP_RELEASES" 'NR > keep { sub(/^[^ ]+ /, ""); print }' \
+  | while IFS= read -r old_release; do
+      case "$old_release" in
+        "$RELEASE_ROOT"/*) rm -rf --one-file-system -- "$old_release" ;;
+      esac
+    done
+
+echo "Angular20 release applied: $release_id ($targets)"
