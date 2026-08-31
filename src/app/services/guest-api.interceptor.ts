@@ -47,7 +47,7 @@ function guestEmptyBody(url: string, method: string): unknown {
  */
 export const guestApiInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
-  if (!auth.isGuest()) {
+  if (!auth.isGuest() && !auth.isLocalDevMode()) {
     return next(req);
   }
 

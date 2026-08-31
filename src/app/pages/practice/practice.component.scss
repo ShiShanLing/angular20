@@ -97,6 +97,26 @@
     border-color: var(--accent-color);
     box-shadow: inset 0 0 0 1px var(--accent-color);
   }
+
+  .practice-mode-tab.is-active {
+    color: var(--accent-color);
+    background: var(--bg);
+  }
+
+  .objective-option.is-selected {
+    border-color: var(--accent-color);
+    background: rgba(22, 119, 255, 0.12);
+  }
+
+  .objective-option.is-correct {
+    border-color: var(--success-color);
+    background: rgba(82, 196, 26, 0.16);
+  }
+
+  .objective-option.is-wrong {
+    border-color: var(--error-color);
+    background: rgba(255, 77, 79, 0.14);
+  }
 }
 
 .practice-empty-fullpage {
@@ -174,6 +194,33 @@
   gap: 6px;
   width: 100%;
   min-width: 0;
+}
+
+.practice-mode-tabs {
+  flex-shrink: 0;
+  display: inline-flex;
+  padding: 2px;
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-soft);
+}
+
+.practice-mode-tab {
+  min-width: 4.5rem;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 4px;
+  color: var(--fg-muted);
+  background: transparent;
+  font: inherit;
+  font-size: 0.9em;
+  cursor: pointer;
+}
+
+.practice-mode-tab.is-active {
+  color: #1677ff;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 .practice-search__label {
@@ -693,6 +740,118 @@ h1.q {
   margin-top: 8px;
   font-size: 0.85em;
   opacity: 0.75;
+}
+
+.objective-options {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.objective-option {
+  display: grid;
+  grid-template-columns: 2rem 1fr;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.objective-option:hover,
+.objective-option:focus-visible {
+  border-color: #1677ff;
+  outline: none;
+}
+
+.objective-option.is-selected {
+  border-color: #1677ff;
+  background: rgba(22, 119, 255, 0.07);
+}
+
+.objective-option.is-correct {
+  border-color: #52c41a;
+  background: rgba(82, 196, 26, 0.12);
+}
+
+.objective-option.is-wrong {
+  border-color: #ff4d4f;
+  background: rgba(255, 77, 79, 0.1);
+}
+
+.objective-options.is-submitted .objective-option {
+  cursor: default;
+}
+
+.objective-option__key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.06);
+  font-weight: 700;
+}
+
+.objective-option__text {
+  min-width: 0;
+  align-self: center;
+  word-break: break-word;
+}
+
+.objective-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.objective-result {
+  margin-top: 12px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  font-weight: 600;
+}
+
+.objective-result--ok {
+  color: #237804;
+  background: rgba(82, 196, 26, 0.12);
+}
+
+.objective-result--wrong {
+  color: #a8071a;
+  background: rgba(255, 77, 79, 0.1);
+}
+
+.source-question {
+  max-height: min(68vh, 720px);
+  overflow: auto;
+}
+
+.source-question__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.source-question__title {
+  margin: 0 0 12px;
+  color: var(--text-primary, #1f2937);
+  font-size: 1.2rem;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+.source-question__answer {
+  margin-top: 12px;
 }
 
 .oral-oneliner {

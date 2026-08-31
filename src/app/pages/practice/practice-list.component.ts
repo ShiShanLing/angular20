@@ -28,7 +28,12 @@ import {
   PracticeStorageService,
   type PracticeStorageScope,
 } from './practice-storage.service';
-import { angularJobSeedToPracticeItems, iosJobSeedToPracticeItems, iosSeedToPracticeItems } from './ios-seed';
+import {
+  angularJobSeedToPracticeItems,
+  iosJobObjectiveSeedToPracticeItems,
+  iosJobSeedToPracticeItems,
+  iosSeedToPracticeItems,
+} from './ios-seed';
 import { MarkdPipe } from './markd.pipe';
 
 type FilterValue = PracticeFilterCategory;
@@ -423,8 +428,8 @@ export class PracticeListComponent implements OnInit {
     // 先确保所有内置题库已注入 localStorage
     this.ensureAllSeeds();
 
-    // 合并所有题库（practice + ios-learning + angular-learning）
-    const allScopes: PracticeStorageScope[] = ['practice', 'ios-learning', 'angular-learning'];
+    // 合并所有题库（practice + ios-learning + ios-objective-learning + angular-learning）
+    const allScopes: PracticeStorageScope[] = ['practice', 'ios-learning', 'ios-objective-learning', 'angular-learning'];
     const merged: PracticeItem[] = [];
     const seenIds = new Set<string>();
     for (const scope of allScopes) {
@@ -446,6 +451,7 @@ export class PracticeListComponent implements OnInit {
     const scopes: Array<{ scope: PracticeStorageScope; seed: (t: number) => PracticeItem[] }> = [
       { scope: 'practice', seed: iosSeedToPracticeItems },
       { scope: 'ios-learning', seed: iosJobSeedToPracticeItems },
+      { scope: 'ios-objective-learning', seed: iosJobObjectiveSeedToPracticeItems },
       { scope: 'angular-learning', seed: angularJobSeedToPracticeItems },
     ];
     for (const { scope, seed } of scopes) {
