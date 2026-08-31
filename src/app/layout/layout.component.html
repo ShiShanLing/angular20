@@ -12,7 +12,7 @@
     }
   </div>
   <!-- 菜单：桌面折叠时收起图标模式，移动端始终展开 -->
-  <ul nz-menu nzTheme="dark" nzMode="inline" [nzInlineCollapsed]="isCollapsed() && !isMobile()">
+  <ul nz-menu [nzTheme]="themeService.mode()" nzMode="inline" [nzInlineCollapsed]="isCollapsed() && !isMobile()">
     @for (item of visibleMenuItems(); track item.label) {
       @if (item.children) {
         <!-- 有子菜单：桌面折叠时收起，移动端始终展开  -->

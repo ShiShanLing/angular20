@@ -6,10 +6,12 @@
 
 // 桌面端 nz-sider 样式（移动端不渲染此元素）
 .sider {
+  background: var(--sidebar-bg, #fff) !important;
   box-shadow: 2px 0 8px rgba(0,0,0,0.15);
   z-index: 10;
   height: 100vh;
   overflow: auto;
+  transition: background-color 0.3s ease;
 
   [nz-menu] {
     border-right: none;
@@ -23,20 +25,20 @@
 
   &::-webkit-scrollbar { width: 6px; }
   &::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--sidebar-scrollbar-thumb, rgba(0, 0, 0, 0.18));
     border-radius: 3px;
   }
 }
 
-// logo 区域（桌面/移动端共用，背景色继承父容器的深色主题）
+// logo 区域（桌面/移动端共用，跟随当前主题切换）
 .logo {
   display: flex;
   align-items: center;
   gap: 10px;
   height: 64px;
   padding: 0 20px;
-  background: rgba(255,255,255,0.05);
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: var(--sidebar-logo-bg, #fff);
+  border-bottom: 1px solid var(--sidebar-border, #f0f0f0);
   overflow: hidden;
   white-space: nowrap;
   transition: padding 0.2s;
@@ -55,7 +57,7 @@
     display: block;
   }
   .logo-text {
-    color: #fff;
+    color: var(--sidebar-logo-text, #262626);
     font-size: 16px;
     font-weight: 600;
     letter-spacing: 0.2em;
@@ -395,7 +397,7 @@
   height: 100vh;
   width: 260px;
   z-index: 1000;                  // 高于遮罩（999），浮在页面内容之上；须低于 .app-header（移动端）以免盖住菜单按钮
-  background: #001529;            // 与 nz-sider dark 主题色保持一致
+  background: var(--sidebar-bg, #fff);
   overflow-y: auto;
   transform: translateX(-100%);   // 默认隐藏在左侧屏幕外
   // 关闭时不参与命中检测：避免部分环境下 transform 后仍挡住顶栏左侧点击
@@ -413,7 +415,7 @@
 
   &::-webkit-scrollbar { width: 6px; }
   &::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--sidebar-scrollbar-thumb, rgba(0, 0, 0, 0.18));
     border-radius: 3px;
   }
 
