@@ -7,7 +7,7 @@ Wants=network-online.target
 Type=oneshot
 User=root
 UMask=0022
-Environment=ANGULAR20_REPO_URL=https://github.com/ShiShanLing/angular20.git
+Environment=ANGULAR20_ARCHIVE_BASE_URL=https://codeload.github.com/ShiShanLing/angular20/tar.gz
 Environment=ANGULAR20_BUILD_USER=angular20-build
 Environment=DEPLOY_REQUEST_DIR=/var/lib/angular20-deploy/requests
 Environment=DEPLOY_STATUS_DIR=/var/lib/angular20-deploy/status

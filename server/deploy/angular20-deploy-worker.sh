@@ -2,7 +2,7 @@
 set -euo pipefail
 umask 022
 
-REPO_URL="${ANGULAR20_REPO_URL:-https://github.com/ShiShanLing/angular20.git}"
+ARCHIVE_BASE_URL="${ANGULAR20_ARCHIVE_BASE_URL:-https://codeload.github.com/ShiShanLing/angular20/tar.gz}"
 BUILD_USER="${ANGULAR20_BUILD_USER:-angular20-build}"
 REQUEST_DIR="${DEPLOY_REQUEST_DIR:-/var/lib/angular20-deploy/requests}"
 STATUS_DIR="${DEPLOY_STATUS_DIR:-/var/lib/angular20-deploy/status}"
@@ -106,12 +106,14 @@ deploy_commit() {
   rm -rf -- "$build_dir" "$next_web" "$next_backend" "$previous_web" "$previous_backend"
   install -d -o "$BUILD_USER" -g "$BUILD_USER" "$build_dir" "$build_dir/home" "$repo_dir"
 
-  log "Fetching commit $commit into an isolated build directory"
-  run_as_builder git -C "$repo_dir" init --quiet
-  run_as_builder git -C "$repo_dir" remote add origin "$REPO_URL"
-  run_as_builder git -C "$repo_dir" fetch --quiet --depth 1 origin "$commit"
-  run_as_builder git -C "$repo_dir" checkout --quiet --detach FETCH_HEAD
-  test "$(run_as_builder git -C "$repo_dir" rev-parse HEAD)" = "$commit"
+  local source_archive="$build_dir/source.tar.gz"
+  log "Downloading commit $commit into an isolated build directory"
+  run_as_builder curl -fsSL --retry 3 --retry-delay 2 \
+    "$ARCHIVE_BASE_URL/$commit" -o "$source_archive"
+  run_as_builder tar -xzf "$source_archive" --strip-components=1 -C "$repo_dir"
+  rm -f -- "$source_archive"
+  test -f "$repo_dir/package-lock.json"
+  test -f "$repo_dir/server/package-lock.json"
 
   log "Installing and building the frontend"
   run_as_builder npm --prefix "$repo_dir" ci --no-audit --no-fund
