@@ -44,6 +44,7 @@ interface WeightRecord {
   styleUrl: './tools-weight.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
+
 export class ToolsWeightComponent implements OnInit {
   private fb = inject(FormBuilder);
   private msg = inject(NzMessageService);
@@ -56,7 +57,7 @@ export class ToolsWeightComponent implements OnInit {
   readonly chartOption = signal<EChartsOption>({});
   readonly loading = signal(false);
 
-  // MARK: 初始化
+  // MARK: 初始化 
   // 组件初始化：同步移动端断点、订阅视口变化与路由事件
   ngOnInit(): void {
     this.form = this.fb.group({
@@ -86,10 +87,12 @@ export class ToolsWeightComponent implements OnInit {
       const val = this.form.value;
       const dateStr = this.datePipe.transform(val.date, 'yyyy-MM-dd') || '';
       const existingIdx = this.records().findIndex(r => r.date === dateStr);
-
+      //Optional 本质上是一个枚举,他把可能没值显式的写入的类型系统,避免了OC中的nil类型随时传递照成的运行是问题,对他解包方式有,强制解包,可选解包,空合运算符,可选链.
+      //Optional不是普通值,也不是指针,他是类型层面的空值表达.
+      //先从判断题和选择题开始. 需要我一个一个设置吗? 还是AI你自己就能搞定?
       if (existingIdx > -1) {
         const existing = this.records()[existingIdx];
-        // 更新已有记录
+        
         this.recordService.update(Number(existing.id), { weight: val.weight }, dateStr).subscribe({
           next: (res) => {
             const updated = this.records().slice();
@@ -102,7 +105,7 @@ export class ToolsWeightComponent implements OnInit {
           error: () => this.msg.error('更新失败')
         });
       } else {
-        // 创建新记录
+        // 创建新记录-
         this.recordService.create('weight', { weight: val.weight }, dateStr).subscribe({
           next: (res) => {
             const updated = [...this.records(), { id: res.id, date: dateStr, weight: val.weight }];
@@ -112,11 +115,13 @@ export class ToolsWeightComponent implements OnInit {
             this.msg.success('记录成功');
             this.buildChart();
           },
+          //
           error: () => this.msg.error('保存失败')
         });
       }
     }
   }
+  
 
   // MARK: 删除记录
   deleteRecord(id: number | string): void {
@@ -154,15 +159,15 @@ export class ToolsWeightComponent implements OnInit {
       }
     });
   }
-
-  // MARK: 构建
+  
+  // MARK: 构建体重曲线
   buildChart(): void {
     const records = this.records();
     if (records.length === 0) {
       this.chartOption.set({});
       return;
     }
-
+    
     const xAxisData = records.map(r => r.date);
     const weightData = records.map(r => r.weight);
 
@@ -200,12 +205,13 @@ export class ToolsWeightComponent implements OnInit {
     });
   }
 
-  // MARK: 导出
+  // MARK: 导出 
   exportCSV(): void {
     if (!this.records().length) {
       this.msg.warning('没有记录可导出');
       return;
     }
+   //
     const headers = ['日期', '体重(kg)'];
     const rows = this.records().map(r => [r.date, r.weight.toString()]);
     const csvContent = "\uFEFF" + [headers, ...rows].map(e => e.join(",")).join("\n");

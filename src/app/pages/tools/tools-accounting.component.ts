@@ -149,7 +149,7 @@ export class ToolsAccountingComponent implements OnInit {
     });
   }
 
-  // MARK: 构建
+  // MARK: 构建记账图表
   buildChart(mode: 'week' | 'month'): void {
     this.currentChartMode = mode;
     const now = new Date();

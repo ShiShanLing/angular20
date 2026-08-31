@@ -13,7 +13,7 @@ import * as echartsDistNs from 'echarts/dist/echarts.js';
 import type { EChartsOption } from 'echarts';
 
 type EChartsNs = typeof import('echarts');
-// MARK: 图表
+// MARK: 解析图表包
 function echartsFromDistBundle(ns: typeof echartsDistNs): EChartsNs {
   const root = ns as unknown as Record<string, unknown>;
   if (typeof root['init'] === 'function') return root as unknown as EChartsNs;
@@ -172,7 +172,7 @@ export class MarketListComponent implements OnInit {
     return `${y}-${m}-${day}`;
   }
 
-  // MARK: 构建
+  // MARK: 构建趋势图表
   private buildChartOptions(data: TrendItem[], days: number): EChartsOption {
     const byDate = new Map(data.map((d) => [d.date, d]));
     const filled: TrendItem[] = [];
@@ -253,7 +253,7 @@ export class MarketListComponent implements OnInit {
           smooth: true,
           connectNulls: true,
           showSymbol: true,
-          symbolSize: 6,//
+          symbolSize: 6,
           data: aiValues,
           itemStyle: { color: '#2563eb' },
           areaStyle: {

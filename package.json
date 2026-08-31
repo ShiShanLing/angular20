@@ -14,7 +14,8 @@
     "publish:all": "node scripts/publish-source-and-pages.cjs",
     "publish:source-and-pages": "node scripts/publish-source-and-pages.cjs",
     "deploy": "npm run publish:gh-pages",
-    "py": "python '/Volumes/dfre/LearningProject/angular20/monthly_dca_report.py'"
+    "py": "python '/Volumes/dfre/LearningProject/angular20/monthly_dca_report.py'",
+    "indices": "node crawler/fetch-indices.mjs"
   },
   "private": true,
   "engines": {

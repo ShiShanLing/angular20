@@ -74,7 +74,7 @@ export class ExportService {
 
   async exportAllExcel(userId: number): Promise<Buffer> {
     const workbook = new ExcelJS.Workbook();
-    workbook.creator = 'Angular20 App';
+    workbook.creator = '工坊';
     workbook.created = new Date();
 
     // 体重 sheet

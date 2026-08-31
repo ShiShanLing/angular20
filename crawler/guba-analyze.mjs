@@ -31,8 +31,17 @@ import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
 import { isInAnalysisWindow, analysisWindowLabel } from './time-window.mjs';
 import { mergeBarsByCanonicalSector } from './sector-utils.mjs';
+import {
+  CONTEXT_BULLISH_WORDS,
+  applyContextBullishWords,
+  applyComplaintMarkers,
+  applyBullDeparturePatterns,
+  finalizeSentimentLabel,
+} from './sentiment-rules.mjs';
+import { getMarketSnapshot } from './eastmoney-market.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const isMain = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
 const DATA_DIR = join(__dirname, 'data');
 const DATA_FILE = join(DATA_DIR, 'guba_posts.json');
 const REPORT_FILE = join(DATA_DIR, 'guba_analysis.json');
@@ -46,12 +55,12 @@ const DICTIONARY = {
   bullish: {
     weight: 1,
     words: [
-      '抄底', '反弹', '看多', '看涨', '起飞', '大涨', '暴涨', '牛市', '底部', '见底',
+      '抄底', '反弹', '看多', '看涨', '起飞', '大涨', '暴涨', '底部', '见底',
       '机会', '利好', '加仓', '满仓', '金叉', '突破', '新高', '强势', '拉升', '起爆',
-      '大牛', '翻红', '红盘', '大涨', '上攻', '启动', '爆发', '做多', '建仓', '抄底',
+      '大牛', '翻红', '红盘', '上攻', '爆发', '做多', '建仓', '抄底',
       '护盘', '撑住', '止跌', '企稳', '回踩', '蓄力', '放量', '主力', '吸筹', '洗盘',
-      '慢牛', '长牛', '低估', '价值', '洼地', '安全', '底部区域', '底部放量',
-      '稳了', '必涨', '翻倍', '大肉', '上车', '冲冲冲', '梭哈', '大牛市', '看涨',
+      '低估', '价值', '洼地', '安全', '底部区域', '底部放量',
+      '稳了', '必涨', '翻倍', '大肉', '上车', '冲冲冲', '梭哈', '看涨',
     ],
   },
 
@@ -90,15 +99,7 @@ const DICTIONARY = {
     ],
   },
 
-  // === 质疑/讽刺（通常暗示看空）===
-  sarcastic: {
-    weight: 0.6,
-    words: [
-      '呵呵', '哈哈', '笑死', '果然', '又是', '又是这样', '一如既往',
-      '果然如此', '每次都', '永远', '又来了', '老样子', '习惯就好',
-      '绿油油', '韭菜', '被割', '又被割', '套路', '老乡别走',
-    ],
-  },
+  // 旧 sarcastic 词典已迁至 sentiment-rules.mjs（吐槽 → neutral）
 };
 
 // ============================================================
@@ -151,46 +152,45 @@ const STOP_WORDS = new Set([
 // ============================================================
 
 /** 分析单个帖子的情绪 */
-function analyzePostSentiment(post) {
-  const text = `${post.title} ${post.content || ''}`.toLowerCase();
+export function analyzePostSentiment(post, options = {}) {
+  const marketDirection = options.marketDirection ?? '未知';
+  const text = `${post.title} ${post.content || ''}`;
+  const lower = text.toLowerCase();
 
-  const scores = { bullish: 0, bearish: 0, fear: 0, greed: 0, sarcastic: 0 };
-  const matchedWords = { bullish: [], bearish: [], fear: [], greed: [], sarcastic: [] };
+  const scores = { bullish: 0, bearish: 0, fear: 0, greed: 0, complaint: 0 };
+  const matchedWords = { bullish: [], bearish: [], fear: [], greed: [], complaint: [] };
+  const contextLower = new Set(CONTEXT_BULLISH_WORDS.map(w => w.toLowerCase()));
 
   for (const [category, config] of Object.entries(DICTIONARY)) {
     for (const word of config.words) {
-      if (text.includes(word.toLowerCase())) {
+      if (contextLower.has(word.toLowerCase())) continue;
+      if (lower.includes(word.toLowerCase())) {
         scores[category] += config.weight;
         matchedWords[category].push(word);
       }
     }
   }
 
-  // 去重（同一类别同一词只算一次）
+  applyBullDeparturePatterns(text, scores, matchedWords);
+  applyContextBullishWords(text, marketDirection, scores, matchedWords);
+  applyComplaintMarkers(text, scores, matchedWords);
+
+  // 去重
   for (const cat of Object.keys(matchedWords)) {
     matchedWords[cat] = [...new Set(matchedWords[cat])];
-    scores[cat] = matchedWords[cat].length * DICTIONARY[cat].weight;
   }
+  scores.bullish = matchedWords.bullish.length;
+  scores.bearish = matchedWords.bearish.length;
+  scores.fear = matchedWords.fear.length * DICTIONARY.fear.weight;
+  scores.greed = matchedWords.greed.length * DICTIONARY.greed.weight;
+  scores.complaint = matchedWords.complaint.length * 0.6;
 
-  // 综合得分：-1(极度看空) ~ +1(极度看多)
-  const positive = scores.bullish + scores.greed;
-  const negative = scores.bearish + scores.fear + scores.sarcastic;
-  const total = positive + negative;
-  const rawScore = total > 0 ? (positive - negative) / total : 0;
+  const { label, rawScore } = finalizeSentimentLabel(scores);
 
-  // 互动加权：高点击/高评论的帖子影响力更大
   const engagementMultiplier = Math.min(
     1 + Math.log10(1 + (post.clicks || 0)) * 0.3 + Math.log10(1 + (post.comments || 0)) * 0.5,
-    3.0  // 最多加权3倍
+    3.0
   );
-
-  // 分类标签（fear/greed：命中 ≥1 个词即可，权重 1.8 > 1.5）
-  let label = 'neutral';
-  if (scores.fear > 1.5) label = 'fear';
-  else if (scores.greed > 1.5) label = 'greed';
-  else if (rawScore > 0.25) label = 'bullish';
-  else if (rawScore < -0.25) label = 'bearish';
-  else if (scores.sarcastic > 0 && rawScore <= 0) label = 'bearish';
 
   return {
     postId: post.postId,
@@ -202,10 +202,12 @@ function analyzePostSentiment(post) {
     clicks: post.clicks || 0,
     comments: post.comments || 0,
     publishTime: post.publishTime,
+    marketDirection,
     bullishWords: matchedWords.bullish,
     bearishWords: matchedWords.bearish,
     fearWords: matchedWords.fear,
     greedWords: matchedWords.greed,
+    complaintWords: matchedWords.complaint,
     sentimentDetail: scores,
   };
 }
@@ -723,6 +725,14 @@ async function main() {
   // 过滤：当天/最近N天，仅 09:00–15:00
   const windowLabel = analysisWindowLabel({ days });
 
+  let marketDirection = '未知';
+  try {
+    marketDirection = getMarketSnapshot().direction || '未知';
+    const dirMsg = `📈 行情方向（语境）: ${marketDirection}`;
+    if (outputJson) console.error(dirMsg);
+    else console.log(`${dirMsg}\n`);
+  } catch { /* 离线/网络失败时回退未知 */ }
+
   // ETF/同主题股吧并入统一板块后再分析（医疗ETF→医疗服务，医药ETF→医药生物）
   const mergedBars = mergeBarsByCanonicalSector(data.bars);
 
@@ -734,7 +744,7 @@ async function main() {
     const filteredPosts = bar.posts.filter(p => isInAnalysisWindow(p.publishTime, { days }));
 
     // 分析每个帖子
-    const analyzedPosts = filteredPosts.map(analyzePostSentiment);
+    const analyzedPosts = filteredPosts.map(p => analyzePostSentiment(p, { marketDirection }));
     allPostsForTopics.push(...filteredPosts);
 
     const result = analyzeBar(bar, analyzedPosts);
@@ -792,7 +802,9 @@ async function main() {
   }
 }
 
-main().catch(err => {
-  console.error('致命错误:', err);
-  process.exit(1);
-});
+if (isMain) {
+  main().catch(err => {
+    console.error('致命错误:', err);
+    process.exit(1);
+  });
+}

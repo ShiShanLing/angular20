@@ -1,47 +1,88 @@
 {
-  "generatedAt": "2026-07-31T07:02:41.482Z",
-  "dateRange": "2026-07-30 ~ 2026-07-31",
+  "generatedAt": "2026-08-19T07:08:46.475Z",
+  "dateRange": "2026-08-19 09:00–15:00",
   "marketIndex": null,
   "bars": [
     {
       "code": "sh000001",
-      "name": "上证指数",
+      "name": "sh000001",
       "postCount": 0,
       "sentiment": null
     },
     {
       "code": "sz399006",
-      "name": "创业板指",
+      "name": "sz39900",
       "postCount": 0,
       "sentiment": null
     },
     {
-      "code": "BK0473",
-      "name": "证券Ⅱ",
+      "code": "BK0428",
+      "name": "BK0",
+      "postCount": 0,
+      "sentiment": null,
+      "mergedFrom": [
+        "BK0473",
+        "BK0475",
+        "BK0477",
+        "BK0493",
+        "BK0447",
+        "BK0896",
+        "BK0428"
+      ]
+    },
+    {
+      "code": "of512480",
+      "name": "of512480",
       "postCount": 0,
       "sentiment": null
     },
     {
-      "code": "BK0475",
-      "name": "银行Ⅱ",
+      "code": "of515000",
+      "name": "of515000",
       "postCount": 0,
       "sentiment": null
     },
     {
-      "code": "BK0477",
-      "name": "酿酒概念",
+      "code": "BK0891",
+      "name": "BK0891",
       "postCount": 0,
       "sentiment": null
     },
     {
-      "code": "BK0493",
-      "name": "新能源",
+      "code": "BK0917",
+      "name": "BK091",
       "postCount": 0,
       "sentiment": null
     },
     {
-      "code": "BK0447",
-      "name": "互联网服务",
+      "code": "BK1216",
+      "name": "医药生物",
+      "postCount": 0,
+      "sentiment": null,
+      "mergedFrom": [
+        "BK1216",
+        "of159938"
+      ]
+    },
+    {
+      "code": "BK1041",
+      "name": "BK1041",
+      "postCount": 0,
+      "sentiment": null
+    },
+    {
+      "code": "BK0727",
+      "name": "医疗服务",
+      "postCount": 0,
+      "sentiment": null,
+      "mergedFrom": [
+        "BK0727",
+        "of512170"
+      ]
+    },
+    {
+      "code": "sh000688",
+      "name": "sh000",
       "postCount": 0,
       "sentiment": null
     }

@@ -52,8 +52,8 @@ async function bootstrap() {
 
   // Swagger API 文档
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('Angular20 API')
-    .setDescription('个人工具平台后端接口文档')
+    .setTitle('工坊 API')
+    .setDescription('工坊 · 个人工具平台后端接口文档')
     .setVersion('1.0')
     .addBearerAuth()
     .addTag('auth', '认证模块（登录/注册/用户信息）')

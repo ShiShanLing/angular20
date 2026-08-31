@@ -47,12 +47,18 @@
     justify-content: center;
   }
 
-  .logo-icon { font-size: 22px; flex-shrink: 0; }
+  .logo-mark {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    border-radius: 6px;
+    display: block;
+  }
   .logo-text {
     color: #fff;
     font-size: 16px;
     font-weight: 600;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.2em;
   }
 }
 

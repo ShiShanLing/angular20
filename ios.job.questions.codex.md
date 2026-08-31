@@ -89,7 +89,9 @@
 
 **参考答案：**
 
-Optional 本质是一个枚举，大致可以理解为 some(Wrapped) 或 none。它把“可能没有值”显式写进类型系统，避免 Objective-C 里 nil 随处传递导致的运行时问题。使用时要通过 if let、guard let、??、可选链等方式安全解包。要强调：Optional 不是普通值，也不是指针，它是类型层面的空值表达。
+Optional 本质是一个枚举，大致可以理解为 some(Wrapped) 或 none。它把“可能没有值”显式写进类型系统，避免 Objective-C 里 nil 随处传递导致的运行时问题。使用时要通过 if let、guard let、??(空合运算符)、可选链等方式安全解包。要强调：Optional 不是普通值，也不是指针，它是类型层面的空值表达。
+
+解包方式有 !(强制解包) if let / guard let(可选绑定) ?.(可选链) ??(空合运算符)
 
 ### 2. `if let` 和 `guard let` 有什么区别？分别适合什么场景？
 

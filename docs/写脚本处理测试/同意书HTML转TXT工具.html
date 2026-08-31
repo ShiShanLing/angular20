@@ -1,0 +1,1218 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>知情同意书转换工具</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --text: #18212f;
+      --muted: #667085;
+      --line: #d8dee9;
+      --primary: #2457d6;
+      --primary-hover: #1948bd;
+      --success: #087a55;
+      --success-bg: #ecfdf3;
+      --error: #b42318;
+      --error-bg: #fff1f0;
+      --shadow: 0 18px 50px rgba(30, 50, 90, 0.10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+
+    .page {
+      width: min(760px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 64px 0;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 5vw, 40px);
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+    }
+
+    .intro {
+      margin: 14px 0 30px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.75;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-bottom: 16px;
+      padding: 5px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: #e9edf4;
+    }
+
+    .tab-button {
+      min-height: 44px;
+      border-radius: 9px;
+      background: transparent;
+      color: #5b6678;
+    }
+
+    .tab-button:hover { background: rgba(255, 255, 255, 0.55); }
+
+    .tab-button.is-active {
+      background: #fff;
+      color: var(--primary);
+      box-shadow: 0 2px 10px rgba(30, 50, 90, 0.10);
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.is-active { display: block; }
+
+    .card {
+      padding: 26px;
+      border: 1px solid rgba(216, 222, 233, 0.9);
+      border-radius: 20px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .drop-zone {
+      display: flex;
+      min-height: 210px;
+      padding: 28px;
+      align-items: center;
+      justify-content: center;
+      border: 2px dashed #b8c3d6;
+      border-radius: 15px;
+      background: #fafbfe;
+      text-align: center;
+      transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+      cursor: pointer;
+    }
+
+    .drop-zone:hover,
+    .drop-zone:focus-visible,
+    .drop-zone.is-dragging {
+      border-color: var(--primary);
+      background: #f1f5ff;
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    .drop-icon {
+      width: 54px;
+      height: 54px;
+      margin: 0 auto 15px;
+      border-radius: 14px;
+      background: #e8efff;
+      color: var(--primary);
+      font-size: 27px;
+      line-height: 54px;
+    }
+
+    .drop-title {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .drop-help {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    input[type="file"] { display: none; }
+
+    .file-row {
+      display: none;
+      margin-top: 18px;
+      padding: 14px 16px;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .file-row.is-visible { display: flex; }
+
+    .file-badge {
+      flex: 0 0 auto;
+      padding: 6px 8px;
+      border-radius: 7px;
+      background: #eef2f8;
+      color: #48566a;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .file-info { min-width: 0; flex: 1; }
+
+    .file-name {
+      overflow: hidden;
+      margin: 0 0 3px;
+      font-size: 14px;
+      font-weight: 650;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .file-size {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .actions {
+      display: flex;
+      margin-top: 20px;
+      gap: 12px;
+    }
+
+    button {
+      min-height: 46px;
+      padding: 0 20px;
+      border: 0;
+      border-radius: 11px;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 150ms ease, opacity 150ms ease, transform 150ms ease;
+    }
+
+    button:active:not(:disabled) { transform: translateY(1px); }
+
+    button:focus-visible {
+      outline: 3px solid rgba(36, 87, 214, 0.25);
+      outline-offset: 2px;
+    }
+
+    button:disabled { cursor: not-allowed; opacity: 0.45; }
+
+    .primary-button {
+      flex: 1;
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .primary-button:hover:not(:disabled) { background: var(--primary-hover); }
+
+    .secondary-button {
+      background: #edf1f7;
+      color: #344054;
+    }
+
+    .secondary-button:hover:not(:disabled) { background: #e2e8f0; }
+
+    .status {
+      display: none;
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 11px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .status.is-visible { display: block; }
+    .status.is-success { background: var(--success-bg); color: var(--success); }
+    .status.is-error { background: var(--error-bg); color: var(--error); }
+
+    .rules {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 22px;
+      gap: 10px;
+    }
+
+    .rule {
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: #f7f9fc;
+      color: #566276;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .privacy-note {
+      margin: 18px 2px 0;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    @media (max-width: 560px) {
+      .page { padding: 36px 0; }
+      .card { padding: 18px; border-radius: 16px; }
+      .drop-zone { min-height: 190px; padding: 22px 16px; }
+      .actions { flex-direction: column; }
+      .rules { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <p class="eyebrow">本地文件工具</p>
+    <h1>知情同意书转换工具</h1>
+    <p class="intro">支持 HTML 转 JSON 字符串 TXT，也支持将转码 TXT 反向还原为 HTML。</p>
+
+    <div class="tabs" role="tablist" aria-label="转换方向">
+      <button class="tab-button is-active" id="wordTab" type="button" role="tab" aria-selected="true" aria-controls="wordPanel">Word → HTML</button>
+      <button class="tab-button" id="encodeTab" type="button" role="tab" aria-selected="false" aria-controls="encodePanel">HTML → TXT</button>
+      <button class="tab-button" id="decodeTab" type="button" role="tab" aria-selected="false" aria-controls="decodePanel">TXT → HTML</button>
+    </div>
+
+    <section class="card tab-panel is-active" id="wordPanel" role="tabpanel" aria-labelledby="wordTab">
+      <div class="drop-zone" id="wordDropZone" tabindex="0" role="button" aria-label="选择或拖入 Word 文件">
+        <div>
+          <div class="drop-icon" aria-hidden="true">＋</div>
+          <p class="drop-title">拖入 Word 文件</p>
+          <p class="drop-help">支持 .docx 文件，或者点击这里选择</p>
+        </div>
+      </div>
+      <input id="wordFileInput" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+
+      <div class="file-row" id="wordFileRow">
+        <span class="file-badge">DOCX</span>
+        <div class="file-info">
+          <p class="file-name" id="wordFileName"></p>
+          <p class="file-size" id="wordFileSize"></p>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="primary-button" id="wordDownloadButton" type="button" disabled>转换并下载 HTML</button>
+        <button class="secondary-button" id="wordClearButton" type="button" disabled>重新选择</button>
+      </div>
+
+      <div class="status" id="wordStatus" role="status" aria-live="polite"></div>
+
+      <div class="rules" aria-label="Word 转换规则">
+        <div class="rule">读取 DOCX 的段落、标题、列表和表格</div>
+        <div class="rule">统一包装为 legal-permission HTML</div>
+        <div class="rule">移除链接跳转并保留文字样式</div>
+        <div class="rule">输出本地 UTF-8 HTML 文件</div>
+      </div>
+    </section>
+
+    <section class="card tab-panel" id="encodePanel" role="tabpanel" aria-labelledby="encodeTab" hidden>
+      <div class="drop-zone" id="dropZone" tabindex="0" role="button" aria-label="选择或拖入 HTML 文件">
+        <div>
+          <div class="drop-icon" aria-hidden="true">＋</div>
+          <p class="drop-title">拖入 HTML 文件</p>
+          <p class="drop-help">或者点击这里选择文件</p>
+        </div>
+      </div>
+      <input id="fileInput" type="file" accept=".html,.htm,text/html">
+
+      <div class="file-row" id="fileRow">
+        <span class="file-badge">HTML</span>
+        <div class="file-info">
+          <p class="file-name" id="fileName"></p>
+          <p class="file-size" id="fileSize"></p>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="primary-button" id="downloadButton" type="button" disabled>生成并下载 TXT</button>
+        <button class="secondary-button" id="clearButton" type="button" disabled>重新选择</button>
+      </div>
+
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+
+      <div class="rules" aria-label="自动处理规则">
+        <div class="rule">移除所有可点击链接和跳转地址</div>
+        <div class="rule">第三方隐私政策保留下划线和正文颜色</div>
+        <div class="rule">橙色邮箱继续保持橙色</div>
+        <div class="rule">输出前自动验证 JSON 字符串</div>
+      </div>
+    </section>
+
+    <section class="card tab-panel" id="decodePanel" role="tabpanel" aria-labelledby="decodeTab" hidden>
+      <div class="drop-zone" id="decodeDropZone" tabindex="0" role="button" aria-label="选择或拖入转码 TXT 文件">
+        <div>
+          <div class="drop-icon" aria-hidden="true">＋</div>
+          <p class="drop-title">拖入转码 TXT 文件</p>
+          <p class="drop-help">或者点击这里选择文件</p>
+        </div>
+      </div>
+      <input id="decodeFileInput" type="file" accept=".txt,text/plain,application/json">
+
+      <div class="file-row" id="decodeFileRow">
+        <span class="file-badge">TXT</span>
+        <div class="file-info">
+          <p class="file-name" id="decodeFileName"></p>
+          <p class="file-size" id="decodeFileSize"></p>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="primary-button" id="decodeDownloadButton" type="button" disabled>解码并下载 HTML</button>
+        <button class="secondary-button" id="decodeClearButton" type="button" disabled>重新选择</button>
+      </div>
+
+      <div class="status" id="decodeStatus" role="status" aria-live="polite"></div>
+
+      <div class="rules" aria-label="反向解析规则">
+        <div class="rule">先验证 TXT 是合法 JSON 字符串</div>
+        <div class="rule">还原 &amp;lt;、&amp;gt; 和 &amp;amp; HTML 实体</div>
+        <div class="rule">验证内容可以无损重新编码</div>
+        <div class="rule">输出 UTF-8 格式 HTML 文件</div>
+      </div>
+    </section>
+
+    <p class="privacy-note">文件只在当前浏览器中处理，不会上传到网络。</p>
+  </main>
+
+  <script src="vendor/mammoth.browser.min.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      var PRIVACY_URL = 'https://www.xian-janssen.com.cn/privacy-policy';
+      var OUTPUT_NAME_PREFIX = '知情同意书转码+转义_';
+      var OUTPUT_HTML_NAME = '知情同意书html文件.html';
+      var WORD_OUTPUT_PREFIX = '个人信息处理授权同意书及承诺函_';
+      var selectedFile = null;
+      var generatedText = '';
+      var decodeSelectedFile = null;
+      var generatedHtml = '';
+      var wordSelectedFile = null;
+      var generatedWordHtml = '';
+
+      var wordTab = document.getElementById('wordTab');
+      var encodeTab = document.getElementById('encodeTab');
+      var decodeTab = document.getElementById('decodeTab');
+      var wordPanel = document.getElementById('wordPanel');
+      var encodePanel = document.getElementById('encodePanel');
+      var decodePanel = document.getElementById('decodePanel');
+
+      var dropZone = document.getElementById('dropZone');
+      var fileInput = document.getElementById('fileInput');
+      var fileRow = document.getElementById('fileRow');
+      var fileName = document.getElementById('fileName');
+      var fileSize = document.getElementById('fileSize');
+      var downloadButton = document.getElementById('downloadButton');
+      var clearButton = document.getElementById('clearButton');
+      var status = document.getElementById('status');
+      var decodeDropZone = document.getElementById('decodeDropZone');
+      var decodeFileInput = document.getElementById('decodeFileInput');
+      var decodeFileRow = document.getElementById('decodeFileRow');
+      var decodeFileName = document.getElementById('decodeFileName');
+      var decodeFileSize = document.getElementById('decodeFileSize');
+      var decodeDownloadButton = document.getElementById('decodeDownloadButton');
+      var decodeClearButton = document.getElementById('decodeClearButton');
+      var decodeStatus = document.getElementById('decodeStatus');
+      var wordDropZone = document.getElementById('wordDropZone');
+      var wordFileInput = document.getElementById('wordFileInput');
+      var wordFileRow = document.getElementById('wordFileRow');
+      var wordFileName = document.getElementById('wordFileName');
+      var wordFileSize = document.getElementById('wordFileSize');
+      var wordDownloadButton = document.getElementById('wordDownloadButton');
+      var wordClearButton = document.getElementById('wordClearButton');
+      var wordStatus = document.getElementById('wordStatus');
+
+      function formatBytes(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+      }
+
+      function createRandomId() {
+        if (window.crypto && window.crypto.getRandomValues) {
+          var values = new Uint32Array(1);
+          window.crypto.getRandomValues(values);
+          return String(100000 + (values[0] % 900000));
+        }
+        return String(Math.floor(100000 + Math.random() * 900000));
+      }
+
+      function showStatus(message, type) {
+        status.textContent = message;
+        status.className = 'status is-visible ' + (type === 'error' ? 'is-error' : 'is-success');
+      }
+
+      function clearStatus() {
+        status.textContent = '';
+        status.className = 'status';
+      }
+
+      function showDecodeStatus(message, type) {
+        decodeStatus.textContent = message;
+        decodeStatus.className = 'status is-visible ' + (type === 'error' ? 'is-error' : 'is-success');
+      }
+
+      function clearDecodeStatus() {
+        decodeStatus.textContent = '';
+        decodeStatus.className = 'status';
+      }
+
+      function showWordStatus(message, type) {
+        wordStatus.textContent = message;
+        wordStatus.className = 'status is-visible ' + (type === 'error' ? 'is-error' : 'is-success');
+      }
+
+      function clearWordStatus() {
+        wordStatus.textContent = '';
+        wordStatus.className = 'status';
+      }
+
+      function activateTab(direction) {
+        var showWord = direction === 'word';
+        var showEncode = direction === 'encode';
+        var showDecode = direction === 'decode';
+        wordTab.classList.toggle('is-active', showWord);
+        encodeTab.classList.toggle('is-active', showEncode);
+        decodeTab.classList.toggle('is-active', showDecode);
+        wordTab.setAttribute('aria-selected', String(showWord));
+        encodeTab.setAttribute('aria-selected', String(showEncode));
+        decodeTab.setAttribute('aria-selected', String(showDecode));
+        wordPanel.classList.toggle('is-active', showWord);
+        encodePanel.classList.toggle('is-active', showEncode);
+        decodePanel.classList.toggle('is-active', showDecode);
+        wordPanel.hidden = !showWord;
+        encodePanel.hidden = !showEncode;
+        decodePanel.hidden = !showDecode;
+      }
+
+      function preserveSafeSpanAttributes(attributes) {
+        var preserved = [];
+        var classMatch = attributes.match(/\bclass\s*=\s*("[^"]*"|'[^']*')/i);
+        var styleMatch = attributes.match(/\bstyle\s*=\s*("[^"]*"|'[^']*')/i);
+
+        if (classMatch) preserved.push('class=' + classMatch[1]);
+        if (styleMatch) preserved.push('style=' + styleMatch[1]);
+        return preserved.length ? ' ' + preserved.join(' ') : '';
+      }
+
+      function disableAllLinks(html) {
+        var replacedCount = 0;
+        var result = html.replace(
+          /<a\b([^>]*)>([\s\S]*?)<\/a\s*>/gi,
+          function (_wholeTag, attributes, content) {
+            replacedCount += 1;
+
+            if (attributes.indexOf(PRIVACY_URL) !== -1 || content.indexOf(PRIVACY_URL) !== -1) {
+              return '<span class="non-clickable-privacy-url">' + content + '</span>';
+            }
+
+            return '<span' + preserveSafeSpanAttributes(attributes) + '>' + content + '</span>';
+          }
+        );
+
+        return { html: result, replacedCount: replacedCount };
+      }
+
+      function normalizePrivacyUrl(html) {
+        var escapedUrl = escapeRegExp(PRIVACY_URL);
+        var expected = '<span class="non-clickable-privacy-url">' + PRIVACY_URL + '</span>';
+        var wrappedUrl = new RegExp(
+          '<span\\b[^>]*>\\s*' + escapedUrl + '\\s*<\\/span\\s*>',
+          'gi'
+        );
+        var result = html.replace(
+          wrappedUrl,
+          expected
+        );
+
+        // Word may append nested empty MsoHyperlink/o:p spans immediately
+        // after the visible URL, so the enclosing span is not an exact match.
+        // At this stage link tags and href attributes have already been removed;
+        // wrapping the remaining visible URL text is therefore safe and keeps
+        // all surrounding Word formatting untouched.
+        if (result.indexOf(expected) === -1) {
+          result = result.replace(new RegExp(escapedUrl, 'g'), expected);
+        }
+
+        return result;
+      }
+
+      function escapeRegExp(value) {
+        return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      }
+
+      function unwrapExactSpan(html, value) {
+        var wrappedValue = new RegExp(
+          '<span\\b[^>]*>\\s*' + escapeRegExp(value) + '\\s*<\\/span\\s*>',
+          'gi'
+        );
+        return html.replace(wrappedValue, value);
+      }
+
+      function normalizeWordContacts(html) {
+        var privacyEmail = 'cn.pharma-privacy@gsk.com';
+        var cccdeskEmail = 'cccdesk@its.jnj.com';
+        var result = unwrapExactSpan(html, privacyEmail);
+        result = unwrapExactSpan(result, cccdeskEmail);
+        result = unwrapExactSpan(result, PRIVACY_URL);
+
+        var emailParts = result.split(privacyEmail);
+        var emailCount = emailParts.length - 1;
+        if (emailCount > 0) {
+          result = emailParts[0];
+          for (var index = 0; index < emailCount; index += 1) {
+            var emailClass = index === 0 || index === emailCount - 1 ? 'link-orange' : 's3';
+            result += '<span class="' + emailClass + '">' + privacyEmail + '</span>' + emailParts[index + 1];
+          }
+        }
+
+        result = result.replace(
+          new RegExp(escapeRegExp(cccdeskEmail), 'g'),
+          '<span class="s3">' + cccdeskEmail + '</span>'
+        );
+        result = result.replace(
+          new RegExp(escapeRegExp(PRIVACY_URL), 'g'),
+          '<span class="non-clickable-privacy-url">' + PRIVACY_URL + '</span>'
+        );
+
+        return result;
+      }
+
+      function normalizeOpeningNumbering(html) {
+        var policyMarker = '<p><strong>个人信息保护政策</strong></p>';
+        var policyIndex = html.indexOf(policyMarker);
+        var opening = policyIndex === -1 ? html : html.slice(0, policyIndex);
+        var remainder = policyIndex === -1 ? '' : html.slice(policyIndex);
+        var sectionNumber = 0;
+        var itemNumber = 0;
+
+        var numberedBlocks = /<ol><li><strong>([\s\S]*?)<\/strong><\/li><\/ol>|<ul><li><ol><li>([\s\S]*?)<\/li><\/ol><\/li><\/ul>|<ol><li>([\s\S]*?)<\/li><\/ol>/gi;
+        opening = opening.replace(
+          numberedBlocks,
+          function (wholeBlock, heading, nestedItem, plainItem) {
+            if (typeof heading === 'string') {
+              sectionNumber += 1;
+              itemNumber = 0;
+              return '<p class="n1"><strong>' + sectionNumber + '. ' + heading.trim() + '</strong></p>';
+            }
+
+            if (sectionNumber === 0) return wholeBlock;
+            itemNumber += 1;
+            var content = typeof nestedItem === 'string' ? nestedItem : plainItem;
+            return [
+              '<div class="n2">',
+              '<span class="n2-no">' + sectionNumber + '.' + itemNumber + '</span>',
+              '<span class="n2-text">' + content.replace(/^\s+/, '') + '</span>',
+              '</div>'
+            ].join('');
+          }
+        );
+
+        opening = opening.replace(/(<\/(?:p|div)>)<p><\/p>/g, '$1');
+        return opening + remainder;
+      }
+
+      function buildLegalPermissionHtml(fragment) {
+        var linkResult = disableAllLinks(fragment);
+        var body = normalizeOpeningNumbering(linkResult.html);
+        body = normalizeWordContacts(body);
+        body = normalizePrivacyUrl(body);
+        body = body.replace(
+          '<p><strong>个人信息处理授权同意书及承诺函</strong></p>',
+          '<p class="p1"><strong>个人信息处理授权同意书及承诺函</strong></p>'
+        );
+        body = body.replace(
+          '<p>个人信息处理授权同意书及承诺函</p>',
+          '<p class="p1"><strong>个人信息处理授权同意书及承诺函</strong></p>'
+        );
+        body = body.replace(
+          '<p><strong>个人信息保护政策</strong></p>',
+          '<p class="policy-title"><strong>个人信息保护政策</strong></p>'
+        );
+
+        var styles = [
+          '<style data-consent-tool-normalized="true">',
+          '.legal-permission div,.legal-permission p{line-height:24px}',
+          '.legal-permission{background:#fff;padding-right:10px;box-sizing:border-box;color:#111;line-height:1.45;font-size:13px;transform-origin:top left}',
+          '.legal-permission p,.legal-permission li{margin:10px 0;font-size:13px}',
+          '.legal-permission p.p1{text-align:center;font-weight:700;margin:12px 0 18px}',
+          '.legal-permission .policy-title{text-align:center;font-weight:700;margin:28px 0}',
+          '.legal-permission .n1{font-weight:700;margin:28px 0 10px}',
+          '.legal-permission .n2{display:flex;align-items:flex-start;margin:0 0 12px 1em;gap:.25em}',
+          '.legal-permission .n2-no{flex:0 0 auto;color:#111!important;font-variant-numeric:tabular-nums}',
+          '.legal-permission .n2-text{flex:1;min-width:0;color:#111!important}',
+          '.legal-permission h1,.legal-permission h2,.legal-permission h3{font-size:13px;line-height:24px;margin:18px 0 10px;font-weight:700}',
+          '.legal-permission strong,.legal-permission b{font-weight:700}',
+          '.legal-permission ul,.legal-permission ol{padding-left:2em;margin:8px 0}',
+          '.legal-permission table{width:100%;border-collapse:collapse;margin:12px 0}',
+          '.legal-permission th,.legal-permission td{padding:6px 8px;border:1px solid #bbb;vertical-align:top;font-size:13px;line-height:1.55}',
+          '.legal-permission img{max-width:100%;height:auto}',
+          '.legal-permission span{color:#111!important;font-size:13px!important}',
+          '.legal-permission .link-orange{color:#ed7d31!important;text-decoration:underline}',
+          '.legal-permission .s3,.legal-permission .non-clickable-link{color:inherit!important;text-decoration:underline;cursor:text}',
+          '.legal-permission .non-clickable-privacy-url{color:inherit!important;text-decoration:inherit;cursor:text}',
+          '</style>'
+        ].join('');
+
+        return {
+          html: styles + '<div class="legal-permission">' + body + '</div>',
+          replacedCount: linkResult.replacedCount
+        };
+      }
+
+      function addRequiredStyles(html) {
+        if (/data-consent-tool-normalized\s*=\s*["']true["']/i.test(html)) {
+          return html;
+        }
+
+        var rules = [
+          '.legal-permission .link-orange { color: #ed7d31 !important; }',
+          '.legal-permission .non-clickable-privacy-url {',
+          '  color: inherit !important;',
+          '  text-decoration: inherit;',
+          '  cursor: text;',
+          '}'
+        ].join(' ');
+
+        if (/<\/style\s*>/i.test(html)) {
+          return html.replace(/<\/style\s*>/i, ' ' + rules + '</style>');
+        }
+        return '<style>' + rules + '</style>' + html;
+      }
+
+      function extractLegalPermissionFragment(html) {
+        var source = String(html || '');
+        var styleBlocks = source.match(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi) || [];
+        var bodyMatch = source.match(/<body\b[^>]*>([\s\S]*?)<\/body\s*>/i);
+        var body = bodyMatch ? bodyMatch[1] : source;
+
+        // 样式统一放在正文片段前面；完整文档的 head、meta、title 等外壳
+        // 不属于 legal_permission 字段。正文中的 style 也先移出，避免重复。
+        body = body
+          .replace(/<!doctype\b[^>]*>/gi, '')
+          .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, '')
+          .replace(/<head\b[^>]*>[\s\S]*?<\/head\s*>/gi, '')
+          .replace(/<\/?html\b[^>]*>/gi, '')
+          .replace(/<\/?body\b[^>]*>/gi, '')
+          .replace(/<meta\b[^>]*>/gi, '')
+          .trim();
+
+        var hasLegalPermissionWrapper = /<[^>]+\bclass\s*=\s*(?:"[^"]*\blegal-permission\b[^"]*"|'[^']*\blegal-permission\b[^']*'|[^\s>]*\blegal-permission\b[^\s>]*)/i.test(body);
+        if (!hasLegalPermissionWrapper) {
+          body = '<div class="legal-permission">' + body + '</div>';
+        }
+
+        return styleBlocks.join('') + body;
+      }
+
+      function normalizeAttributeQuotes(html) {
+        function normalizeTag(tag) {
+          var result = '';
+          var index = 0;
+          var activeDoubleQuote = false;
+
+          while (index < tag.length) {
+            var character = tag.charAt(index);
+
+            if (character === '"') {
+              activeDoubleQuote = !activeDoubleQuote;
+              result += character;
+              index += 1;
+              continue;
+            }
+
+            if (!activeDoubleQuote && character === "'") {
+              var previousIndex = result.length - 1;
+              while (previousIndex >= 0 && /\s/.test(result.charAt(previousIndex))) {
+                previousIndex -= 1;
+              }
+
+              // 只转换由等号引出的单引号属性值，不触碰正文、CSS 内容
+              // 或属性值中作为数据存在的单引号。
+              if (result.charAt(previousIndex) === '=') {
+                var closingIndex = tag.indexOf("'", index + 1);
+                if (closingIndex !== -1) {
+                  var attributeValue = tag.slice(index + 1, closingIndex)
+                    .replace(/"/g, '&quot;');
+                  result += '"' + attributeValue + '"';
+                  index = closingIndex + 1;
+                  continue;
+                }
+              }
+            }
+
+            result += character;
+            index += 1;
+          }
+
+          return result;
+        }
+
+        var output = '';
+        var cursor = 0;
+
+        while (cursor < html.length) {
+          var tagStart = html.indexOf('<', cursor);
+          if (tagStart === -1) {
+            output += html.slice(cursor);
+            break;
+          }
+
+          output += html.slice(cursor, tagStart);
+
+          if (html.slice(tagStart, tagStart + 4) === '<!--') {
+            var commentEnd = html.indexOf('-->', tagStart + 4);
+            if (commentEnd === -1) {
+              output += html.slice(tagStart);
+              break;
+            }
+            output += html.slice(tagStart, commentEnd + 3);
+            cursor = commentEnd + 3;
+            continue;
+          }
+
+          var tagEnd = tagStart + 1;
+          var quote = '';
+          while (tagEnd < html.length) {
+            var tagCharacter = html.charAt(tagEnd);
+            if (quote) {
+              if (tagCharacter === quote) quote = '';
+            } else if (tagCharacter === '"' || tagCharacter === "'") {
+              quote = tagCharacter;
+            } else if (tagCharacter === '>') {
+              break;
+            }
+            tagEnd += 1;
+          }
+
+          if (tagEnd >= html.length) {
+            output += html.slice(tagStart);
+            break;
+          }
+
+          output += normalizeTag(html.slice(tagStart, tagEnd + 1));
+          cursor = tagEnd + 1;
+        }
+
+        return output;
+      }
+
+      function encodeHtmlForJson(html) {
+        var htmlEntities = html
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+        // core-data 使用单引号包裹。这里对整个 JSON 字符串做全局处理，
+        // 不区分单引号来自标签属性、CSS、JavaScript 还是正文。
+        // 输出中坚决不保留裸单引号，JSON.parse 时会无损恢复。
+        return JSON.stringify(htmlEntities).replace(/'/g, '\\u0027') + '\n';
+      }
+
+      function assertCoreDataSafe(jsonText) {
+        var normalizedText = String(jsonText || '').trim();
+
+        // 裸单引号会提前结束 core-data='...'，因此必须在下载前拦截。
+        if (normalizedText.indexOf("'") !== -1) {
+          throw new Error('输出仍包含裸单引号，不能放入 core-data。');
+        }
+
+        // 同时检查作为 legal_permission 属性值时仍是完整、合法的 JSON。
+        var payload = JSON.parse('{"legal_permission":' + normalizedText + '}');
+        if (typeof payload.legal_permission !== 'string') {
+          throw new Error('legal_permission 不是合法的 JSON 字符串。');
+        }
+      }
+
+      function decodeGeneratedValue(jsonText) {
+        return JSON.parse(jsonText)
+          .replace(/&gt;/g, '>')
+          .replace(/&lt;/g, '<')
+          .replace(/&amp;/g, '&');
+      }
+
+      function convert(sourceHtml) {
+        if (!sourceHtml || !sourceHtml.trim()) throw new Error('HTML 文件内容为空。');
+
+        var inputContainedPrivacyUrl = sourceHtml.indexOf(PRIVACY_URL) !== -1;
+        var fragmentHtml = extractLegalPermissionFragment(sourceHtml);
+        var linkResult = disableAllLinks(fragmentHtml);
+        var normalizedHtml = normalizeAttributeQuotes(linkResult.html);
+        var processedHtml = addRequiredStyles(normalizePrivacyUrl(normalizedHtml));
+        var outputText = encodeHtmlForJson(processedHtml);
+        assertCoreDataSafe(outputText);
+        var decoded = decodeGeneratedValue(outputText);
+
+        if (decoded !== processedHtml) throw new Error('转换结果无法无损还原。');
+        if (/<a\b/i.test(decoded)) throw new Error('处理后仍然存在链接标签。');
+        if (/\bhref\s*=/i.test(decoded)) throw new Error('处理后仍然存在跳转地址。');
+        if (/\bonclick\s*=/i.test(decoded)) throw new Error('处理后仍然存在点击跳转代码。');
+        if (/<!doctype\b|<\/?(?:html|head|body)\b|<meta\b/i.test(decoded)) {
+          throw new Error('处理后仍然存在完整 HTML 文档外壳。');
+        }
+        if (!/\bclass\s*=\s*"[^"]*\blegal-permission\b/i.test(decoded)) {
+          throw new Error('处理后缺少 legal-permission 正文容器。');
+        }
+
+        if (inputContainedPrivacyUrl) {
+          var expected = '<span class="non-clickable-privacy-url">' + PRIVACY_URL + '</span>';
+          if (decoded.indexOf(expected) === -1) throw new Error('第三方隐私政策网址处理失败。');
+        }
+
+        return { text: outputText, replacedCount: linkResult.replacedCount };
+      }
+
+      function decodeTxtToHtml(sourceText) {
+        var normalizedText = String(sourceText || '').replace(/^\uFEFF/, '').trim();
+        if (!normalizedText) throw new Error('TXT 文件内容为空。');
+
+        var encodedHtml;
+        try {
+          encodedHtml = JSON.parse(normalizedText);
+        } catch (error) {
+          throw new Error('TXT 不是合法的 JSON 字符串：' + error.message);
+        }
+
+        if (typeof encodedHtml !== 'string') {
+          throw new Error('TXT 顶层内容必须是一个 JSON 字符串。');
+        }
+
+        var html = encodedHtml
+          .replace(/&gt;/g, '>')
+          .replace(/&lt;/g, '<')
+          .replace(/&amp;/g, '&');
+
+        var reencoded = JSON.parse(encodeHtmlForJson(html));
+        if (reencoded !== encodedHtml) {
+          throw new Error('反向解析结果无法无损重新编码。');
+        }
+
+        return html;
+      }
+
+      function sanitizeWordFragment(html) {
+        return html
+          .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, '')
+          .replace(/<(?:iframe|object|embed)\b[^>]*>[\s\S]*?<\/(?:iframe|object|embed)\s*>/gi, '')
+          .replace(/\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+      }
+
+      function convertWordArrayBuffer(arrayBuffer) {
+        if (!window.mammoth || typeof window.mammoth.convertToHtml !== 'function') {
+          return Promise.reject(new Error('Word 转换组件未加载，请使用启动文件重新打开工具。'));
+        }
+
+        var options = {
+          styleMap: [
+            "p[style-name='Title'] => p.p1:fresh",
+            "p[style-name='标题'] => p.p1:fresh",
+            'u => span.s3'
+          ],
+          includeDefaultStyleMap: true,
+          ignoreEmptyParagraphs: false
+        };
+
+        return window.mammoth.convertToHtml({ arrayBuffer: arrayBuffer }, options)
+          .then(function (result) {
+            var safeFragment = sanitizeWordFragment(result.value || '');
+            if (!safeFragment.trim()) throw new Error('Word 文档没有可转换的正文内容。');
+
+            var built = buildLegalPermissionHtml(safeFragment);
+            if (/<a\b/i.test(built.html) || /\bhref\s*=/i.test(built.html)) {
+              throw new Error('转换后仍然存在可点击链接。');
+            }
+            if (/\bonclick\s*=/i.test(built.html)) {
+              throw new Error('转换后仍然存在点击跳转代码。');
+            }
+
+            return {
+              html: built.html,
+              replacedCount: built.replacedCount,
+              warningCount: (result.messages || []).length
+            };
+          });
+      }
+
+      function readFile(file) {
+        if (!file) return;
+        if (!/\.html?$/i.test(file.name) && file.type !== 'text/html') {
+          showStatus('请选择 .html 或 .htm 文件。', 'error');
+          return;
+        }
+
+        selectedFile = file;
+        generatedText = '';
+        fileName.textContent = file.name;
+        fileSize.textContent = formatBytes(file.size);
+        fileRow.classList.add('is-visible');
+        clearButton.disabled = false;
+        downloadButton.disabled = true;
+        clearStatus();
+
+        var reader = new FileReader();
+        reader.onload = function () {
+          try {
+            var result = convert(String(reader.result || ''));
+            generatedText = result.text;
+            downloadButton.disabled = false;
+            showStatus(
+              '检查通过：已禁用 ' + result.replacedCount +
+              ' 个链接，且输出不含裸单引号，可以生成 TXT。',
+              'success'
+            );
+          } catch (error) {
+            generatedText = '';
+            downloadButton.disabled = true;
+            showStatus('处理失败：' + error.message, 'error');
+          }
+        };
+        reader.onerror = function () {
+          showStatus('文件读取失败，请重新选择。', 'error');
+        };
+        reader.readAsText(file, 'utf-8');
+      }
+
+      function reset() {
+        selectedFile = null;
+        generatedText = '';
+        fileInput.value = '';
+        fileRow.classList.remove('is-visible');
+        downloadButton.disabled = true;
+        clearButton.disabled = true;
+        clearStatus();
+      }
+
+      function download() {
+        if (!selectedFile || !generatedText) return;
+        var blob = new Blob([generatedText], { type: 'text/plain;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        link.href = url;
+        link.download = OUTPUT_NAME_PREFIX + createRandomId() + '.txt';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        showStatus('TXT 已生成并开始下载。', 'success');
+      }
+
+      function readDecodeFile(file) {
+        if (!file) return;
+        if (!/\.txt$/i.test(file.name) && file.type !== 'text/plain' && file.type !== 'application/json') {
+          showDecodeStatus('请选择 .txt 文件。', 'error');
+          return;
+        }
+
+        decodeSelectedFile = file;
+        generatedHtml = '';
+        decodeFileName.textContent = file.name;
+        decodeFileSize.textContent = formatBytes(file.size);
+        decodeFileRow.classList.add('is-visible');
+        decodeClearButton.disabled = false;
+        decodeDownloadButton.disabled = true;
+        clearDecodeStatus();
+
+        var reader = new FileReader();
+        reader.onload = function () {
+          try {
+            generatedHtml = decodeTxtToHtml(String(reader.result || ''));
+            decodeDownloadButton.disabled = false;
+            showDecodeStatus('检查通过：TXT 已成功还原，可以下载 HTML。', 'success');
+          } catch (error) {
+            generatedHtml = '';
+            decodeDownloadButton.disabled = true;
+            showDecodeStatus('解析失败：' + error.message, 'error');
+          }
+        };
+        reader.onerror = function () {
+          showDecodeStatus('文件读取失败，请重新选择。', 'error');
+        };
+        reader.readAsText(file, 'utf-8');
+      }
+
+      function resetDecode() {
+        decodeSelectedFile = null;
+        generatedHtml = '';
+        decodeFileInput.value = '';
+        decodeFileRow.classList.remove('is-visible');
+        decodeDownloadButton.disabled = true;
+        decodeClearButton.disabled = true;
+        clearDecodeStatus();
+      }
+
+      function downloadHtml() {
+        if (!decodeSelectedFile || !generatedHtml) return;
+        var blob = new Blob([generatedHtml], { type: 'text/html;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        link.href = url;
+        link.download = OUTPUT_HTML_NAME;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        showDecodeStatus('HTML 已生成并开始下载。', 'success');
+      }
+
+      function readWordFile(file) {
+        if (!file) return;
+        if (!/\.docx$/i.test(file.name)) {
+          showWordStatus('请选择 .docx 格式的 Word 文件。', 'error');
+          return;
+        }
+
+        wordSelectedFile = file;
+        generatedWordHtml = '';
+        wordFileName.textContent = file.name;
+        wordFileSize.textContent = formatBytes(file.size);
+        wordFileRow.classList.add('is-visible');
+        wordClearButton.disabled = false;
+        wordDownloadButton.disabled = true;
+        showWordStatus('正在读取并转换 Word，请稍候…', 'success');
+
+        var reader = new FileReader();
+        reader.onload = function () {
+          convertWordArrayBuffer(reader.result)
+            .then(function (result) {
+              generatedWordHtml = result.html;
+              wordDownloadButton.disabled = false;
+              var warningText = result.warningCount > 0 ? '，检测到 ' + result.warningCount + ' 条格式提示' : '';
+              showWordStatus(
+                '转换完成：已禁用 ' + result.replacedCount + ' 个链接' + warningText + '，可以下载 HTML。',
+                'success'
+              );
+            })
+            .catch(function (error) {
+              generatedWordHtml = '';
+              wordDownloadButton.disabled = true;
+              showWordStatus('转换失败：' + error.message, 'error');
+            });
+        };
+        reader.onerror = function () {
+          showWordStatus('Word 文件读取失败，请重新选择。', 'error');
+        };
+        reader.readAsArrayBuffer(file);
+      }
+
+      function resetWord() {
+        wordSelectedFile = null;
+        generatedWordHtml = '';
+        wordFileInput.value = '';
+        wordFileRow.classList.remove('is-visible');
+        wordDownloadButton.disabled = true;
+        wordClearButton.disabled = true;
+        clearWordStatus();
+      }
+
+      function downloadWordHtml() {
+        if (!wordSelectedFile || !generatedWordHtml) return;
+        var blob = new Blob([generatedWordHtml], { type: 'text/html;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        link.href = url;
+        link.download = WORD_OUTPUT_PREFIX + createRandomId() + '.html';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        showWordStatus('HTML 已生成并开始下载。', 'success');
+      }
+
+      wordTab.addEventListener('click', function () { activateTab('word'); });
+      encodeTab.addEventListener('click', function () { activateTab('encode'); });
+      decodeTab.addEventListener('click', function () { activateTab('decode'); });
+
+      dropZone.addEventListener('click', function () { fileInput.click(); });
+      dropZone.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          fileInput.click();
+        }
+      });
+      fileInput.addEventListener('change', function () { readFile(fileInput.files[0]); });
+      downloadButton.addEventListener('click', download);
+      clearButton.addEventListener('click', reset);
+
+      ['dragenter', 'dragover'].forEach(function (eventName) {
+        dropZone.addEventListener(eventName, function (event) {
+          event.preventDefault();
+          dropZone.classList.add('is-dragging');
+        });
+      });
+      ['dragleave', 'drop'].forEach(function (eventName) {
+        dropZone.addEventListener(eventName, function (event) {
+          event.preventDefault();
+          dropZone.classList.remove('is-dragging');
+        });
+      });
+      dropZone.addEventListener('drop', function (event) {
+        readFile(event.dataTransfer.files[0]);
+      });
+
+      decodeDropZone.addEventListener('click', function () { decodeFileInput.click(); });
+      decodeDropZone.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          decodeFileInput.click();
+        }
+      });
+      decodeFileInput.addEventListener('change', function () { readDecodeFile(decodeFileInput.files[0]); });
+      decodeDownloadButton.addEventListener('click', downloadHtml);
+      decodeClearButton.addEventListener('click', resetDecode);
+
+      ['dragenter', 'dragover'].forEach(function (eventName) {
+        decodeDropZone.addEventListener(eventName, function (event) {
+          event.preventDefault();
+          decodeDropZone.classList.add('is-dragging');
+        });
+      });
+      ['dragleave', 'drop'].forEach(function (eventName) {
+        decodeDropZone.addEventListener(eventName, function (event) {
+          event.preventDefault();
+          decodeDropZone.classList.remove('is-dragging');
+        });
+      });
+      decodeDropZone.addEventListener('drop', function (event) {
+        readDecodeFile(event.dataTransfer.files[0]);
+      });
+
+      wordDropZone.addEventListener('click', function () { wordFileInput.click(); });
+      wordDropZone.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          wordFileInput.click();
+        }
+      });
+      wordFileInput.addEventListener('change', function () { readWordFile(wordFileInput.files[0]); });
+      wordDownloadButton.addEventListener('click', downloadWordHtml);
+      wordClearButton.addEventListener('click', resetWord);
+
+      ['dragenter', 'dragover'].forEach(function (eventName) {
+        wordDropZone.addEventListener(eventName, function (event) {
+          event.preventDefault();
+          wordDropZone.classList.add('is-dragging');
+        });
+      });
+      ['dragleave', 'drop'].forEach(function (eventName) {
+        wordDropZone.addEventListener(eventName, function (event) {
+          event.preventDefault();
+          wordDropZone.classList.remove('is-dragging');
+        });
+      });
+      wordDropZone.addEventListener('drop', function (event) {
+        readWordFile(event.dataTransfer.files[0]);
+      });
+    }());
+  </script>
+</body>
+</html>
