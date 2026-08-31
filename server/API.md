@@ -1,7 +1,7 @@
-# Angular20 后端 API 文档
+# 工坊 后端 API 文档
 
-> 基础地址：`http://<服务器IP>/api`  
-> 认证方式：Bearer Token（登录后获取 `access_token`，放入请求头 `Authorization: Bearer <token>`）
+> 基础地址：`https://<服务器IP>/angular20/api`（本地为 `http://localhost:3000/api`）  
+> 认证方式：浏览器自动携带 Agent 登录 Cookie `hello_agent_login`（`credentials: include`）。后端校验该 Cookie，不再使用 JWT。
 
 ---
 
@@ -12,9 +12,10 @@
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | INTEGER (PK) | 自增主键 |
-| username | VARCHAR(50) | 用户名（唯一） |
-| password | VARCHAR(200) | 密码（bcrypt 加密存储） |
-| nickname | VARCHAR(50) | 昵称（可选） |
+| username | VARCHAR(254) | 用户名，现为 Agent 邮箱（唯一） |
+| agentUserId | VARCHAR(36) | 对应的 Agent 用户 id（唯一，可空） |
+| password | VARCHAR(200) | 占位密码（Agent 账号不同步密码） |
+| nickname | VARCHAR(80) | 昵称，取自 Agent 显示名 |
 | createdAt | DATETIME | 创建时间 |
 | updatedAt | DATETIME | 更新时间 |
 
@@ -59,37 +60,30 @@
 
 | 方法 | 路径 | 认证 | 说明 | 限流 |
 |------|------|------|------|------|
-| POST | `/api/auth/register` | 否 | 注册（需邀请码） | 10分钟/3次 |
-| POST | `/api/auth/login` | 否 | 登录，返回 JWT token | 10分钟/10次 |
-| GET | `/api/auth/profile` | 是 | 获取当前用户信息 | 全局 |
+| POST | `/api/auth/register` | 否 | 已停用，请到 Agent 注册 | 10分钟/3次 |
+| POST | `/api/auth/login` | 否 | 已停用，请到 Agent 登录 | 10分钟/10次 |
+| GET | `/api/auth/profile` | 是 | 用 Agent Cookie 换取当前工坊用户与权限 | 全局 |
 
-#### 注册请求示例
+登录、注册请使用 Agent：`/agent/`。工坊前端请求需带 Cookie：
+
+```http
+GET /api/auth/profile
+Cookie: hello_agent_login=<Agent会话>
+```
+
+成功时返回本地映射用户，例如：
 
 ```json
-POST /api/auth/register
 {
-  "username": "zhangsan",
-  "password": "123456",
-  "inviteCode": "999",
-  "nickname": "张三"        // 可选
+  "id": 1,
+  "username": "you@example.com",
+  "nickname": "显示名",
+  "createdAt": "2026-08-21T00:00:00.000Z",
+  "permissions": ["tools.mortgage", "chart.showcase"]
 }
 ```
 
-#### 登录请求示例
-
-```json
-POST /api/auth/login
-{
-  "username": "zhangsan",
-  "password": "123456"
-}
-
-// 响应
-{
-  "access_token": "eyJhbGci...",
-  "user": { "id": 1, "username": "zhangsan", "nickname": "张三" }
-}
-```
+未带有效 Cookie 时返回 401。`POST /api/auth/login` 与 `POST /api/auth/register` 返回 410。
 
 ### 使用记录模块（/api/records）
 
@@ -164,11 +158,9 @@ POST /api/game-scores
 | 措施 | 配置 |
 |------|------|
 | 全局限流 | 每 IP 每分钟 60 次 |
-| 登录限流 | 每 IP 每 10 分钟 10 次 |
-| 注册限流 | 每 IP 每 10 分钟 3 次 |
+| 登录/注册接口 | 已停用（410），仍保留限流 |
 | Helmet 安全头 | CSP / HSTS / X-Frame-Options 等 |
-| 密码加密 | bcrypt |
-| JWT 有效期 | 7 天 |
+| 会话来源 | Agent Cookie `hello_agent_login`，后端向 `AGENT_AUTH_ME_URL` 校验 |
 
 ---
 
@@ -177,8 +169,6 @@ POST /api/game-scores
 ```env
 PORT=3000
 DB_PATH=/var/lib/mydata/app.db
-JWT_SECRET=your-secret-key
-JWT_EXPIRES_IN=7d
 CORS_ORIGIN=http://localhost:4200
-INVITE_CODE=999
+AGENT_AUTH_ME_URL=http://127.0.0.1:8000/auth/me
 ```

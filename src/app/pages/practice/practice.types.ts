@@ -45,6 +45,16 @@ export interface PracticeItem {
   markD?: boolean;
   /** 口播要点（可选，内置 iOS 题库有） */
   oralOneLiner?: string;
+  questionType?: 'shortAnswer' | 'trueFalse' | 'single' | 'multiple';
+  options?: PracticeOption[];
+  correctAnswers?: string[];
+  explanation?: string;
+  sourceQuestionId?: string;
+}
+
+export interface PracticeOption {
+  id: string;
+  text: string;
 }
 
 export interface PracticeItemDraft {

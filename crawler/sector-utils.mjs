@@ -21,10 +21,27 @@ export const SECTOR_CANONICAL = {
   '电力': '电力',
   '芯片': '芯片', '国产芯片': '芯片', '芯片ETF': '芯片',
   '半导体': '半导体', '半导体概念': '半导体',
+  '医药生物': '医药生物', '医药': '医药生物', '生物医药': '医药生物',
+  '医药ETF': '医药生物', '医药ETF广发': '医药生物',
+  '医疗器械': '医疗器械', '器械': '医疗器械',
+  '医疗服务': '医疗服务', '医疗': '医疗服务',
+  '医疗ETF': '医疗服务', '医疗ETF华宝': '医疗服务',
 };
 
-/** 参与市场指数加权的最小帖子数 */
-export const MIN_POSTS_FOR_INDEX = 20;
+/** 股吧代码 → 统计用板块（ETF 并入对应行业板块） */
+export const CODE_TO_CANONICAL_SECTOR = {
+  BK0727: '医疗服务',
+  of512170: '医疗服务',
+  '512170': '医疗服务',
+  BK1216: '医药生物',
+  of159938: '医药生物',
+  '159938': '医药生物',
+};
+
+/** 参与板块热度 / 市场指数加权的最小帖子数（少于则不算） */
+export const MIN_POSTS_FOR_HEAT = 5;
+/** @deprecated 使用 MIN_POSTS_FOR_HEAT */
+export const MIN_POSTS_FOR_INDEX = MIN_POSTS_FOR_HEAT;
 
 /** 去掉后缀并映射到固定板块名 */
 export function normalizeSectorName(name) {
@@ -52,6 +69,46 @@ export function normalizeSectorName(name) {
   cleaned = cleaned.replace(/[2-9]+$/g, '').trim();
 
   return SECTOR_CANONICAL[cleaned] || cleaned;
+}
+
+/** 由股吧 bar 得到统计用板块名（优先代码映射，再走名称归一化） */
+export function canonicalSectorFromBar(bar) {
+  const code = String(bar?.code || '').trim();
+  if (CODE_TO_CANONICAL_SECTOR[code]) return CODE_TO_CANONICAL_SECTOR[code];
+  return normalizeSectorName(bar?.barName || bar?.name || code);
+}
+
+/**
+ * 合并同统计板块的股吧帖子（如 医疗ETF→医疗服务、医药ETF→医药生物）
+ * 用于关键词分析前，保证帖子数一起统计
+ */
+export function mergeBarsByCanonicalSector(bars) {
+  const groups = new Map();
+
+  for (const bar of bars || []) {
+    const sectorName = canonicalSectorFromBar(bar) || bar.barName || bar.code;
+    if (!groups.has(sectorName)) {
+      groups.set(sectorName, {
+        code: bar.code,
+        barName: sectorName,
+        posts: [],
+        sourceCodes: [],
+      });
+    }
+    const g = groups.get(sectorName);
+    // 优先保留 BK 行业代码，便于权重表命中
+    if (/^BK/i.test(String(bar.code || ''))) g.code = bar.code;
+    g.posts.push(...(bar.posts || []));
+    if (bar.code && !g.sourceCodes.includes(bar.code)) g.sourceCodes.push(bar.code);
+  }
+
+  return [...groups.values()].map((g) => ({
+    code: g.code,
+    barName: g.barName,
+    posts: g.posts,
+    totalPosts: g.posts.length,
+    sourceCodes: g.sourceCodes,
+  }));
 }
 
 /** 由情绪计数计算温度（0–100） */
@@ -127,7 +184,7 @@ export function mergeSectors(sectorsObj) {
  * 市场指数：各板块温度按 posts 加权；posts < minPosts 不参与指数
  * 若无合格板块，回退到全局 distribution
  */
-export function marketIndexFromSectors(sectors, dist, totalPosts, minPosts = MIN_POSTS_FOR_INDEX) {
+export function marketIndexFromSectors(sectors, dist, totalPosts, minPosts = MIN_POSTS_FOR_HEAT) {
   let weightSum = 0;
   let weightedTemp = 0;
 
@@ -143,6 +200,14 @@ export function marketIndexFromSectors(sectors, dist, totalPosts, minPosts = MIN
   }
 
   return marketIndexFromDistribution(dist, totalPosts);
+}
+
+/**
+ * 过滤出帖子数足够、可参与热度比较的板块
+ * @returns {Array<[string, object]>}
+ */
+export function heatSectors(sectors, minPosts = MIN_POSTS_FOR_HEAT) {
+  return Object.entries(sectors || {}).filter(([, s]) => (s?.posts || 0) >= minPosts);
 }
 
 /** 统一等级文案（与日报/关键词对齐） */

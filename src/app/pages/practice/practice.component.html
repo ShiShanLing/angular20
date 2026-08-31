@@ -80,6 +80,24 @@
         </div>
       </div>
       <div class="practice-search" role="search">
+        @if (isIosLearning) {
+          <div class="practice-mode-tabs" aria-label="iOS 题型">
+            <button
+              type="button"
+              class="practice-mode-tab"
+              [class.is-active]="questionMode() === 'objective'"
+              (click)="setQuestionMode('objective')">
+              客观题
+            </button>
+            <button
+              type="button"
+              class="practice-mode-tab"
+              [class.is-active]="questionMode() === 'subjective'"
+              (click)="setQuestionMode('subjective')">
+              简答题
+            </button>
+          </div>
+        }
         <label class="practice-search__label" for="practiceSearchInput">搜索</label>
         <input
           id="practiceSearchInput"
@@ -301,51 +319,108 @@
           </button>
           <span class="speech-rate__compact">语速 {{ speechRate().toFixed(1) }}x</span>
         </div>
-        <label class="label" for="practiceUserAnswer">你的回答</label>
-        <textarea
-          id="practiceUserAnswer"
-          class="practice-textarea"
-          rows="4"
-          placeholder="先试着写出要点，再显示参考答案或对比自检…"
-          spellcheck="false"
-          [ngModel]="userAnswer()"
-          (ngModelChange)="onUserAnswerInput($event)"></textarea>
-        <p class="hint">参考答案默认隐藏；右侧可切换类型与字号。</p>
-
-        @if (item.oralOneLiner) {
-          <div class="oral-oneliner">
-            <div class="oral-oneliner__label">口播要点（一句）</div>
-            <p class="oral-oneliner__text">{{ item.oralOneLiner }}</p>
+        @if (isObjectiveQuestion(item)) {
+          <div class="objective-options" [class.is-submitted]="objectiveSubmitted()">
+            @for (opt of item.options ?? []; track opt.id) {
+              <button
+                type="button"
+                class="objective-option"
+                [class.is-selected]="optionSelected(opt.id)"
+                [class.is-correct]="objectiveSubmitted() && isCorrectObjectiveOption(item, opt.id)"
+                [class.is-wrong]="isWrongSelectedObjectiveOption(item, opt.id)"
+                (click)="toggleObjectiveOption(item, opt.id)">
+                <span class="objective-option__key">{{ opt.id }}</span>
+                <span class="objective-option__text">{{ opt.text }}</span>
+              </button>
+            }
           </div>
-        }
+          <p class="hint">{{ objectiveTypeLabel(item) }} · 提交后显示正确答案和解析。</p>
 
-        <div class="reference-wrap" [class.reference--hidden]="!showAnswer()">
-          <div class="reference-actions">
-            <button type="button" class="practice-btn" (click)="toggleAnswer()">
-              {{ showAnswer() ? '隐藏参考答案' : '显示参考答案' }}
+          <div class="objective-actions">
+            <button
+              type="button"
+              class="practice-btn practice-btn--primary"
+              [disabled]="objectiveSubmitted()"
+              (click)="submitObjectiveAnswer()">
+              提交答案
             </button>
             <button
               type="button"
               class="practice-btn"
               [disabled]="!speechAvailable() || chantMode()"
               (click)="speakAnswer()">
-              播放答案
+              播放解析
+            </button>
+            <button
+              type="button"
+              class="practice-btn practice-btn--ghost"
+              (click)="showSourceQuestion(item)">
+              查看原题
             </button>
           </div>
-          <div
-            class="reference-body"
-            [class.reference-body--md]="item.markD"
-            [class.reference-body--plain]="!item.markD">
-            @if (item.markD) {
-              <div
-                [innerHTML]="
-                  (item.answer || '（本题未录入答案，可在表格中补充「答案」列后重新导入。）') | markd
-                "></div>
-            } @else {
-              {{ item.answer || '（本题未录入答案，可在表格中补充「答案」列后重新导入。）' }}
-            }
+
+          @if (objectiveSubmitted()) {
+            <div
+              class="objective-result"
+              [class.objective-result--ok]="objectiveAnswerCorrect(item)"
+              [class.objective-result--wrong]="!objectiveAnswerCorrect(item)">
+              {{ objectiveAnswerCorrect(item) ? '回答正确' : '回答错误' }}
+            </div>
+            <div class="reference-body reference-body--plain">
+              <strong>正确答案：</strong>
+              {{ item.correctAnswers?.join('、') || '未录入' }}
+              <br />
+              <strong>解析：</strong>
+              {{ item.explanation || item.answer || '本题暂未录入解析。' }}
+            </div>
+          }
+        } @else {
+          <label class="label" for="practiceUserAnswer">你的回答</label>
+          <textarea
+            id="practiceUserAnswer"
+            class="practice-textarea"
+            rows="4"
+            placeholder="先试着写出要点，再显示参考答案或对比自检…"
+            spellcheck="false"
+            [ngModel]="userAnswer()"
+            (ngModelChange)="onUserAnswerInput($event)"></textarea>
+          <p class="hint">参考答案默认隐藏；右侧可切换类型与字号。</p>
+
+          @if (item.oralOneLiner) {
+            <div class="oral-oneliner">
+              <div class="oral-oneliner__label">口播要点（一句）</div>
+              <p class="oral-oneliner__text">{{ item.oralOneLiner }}</p>
+            </div>
+          }
+
+          <div class="reference-wrap" [class.reference--hidden]="!showAnswer()">
+            <div class="reference-actions">
+              <button type="button" class="practice-btn" (click)="toggleAnswer()">
+                {{ showAnswer() ? '隐藏参考答案' : '显示参考答案' }}
+              </button>
+              <button
+                type="button"
+                class="practice-btn"
+                [disabled]="!speechAvailable() || chantMode()"
+                (click)="speakAnswer()">
+                播放答案
+              </button>
+            </div>
+            <div
+              class="reference-body"
+              [class.reference-body--md]="item.markD"
+              [class.reference-body--plain]="!item.markD">
+              @if (item.markD) {
+                <div
+                  [innerHTML]="
+                    (item.answer || '（本题未录入答案，可在表格中补充「答案」列后重新导入。）') | markd
+                  "></div>
+              } @else {
+                {{ item.answer || '（本题未录入答案，可在表格中补充「答案」列后重新导入。）' }}
+              }
+            </div>
           </div>
-        </div>
+        }
         
         <div class="daily-actions">
           <button
@@ -362,7 +437,9 @@
             (click)="markForgotten()">
             还没记住
           </button>
-          <button type="button" class="practice-btn practice-btn--ghost" (click)="compareAnswers()">对比我的答案</button>
+          @if (!isObjectiveQuestion(item)) {
+            <button type="button" class="practice-btn practice-btn--ghost" (click)="compareAnswers()">对比我的答案</button>
+          }
         </div>
         @if (compareResult(); as cr) {
           <div
@@ -405,3 +482,40 @@
     </main>
     }
   }
+
+<nz-modal
+  [nzVisible]="sourceQuestionVisible()"
+  nzTitle="原简答题"
+  [nzFooter]="null"
+  nzWidth="min(860px, 92vw)"
+  (nzOnCancel)="closeSourceQuestion()">
+  <ng-container *nzModalContent>
+    @if (sourceQuestionItem(); as source) {
+      <div class="source-question">
+        <div class="source-question__meta">
+          <span class="badge">{{ categoryLabel(source.category) }}</span>
+          @if (source.tags) {
+            <span class="tags">{{ source.tags }}</span>
+          }
+        </div>
+        <h2 class="source-question__title">{{ source.question }}</h2>
+        @if (source.oralOneLiner) {
+          <div class="oral-oneliner">
+            <div class="oral-oneliner__label">口播要点（一句）</div>
+            <p class="oral-oneliner__text">{{ source.oralOneLiner }}</p>
+          </div>
+        }
+        <div
+          class="reference-body source-question__answer"
+          [class.reference-body--md]="source.markD"
+          [class.reference-body--plain]="!source.markD">
+          @if (source.markD) {
+            <div [innerHTML]="source.answer | markd"></div>
+          } @else {
+            {{ source.answer }}
+          }
+        </div>
+      </div>
+    }
+  </ng-container>
+</nz-modal>

@@ -9,7 +9,7 @@ import 'echarts-gl/dist/echarts-gl.js';
 
 type EChartsNs = typeof import('echarts');
 
-// MARK: 图表
+// MARK: 解析图表包
 function echartsFromDistBundle(ns: typeof echartsDistNs): EChartsNs {
   const root = ns as unknown as Record<string, unknown>;
   if (typeof root['init'] === 'function') {
@@ -26,6 +26,7 @@ function echartsFromDistBundle(ns: typeof echartsDistNs): EChartsNs {
 const echarts = echartsFromDistBundle(echartsDistNs);
 
 import { GlobeEchartComponent } from './globe-echart.component';
+import { ChartStageComponent } from '../../shared/chart-stage/chart-stage.component';
 
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzGridModule } from 'ng-zorro-antd/grid';
@@ -47,6 +48,7 @@ const SPLIT_LINE = 'rgba(15, 23, 42, 0.06)';
   imports: [
     NgxEchartsDirective,
     GlobeEchartComponent,
+    ChartStageComponent,
     NzCardModule,
     NzGridModule,
     NzIconModule,
@@ -82,7 +84,7 @@ export class ChartShowcaseComponent implements OnInit {
   /** 直角 3D：surface 数学曲面 + bar3D 立体栅格 + scatter3D 粒子 */
   readonly glCartesian3DOption = signal<EChartsOption>({});
 
-  // MARK: 初始化
+  // MARK: 初始化图表
   // 组件初始化：同步移动端断点、订阅视口变化与路由事件
   ngOnInit(): void {
     this.glCartesian3DOption.set(this.buildGlCartesian3D());
@@ -104,10 +106,11 @@ export class ChartShowcaseComponent implements OnInit {
     this.loadChinaGeoAndFlightLines();
   }
 
-  // MARK: 加载
-  // 拉取阿里云 DataV 国界 GeoJSON 并注册地图；失败时仅展示占位文案
+  // MARK: 加载地图数据
+  // 从本地 public/geo 加载国界 GeoJSON（避免跨域 DataV OPTIONS 403）；失败时仅展示占位文案
   private loadChinaGeoAndFlightLines(): void {
-    const url = 'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json';
+    // 相对 base-href，部署在 /angular20/ 时为 /angular20/geo/...
+    const url = 'geo/china_100000_full.json';
     this.http.get<unknown>(url).subscribe({
       next: (geo) => {
         try {
@@ -122,7 +125,7 @@ export class ChartShowcaseComponent implements OnInit {
       },
       error: () => {
         const err = this.buildGeoFlightMapErrorOption(
-          '地图数据加载失败（请检查网络，或改为使用本地 GeoJSON）',
+          '地图数据加载失败（本地 GeoJSON 缺失或路径不正确）',
         );
         this.geoFlightLinesOption.set(err);
         this.geoProvinceHeatOption.set(err);
@@ -130,7 +133,7 @@ export class ChartShowcaseComponent implements OnInit {
     });
   }
 
-  // MARK: 构建
+  // MARK: 构建地图错误
   private buildGeoFlightMapErrorOption(hint: string): EChartsOption {
     return {
       backgroundColor: 'transparent',
@@ -143,7 +146,7 @@ export class ChartShowcaseComponent implements OnInit {
     };
   }
 
-  // MARK: 提取
+  // MARK: 提取省域名称
   private extractMapRegionNames(geo: unknown): string[] {
     const g = geo as { features?: { properties?: Record<string, unknown> | null }[] };
     const raw: string[] = [];
@@ -156,7 +159,7 @@ export class ChartShowcaseComponent implements OnInit {
     return [...new Set(raw)];
   }
 
-  // MARK: 构建
+  // MARK: 构建省域热力
   // 省域分级着色（map + visualMap）+ 少量暖色 OD 弧线（慢周期、pin 尾迹），与飞线卡片蓝青箭头区分。
   private buildGeoProvinceHeat(geo: unknown): EChartsOption {
     const names = this.extractMapRegionNames(geo);
@@ -222,6 +225,8 @@ export class ChartShowcaseComponent implements OnInit {
         roam: true,
         zoom: 1.08,
         scaleLimit: { min: 0.82, max: 4 },
+        layoutCenter: ['50%', '50%'],
+        layoutSize: '100%',
         itemStyle: {
           areaColor: '#0f172a',
           borderColor: 'rgba(148, 163, 184, 0.32)',
@@ -281,7 +286,7 @@ export class ChartShowcaseComponent implements OnInit {
     } as EChartsOption;
   }
 
-  // MARK: 构建
+  // MARK: 构建飞线地图
   // 2D 中国底图 + lines 流光飞线 + effectScatter 城市涟漪；与 3D 地球飞轨观感不同。
   // 需在 registerMap('china') 之后调用。
   private buildGeoFlightLines(): EChartsOption {
@@ -423,6 +428,9 @@ export class ChartShowcaseComponent implements OnInit {
         scaleLimit: { min: 0.85, max: 4 },
         zoom: 1.12,
         center: [105, 35.5],
+        // 全屏时按容器铺满，避免只按宽高比居中留下大片黑边（象形柱等直角坐标图不会有这个问题）
+        layoutCenter: ['50%', '50%'],
+        layoutSize: '100%',
         itemStyle: {
           areaColor: '#1e293b',
           borderColor: 'rgba(148, 163, 184, 0.45)',
@@ -501,7 +509,7 @@ export class ChartShowcaseComponent implements OnInit {
     } as EChartsOption;
   }
 
-  // MARK: 构建
+  // MARK: 构建直角三维
   // 直角坐标 3D：半透明 surface「地形」+ bar3D 立体栅格 + scatter3D 霓虹粒子；可拖拽旋转，与 globe 不同场景。
   private buildGlCartesian3D(): EChartsOption {
     /**
@@ -624,10 +632,12 @@ export class ChartShowcaseComponent implements OnInit {
             roughness: 0.42,
             metalness: 0.12,
           },
+          
           wireframe: {
             show: true,
             lineStyle: { color: 'rgba(165, 180, 252, 0.55)', width: 1.2 },
           },
+          
           equation: {
             x: { step: 0.2, min: -4.5, max: 4.5 },
             y: { step: 0.2, min: -4.5, max: 4.5 },
@@ -639,6 +649,7 @@ export class ChartShowcaseComponent implements OnInit {
             opacity: 0.93,
           },
         },
+        
         {
           type: 'bar3D',
           zlevel: 8,
@@ -678,7 +689,7 @@ export class ChartShowcaseComponent implements OnInit {
     } as EChartsOption;
   }
 
-  // MARK: 提示
+  // MARK: 共用提示样式
   private baseTooltip(): EChartsOption['tooltip'] {
     return {
       backgroundColor: 'rgba(255, 255, 255, 0.97)',
@@ -688,8 +699,8 @@ export class ChartShowcaseComponent implements OnInit {
       extraCssText: 'box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);',
     };
   }
-
-  // MARK: 构建
+  
+  // MARK: 构建三维地球
   // 3D 地球（WebGL）：拖拽旋转、滚轮缩放、自动缓慢自转；弧 Fly 线示意航线。
   // 贴图使用 Three.js 官方示例站点资源（threejs.org），避免 jsDelivr「gh 包」对部分请求返回 403。
   // 亦可改为放到 public/ 下同源引用。
@@ -912,7 +923,7 @@ export class ChartShowcaseComponent implements OnInit {
     } as EChartsOption;
   }
 
-  // MARK: 构建
+  // MARK: 构建霓虹流线
   // 霓虹流线：渐变面积 + 强发光描边
   private buildNeonStream(): EChartsOption {
     const hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
@@ -1010,7 +1021,7 @@ export class ChartShowcaseComponent implements OnInit {
     };
   }
 
-  // MARK: 构建
+  // MARK: 构建涟漪散点
   // 涟漪散点
   private buildPulseScatter(): EChartsOption {
     const data: [number, number, number][] = [];
@@ -1054,7 +1065,7 @@ export class ChartShowcaseComponent implements OnInit {
     };
   }
 
-  // MARK: 构建
+  // MARK: 构建玫瑰饼图
   // 南丁格尔玫瑰
   private buildNightRose(): EChartsOption {
     const data = [
@@ -1102,7 +1113,7 @@ export class ChartShowcaseComponent implements OnInit {
     };
   }
 
-  // MARK: 构建
+  // MARK: 构建旭日分层
   // 旭日图
   private buildSunburst(): EChartsOption {
     return {
@@ -1172,7 +1183,7 @@ export class ChartShowcaseComponent implements OnInit {
     };
   }
 
-  // MARK: 构建
+  // MARK: 构建力导向图
   // 力导向关系图
   private buildForceGraph(): EChartsOption {
     const cats = [
@@ -1228,7 +1239,7 @@ export class ChartShowcaseComponent implements OnInit {
     };
   }
 
-  // MARK: 构建
+  // MARK: 构建桑基流向
   // 桑基图
   private buildSankey(): EChartsOption {
     return {
@@ -1275,7 +1286,7 @@ export class ChartShowcaseComponent implements OnInit {
     };
   }
 
-  // MARK: 构建
+  // MARK: 构建矩形树图
   private buildTreemap(): EChartsOption {
     return {
       backgroundColor: 'transparent',
@@ -1331,7 +1342,7 @@ export class ChartShowcaseComponent implements OnInit {
     };
   }
 
-  // MARK: 构建
+  // MARK: 构建主题河流
   // 主题河流：多条带状流叠成河，适合做时间×品类占比流
   private buildThemeRiver(): EChartsOption {
     const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
@@ -1395,7 +1406,7 @@ export class ChartShowcaseComponent implements OnInit {
     };
   }
 
-  // MARK: 构建
+  // MARK: 构建平行坐标
   // 平行坐标：多维连线「扫描」感，适合多维对比/ profiling
   private buildParallelCyber(): EChartsOption {
     const dims = ['QPS', 'P99 ms', 'CPU %', '内存 MB', '错误/分'];
@@ -1450,7 +1461,7 @@ export class ChartShowcaseComponent implements OnInit {
     };
   }
 
-  // MARK: 构建
+  // MARK: 构建三联仪表
   // 三联 HUD 仪表盘：progress + roundCap，偏控制台/Vision 风格
   private buildGaugeHud(): EChartsOption {
     const mk = (
@@ -1504,7 +1515,7 @@ export class ChartShowcaseComponent implements OnInit {
     };
   }
 
-  // MARK: 构建
+  // MARK: 构建柱状竞速
   // 柱状排序竞速：timeline + bar.realtimeSort，按「赛季」播放示意热度榜
   private buildBarRace(): EChartsOption {
     const frameworks = ['Angular', 'React', 'Vue', 'Svelte', 'Solid', 'Qwik', 'Next', 'Nuxt'];
@@ -1617,7 +1628,7 @@ export class ChartShowcaseComponent implements OnInit {
     } as EChartsOption;
   }
 
-  // MARK: 构建
+  // MARK: 构建日历热力
   // 日历热力图：calendar + heatmap，示意全年提交/活跃强度
   private buildCalendarHeatmap(): EChartsOption {
     const year = 2026;
@@ -1630,7 +1641,7 @@ export class ChartShowcaseComponent implements OnInit {
       const weekend = d.getDay() === 0 || d.getDay() === 6 ? 5 : 0;
       data.push([iso, Math.round(weekend + Math.random() * 14 + (d.getMonth() % 4) * 2)]);
     }
-
+    
     return {
       backgroundColor: 'transparent',
       tooltip: {
@@ -1682,7 +1693,7 @@ export class ChartShowcaseComponent implements OnInit {
     };
   }
 
-  // MARK: 构建
+  // MARK: 构建象形柱图
   // 象形柱图：pictorialBar，底层满格 + 上层 repeat 符号堆叠高度
   private buildPictorialBars(): EChartsOption {
     const cats = ['构建', '单测', 'E2E', '部署', '观测'];
@@ -1755,7 +1766,7 @@ export class ChartShowcaseComponent implements OnInit {
     };
   }
 
-  // MARK: 构建
+  // MARK: 构建双水球图
   // 水球图：echarts-liquidfill 插件；双球示意完成度 / 稳定性
   private buildLiquidFill(): EChartsOption {
     return {

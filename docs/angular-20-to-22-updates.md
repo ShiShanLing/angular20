@@ -60,7 +60,7 @@
 ### 3.3 无障碍
 
 - **Angular Aria** Developer Preview
-  - 无样式、可访问性优先的 headless 指令
+  - 无样式、可访问性优先的 headless 指令 
   - 覆盖 Tabs / Menu / Accordion / Combobox 等常见模式
 
 ### 3.4 测试
@@ -130,7 +130,7 @@
 ---
 
 ## 六、本项目现状对照
-
+所以
 ### 6.1 已落地
 
 - `signal` / `computed` / `input` / `effect`

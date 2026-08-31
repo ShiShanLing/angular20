@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>@font-face{font-family:Wingdings; panose-1:5 0 0 0 0 0 0 0 0 0;}@font-face{font-family:宋体; panose-1:2 1 6 0 3 1 1 1 1 1;}@font-face{font-family:"Cambria Math"; panose-1:2 4 5 3 5 4 6 3 2 4;}@font-face{font-family:DengXian; panose-1:2 1 6 0 3 1 1 1 1 1;}@font-face{font-family:Calibri; panose-1:2 15 5 2 2 2 4 3 2 4;}@font-face{font-family:"Segoe UI"; panose-1:2 11 5 2 4 2 4 2 2 3;}@font-face{font-family:微软雅黑; panose-1:2 11 5 3 2 2 4 2 2 4;}@font-face{font-family:"\@等线"; panose-1:2 1 6 0 3 1 1 1 1 1;}@font-face{font-family:"\@宋体"; panose-1:2 1 6 0 3 1 1 1 1 1;}@font-face{font-family:"\@微软雅黑";}p.MsoNormal, li.MsoNormal, div.MsoNormal{margin-top:0cm; margin-right:0cm; margin-bottom:8.0pt; margin-left:0cm; line-height:107%; font-size:11.0pt; font-family:"Calibri",sans-serif;}h1{margin-top:12.0pt; margin-right:0cm; margin-bottom:0cm; margin-left:0cm; line-height:107%; page-break-after:avoid; font-size:16.0pt; font-family:"Calibri Light",sans-serif; color:#2F5496; font-weight:normal;}p.MsoCommentText, li.MsoCommentText, div.MsoCommentText{margin-top:0cm; margin-right:0cm; margin-bottom:8.0pt; margin-left:0cm; font-size:10.0pt; font-family:"Calibri",sans-serif;}p.MsoHeader, li.MsoHeader, div.MsoHeader{margin:0cm; tab-stops:center 234.0pt right 468.0pt; font-size:11.0pt; font-family:"Calibri",sans-serif;}p.MsoFooter, li.MsoFooter, div.MsoFooter{margin:0cm; tab-stops:center 234.0pt right 468.0pt; font-size:11.0pt; font-family:"Calibri",sans-serif;}p.MsoTitle, li.MsoTitle, div.MsoTitle{margin-top:8.25pt; margin-right:0cm; margin-bottom:12.0pt; margin-left:0cm; text-align:justify; text-justify:inter-ideograph; page-break-after:avoid; text-autospace:none; font-size:14.0pt; font-family:"Arial",sans-serif; color:#7AB851; font-weight:bold;}a:link, span.MsoHyperlink{color:#E16633; text-decoration:underline; text-underline:single;}a:visited, span.MsoHyperlinkFollowed{color:#954F72; text-decoration:underline; text-underline:single;}p{margin-right:0cm; margin-left:0cm; font-size:12.0pt; font-family:宋体;}p.MsoCommentSubject, li.MsoCommentSubject, div.MsoCommentSubject{margin-top:0cm; margin-right:0cm; margin-bottom:8.0pt; margin-left:0cm; font-size:10.0pt; font-family:"Calibri",sans-serif; font-weight:bold;}p.MsoAcetate, li.MsoAcetate, div.MsoAcetate{margin:0cm; font-size:9.0pt; font-family:"Segoe UI",sans-serif;}span.MsoPlaceholderText{color:gray;}p.MsoRMPane, li.MsoRMPane, div.MsoRMPane{margin:0cm; font-size:11.0pt; font-family:"Calibri",sans-serif;}p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph{margin-top:0cm; margin-right:0cm; margin-bottom:8.0pt; margin-left:36.0pt; line-height:107%; font-size:11.0pt; font-family:"Calibri",sans-serif;}p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst{margin-top:0cm; margin-right:0cm; margin-bottom:0cm; margin-left:36.0pt; line-height:107%; font-size:11.0pt; font-family:"Calibri",sans-serif;}p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle{margin-top:0cm; margin-right:0cm; margin-bottom:0cm; margin-left:36.0pt; line-height:107%; font-size:11.0pt; font-family:"Calibri",sans-serif;}p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast{margin-top:0cm; margin-right:0cm; margin-bottom:8.0pt; margin-left:36.0pt; line-height:107%; font-size:11.0pt; font-family:"Calibri",sans-serif;}span.a0{font-weight:bold;}span.a1{font-family:"Segoe UI",sans-serif;}span.a4{font-family:"Arial",sans-serif; color:#7AB851; font-weight:bold;}span.1{font-family:"Calibri Light",sans-serif; color:#2F5496;}p.a5, li.a5, div.a5{margin:0cm; text-align:justify; text-justify:inter-ideograph; text-indent:21.0pt; tab-stops:center 210.05pt right dotted 464.9pt; text-autospace:none; font-size:10.5pt; font-family:宋体;}.MsoChpDefault{font-size:10.0pt;}@page WordSection1{size:612.0pt 792.0pt; margin:72.0pt 72.0pt 72.0pt 72.0pt;}div.WordSection1{page:WordSection1;}@list l0:level1{margin-left:21.0pt; text-indent:-21.0pt; font-family:Wingdings;}@list l0:level2{margin-left:42.0pt; text-indent:-21.0pt; font-family:Wingdings; color:windowtext;}@list l0:level3{margin-left:63.0pt; text-indent:-21.0pt; font-family:Wingdings;}@list l0:level4{margin-left:84.0pt; text-indent:-21.0pt; font-family:Wingdings;}@list l0:level5{margin-left:105.0pt; text-indent:-21.0pt; font-family:Wingdings;}@list l0:level6{margin-left:126.0pt; text-indent:-21.0pt; font-family:Wingdings;}@list l0:level7{margin-left:147.0pt; text-indent:-21.0pt; font-family:Wingdings;}@list l0:level8{margin-left:168.0pt; text-indent:-21.0pt; font-family:Wingdings;}@list l0:level9{margin-left:189.0pt; text-indent:-21.0pt; font-family:Wingdings;}@list l1:level1{margin-left:22.5pt; text-indent:-22.5pt;}@list l1:level2{margin-left:20.25pt; text-indent:-20.25pt;}@list l1:level3{margin-left:36.0pt; text-indent:-36.0pt;}@list l1:level4{margin-left:36.0pt; text-indent:-36.0pt;}@list l1:level5{margin-left:54.0pt; text-indent:-54.0pt;}@list l1:level6{margin-left:54.0pt; text-indent:-54.0pt;}@list l1:level7{margin-left:72.0pt; text-indent:-72.0pt;}@list l1:level8{margin-left:72.0pt; text-indent:-72.0pt;}@list l1:level9{margin-left:72.0pt; text-indent:-72.0pt;}@list l2:level1{margin-left:18.0pt; text-indent:-18.0pt;}@list l2:level2{margin-left:54.0pt; text-indent:-18.0pt;}@list l2:level3{margin-left:90.0pt; text-indent:-9.0pt;}@list l2:level4{margin-left:126.0pt; text-indent:-18.0pt;}@list l2:level5{margin-left:162.0pt; text-indent:-18.0pt;}@list l2:level6{margin-left:198.0pt; text-indent:-9.0pt;}@list l2:level7{margin-left:234.0pt; text-indent:-18.0pt;}@list l2:level8{margin-left:270.0pt; text-indent:-18.0pt;}@list l2:level9{margin-left:306.0pt; text-indent:-9.0pt;}@list l3:level1{margin-left:18.0pt; text-indent:-18.0pt;}@list l3:level2{margin-left:54.0pt; text-indent:-18.0pt;}@list l3:level3{margin-left:90.0pt; text-indent:-9.0pt;}@list l3:level4{margin-left:126.0pt; text-indent:-18.0pt;}@list l3:level5{margin-left:162.0pt; text-indent:-18.0pt;}@list l3:level6{margin-left:198.0pt; text-indent:-9.0pt;}@list l3:level7{margin-left:234.0pt; text-indent:-18.0pt;}@list l3:level8{margin-left:270.0pt; text-indent:-18.0pt;}@list l3:level9{margin-left:306.0pt; text-indent:-9.0pt;}@list l4:level1{margin-left:42.0pt; text-indent:-21.0pt; font-family:Wingdings; color:windowtext;}@list l4:level2{margin-left:63.0pt; text-indent:-21.0pt; font-family:Wingdings;}@list l4:level3{margin-left:84.0pt; text-indent:-21.0pt; font-family:Wingdings;}@list l4:level4{margin-left:105.0pt; text-indent:-21.0pt; font-family:Wingdings;}@list l4:level5{margin-left:126.0pt; text-indent:-21.0pt; font-family:Wingdings;}@list l4:level6{margin-left:147.0pt; text-indent:-21.0pt; font-family:Wingdings;}@list l4:level7{margin-left:168.0pt; text-indent:-21.0pt; font-family:Wingdings;}@list l4:level8{margin-left:189.0pt; text-indent:-21.0pt; font-family:Wingdings;}@list l4:level9{margin-left:210.0pt; text-indent:-21.0pt; font-family:Wingdings;}@list l5:level1{margin-left:42.0pt; text-indent:-21.0pt;}@list l5:level2{margin-left:63.0pt; text-indent:-21.0pt;}@list l5:level3{margin-left:84.0pt; text-indent:-21.0pt;}@list l5:level4{margin-left:105.0pt; text-indent:-21.0pt;}@list l5:level5{margin-left:126.0pt; text-indent:-21.0pt;}@list l5:level6{margin-left:147.0pt; text-indent:-21.0pt;}@list l5:level7{margin-left:168.0pt; text-indent:-21.0pt;}@list l5:level8{margin-left:189.0pt; text-indent:-21.0pt;}@list l5:level9{margin-left:210.0pt; text-indent:-21.0pt;}@list l6:level1{margin-left:42.0pt; text-indent:-21.0pt;}@list l6:level2{margin-left:63.0pt; text-indent:-21.0pt;}@list l6:level3{margin-left:84.0pt; text-indent:-21.0pt;}@list l6:level4{margin-left:105.0pt; text-indent:-21.0pt;}@list l6:level5{margin-left:126.0pt; text-indent:-21.0pt;}@list l6:level6{margin-left:147.0pt; text-indent:-21.0pt;}@list l6:level7{margin-left:168.0pt; text-indent:-21.0pt;}@list l6:level8{margin-left:189.0pt; text-indent:-21.0pt;}@list l6:level9{margin-left:210.0pt; text-indent:-21.0pt;}@list l7:level1{margin-left:18.0pt; text-indent:-18.0pt; color:windowtext;}@list l7:level2{text-indent:-36.0pt;}@list l7:level3{margin-left:90.0pt; text-indent:-9.0pt;}@list l7:level4{margin-left:126.0pt; text-indent:-18.0pt;}@list l7:level5{margin-left:162.0pt; text-indent:-18.0pt;}@list l7:level6{margin-left:198.0pt; text-indent:-9.0pt;}@list l7:level7{margin-left:234.0pt; text-indent:-18.0pt;}@list l7:level8{margin-left:270.0pt; text-indent:-18.0pt;}@list l7:level9{margin-left:306.0pt; text-indent:-9.0pt;}@list l8:level1{margin-left:42.0pt; text-indent:-21.0pt;}@list l8:level2{margin-left:63.0pt; text-indent:-21.0pt;}@list l8:level3{margin-left:84.0pt; text-indent:-21.0pt;}@list l8:level4{margin-left:105.0pt; text-indent:-21.0pt;}@list l8:level5{margin-left:126.0pt; text-indent:-21.0pt;}@list l8:level6{margin-left:147.0pt; text-indent:-21.0pt;}@list l8:level7{margin-left:168.0pt; text-indent:-21.0pt;}@list l8:level8{margin-left:189.0pt; text-indent:-21.0pt;}@list l8:level9{margin-left:210.0pt; text-indent:-21.0pt;}@list l9:level1{margin-left:43.0pt; text-indent:-22.0pt; font-family:Wingdings;}@list l9:level2{margin-left:65.0pt; text-indent:-22.0pt; font-family:Wingdings;}@list l9:level3{margin-left:87.0pt; text-indent:-22.0pt; font-family:Wingdings;}@list l9:level4{margin-left:109.0pt; text-indent:-22.0pt; font-family:Wingdings;}@list l9:level5{margin-left:131.0pt; text-indent:-22.0pt; font-family:Wingdings;}@list l9:level6{margin-left:153.0pt; text-indent:-22.0pt; font-family:Wingdings;}@list l9:level7{margin-left:175.0pt; text-indent:-22.0pt; font-family:Wingdings;}@list l9:level8{margin-left:197.0pt; text-indent:-22.0pt; font-family:Wingdings;}@list l9:level9{margin-left:219.0pt; text-indent:-22.0pt; font-family:Wingdings;}@list l10:level1{margin-left:18.0pt; text-indent:-18.0pt;}@list l10:level2{text-indent:-36.0pt;}@list l10:level3{margin-left:90.0pt; text-indent:-9.0pt;}@list l10:level4{margin-left:126.0pt; text-indent:-18.0pt;}@list l10:level5{margin-left:162.0pt; text-indent:-18.0pt;}@list l10:level6{margin-left:198.0pt; text-indent:-9.0pt;}@list l10:level7{margin-left:234.0pt; text-indent:-18.0pt;}@list l10:level8{margin-left:270.0pt; text-indent:-18.0pt;}@list l10:level9{margin-left:306.0pt; text-indent:-9.0pt;}@list l11:level1{text-indent:-18.0pt; font-family:Symbol;}@list l11:level2{text-indent:-18.0pt; font-family:"Courier New";}@list l11:level3{text-indent:-18.0pt; font-family:Wingdings;}@list l11:level4{text-indent:-18.0pt; font-family:Symbol;}@list l11:level5{text-indent:-18.0pt; font-family:"Courier New";}@list l11:level6{text-indent:-18.0pt; font-family:Wingdings;}@list l11:level7{text-indent:-18.0pt; font-family:Symbol;}@list l11:level8{text-indent:-18.0pt; font-family:"Courier New";}@list l11:level9{text-indent:-18.0pt; font-family:Wingdings;}@list l12:level1{margin-left:18.0pt; text-indent:-18.0pt;}@list l12:level2{margin-left:22.5pt; text-indent:-18.0pt;}@list l12:level3{margin-left:81.0pt; text-indent:-36.0pt;}@list l12:level4{margin-left:103.5pt; text-indent:-36.0pt;}@list l12:level5{margin-left:144.0pt; text-indent:-54.0pt;}@list l12:level6{margin-left:166.5pt; text-indent:-54.0pt;}@list l12:level7{margin-left:207.0pt; text-indent:-72.0pt;}@list l12:level8{margin-left:229.5pt; text-indent:-72.0pt;}@list l12:level9{margin-left:270.0pt; text-indent:-90.0pt;}@list l13:level1{margin-left:22.5pt; text-indent:-18.0pt;}@list l13:level2{margin-left:58.5pt; text-indent:-18.0pt;}@list l13:level3{margin-left:94.5pt; text-indent:-9.0pt;}@list l13:level4{margin-left:130.5pt; text-indent:-18.0pt;}@list l13:level5{margin-left:166.5pt; text-indent:-18.0pt;}@list l13:level6{margin-left:202.5pt; text-indent:-9.0pt;}@list l13:level7{margin-left:238.5pt; text-indent:-18.0pt;}@list l13:level8{margin-left:274.5pt; text-indent:-18.0pt;}@list l13:level9{margin-left:310.5pt; text-indent:-9.0pt;}@list l14:level1{text-indent:-18.0pt;}@list l14:level2{text-indent:-18.0pt;}@list l14:level3{text-indent:-9.0pt;}@list l14:level4{text-indent:-18.0pt;}@list l14:level5{text-indent:-18.0pt;}@list l14:level6{text-indent:-9.0pt;}@list l14:level7{text-indent:-18.0pt;}@list l14:level8{text-indent:-18.0pt;}@list l14:level9{text-indent:-9.0pt;}ol{margin-bottom:0cm;}ul{margin-bottom:0cm;}table.MsoNormalTable{font-size:10.0pt; font-family:"Times New Roman",serif;}table.MsoTableGrid{border:solid windowtext 1.0pt; font-size:10.0pt; font-family:"Times New Roman",serif;}</style>
+</head>
+<body lang=ZH-CN link="#E16633" vlink="#954F72" style='tab-interval:36.0pt; word-wrap:break-word'>
+
+<div class=WordSection1>
+
+<p class=MsoNormal align=center style='margin-top:12.0pt;text-align:center; line-height:115%'><b><span style='font-size:10.5pt;line-height:115%;font-family: DengXian'>个人信息处理授权同意书及承诺函<span
+lang=EN-US><o:p></o:p></span></span></b></p>
+
+<p class=MsoNormal style='margin-top:12.0pt;line-height:115%'><span style='font-size:10.5pt;line-height:115%;font-family:DengXian'>致：葛兰素史克（中国）投资有限公司<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p><span lang=EN-US style='font-size:10.5pt;font-family:DengXian'><span>        </span></span><span style='font-size:10.5pt;font-family:DengXian'>葛兰素史克企业管理有限公司<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p style='text-indent:21.0pt'><span style='font-size: 10.5pt;font-family:DengXian'>上海葛兰素史克药业有限公司</span><span
+lang=EN-US style='font-size:10.5pt;font-family:DengXian'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-top:12.0pt;line-height:115%'><span lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian'><span>      </span></span><span style='font-size:10.5pt;line-height:115%;font-family:DengXian'>（以下统称<span lang=EN-US>“GSK”</span>）<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='margin-top:12.0pt;line-height:115%'><span lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian'><span>      </span><o:p></o:p></span></p>
+
+<p class=MsoListParagraph style='margin-top:12.0pt;margin-right:0cm;margin-bottom: 8.0pt;margin-left:22.5pt;text-indent:-22.5pt;line-height: 115%'><b><span lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian'><span>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span></b><b><span style='font-size:10.5pt;line-height: 115%;font-family:DengXian'>授权事项及目的<span
+lang=EN-US><o:p></o:p></span></span></b></p>
+
+<p class=MsoNormal style='margin-top:12.0pt;margin-right:0cm;margin-bottom: 8.0pt;margin-left:4.5pt;text-indent:18.0pt;line-height:115%'><span style='font-size:10.5pt;line-height:115%;font-family:DengXian'>本人理解、同意并不可撤销地授权并同意，<span lang=EN-US>GSK</span>有权依据<span
+lang=EN-US>2026</span>年<span lang=EN-US>8</span>月<span lang=EN-US>1</span>日生效的《医药代表管理办法》及相关法律法规及其更新的规定（下称<span
+lang=EN-US>“</span>《医药代表管理办法》），基于本同意书<b>授权目的</b>（定义见第<span lang=EN-US>1.1</span>条）对本人的<b>个人信息</b>（定义见第<span
+lang=EN-US>1.2</span>条）按本条的约定及附件一（个人信息保护政策）进行<b>处理</b>（定义见第<span lang=EN-US>1.3</span>条）。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-top:12.0pt;margin-right:0cm; margin-bottom:8.0pt;margin-left:22.5pt;text-indent:-18.0pt; line-height:115%'><span
+lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian'><span>1.1<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span lang=EN-US style='font-size:10.5pt; line-height:115%;font-family:DengXian'><span> </span></span><span style='font-size:10.5pt;line-height:115%;font-family:DengXian'>授权目的指的是，为依法完成于国家药品监督管理局指定的备案平台的医药代表信息备案工作以及于<span
+lang=EN-US>GSK</span>网站或者相关行业协会网站对医药代表信息的公示工作，以便负有向医疗卫生机构及其工作人员传递、沟通、反馈药品信息，从事药品学术推广活动职责的员工完整履行工作职责。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:12.0pt;margin-right:0cm; margin-bottom:8.0pt;margin-left:22.5pt;line-height:115%'><span
+lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:12.0pt;margin-right:0cm; margin-bottom:8.0pt;margin-left:22.5pt;text-indent:-18.0pt; line-height:115%'><span
+lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian'><span>1.2<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span style='font-size:10.5pt;line-height:115%; font-family:DengXian'>个人信息指的是，本人的姓名、性别、照片、身份证件种类及号码、本人所学专业及学历、劳动合同，负责推广的药品类别和治疗领域等，授权书的起止日期，及其他为实现第<span
+lang=EN-US>1.1</span>条之授权目的所必须的个人信息。<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpMiddle><span lang=EN-US style='font-size:10.5pt; line-height:107%;font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:12.0pt;margin-right:0cm; margin-bottom:8.0pt;margin-left:22.5pt;text-indent:-18.0pt; line-height:115%'><span
+lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian'><span>1.3<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span style='font-size:10.5pt;line-height:115%; font-family:DengXian'>个人信息的处理指的是，对个人信息的收集、存储、使用、加工、传输、提供、公开等活动，具体而言，主要包括为授权目的收集、存储、整理个人信息，并将个人信息上传于医药代表备案平台以及公示于<span
+lang=EN-US>GSK</span>网站或者相关行业协会网站。<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpMiddle><span lang=EN-US style='font-size:10.5pt; line-height:107%;font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:12.0pt;margin-right:0cm; margin-bottom:8.0pt;margin-left:22.5pt;text-indent:-18.0pt; line-height:115%'><span
+lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian'><span>1.4<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span style='font-size:10.5pt;line-height:115%; font-family:DengXian'>为本函之目的，医药代表指的是根据《医药代表管理办法》的定义，代表<span
+lang=EN-US>GSK</span>在中华人民共和国境内从事药品信息传递<span lang=EN-US>&nbsp;</span>、沟通、反馈的专业人员。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='line-height:150%'><span lang=EN-US style='font-size:10.5pt;line-height:150%;font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:12.0pt;margin-right:0cm; margin-bottom:8.0pt;margin-left:22.5pt;text-indent:-18.0pt; line-height:115%'><span
+lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian'><span>1.5<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span style='font-size:10.5pt;line-height:115%; font-family:DengXian'>个人信息的保存期限：<span
+lang=EN-US>GSK</span>在为达成授权目的所需的期限内留存本人的个人信息。<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:12.0pt;margin-right:0cm; margin-bottom:8.0pt;margin-left:22.5pt;line-height:115%'><span
+lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:12.0pt;margin-right:0cm; margin-bottom:8.0pt;margin-left:22.5pt;text-indent:-22.5pt; line-height:115%'><b><span
+lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian'><span>2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span></b><b><span style='font-size:10.5pt;line-height: 115%;font-family:DengXian'>本人义务及承诺声明<span
+lang=EN-US><o:p></o:p></span></span></b></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:12.0pt;margin-right:0cm; margin-bottom:8.0pt;margin-left:22.5pt;line-height:115%'><b><span
+lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian'><o:p>&nbsp;</o:p></span></b></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:12.0pt;margin-right:0cm; margin-bottom:8.0pt;margin-left:22.5pt;text-indent:-18.0pt; line-height:115%'><span
+lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian'><span>2.1<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span style='font-size:10.5pt;line-height:115%; font-family:DengXian'>本人保证，本人所提供的个人信息均为真实、准确、完整且有效的信息，不可为他人的个人信息，不存在虚假或者伪造的信息，否则本人将自愿承担由此产生的一切法律责任。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:12.0pt;margin-right:0cm; margin-bottom:8.0pt;margin-left:31.5pt;line-height:115%'><span
+lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:12.0pt;margin-right:0cm; margin-bottom:8.0pt;margin-left:22.5pt;text-indent:-18.0pt; line-height:115%'><span
+lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian'><span>2.2<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span style='font-size:10.5pt;line-height:115%; font-family:DengXian'>本人确认已知悉本同意书所有内容，并对本授权书条款的含义及相应的法律后果已全部知晓并充分理解，自愿出具本同意书。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpMiddle><span lang=EN-US style='font-size:10.5pt; line-height:107%;font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:12.0pt;margin-right:0cm; margin-bottom:8.0pt;margin-left:22.5pt;text-align:justify; text-justify:inter-ideograph;text-indent:-18.0pt;line-height:115%'><span lang=EN-US style='font-size:10.5pt; line-height:115%;font-family:DengXian'><span>2.3<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span style='font-size:10.5pt;line-height:115%; font-family:DengXian'>本人保证，若因职位变动或者离职等原因本人不再担任<span
+lang=EN-US>GSK</span>医药代表职务或者工作内容不再包含医药代表职责，应于前述职位变动发生时或者离职前主动向<span
+lang=EN-US>GSK</span>相关部门申报，和<span lang=EN-US>/</span>或主动、及时配合<span lang=EN-US>GSK</span>完成依照本同意书所备案或者公示的个人信息的删除或者撤回。因本人未及时履行本款义务导致的法律后果由本人自愿承担，此种情况下本人无权要求<span
+lang=EN-US>GSK</span>承担损害赔偿责任。<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpMiddle><span lang=EN-US style='font-size:10.5pt; line-height:107%;font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:12.0pt;margin-right:0cm; margin-bottom:8.0pt;margin-left:22.5pt;text-align:justify; text-justify:inter-ideograph;text-indent:-18.0pt;line-height:115%'><span lang=EN-US style='font-size:10.5pt; line-height:115%;font-family:DengXian'><span>2.4<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span style='font-size:10.5pt;line-height:115%; font-family:DengXian'>本人承诺并保证，在履行<span
+lang=EN-US>GSK</span>医药代表的工作任务时，严格遵守《医药代表管理办法》以及与本人履行医药代表职责相关的<span lang=EN-US>GSK</span>内部行为准则。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpMiddle><span lang=EN-US style='font-size:10.5pt; line-height:107%;font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle><span lang=EN-US style='font-size:10.5pt; line-height:107%;font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpLast align=center style='text-align:center'><b><span style='font-size:10.5pt;line-height: 107%;font-family:DengXian;color:black'>个人信息保护政策</span></b><b><span
+lang=EN-US style='font-size:10.5pt;line-height:107%;font-family:DengXian'><o:p></o:p></span></b></p>
+
+<p class=MsoNormal align=center style='margin-bottom:6.0pt;text-align:center;line-height:115%'><b><span lang=EN-US style='font-size: 10.5pt;line-height:115%;font-family:DengXian; color:black'><o:p>&nbsp;</o:p></span></b></p>
+
+<p><span style='font-size:10.5pt;font-family:DengXian; color:black'>本政策仅适用于葛兰素史克（中国）投资有限公司</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>、</span><span style='font-size:10.5pt; font-family:DengXian'>葛兰素史克企业管理有限公司<span style='color:black'>、</span>上海葛兰素史克药业有限公司</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>（下</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>合</span><span style='font-size:10.5pt; font-family:DengXian; color:black'>称</span><span style='font-size:10.5pt; font-family:DengXian; color:black'>“</span><span style='font-size:10.5pt; font-family:DengXian; color:black'>我们</span><span style='font-size:10.5pt; font-family:DengXian; color:black'>”</span><span style='font-size:10.5pt; font-family:DengXian; color:black'>或</span><span style='font-size:10.5pt; font-family:DengXian; color:black'>“<span lang=EN-US>GSK</span>”</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>）的医药代表备案解决方案（下称</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>“</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>备案程序</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>”</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>）。该备案程序旨在依据</span><span
+lang=EN-US style='font-size:10.5pt;font-family:DengXian; color:black'>2026</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>年</span><span
+lang=EN-US style='font-size:10.5pt;font-family:DengXian; color:black'>8</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>月</span><span
+lang=EN-US style='font-size:10.5pt;font-family:DengXian; color:black'>1</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>日生效的《医药代表管理办法》及相关法律法规及其未来不时的更新（下称</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>“</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>医药代表管理办法</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>”</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>），完成于国家药品监督管理局指定的备案平台的医药代表信息备案工作、以及于</span><span
+lang=EN-US style='font-size:10.5pt;font-family:DengXian; color:black'>GSK</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>网站或者相关行业协会网站对医药代表信息的公示工作、以及与前述备案工作与公示工作相关的</span><span
+lang=EN-US style='font-size:10.5pt;font-family:DengXian; color:black'>GSK</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>对医药代表的管理工作（以下统称</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>“</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>法定备案与公示工作</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>”</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>）。</span><span
+lang=EN-US style='font-size:10.5pt;font-family:DengXian'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;line-height:115%;tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'><span
+lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian; color:black'><o:p>&nbsp;</o:p></span></p>
+
+<p class=a5 style='margin-bottom:6.0pt;text-indent: 0cm;line-height:115%;tab-stops:36.0pt center 210.05pt right dotted 464.9pt; layout-grid-mode:char'><span style='line-height:115%;font-family:DengXian'>最近更新日期：<span
+lang=EN-US>2026</span>年<span lang=EN-US>8</span>月<span lang=EN-US>14</span>日<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; line-height:115%'><b><span lang=EN-US style='font-size:10.5pt;line-height:115%; font-family:DengXian;color:#ED7D31'><o:p>&nbsp;</o:p></span></b></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; line-height:115%'><b><span style='font-size:10.5pt;line-height:115%;font-family: DengXian; color:#ED7D31'>我们会收集有关您的哪些个人信息并如何使用？<span
+lang=EN-US><o:p></o:p></span></span></b></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; line-height:115%'><b><span lang=EN-US style='font-size:10.5pt;line-height:115%; font-family:DengXian;color:#ED7D31'><o:p>&nbsp;</o:p></span></b></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; line-height:115%'><span style='font-size:10.5pt;line-height:115%;font-family: DengXian; color:black'>在本《个人信息保护政策》中，涉及个人敏感信息<span lang=EN-US>/</span>个人信息出境的相关术语和条款将以</span><b><u><span style='font-size:10.5pt; line-height:115%;font-family:DengXian; color:black'>加粗和下划线</span></u></b><span style='font-size: 10.5pt;line-height:115%;font-family:DengXian; color:black'>的形式展示，以提请您的特别注意。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; line-height:115%'><span lang=EN-US style='font-size:10.5pt;line-height:115%; font-family:DengXian;color:black'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; text-indent:18.0pt;line-height:115%'><span style='font-size:10.5pt;line-height: 115%;font-family:DengXian;color:black'>我们收集您的个人信息的目的是为了完成法定备案与公示工作。为本政策之目的，法定备案与公示工作包括：<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-bottom:6.0pt;text-align:justify; text-justify:inter-ideograph;text-indent:-18.0pt;line-height:115%'><span lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian; color:black'><span>1、<span style='font:7.0pt "Times New Roman"'>
+</span></span></span><span style='font-size:10.5pt;line-height:115%; font-family:DengXian;color:black'>在国家药品监督管理局指定的备案平台完成医药代表信息备案；<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-bottom:6.0pt;text-align:justify; text-justify:inter-ideograph;text-indent:-18.0pt;line-height:115%'><span lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian; color:black'><span>2、<span style='font:7.0pt "Times New Roman"'>
+</span></span></span><span style='font-size:10.5pt;line-height:115%; font-family:DengXian;color:black'>在<span lang=EN-US>GSK</span>网站或者相关行业协会网站对医药代表信息的公示；<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-bottom:6.0pt;text-align:justify; text-justify:inter-ideograph;text-indent:-18.0pt;line-height:115%'><span lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian; color:black'><span>3、<span style='font:7.0pt "Times New Roman"'>
+</span></span></span><span style='font-size:10.5pt;line-height:115%; font-family:DengXian;color:black'>为上述目的或与上述各项有关的，<span lang=EN-US>GSK</span>对医药代表信息的准备和管理、或与之相关的对医药代表的管理。 <span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm; margin-bottom:6.0pt;margin-left:4.5pt;text-indent:13.5pt;line-height:115%'><span lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian; color:black'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpLast style='margin-top:0cm;margin-right:0cm; margin-bottom:6.0pt;margin-left:4.5pt;text-indent:13.5pt;line-height:115%'><span style='font-size:10.5pt;line-height:115%;font-family:DengXian; color:black'>当我们要求您提供这部分个人信息时，如果您决定不向我们提供您的个人信息，这会导致我们无法依法完成有关您的法定备案与公示工作，从而导致我们与您的劳动合同或授权书目的落空、无法履行。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; text-indent:18.0pt;line-height:115%'><span style='font-size:10.5pt;line-height: 115%;font-family:DengXian;color:black'>根据医药代表管理办法，您需要向我们提供或允许我们收集的个人信息（下称“个人信息“）包括：</span><span lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian; color:red'><o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpFirst style='text-align:justify;text-justify:inter-ideograph; text-indent:-18.0pt;line-height:28.0pt'><span lang=EN-US style='font-size:10.5pt;font-family:Symbol; color:black'><span>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><span style='font-size:10.5pt;font-family:DengXian; color:black'>您的姓名、性别、<b><u>照片</u></b>；<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='text-align:justify;text-justify: inter-ideograph;text-indent:-18.0pt;line-height:28.0pt'><span
+lang=EN-US style='font-size:10.5pt;font-family:Symbol;color:black'><span>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><b><u><span style='font-size:10.5pt;font-family:DengXian; color:black'>身份证件种类及号码，</span></u></b><span style='font-size:10.5pt;font-family:DengXian; color:black'>所学专业、学历；<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='text-align:justify;text-justify: inter-ideograph;text-indent:-18.0pt;line-height:28.0pt'><span
+lang=EN-US style='font-size:10.5pt;font-family:Symbol;color:black'><span>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><span style='font-size:10.5pt;font-family:DengXian; color:black'>劳动合同或者授权书的起止日期；<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='text-align:justify;text-justify: inter-ideograph;text-indent:-18.0pt;line-height:28.0pt'><span
+lang=EN-US style='font-size:10.5pt;font-family:Symbol;color:black'><span>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><span style='font-size:10.5pt;font-family:DengXian; color:black'>您负责推广的药品类别</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>、治疗领域和负责推广的区域；</span><span
+lang=EN-US style='font-size:10.5pt;font-family:DengXian; color:black'><o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpLast style='text-align:justify;text-justify:inter-ideograph; text-indent:-18.0pt;line-height:28.0pt'><span lang=EN-US style='font-size:10.5pt;font-family:Symbol; color:black'><span>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><span style='font-size:10.5pt;font-family:DengXian; color:black'>根</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>据不时更新的相关法律法规，其他为完成法定备案与公示工作所必须的个人信息。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; line-height:115%'><b><span lang=EN-US style='font-size:10.5pt;line-height:115%; font-family:DengXian;color:#ED7D31'><o:p>&nbsp;</o:p></span></b></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; line-height:115%'><b><span style='font-size:10.5pt;line-height:115%;font-family: DengXian; color:#ED7D31'>我们如何收集您的个人信息？<span
+lang=EN-US><o:p></o:p></span></span></b></p>
+
+<p class=a5 style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:18.0pt; text-indent:-18.0pt; line-height:115%;tab-stops: 36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode:char'><b><span lang=EN-US style='line-height:115%;font-family:DengXian; color:black'><span>1、<span style='font:7.0pt "Times New Roman"'>
+</span></span></span></b><b><span style='line-height:115%;font-family:DengXian; color:black'>在您执行以下操作时直接收集您的信息：<span lang=EN-US><o:p></o:p></span></span></b></p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-top:0cm;margin-right:0cm; margin-bottom:0cm;margin-left:43.0pt;text-align:justify;text-justify:inter-ideograph; text-indent:-21.0pt;line-height:115%; tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'><span
+lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:Wingdings; color:black'><span><span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span style='font-size:10.5pt;line-height:115%; font-family:DengXian;color:black'>在备案程序系统上提供身份证件种类及号码，性别，所学专业、学历，照片等其他为实现法定备案与公示工作所必须的个人信息；<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpLast style='margin-top:0cm;margin-right:0cm; margin-bottom:0cm;margin-left:42.0pt;line-height:115%; tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'><span
+lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian; color:black'><o:p>&nbsp;</o:p></span></p>
+
+<p class=a5 style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:18.0pt; text-indent:-18.0pt; line-height:115%;tab-stops: 36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode:char'><span lang=EN-US style='line-height:115%;font-family:DengXian; color:black'><span>2、<span style='font:7.0pt "Times New Roman"'>
+</span></span></span><b><span style='line-height:115%;font-family:DengXian; color:black'>从其他来源收集</span></b><b><span style='line-height:115%;font-family:DengXian; color:black'>（仅<span lang=EN-US>GSK</span>员工）</span></b><span style='line-height:115%;font-family:DengXian; color:black'>：<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-top:0cm;margin-right:0cm; margin-bottom:0cm;margin-left:42.0pt;text-align:justify; text-justify:inter-ideograph;text-indent:-21.0pt;line-height:115%;tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'><span
+lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:Wingdings'><span><span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span style='font-size:10.5pt;line-height:115%; font-family:DengXian;color:black'>来自<span lang=EN-US>GSK</span>人力资源系统<span lang=EN-US>Workday</span>中的姓名，劳动合同的起止日期<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='text-align:justify;text-justify: inter-ideograph;text-indent:-18.0pt;line-height:28.0pt'><span
+lang=EN-US style='font-size:10.5pt;font-family:Symbol;color:black'><span>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><span style='font-size:10.5pt;font-family:DengXian'>来自<span lang=EN-US>GSK</span>内部管理系统中您负责推广的药品类别、治疗领域和负责推广的区域信息<span
+lang=EN-US style='color:black'><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm; margin-bottom:0cm;margin-left:42.0pt;text-align:justify; text-justify:inter-ideograph;text-indent:-21.0pt;line-height:115%;tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'><span
+lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:Wingdings'><span><span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span lang=EN-US style='font-size:10.5pt; line-height:115%;font-family:DengXian; color:black'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm; margin-bottom:0cm;margin-left:42.0pt;text-align:justify; text-justify:inter-ideograph;text-indent:-21.0pt;line-height:115%;tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'><span
+lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:Wingdings'><span><span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span style='font-size:10.5pt;line-height:115%; font-family:DengXian;color:black'>可公开访问的来源。<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpLast><span lang=EN-US style='font-size:10.5pt; line-height:107%;font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; line-height:115%'><b><span style='font-size:10.5pt;line-height:115%;font-family: DengXian; color:#ED7D31'>我们如何委托处理、共享、转让、公开披露您的个人信息<span
+lang=EN-US><o:p></o:p></span></span></b></p>
+
+<p class=a5 style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:18.0pt; text-indent:-18.0pt; line-height:115%;tab-stops: 36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode:char'><b><span lang=EN-US style='line-height:115%;font-family:DengXian; color:black'><span>1、<span style='font:7.0pt "Times New Roman"'>
+</span></span></span></b><b><span style='line-height:115%;font-family:DengXian; color:black'>委托处理与共享<span lang=EN-US><o:p></o:p></span></span></b></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; text-indent:18.0pt;line-height:115%'><a name="_Hlk49331127"><span style='font-size:10.5pt;line-height:115%;font-family:DengXian; letter-spacing:-.15pt'>根据医药代表管理办法的规定，为完成法定备案与公示工作之目的，我们会将您的个人信息与国家药品监督管理局指定的备案平台共享并委托其处理。<span
+lang=EN-US><o:p></o:p></span></span></a></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; text-indent:18.0pt;line-height:115%'><span><span style='font-size:10.5pt;line-height:115%;font-family:DengXian; letter-spacing:-.15pt'>同时，我们会委托一家经<span lang=EN-US>GSK</span>审核的供应商运营和管理备案程序，您的个人信息会委托给该供应商进行处理。<span
+lang=EN-US><o:p></o:p></span></span></span></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; text-indent:18.0pt;line-height:115%'><span><span style='font-size:10.5pt;line-height:115%;font-family:DengXian; letter-spacing:-.15pt'>共享您的个人信息给授权合作伙伴：为实现本声明中的目的，我们的某些产品可能与授权合作伙伴以协议约定的方式合作进行医学知识的传播。请参阅</span></span><span><span style='font-size:10.5pt;line-height: 115%;font-family:DengXian;letter-spacing:-.15pt'>“</span></span><span><span style='font-size:10.5pt;line-height: 115%;font-family:DengXian; letter-spacing:-.15pt'>个人信息第三方共享清单</span></span><span><span style='font-size:10.5pt;line-height:115%;font-family:DengXian; letter-spacing:-.15pt'>”</span></span><span><span style='font-size:10.5pt;line-height:115%;font-family:DengXian; letter-spacing:-.15pt'>，以了解我们与授权合作伙伴共享您的个人信息的情形</span></span><span><span lang=EN-US style='font-size:10.5pt; line-height:115%;font-family:DengXian; letter-spacing:-.15pt'><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; text-indent:18.0pt;line-height:115%'><span><span style='font-size:10.5pt;line-height:115%;font-family:DengXian; letter-spacing:-.15pt;background:yellow'>我们将要求共享个人信息的合作伙伴按照我们的隐私政策以及其他任何相关的保密条款和安全措施来处理您的个人信息。</span></span><span><span lang=EN-US style='font-size:10.5pt; line-height:115%;font-family:DengXian; letter-spacing:-.15pt'><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; text-indent:18.0pt;line-height:115%'><span><span style='font-size:10.5pt;line-height:115%;font-family:DengXian; letter-spacing:-.15pt'>除非本政策另有规定，我们不会与本公司以外的任何公司、组织和个人分享您的个人信息，除非获得您的明确同意。<span
+lang=EN-US><o:p></o:p></span></span></span></p>
+
+<span></span>
+
+<p class=a5 style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:18.0pt; text-indent:-18.0pt; line-height:115%;tab-stops: 36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode:char'><b><span lang=EN-US style='line-height:115%;font-family:DengXian'><span>2、<span style='font:7.0pt "Times New Roman"'> </span></span></span></b><b><span style='line-height:115%;font-family:DengXian'>转让<span lang=EN-US><o:p></o:p></span></span></b></p>
+
+<p class=a5 style='margin-bottom:6.0pt;line-height: 115%;tab-stops:36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode: char'><span style='line-height:115%;font-family:DengXian'>我们不会将您的个人信息转让给任何公司、组织和个人，但以下情况除外：<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:42.0pt; text-indent:-21.0pt; line-height:115%;tab-stops: 36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode:char'><span lang=EN-US style='line-height:115%;font-family:DengXian'><span>1)<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span style='line-height:115%;font-family:DengXian'>在获取明确同意的情况下转让：获得您的明确同意后，我们会向其他方转让您的个人信息；<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:42.0pt; text-indent:-21.0pt; line-height:115%;tab-stops: 36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode:char'><span lang=EN-US style='line-height:115%;font-family:DengXian'><span>2)<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span style='line-height:115%;font-family:DengXian'>在涉及合并、收购或破产清算时，如涉及到个人信息转让，我们会在要求新的持有您个人信息的公司、组织继续受本政策的约束，否则我们将要求该公司、组织重新向您征求授权同意。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:18.0pt; text-indent:-18.0pt; line-height:115%;tab-stops: 36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode:char'><b><span lang=EN-US style='line-height:115%;font-family:DengXian'><span>3、<span style='font:7.0pt "Times New Roman"'> </span></span></span></b><b><span style='line-height:115%;font-family:DengXian'>公开披露<span lang=EN-US><o:p></o:p></span></span></b></p>
+
+<p class=a5 style='margin-bottom:6.0pt;text-indent: 0cm;line-height:115%;tab-stops:25.5pt center 210.05pt right dotted 464.9pt; layout-grid-mode:char'><span lang=EN-US style='line-height:115%;font-family:DengXian'><span>         </span></span><span style='line-height:115%;font-family:DengXian'>我们仅会在以下情况下，公开披露您的个人信息：<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:42.0pt; text-indent:-21.0pt; line-height:115%;tab-stops: 36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode:char'><span lang=EN-US style='line-height:115%;font-family:DengXian'><span>1)<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span style='line-height:115%;font-family:DengXian'>获得您明确同意后；<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:42.0pt; text-indent:-21.0pt; line-height:115%;tab-stops: 36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode:char'><span lang=EN-US style='line-height:115%;font-family:DengXian'><span>2)<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span style='line-height:115%;font-family:DengXian'>基于法定备案与公示工作之目的的披露；<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:42.0pt; text-indent:-21.0pt; line-height:115%;tab-stops: 36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode:char'><span lang=EN-US style='line-height:115%;font-family:DengXian'><span>3)<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span style='line-height:115%;font-family:DengXian'>基于其他法律的披露：在法律、法律程序、诉讼或政府主管部门强制性要求的情况下，我们会公开披露您的个人信息。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-bottom:6.0pt;line-height: 115%;tab-stops:36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode: char'><span lang=EN-US style='line-height:115%;font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; line-height:115%'><b><span style='font-size:10.5pt;line-height:115%;font-family: DengXian; color:#ED7D31'>我们如何保护您的个人信息<span
+lang=EN-US><o:p></o:p></span></span></b></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; line-height:115%'><span style='font-size:10.5pt;line-height:115%;font-family: DengXian'>我</span><span style='font-size:10.5pt;line-height:115%;font-family:DengXian'>们希望确保您的个人信息不会与不被允许看到它的人共享或被其使用。我们使用各种安全措施和技术，和符合业界标准的安全防护措施保护您提供的个人信息。例如，在数据交换、存储时采取加密保护。<b><span
+lang=EN-US style='color:#ED7D31'><o:p></o:p></span></b></span></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; line-height:115%'><span style='font-size:10.5pt;line-height:115%;font-family: DengXian'>我们将定期更新并公开安全风险、个人信息安全影响评估等报告的有关内容。如果我们的物理、技术、或管理防护设施遭到破坏，导致信息被非授权访问、公开披露、篡改、或毁坏，导致您的合法权益受损，我们将承担相应的法律责任。在不幸发生个人信息安全事件后，我们将按照法律法规的要求，及时向您告知安全事件的基本情况和可能的影响、我们已采取或将要采取的处置措施、您可自主防范和降低风险的建议、对您的补救措施等。同时，我们还将按照监管部门要求，主动上报个人信息安全事件的处置情况。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; line-height:115%'><b><span lang=EN-US style='font-size:10.5pt;line-height:115%; font-family:DengXian;color:#ED7D31'><o:p>&nbsp;</o:p></span></b></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; line-height:115%'><b><span style='font-size:10.5pt;line-height:115%;font-family: DengXian; color:#ED7D31'>您对自己的个人信息拥有哪些权利？<span
+lang=EN-US><o:p></o:p></span></span></b></p>
+
+<p class=a5 style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:18.0pt; text-indent:-18.0pt; line-height:115%;tab-stops: 36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode:char'><b><span lang=EN-US style='line-height:115%;font-family:DengXian'><span>1、<span style='font:7.0pt "Times New Roman"'> </span></span></span></b><b><span style='line-height:115%;font-family:DengXian'>访问您的个人信息<span lang=EN-US><o:p></o:p></span></span></b></p>
+
+<p class=a5 style='margin-bottom:6.0pt;line-height: 115%;tab-stops:36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode: char'><span style='line-height:115%;font-family:DengXian'>您有权访问您的个人信息，法律法规规定的例外情况除外。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-bottom:6.0pt;line-height: 115%;tab-stops:36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode: char'><span style='line-height:115%;font-family:DengXian'>如果您想行使数据访问权，</span><span
+class=SpellE><span lang=IT style='line-height:115%; font-family:DengXian;color:#404040'>可以通过以下方式自行访问</span></span><span style='line-height:115%;font-family:DengXian; color:#404040'>：在页面的个人中心中查看您的个人信息<b>。</b><span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:18.0pt; text-indent:-18.0pt; line-height:115%;tab-stops: 36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode:char'><b><span lang=EN-US style='line-height:115%;font-family:DengXian'><span>2、<span style='font:7.0pt "Times New Roman"'> </span></span></span></b><b><span style='line-height:115%;font-family:DengXian'>更正您的个人信息 <span lang=EN-US><o:p></o:p></span></span></b></p>
+
+<p class=a5 style='margin-bottom:6.0pt;line-height: 115%;tab-stops:36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode: char'><span style='line-height:115%;font-family:DengXian; color:black'>为法定备案与公示工作之目的，您有义务向<span lang=EN-US>GSK</span>提供真实、准确、完整且有效的个人信息，当您发现我们处理的关于您的个人信息有错误时，您有权利且有义务立即通知我们并要求我们做出更正。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-bottom:6.0pt;line-height: 115%;tab-stops:36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode: char'><span style='line-height:115%;font-family:DengXian'>如果您有更改或更正个人信息的需求，请使用备案程序中的“修改”功能或者联系<span lang=EN-US>cn.beian@gsk.com</span></span><span
+lang=EN-US style='line-height:115%;font-family:DengXian'><o:p></o:p></span></p>
+
+<p class=a5 style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:18.0pt; text-indent:-18.0pt; line-height:115%;tab-stops: 36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode:char'><b><span lang=EN-US style='line-height:115%;font-family:DengXian'><span>3、<span style='font:7.0pt "Times New Roman"'> </span></span></span></b><b><span style='line-height:115%;font-family:DengXian'>改变您授权同意的范围和注销您的账户 <span
+lang=EN-US style='color:#00B0F0'><o:p></o:p></span></span></b></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:18.0pt; line-height:115%'><span style='font-size:10.5pt;line-height:115%;font-family:DengXian; color:black'>我们将在处理您的个人信息的过程中尊重您对个人信息所拥有的改变授权和注销账户的权利，但是，鉴于本备案程序收集个人信息仅为完成法定备案与公示工作之目的，且法定备案与公示工作是依据法律要求做出，我们无权改变。因此，当且仅当您不再担任法定备案与公示工作所覆盖的岗位，或从<span
+lang=EN-US>GSK</span>离职，或<span lang=EN-US>GSK</span>停止对您从事相关工作授权的时候，您有权收回您的授权同意或申请注销您的账户。请注意，在前述情形下，我们也将主动注销您的账户。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:18.0pt; line-height:115%'><span style='font-size:10.5pt;line-height:115%;font-family:DengXian; color:black'>如果您有收回同意或注销账户的需求，请联系</span><u><span
+lang=EN-US style='font-size:10.5pt;line-height:115%;font-family:DengXian'>cn.beian@gsk.com</span></u><span style='font-size:10.5pt;line-height:115%;font-family:DengXian; color:black'>。<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; text-indent:18.0pt;line-height:115%'><span style='font-size:10.5pt;line-height: 115%;font-family:DengXian;color:black'>当您收回同意或注销账户之后，我们将不再处理相应的个人信息，</span><span style='font-size:10.5pt; line-height:115%;font-family:DengXian'>并依据您的要求，删除您的个人信息，法律法规另有规定的除外。<span style='color:black'>但您收回同意的决定，不会影响此前基于您的授权而开展的个人信息处理。<span
+lang=EN-US><o:p></o:p></span></span></span></p>
+
+<p class=a5 align=left style='margin-top:0cm;margin-right:0cm;margin-bottom: 6.0pt;margin-left:18.0pt; text-align:left; text-indent:0cm;line-height:115%;tab-stops:36.0pt center 210.05pt right dotted 504.0pt; layout-grid-mode:char'><b><span style='line-height:115%;font-family:DengXian'>个人信息主体获取个人信息副本</span></b><span style='line-height:115%;font-family:DengXian'>您有权获取您的个人信息副本，请</span><span style='line-height:115%;font-family:DengXian'>联系我们：</span><span
+lang=EN-US><a href="mailto:cn.pharma-privacy@gsk.com"><span style='line-height:115%;font-family:DengXian'>cn.pharma-privacy@gsk.com</span></a></span><span style='line-height:115%;font-family:DengXian'>。</span><span lang=EN-US><a href="mailto:"></a></span><span lang=EN-US style='line-height:115%;font-family:DengXian'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; text-indent:18.0pt;line-height:115%'><span style='font-size:10.5pt;line-height: 115%;font-family:DengXian'>在技术可行的前提下，例如数据接口匹配，我们还可按您的要求，直接将您的个人信息副本传输给您指定的第三方。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:18.0pt; text-indent:-18.0pt; line-height:115%;tab-stops: 36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode:char'><b><span lang=EN-US style='line-height:115%;font-family:DengXian'><span>4、<span style='font:7.0pt "Times New Roman"'> </span></span></span></b><b><span style='line-height:115%;font-family:DengXian'>删除您的个人信息<span
+lang=EN-US><o:p></o:p></span></span></b></p>
+
+<p class=a5 style='margin-bottom:6.0pt;line-height: 115%;tab-stops:36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode: char'><span style='line-height:115%;font-family:DengXian'>在以下情形中，您可以向我们提出删除个人信息的请求：</span><span
+lang=EN-US style='line-height:115%;font-family:DengXian'><o:p></o:p></span></p>
+
+<p class=a5 style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:42.0pt; text-indent:-21.0pt; line-height:115%;tab-stops: 36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode:char'><span lang=EN-US style='line-height:115%;font-family:DengXian'><span>1)<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span style='line-height:115%;font-family:DengXian'>如果我们处理个人信息的行为违反法律法规；<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:42.0pt; text-indent:-21.0pt; line-height:115%;tab-stops: 36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode:char'><span lang=EN-US style='line-height:115%;font-family:DengXian'><span>2)<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span style='line-height:115%;font-family:DengXian'>如果我们收集、使用您的个人信息，却未征得您的同意；<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:42.0pt; text-indent:-21.0pt; line-height:115%;tab-stops: 36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode:char'><span lang=EN-US style='line-height:115%;font-family:DengXian'><span>3)<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span style='line-height:115%;font-family:DengXian'>如果我们处理个人信息的行为违反了与您的约定；<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:42.0pt; text-indent:-21.0pt; line-height:115%;tab-stops: 36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode:char'><span lang=EN-US style='line-height:115%;font-family:DengXian'><span>4)<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span style='line-height:115%;font-family:DengXian'>您不再担任法定备案与公示工作所覆盖的岗位<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:42.0pt; text-indent:-21.0pt; line-height:115%;tab-stops: 36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode:char'><span lang=EN-US style='line-height:115%;font-family:DengXian'><span>5)<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span style='line-height:115%;font-family:DengXian'>您从<span
+lang=EN-US>GSK</span>离职<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:42.0pt; text-indent:-21.0pt; line-height:115%;tab-stops: 36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode:char'><span lang=EN-US style='line-height:115%;font-family:DengXian'><span>6)<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><span lang=EN-US style='line-height:115%;font-family:DengXian'>GSK</span><span style='line-height:115%;font-family:DengXian'>停止对您从事医药代表相关工作的授权。<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-bottom:6.0pt;line-height: 115%;tab-stops:36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode: char'><span style='line-height:115%;font-family:DengXian'>若我们决定响应您的删除请求，我们还将同时通知从我们获得您的个人信息的实体，要求其及时删除，除非法律法规另有规定，或这些实体获得您的独立授权。当您从我们的服务中删除信息后，我们可能不会立即备份系统中删除相应的信息，但会在备份更新时删除这些信息。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraph style='margin-top:0cm;margin-right:0cm;margin-bottom: 6.0pt;margin-left:18.0pt; line-height:115%'><span style='font-size:10.5pt;line-height:115%;font-family: DengXian'>您可以通过联系<u><span lang=EN-US>cn.beian@gsk.com</span></u>提出您的删除请求。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt; margin-left:18.0pt; text-indent:-18.0pt; line-height:115%;tab-stops: 36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode:char'><b><span lang=EN-US style='line-height:115%;font-family:DengXian'><span>5、<span style='font:7.0pt "Times New Roman"'> </span></span></span></b><b><span style='line-height:115%;font-family:DengXian'>响应您的上述请求<span
+lang=EN-US><o:p></o:p></span></span></b></p>
+
+<p class=a5 style='margin-bottom:6.0pt;line-height: 115%;tab-stops:36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode: char'><span style='line-height:115%;font-family:DengXian'>如您无法通过上述途径完成访问，更正，改变授权同意范围，注销账户，删除的活动，请联系我们帮助您实现这些权利：<u><span
+lang=EN-US>cn.pharma-privacy@gsk.com</span></u>。<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-bottom:6.0pt;line-height: 115%;tab-stops:36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode: char'><span style='line-height:115%;font-family:DengXian'>为保障安全，您可能需要提供书面请求，或以其他方式证明您的身份。我们可能会先要求您验证自己的身份，然后再处理您的请求。我们将在十五个工作日内作出答复。如您不满意，请联系我们：</span><span
+lang=EN-US><a href="mailto:cn.pharma-privacy@gsk.com"><span style='line-height:115%;font-family:DengXian; color:windowtext'>cn.pharma-privacy@gsk.com</span></a></span><span style='line-height:115%;font-family:DengXian'>。</span><span lang=EN-US><a href="mailto:"></a></span><span
+lang=EN-US style='line-height:115%;font-family:DengXian'><o:p></o:p></span></p>
+
+<p class=a5 style='margin-bottom:6.0pt;line-height: 115%;tab-stops:36.0pt center 210.05pt right dotted 464.9pt;layout-grid-mode: char'><span style='line-height:115%;font-family:DengXian'>对于您合理的请求，我们原则上不收取费用，但对多次重复、超出合理限度的请求，我们将视情收取一定成本费用。对于那些无端重复、需要过多技术手段（例如，需要开发新系统或从根本上改变现行惯例）、给他人合法权益带来风险或者非常不切实际（例如，涉及备份磁带上存放的信息）的请求，我们可能会予以拒绝。<a
+name="OLE_LINK1"></a><a name="OLE_LINK3"></a><a name="OLE_LINK2"><span><span><span
+lang=EN-US><o:p></o:p></span></span></span></a></span></p>
+
+<span></span><span></span><span></span>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; line-height:115%'><b><span lang=EN-US style='font-size:10.5pt;line-height:115%; font-family:DengXian;color:#ED7D31'><o:p>&nbsp;</o:p></span></b></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; line-height:115%'><b><span style='font-size:10.5pt;line-height:115%;font-family: DengXian; color:#ED7D31'>本政策如何更新<span
+lang=EN-US><o:p></o:p></span></span></b></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; line-height:115%'><span style='font-size:10.5pt;line-height:115%;font-family: DengXian'>我们的个人信息保护政策可能变更。<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; line-height:115%'><span style='font-size:10.5pt;line-height:115%;font-family: DengXian'>未经您明确同意，我们不会削减您按照本个人信息保护政策所应享有的权力。我们会在本页面上发布对本政策所做的任何变更。对于重大变更，我们还会提供更为显著的通知，让您了解更改内容。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; line-height:115%'><span style='font-size:10.5pt;line-height:115%;font-family: DengXian'>我们的网站和应用程序可能包含指向我们不具备所有权或控制权的网站或移动应用程序的链接。本隐私声明不涵盖这些内容。如果您想了解这些网站和移动应用程序如何收集、使用和共享您的个人信息，请阅读这些网站和移动应用程序上的隐私声明。<b><span
+lang=EN-US style='color:#ED7D31'><o:p></o:p></span></b></span></p>
+
+<p class=a5 style='margin-bottom:6.0pt;text-indent: 0cm;line-height:115%;tab-stops:25.5pt center 210.05pt right dotted 464.9pt; layout-grid-mode:char'><span style='line-height:115%;font-family:DengXian'>本告知遵循的相关国家法律法规和政策为：《中华人民共和国网络安全法》及相关的个人信息保护法规<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-bottom:6.0pt;text-indent: 0cm;line-height:115%;tab-stops:25.5pt center 210.05pt right dotted 464.9pt; layout-grid-mode:char'><span lang=EN-US style='line-height:115%;font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='margin-bottom:6.0pt; line-height:115%'><b><span style='font-size:10.5pt;line-height:115%;font-family: DengXian; color:#ED7D31'>如何联系我们<span
+lang=EN-US><o:p></o:p></span></span></b></p>
+
+<p class=a5 style='margin-bottom:6.0pt;text-indent: 0cm;line-height:115%;tab-stops:25.5pt center 210.05pt right dotted 464.9pt; layout-grid-mode:char'><span style='line-height:115%;font-family:DengXian'>如果您有任何疑问、意见或建议，请通过以下联系方式与我们联系：<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 align=left style='margin-bottom:6.0pt; text-align:left;text-indent:0cm;line-height:115%; tab-stops:25.5pt center 210.05pt right dotted 464.9pt;layout-grid-mode:char'><span style='line-height: 115%;font-family:DengXian'>电子邮件<span lang=EN-US>: </span></span><span
+lang=EN-US><a href="mailto:cn.pharma-privacy@gsk.com"><span style='line-height:115%;font-family:DengXian'>cn.pharma-privacy@gsk.com</span></a></span><span style='line-height:115%;font-family:DengXian'>。<span lang=EN-US style='color:red'><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-bottom:6.0pt;text-indent: 0cm;line-height:115%;tab-stops:25.5pt center 210.05pt right dotted 464.9pt; layout-grid-mode:char'><span style='line-height:115%;font-family:DengXian'>一般情况下，我们将在十五个工作日内回复。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-bottom:6.0pt;text-indent: 0cm;line-height:115%;tab-stops:25.5pt center 210.05pt right dotted 464.9pt; layout-grid-mode:char'><span style='line-height:115%;font-family:DengXian'>如果您对我们的回复不满意，特别时您认为我们的个人信息处理行为损害了您的合法权益，<u>您还可以通过向被告住所地有管辖权的法院提起诉讼来寻求解决方案。</u><span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=a5 style='margin-bottom:6.0pt;text-indent: 0cm;line-height:115%;tab-stops:25.5pt center 210.05pt right dotted 464.9pt; layout-grid-mode:char'><span lang=EN-US style='line-height:115%;font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=a5 style='margin-bottom:6.0pt;text-indent: 0cm;line-height:115%;tab-stops:25.5pt center 210.05pt right dotted 464.9pt; layout-grid-mode:char'><span style='line-height:115%;font-family:DengXian'>生效日期及版本号：<span
+lang=EN-US>2026</span>年<span lang=EN-US>8</span>月<span lang=EN-US>19</span>日，<span
+lang=EN-US>V1.4</span>版<span lang=EN-US style='color:red'><o:p></o:p></span></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.5pt;line-height:107%; font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-left:43.0pt;text-indent:-22.0pt'><span
+lang=EN-US style='font-size:10.5pt;line-height:107%;font-family:Wingdings'><span>o<span style='font:7.0pt "Times New Roman"'>&nbsp; </span></span></span><span style='font-size:10.5pt;line-height:107%;font-family:DengXian'>我已认真阅读并知悉以上全部内容，<b>并同意本个人信息保护政策的全部内容</b><span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraph style='margin-top:0cm;margin-right:0cm;margin-bottom: 0cm;margin-left:43.0pt;text-align:justify;text-justify:inter-ideograph; text-indent:-22.0pt;line-height:normal'><span
+lang=EN-US style='font-size:10.5pt;font-family:Wingdings'><span>o<span style='font:7.0pt "Times New Roman"'>&nbsp; </span></span></span><span style='font-size:10.5pt;font-family:DengXian'>我已同意按照本<b>个人信息保护政策</b>处理<b>本人的敏感个人信息</b><span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraph style='margin-top:0cm;margin-right:0cm;margin-bottom: 0cm;margin-left:43.0pt;text-align:justify;text-justify:inter-ideograph; text-indent:-22.0pt;line-height:normal'><span
+lang=EN-US style='font-size:10.5pt;font-family:Wingdings'><span>o<span style='font:7.0pt "Times New Roman"'>&nbsp; </span></span></span><span style='font-size:10.5pt;font-family:DengXian'>我已同意按照本<b>个人信息保护政策<span>共享本人的个人信息</span></b>（包含敏感个人信息）<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraph style='margin-top:0cm;margin-right:0cm;margin-bottom: 0cm;margin-left:43.0pt;text-align:justify;text-justify:inter-ideograph; text-indent:-22.0pt;line-height:normal'><span
+lang=EN-US style='font-size:10.5pt;font-family:Wingdings'><span>o<span style='font:7.0pt "Times New Roman"'>&nbsp; </span></span></span><span style='font-size:10.5pt;font-family:DengXian'>我已同意按照本<b>个人信息保护政策</b>公开本人的个人信息<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm; margin-left:21.0pt;text-align:justify;text-justify:inter-ideograph;line-height: normal'><span lang=EN-US style='font-size:10.5pt; font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm; margin-left:43.0pt;text-align:justify;text-justify:inter-ideograph;line-height: normal'><span style='position:relative;z-index:251659264'><span style='left:0px;position:absolute;left:12px;top:-1162px;width:14px;height:14px'><img
+width=14 height=14 src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIAAD/4QCARXhpZgAATU0AKgAAAAgABQESAAMAAAABAAEAAAEaAAUAAAABAAAASgEbAAUAAAABAAAAUgEoAAMAAAABAAIAAIdpAAQAAAABAAAAWgAAAAAAAABIAAAAAQAAAEgAAAABAAKgAgAEAAAAAQAAAA+gAwAEAAAAAQAAABYAAAAA/+0AOFBob3Rvc2hvcCAzLjAAOEJJTQQEAAAAAAAAOEJJTQQlAAAAAAAQ1B2M2Y8AsgTpgAmY7PhCfv/AABEIABYADwMBIgACEQEDEQH/xAAfAAABBQEBAQEBAQAAAAAAAAAAAQIDBAUGBwgJCgv/xAC1EAACAQMDAgQDBQUEBAAAAX0BAgMABBEFEiExQQYTUWEHInEUMoGRoQgjQrHBFVLR8CQzYnKCCQoWFxgZGiUmJygpKjQ1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4eLj5OXm5+jp6vHy8/T19vf4+fr/xAAfAQADAQEBAQEBAQEBAAAAAAAAAQIDBAUGBwgJCgv/xAC1EQACAQIEBAMEBwUEBAABAncAAQIDEQQFITEGEkFRB2FxEyIygQgUQpGhscEJIzNS8BVictEKFiQ04SXxFxgZGiYnKCkqNTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqCg4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2dri4+Tl5ufo6ery8/T19vf4+fr/2wBDAAICAgICAgMCAgMFAwMDBQYFBQUFBggGBgYGBggKCAgICAgICgoKCgoKCgoMDAwMDAwODg4ODg8PDw8PDw8PDw//2wBDAQICAgQEBAcEBAcQCwkLEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBD/3QAEAAH/2gAMAwEAAhEDEQA/AP00/Z+/Z++AutfAX4baxrHw28NX9/feGtHnuLifR7KWaaaWyiZ5JHaIszsxJZiSSTknNevf8M2fs6f9Er8Kf+COx/8AjNeQ/s/ftA/AXRfgL8NtH1j4k+GrC/sfDWjwXFvPrFlFNDNFZRK8ciNKGV1YEMpAIIwRmvXv+Gk/2dP+iqeFP/B5Y/8Ax6vQr+355Wvv5nLT9nyrY//Q/fyiiigD/9k=" v:shapes="Rectangle_x0020_1"></span></span><b><u><span style='font-size:10.5pt;font-family:DengXian'>我已阅读并同意以上全部个人信息保护政策和个人信息处理活动 </span></u></b><u><span style='font-size:10.5pt;font-family:DengXian'>（<b>本人点击上述勾选框，即表示本人已充分理解并同意上述全部内容）</b></span></u><span
+lang=EN-US style='font-size:10.5pt;font-family:DengXian'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm; margin-left:21.0pt;text-align:justify;text-justify:inter-ideograph;line-height: normal'><span lang=EN-US style='font-size:10.5pt; font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm; margin-left:21.0pt;text-align:justify;text-justify:inter-ideograph;line-height: normal'><span lang=EN-US style='font-size:10.5pt; font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><b><span style='font-size:10.5pt; line-height:107%;font-family:DengXian; color:#ED7D31'>个人信息第三方共享清单<span
+lang=EN-US><o:p></o:p></span></span></b></p>
+
+<p class=MsoNormal style='layout-grid-mode:char'><span style='font-size:10.5pt;line-height:107%;font-family:DengXian; color:black'>第三方公司名称：西安杨森制药有限公司<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='layout-grid-mode:char'><span style='font-size:10.5pt;line-height:107%;font-family:DengXian; color:black'>合作类型：授权推广<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='layout-grid-mode:char'><span style='font-size:10.5pt;line-height:107%;font-family:DengXian; color:black'>提供给第三方的个人信息：【仅涵盖葛兰素史克推广<span lang=EN-US>HIV</span>治疗领域万凯锐（通用名称：卡替拉韦注射液）与强生旗下杨森制药有限公司产品瑞卡必（通用名称：利匹韦林注射液）产品人员】<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpFirst style='text-align:justify;text-justify:inter-ideograph; text-indent:-18.0pt;line-height:28.0pt'><span lang=EN-US style='font-size:10.5pt;font-family:Symbol; color:black'><span>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><span style='font-size:10.5pt;font-family:DengXian; color:#544F40'>提供给第三方的个人信息：</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>您的姓名、性别、<u>照片</u>；<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='text-align:justify;text-justify: inter-ideograph;text-indent:-18.0pt;line-height:28.0pt'><span
+lang=EN-US style='font-size:10.5pt;font-family:Symbol;color:black'><span>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><u><span style='font-size:10.5pt;font-family: DengXian; color:black'>身份证件种类及号码，</span></u><span style='font-size:10.5pt;font-family:DengXian; color:black'>所学专业、学历；<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='text-align:justify;text-justify: inter-ideograph;text-indent:-18.0pt;line-height:28.0pt'><span
+lang=EN-US style='font-size:10.5pt;font-family:Symbol;color:black'><span>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><span style='font-size:10.5pt;font-family:DengXian; color:black'>劳动合同或者授权书的起止日期；<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='text-align:justify;text-justify: inter-ideograph;text-indent:-18.0pt;line-height:28.0pt'><span
+lang=EN-US style='font-size:10.5pt;font-family:Symbol;color:black'><span>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><span style='font-size:10.5pt;font-family:DengXian; color:black'>您负责推广的药品类别</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>、治疗领域和负责推广的区域；</span><span
+lang=EN-US style='font-size:10.5pt;font-family:DengXian; color:black'><o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpLast style='text-align:justify;text-justify:inter-ideograph; text-indent:-18.0pt;line-height:28.0pt'><span lang=EN-US style='font-size:10.5pt;font-family:Symbol; color:black'><span>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><span style='font-size:10.5pt;font-family:DengXian; color:black'>根</span><span style='font-size:10.5pt;font-family:DengXian; color:black'>据不时更新的相关法律法规，其他为完成法定备案与公示工作所必须的个人信息。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='layout-grid-mode:char'><span style='font-size:10.5pt;line-height:107%;font-family:DengXian; color:black'>使用目的：医药代表备案<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='layout-grid-mode:char'><span style='font-size:10.5pt;line-height:107%;font-family:DengXian; color:black'>使用场景： <span lang=EN-US>GSK</span>在备案平台上提交备案信息；提交备案信息后，取得具有唯一备案号的医药代表备案信息表；医疗卫生机构可通过医药代表备案平台核对医药代表身份信息，并留存资料备查。<span
+lang=EN-US>&nbsp;<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='layout-grid-mode:char'><span style='font-size:10.5pt;line-height:107%;font-family:DengXian; color:black'>共享方式：<span lang=EN-US>GSK</span>直接提供<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal><span style='font-size:10.5pt;line-height:107%;font-family: DengXian; color:black'>第三方隐私政策： <span lang=EN-US>https://www.xian-janssen.com.cn/privacy-policy<span
+class=MsoHyperlink><span style='color:black'><o:p></o:p></span></span></span></span></p>
+
+<p class=MsoNormal><span style='font-size:10.5pt;line-height:107%;font-family: DengXian; color:black'>联系方式：<span lang=EN-US>cccdesk@its.jnj.com
+<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm; margin-left:21.0pt;text-align:justify;text-justify:inter-ideograph;line-height: normal'><span lang=EN-US style='font-size:10.5pt; font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm; margin-left:21.0pt;text-align:justify;text-justify:inter-ideograph;line-height: normal'><span lang=EN-US style='font-size:10.5pt; font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm; margin-left:21.0pt;text-align:justify;text-justify:inter-ideograph;line-height: normal'><span lang=EN-US style='font-size:10.5pt; font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm; margin-left:21.0pt;text-align:justify;text-justify:inter-ideograph;line-height: normal'><span lang=EN-US style='font-size:10.5pt; font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm; margin-left:21.0pt;text-align:justify;text-justify:inter-ideograph;line-height: normal'><span lang=EN-US style='font-size:10.5pt; font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm; margin-left:21.0pt;text-align:justify;text-justify:inter-ideograph;line-height: normal'><span lang=EN-US style='font-size:10.5pt; font-family:DengXian'><o:p>&nbsp;</o:p></span></p>
+
+</div>
+
+</body>
+</html>

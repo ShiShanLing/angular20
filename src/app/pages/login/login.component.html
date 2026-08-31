@@ -1,70 +1,44 @@
 <div class="login-container">
   <div class="login-card">
-    <h2 class="login-title">Angular22 工具箱</h2>
+    <div class="login-brand">
+      <img src="logo.svg" alt="工坊" class="login-logo" width="56" height="56" />
+      <h2 class="login-title">工坊</h2>
+      <p class="login-sub">使用 Agent 统一账号登录</p>
+    </div>
 
-    <nz-tabs [nzSelectedIndex]="tabIndex()" (nzSelectedIndexChange)="tabIndex.set($event)">
-      <nz-tab nzTitle="登录">
-        <form nz-form [formGroup]="loginForm" (ngSubmit)="onLogin()" nzLayout="vertical">
-          <nz-form-item>
-            <nz-form-control nzErrorTip="请输入用户名">
-              <nz-input-wrapper>
-                <span nzInputPrefix><nz-icon nzType="user" /></span>
-                <input nz-input formControlName="username" placeholder="用户名" />
-              </nz-input-wrapper>
-            </nz-form-control>
-          </nz-form-item>
-          <nz-form-item>
-            <nz-form-control nzErrorTip="请输入密码">
-              <nz-input-wrapper>
-                <span nzInputPrefix><nz-icon nzType="lock" /></span>
-                <input nz-input formControlName="password" type="password" placeholder="密码" />
-              </nz-input-wrapper>
-            </nz-form-control>
-          </nz-form-item>
-          <button nz-button nzType="primary" nzBlock [nzLoading]="loading()" [disabled]="loginForm.invalid">
-            登 录
-          </button>
-        </form>
-      </nz-tab>
-
-      <nz-tab nzTitle="注册">
-        <form nz-form [formGroup]="registerForm" (ngSubmit)="onRegister()" nzLayout="vertical">
-          <nz-form-item>
-            <nz-form-control nzErrorTip="用户名至少3个字符">
-              <nz-input-wrapper>
-                <span nzInputPrefix><nz-icon nzType="user" /></span>
-                <input nz-input formControlName="username" placeholder="用户名" />
-              </nz-input-wrapper>
-            </nz-form-control>
-          </nz-form-item>
-          <nz-form-item>
-            <nz-form-control nzErrorTip="密码至少6个字符">
-              <nz-input-wrapper>
-                <span nzInputPrefix><nz-icon nzType="lock" /></span>
-                <input nz-input formControlName="password" type="password" placeholder="密码" />
-              </nz-input-wrapper>
-            </nz-form-control>
-          </nz-form-item>
-          <nz-form-item>
-            <nz-form-control nzErrorTip="请输入邀请码">
-              <nz-input-wrapper>
-                <span nzInputPrefix><nz-icon nzType="key" /></span>
-                <input nz-input formControlName="inviteCode" placeholder="邀请码" />
-              </nz-input-wrapper>
-            </nz-form-control>
-          </nz-form-item>
-          <nz-form-item>
-            <nz-form-control>
-              <nz-input-wrapper>
-                <input nz-input formControlName="nickname" placeholder="昵称（可选）" />
-              </nz-input-wrapper>
-            </nz-form-control>
-          </nz-form-item>
-          <button nz-button nzType="primary" nzBlock [nzLoading]="loading()" [disabled]="registerForm.invalid">
-            注 册
-          </button>
-        </form>
-      </nz-tab>
-    </nz-tabs>
+    <button
+      nz-button
+      nzType="primary"
+      nzBlock
+      nzSize="large"
+      class="agent-login-btn"
+      [nzLoading]="loading()"
+      (click)="onAgentLogin()"
+    >
+      使用统一账号登录
+    </button>
+    @if (showLocalDevLogin()) {
+      <button
+        type="button"
+        nz-button
+        nzBlock
+        class="local-dev-btn"
+        [disabled]="loading()"
+        (click)="onLocalDevLogin()"
+      >
+        本地开发登录
+      </button>
+    }
+    <button
+      type="button"
+      nz-button
+      nzBlock
+      class="guest-btn"
+      [disabled]="loading()"
+      (click)="onGuestEnter()"
+    >
+      游客访问
+    </button>
+    <p class="guest-hint">没有账号请先到 Agent 注册。游客可使用工具与游戏，记录不会保存。</p>
   </div>
 </div>

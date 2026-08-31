@@ -3,20 +3,27 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, tap, map, catchError, of } from 'rxjs';
 import { PermissionService } from './permission.service';
 
-const TOKEN_KEY = 'app.auth.token.v1';
 const USER_KEY = 'app.auth.user.v1';
 const PERM_KEY = 'app.auth.permissions.v1';
+const GUEST_KEY = 'app.auth.guest.v1';
+const LOCAL_DEV_KEY = 'app.auth.local_dev.v1';
 
-export interface LoginRequest {
-  username: string;
-  password: string;
-}
+/** 普通用户 / 游客可用权限（不含市场情绪等 admin 专属） */
+export const BASIC_PERMISSIONS: string[] = [
+  'tools.mortgage', 'tools.salary', 'tools.accounting',
+  'tools.subscription', 'tools.saving', 'tools.fire', 'tools.anhui-pension',
+  'tools.bmi', 'tools.water', 'tools.weight', 'tools.sleep',
+  'tools.time', 'tools.weather', 'tools.calendar', 'tools.text',
+  'tools.qrcode', 'tools.notes', 'tools.dev',
+  'snake.play', 'tetris.play',
+  'chart.showcase',
+];
 
-export interface LoginResponse {
-  access_token: string;
-  user: UserInfo;
-  permissions?: string[];
-}
+const LOCAL_DEV_PERMISSIONS: string[] = [
+  ...BASIC_PERMISSIONS,
+  'practice.view',
+  'market.view',
+];
 
 export interface UserInfo {
   id: number;
@@ -24,115 +31,179 @@ export interface UserInfo {
   nickname?: string;
 }
 
+type ProfileResponse = UserInfo & {
+  permissions?: string[];
+};
+
 /**
  * 认证服务：
- * - 管理登录态（token + 用户信息），持久化到 localStorage
- * - 提供 login / logout / isLoggedIn 接口
+ * - 登录态来自 Agent Cookie，由 Nest 的 /api/auth/profile 识别
+ * - 支持游客模式：可进应用，不携带登录 Cookie，写入由拦截器拦截不落库
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly token = signal<string | null>(this.loadToken());
   private readonly user = signal<UserInfo | null>(this.loadUser());
   private readonly permissions = signal<string[]>(this.loadPermissions());
+  private readonly guest = signal<boolean>(this.loadGuest());
+  private readonly localDev = signal<boolean>(this.loadLocalDev());
 
-  readonly isLoggedIn = computed(() => {
-    const t = this.token();
-    if (!t) return false;
-    // 检查 JWT 是否过期
-    return !this.isTokenExpired(t);
-  });
+  readonly isGuest = computed(() => this.guest());
+  readonly isLocalDevMode = computed(() => this.localDev());
+  readonly isLoggedIn = computed(() => !this.guest() && this.user() !== null && this.user()!.id > 0);
+  readonly canAccessApp = computed(() => this.isLoggedIn() || this.guest());
   readonly currentUser = computed(() => this.user());
   readonly userPermissions = computed(() => this.permissions());
+  readonly isLocalDev = computed(() => this.isLocalDevHost());
 
   private readonly permissionService = inject(PermissionService);
   private readonly http = inject(HttpClient);
 
-  // MARK: 登录
-  // 调用登录接口并持久化 token、用户与权限
-  login(req: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>('/api/auth/login', req).pipe(
-      tap((res) => this.persistSession(res))
-    );
-  }
-
-  // MARK: 注册
-  // 调用注册接口，需邀请码
-  register(username: string, password: string, inviteCode: string, nickname?: string): Observable<any> {
-    return this.http.post('/api/auth/register', { username, password, inviteCode, nickname });
-  }
-
-  // MARK: 退出登录
-  // 清除本地登录态（不请求后端）
-  logout(): void {
-    this.token.set(null);
-    this.user.set(null);
-    this.permissions.set([]);
-    if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(USER_KEY);
-      localStorage.removeItem(PERM_KEY);
+  constructor() {
+    if (this.localDev() && this.isLocalDevHost()) {
+      this.permissionService.setPermissions(this.permissions());
+    } else if (this.guest()) {
+      this.permissionService.setPermissions(this.permissions());
+    } else if (this.user() && this.permissions().length) {
+      this.permissionService.setPermissions(this.permissions());
     }
   }
 
-  // MARK: 获取令牌
-  // 读取当前 JWT，供拦截器附加 Authorization
-  getToken(): string | null {
-    return this.token();
+  goToAgentLogin(returnUrl = '/'): void {
+    const hashPath = returnUrl.startsWith('#')
+      ? returnUrl
+      : `#${returnUrl.startsWith('/') ? returnUrl : `/${returnUrl}`}`;
+    const isLocalDev =
+      typeof window !== 'undefined' &&
+      ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    const next = isLocalDev ? `/${hashPath}` : `/angular20/${hashPath}`;
+    window.location.assign(`/agent/?next=${encodeURIComponent(next)}`);
   }
 
-  // MARK: 恢复会话
-  // 从 localStorage 恢复会话到 signal 与权限服务
+  enterAsGuest(): void {
+    this.clearStorageSession();
+    this.guest.set(true);
+    this.localDev.set(false);
+    const guestUser: UserInfo = { id: 0, username: 'guest', nickname: '游客' };
+    this.user.set(guestUser);
+    this.permissions.set([...BASIC_PERMISSIONS]);
+    this.permissionService.setPermissions([...BASIC_PERMISSIONS]);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(GUEST_KEY, '1');
+      localStorage.setItem(USER_KEY, JSON.stringify(guestUser));
+      localStorage.setItem(PERM_KEY, JSON.stringify(BASIC_PERMISSIONS));
+    }
+  }
+
+  enterAsLocalDev(): boolean {
+    if (!this.isLocalDevHost()) {
+      return false;
+    }
+    this.clearStorageSession();
+    this.guest.set(false);
+    this.localDev.set(true);
+    const devUser: UserInfo = { id: 1, username: 'local-dev', nickname: '本地开发' };
+    this.user.set(devUser);
+    this.permissions.set([...LOCAL_DEV_PERMISSIONS]);
+    this.permissionService.setPermissions([...LOCAL_DEV_PERMISSIONS]);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(USER_KEY, JSON.stringify(devUser));
+      localStorage.setItem(PERM_KEY, JSON.stringify(LOCAL_DEV_PERMISSIONS));
+      localStorage.setItem(LOCAL_DEV_KEY, '1');
+    }
+    return true;
+  }
+
+  async logout(): Promise<void> {
+    const wasGuest = this.guest();
+    const wasLocalDev = this.localDev();
+    this.user.set(null);
+    this.permissions.set([]);
+    this.guest.set(false);
+    this.localDev.set(false);
+    this.permissionService.clearPermissions();
+    this.clearStorageSession();
+    if (!wasGuest && !wasLocalDev) {
+      try {
+        await fetch('/agent/api/auth/logout', {
+          method: 'POST',
+          credentials: 'include',
+        });
+      } catch {
+        // 本地会话已清，忽略网络失败
+      }
+    }
+  }
+
   restoreSession(): void {
-    this.token.set(this.loadToken());
+    this.guest.set(this.loadGuest());
+    this.localDev.set(this.loadLocalDev() && this.isLocalDevHost());
     this.user.set(this.loadUser());
     const perms = this.loadPermissions();
     this.permissions.set(perms);
-    this.permissionService.setPermissions(perms);
+    if (perms.length) {
+      this.permissionService.setPermissions(perms);
+    }
   }
 
-  // MARK: 校验会话
-  // 启动时请求 /api/auth/profile 校验 token，401 或过期则退出登录
   validateSession(): Observable<boolean> {
-    const t = this.getToken();
-    if (!t || this.isTokenExpired(t)) {
-      this.logout();
-      return new Observable<boolean>((sub) => { sub.next(false); sub.complete(); });
+    if (this.loadLocalDev() && this.isLocalDevHost()) {
+      return of(this.enterAsLocalDev());
     }
-    return this.http.get('/api/auth/profile').pipe(
+
+    if (this.loadGuest() || this.guest()) {
+      this.enterAsGuest();
+      return of(true);
+    }
+
+    return this.http.get<ProfileResponse>('/api/auth/profile').pipe(
+      tap((profile) => this.persistProfile(profile)),
       map(() => true),
       catchError(() => {
-        this.logout();
-        return new Observable<boolean>((sub) => { sub.next(false); sub.complete(); });
-      })
+        this.clearLoggedInState();
+        return of(false);
+      }),
     );
   }
 
-  // ─── private ────────────────────────────────────────────────────────────────
-
-  // MARK: 持久会话
-  // 把登录响应写入 signal 与 localStorage
-  private persistSession(res: LoginResponse): void {
-    const perms = res.permissions || [];
-    this.token.set(res.access_token);
-    this.user.set(res.user);
+  private persistProfile(profile: ProfileResponse): void {
+    this.guest.set(false);
+    this.localDev.set(false);
+    const perms = profile.permissions || [];
+    const user: UserInfo = {
+      id: profile.id,
+      username: profile.username,
+      nickname: profile.nickname,
+    };
+    this.user.set(user);
     this.permissions.set(perms);
     this.permissionService.setPermissions(perms);
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(TOKEN_KEY, res.access_token);
-      localStorage.setItem(USER_KEY, JSON.stringify(res.user));
+      localStorage.removeItem(GUEST_KEY);
+      localStorage.removeItem(LOCAL_DEV_KEY);
+      localStorage.removeItem('app.auth.token.v1');
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
       localStorage.setItem(PERM_KEY, JSON.stringify(perms));
     }
   }
 
-  // MARK: 加载令牌
-  // 从 localStorage 读取 token
-  private loadToken(): string | null {
-    if (typeof localStorage === 'undefined') return null;
-    return localStorage.getItem(TOKEN_KEY);
+  private clearLoggedInState(): void {
+    this.user.set(null);
+    this.permissions.set([]);
+    this.guest.set(false);
+    this.localDev.set(false);
+    this.permissionService.clearPermissions();
+    this.clearStorageSession();
   }
 
-  // MARK: 加载用户
-  // 从 localStorage 读取用户信息
+  private clearStorageSession(): void {
+    if (typeof localStorage === 'undefined') return;
+    localStorage.removeItem('app.auth.token.v1');
+    localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(PERM_KEY);
+    localStorage.removeItem(GUEST_KEY);
+    localStorage.removeItem(LOCAL_DEV_KEY);
+  }
+
   private loadUser(): UserInfo | null {
     if (typeof localStorage === 'undefined') return null;
     try {
@@ -143,8 +214,6 @@ export class AuthService {
     }
   }
 
-  // MARK: 加载权限
-  // 从 localStorage 读取权限列表
   private loadPermissions(): string[] {
     if (typeof localStorage === 'undefined') return [];
     try {
@@ -155,16 +224,20 @@ export class AuthService {
     }
   }
 
-  // MARK: 令牌过期
-  // 解析 JWT exp，提前 60 秒视为过期；解析失败也视为过期
-  private isTokenExpired(token: string): boolean {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      if (!payload.exp) return false;
-      // exp 是秒级时间戳，留 60 秒缓冲
-      return Date.now() >= (payload.exp - 60) * 1000;
-    } catch {
-      return true; // 解析失败视为过期
+  private loadGuest(): boolean {
+    if (typeof localStorage === 'undefined') return false;
+    return localStorage.getItem(GUEST_KEY) === '1';
+  }
+
+  private loadLocalDev(): boolean {
+    if (typeof localStorage === 'undefined') return false;
+    return localStorage.getItem(LOCAL_DEV_KEY) === '1';
+  }
+
+  private isLocalDevHost(): boolean {
+    if (typeof window === 'undefined') {
+      return false;
     }
+    return ['localhost', '127.0.0.1'].includes(window.location.hostname);
   }
 }

@@ -77,7 +77,6 @@ export class ToolsWaterComponent implements OnInit {
     if (val.goal <= 0 || times.length === 0 || val.per <= 0) {
       status = 'warning';
       hint = '请设置目标、单次量和提醒时间';
-      
     } else {
       if (Math.abs(diff) < 1) {
         status = 'success';
@@ -121,6 +120,7 @@ export class ToolsWaterComponent implements OnInit {
   private parseTimeLines(text: string): { hh: number; mm: number; raw: string }[] {
     const lines = (text || '').split(/\n/).map(s => s.trim()).filter(Boolean);
     const times: any[] = [];
+    
     for (const line of lines) {
       const parts = line.split(':');
       if (parts.length !== 2) continue;
@@ -137,7 +137,7 @@ export class ToolsWaterComponent implements OnInit {
     return uniq.sort((a, b) => (a.hh * 60 + a.mm) - (b.hh * 60 + b.mm));
   }
 
-  // MARK: 构建
+  // MARK: 构建日历文件
   private buildIcs(): { ok: boolean; error: string; ics: string } {
     const val = this.form.value;
     const times = this.parseTimeLines(val.timeList);

@@ -58,16 +58,78 @@ function asRows(diff) {
   return Array.isArray(diff) ? diff : Object.values(diff);
 }
 
-const INDEX_SPECS = [
+export const INDEX_SPECS = [
   { name: '上证指数', secid: '1.000001' },
   { name: '深证成指', secid: '0.399001' },
   { name: '创业板指', secid: '0.399006' },
+  { name: '科创50', secid: '1.000688' },
   { name: '沪深300', secid: '1.000300' },
 ];
 
-/** 主要指数：现价 / 涨跌幅 / 成交额(亿) / 涨跌家数 */
-export function getIndices() {
-  const secids = INDEX_SPECS.map(s => s.secid).join(',');
+/** 股吧/配置代码 → 东财 secid */
+export function toSecid(code) {
+  const c = String(code || '').trim();
+  if (!c) return null;
+  if (/^\d+\.[A-Za-z0-9]+$/.test(c)) return c;
+  if (/^BK/i.test(c)) return `90.${c.toUpperCase()}`;
+
+  let market = '';
+  let numCode = c;
+  if (/^sh/i.test(c)) {
+    market = 'sh';
+    numCode = c.slice(2);
+  } else if (/^sz/i.test(c)) {
+    market = 'sz';
+    numCode = c.slice(2);
+  } else if (/^of/i.test(c)) {
+    market = 'of';
+    numCode = c.slice(2);
+  }
+
+  if (!/^\d{6}$/.test(numCode)) return null;
+  if (market === 'sh') return `1.${numCode}`;
+  if (market === 'sz') return `0.${numCode}`;
+  if (numCode.startsWith('6') || numCode.startsWith('5') || numCode.startsWith('9')) return `1.${numCode}`;
+  return `0.${numCode}`;
+}
+
+function classifyTarget(code) {
+  const c = String(code || '');
+  if (/^BK/i.test(c) || c.startsWith('90.')) return 'board';
+  if (/^of/i.test(c) || /^\d\.(?:51|56|58|15|16|18)\d{4}$/.test(c)) return 'etf';
+  return 'index';
+}
+
+function quoteDirection(pct) {
+  if (pct == null) return '未知';
+  if (pct > 0.05) return '涨';
+  if (pct < -0.05) return '跌';
+  return '震荡';
+}
+
+function rowToQuote(spec, row) {
+  const pct = num(row.f3);
+  return {
+    name: row.f14 || spec.name,
+    code: spec.code || spec.secid,
+    secid: spec.secid,
+    type: spec.type || classifyTarget(spec.code || spec.secid),
+    price: num(row.f2),
+    change: num(row.f4),
+    pct,
+    amountYi: yi(row.f6),
+    upCount: num(row.f104),
+    downCount: num(row.f105),
+    flatCount: num(row.f106),
+    direction: quoteDirection(pct),
+  };
+}
+
+/** 按 secid 批量取行情 */
+export function getQuotesBySecids(specs) {
+  const list = (specs || []).filter(s => s?.secid);
+  if (!list.length) return [];
+  const secids = list.map(s => s.secid).join(',');
   const url = `https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&invt=2&secids=${secids}&fields=f2,f3,f4,f6,f12,f13,f14,f104,f105,f106,f152&ut=${UT}`;
   const rows = asRows(parseJson(httpGetText(url))?.data?.diff);
   const bySecid = new Map();
@@ -77,22 +139,15 @@ export function getIndices() {
     if (row.f14) byName.set(row.f14, row);
   }
 
-  return INDEX_SPECS.map((spec, i) => {
+  return list.map((spec, i) => {
     const row = bySecid.get(spec.secid) || byName.get(spec.name) || rows[i] || {};
-    const pct = num(row.f3);
-    return {
-      name: row.f14 || spec.name,
-      code: spec.secid,
-      price: num(row.f2),
-      change: num(row.f4),
-      pct,
-      amountYi: yi(row.f6),
-      upCount: num(row.f104),
-      downCount: num(row.f105),
-      flatCount: num(row.f106),
-      direction: pct == null ? '未知' : pct > 0.05 ? '涨' : pct < -0.05 ? '跌' : '震荡',
-    };
+    return rowToQuote(spec, row);
   });
+}
+
+/** 主要指数：现价 / 涨跌幅 / 成交额(亿) / 涨跌家数 */
+export function getIndices() {
+  return getQuotesBySecids(INDEX_SPECS.map(spec => ({ ...spec, code: spec.secid, type: 'index' })));
 }
 
 function mapBoard(row) {
@@ -271,6 +326,39 @@ export function getConceptFundFlow(topN = 10) {
   return { type: 'concept', ...fetchFundBoardList('m:90+t:3', topN) };
 }
 
+/** 综合指数 + 涨跌家数推断当日行情方向 */
+export function inferMarketDirection(indices, breadth) {
+  const main = (indices || []).filter(i =>
+    ['1.000001', '0.399001', '0.399006'].includes(i.code)
+  );
+  const pcts = main.map(i => i.pct).filter(p => p != null);
+  if (!pcts.length) return '未知';
+
+  const avgPct = pcts.reduce((a, b) => a + b, 0) / pcts.length;
+  const up = breadth?.upCount;
+  const down = breadth?.downCount;
+  const total = (up || 0) + (down || 0);
+  const upRatio = total > 0 ? up / total : null;
+
+  if (avgPct >= 0.8 || (avgPct >= 0.4 && upRatio != null && upRatio >= 0.6)) return '涨';
+  if (avgPct <= -0.8 || (avgPct <= -0.4 && upRatio != null && upRatio <= 0.4)) return '跌';
+  if (Math.abs(avgPct) < 0.25 && (upRatio == null || (upRatio >= 0.42 && upRatio <= 0.58))) return '震荡';
+  if (avgPct >= 0.25) return '涨';
+  if (avgPct <= -0.25) return '跌';
+  return '震荡';
+}
+
+/** 指数 + 市场宽度快照（供日报 / 涨跌原因分析） */
+export function getMarketSnapshot() {
+  const indices = getIndices();
+  const breadth = getMarketBreadth();
+  return {
+    indices,
+    breadth,
+    direction: inferMarketDirection(indices, breadth),
+  };
+}
+
 /** 市场宽度：涨跌家数 + 涨停/跌停概览 */
 export function getMarketBreadth() {
   const indices = getIndices();
@@ -280,7 +368,7 @@ export function getMarketBreadth() {
   const dateStr = getBjToday();
   const zt = fetchLimitPool('zt', dateStr);
   const dt = fetchLimitPool('dt', dateStr);
-
+  
   const up = (sh?.upCount || 0) + (sz?.upCount || 0);
   const down = (sh?.downCount || 0) + (sz?.downCount || 0);
   const flat = (sh?.flatCount || 0) + (sz?.flatCount || 0);

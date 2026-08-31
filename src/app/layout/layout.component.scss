@@ -47,12 +47,18 @@
     justify-content: center;
   }
 
-  .logo-icon { font-size: 22px; flex-shrink: 0; }
+  .logo-mark {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    border-radius: 6px;
+    display: block;
+  }
   .logo-text {
     color: #fff;
     font-size: 16px;
     font-weight: 600;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.2em;
   }
 }
 
@@ -127,6 +133,17 @@
       max-width: 80px;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .header-guest-badge {
+      margin-left: 2px;
+      padding: 0 6px;
+      border-radius: 999px;
+      font-size: 11px;
+      line-height: 18px;
+      color: #d46b08;
+      background: #fff7e6;
+      border: 1px solid #ffd591;
     }
   }
 

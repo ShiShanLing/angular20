@@ -4,5 +4,13 @@
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
+  },
+  "/agent": {
+    "target": "http://106.13.175.227",
+    "secure": false,
+    "changeOrigin": true,
+    "cookieDomainRewrite": "localhost",
+    "cookiePathRewrite": "/",
+    "logLevel": "debug"
   }
 }

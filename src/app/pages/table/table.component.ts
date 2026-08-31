@@ -76,7 +76,7 @@ export class TableComponent implements OnInit {
     }));
     this.applyFilter();
   }
-
+  
   // MARK: 应用
   // 按搜索词与子段排序更新 `displayData`。
   applyFilter() {
@@ -98,7 +98,7 @@ export class TableComponent implements OnInit {
     }
     this.displayData.set(data);
   }
-
+  
   // MARK: 事件处理
   // 表格列排序变更回调。
   onSort(sortInfo: { key: string; value: string }) {
@@ -106,7 +106,12 @@ export class TableComponent implements OnInit {
     this.sortValue = sortInfo.value;
     this.applyFilter();
   }
+  
+  addUser(){
+    
 
+  }
+  
   // MARK: 删除
   // 删除前弹出确认框，成功后更新列表并提示。
   deleteUser(user: User) {
@@ -122,6 +127,8 @@ export class TableComponent implements OnInit {
       }
     });
   }
+
+  
 
   // MARK: 用户
   // 只读展示用户字段。

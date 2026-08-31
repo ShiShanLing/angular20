@@ -1,5 +1,6 @@
 import { EnvironmentInjector, runInInjectionContext } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalService } from 'ng-zorro-antd/modal';
 
@@ -44,6 +45,7 @@ describe('PracticeComponent', () => {
     TestBed.configureTestingModule({
       providers: [
         PracticeStorageService,
+        { provide: ActivatedRoute, useValue: { snapshot: { data: {} } } },
         { provide: NzMessageService, useValue: msgStub },
         { provide: NzModalService, useValue: modalStub },
       ],

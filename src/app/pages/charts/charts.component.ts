@@ -14,6 +14,7 @@ import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { FormsModule } from '@angular/forms';
+import { ChartStageComponent } from '../../shared/chart-stage/chart-stage.component';
 
 echarts.use([
   LineChart, BarChart, ScatterChart, RadarChart, GaugeChart, HeatmapChart,
@@ -32,7 +33,8 @@ echarts.use([
     NzGridModule,
     NzSwitchModule,
     NzIconModule,
-    FormsModule
+    FormsModule,
+    ChartStageComponent,
   ],
   providers: [provideEchartsCore({ echarts })],
   templateUrl: './charts.component.html',
@@ -54,14 +56,14 @@ export class ChartsComponent implements OnInit {
   days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
   hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
 
-  // MARK: 初始化
+  // MARK: 初始化图表
   // 首次构建全部图表 option。
   ngOnInit() {
     this.buildCharts();
   }
 
 
-  // MARK: 构建
+  // MARK: 构建热力数据
   private buildHeatmapData(): Array<[number, number, number]> {
     // x: hour, y: day 
     
@@ -78,7 +80,7 @@ export class ChartsComponent implements OnInit {
     return data;
   }
   
-  // MARK: 构建
+  // MARK: 构建全部图表
   // 根据 `darkMode` 重建各 chart 的配色与背景。
   buildCharts() {
     const darkMode = this.darkMode();
@@ -173,7 +175,7 @@ export class ChartsComponent implements OnInit {
         boundaryGap: false,
         data: this.months,
         axisLabel: { color: textColor }
-        //拐弯不让执行扣分
+        
       },
 
       yAxis: { type: 'value', axisLabel: { color: textColor } },
@@ -304,7 +306,7 @@ export class ChartsComponent implements OnInit {
   
 
 
-  // MARK: 事件处理
+  // MARK: 主题变更重绘
   onThemeChange() {
     this.buildCharts();
   }

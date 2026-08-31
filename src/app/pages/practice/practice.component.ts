@@ -31,7 +31,12 @@ import {
   type PracticeDayRecord,
   PRACTICE_SKIP_BUILTIN_SEED_KEY,
 } from './practice-storage.service';
-import { angularJobSeedToPracticeItems, iosJobSeedToPracticeItems, iosSeedToPracticeItems } from './ios-seed';
+import {
+  angularJobSeedToPracticeItems,
+  iosJobObjectiveSeedToPracticeItems,
+  iosJobSeedToPracticeItems,
+  iosSeedToPracticeItems,
+} from './ios-seed';
 import { MarkdPipe } from './markd.pipe';
 import { applyPracticeSearchFilter } from './practice-search.util';
 import {
@@ -42,6 +47,7 @@ import {
 
 type FilterValue = PracticeFilterCategory;
 type ChantPhase = 'idle' | 'question' | 'answer';
+type PracticeQuestionMode = 'objective' | 'subjective';
 
 const FONT_SCALE_KEY = 'angular20_practice_font_scale_v1';
 const SPEECH_RATE_KEY = 'angular20_practice_speech_rate_v1';
@@ -98,27 +104,46 @@ export class PracticeComponent implements OnInit, OnDestroy {
   private readonly storage = inject(PracticeStorageService);
   private readonly msg = inject(NzMessageService);
   private readonly modal = inject(NzModalService);
-  private readonly storageScope = this.readPracticeScope();
+  private readonly routeScope = this.readPracticeScope();
   /** 唱题模式中题目与答案之间、答案与下一题之间的短暂停顿。 */
   private chantTimer: ReturnType<typeof setTimeout> | null = null;
   /** 每次播放递增，防止已取消的语音回调继续推进唱题流程。 */
   private speechRunId = 0;
 
   readonly categoryList = PRACTICE_CATEGORY_LIST;
-  readonly isIosLearning = this.storageScope === 'ios-learning';
-  readonly isAngularLearning = this.storageScope === 'angular-learning';
-  readonly pageName = this.isIosLearning ? 'iOS 学习' : this.isAngularLearning ? 'Angular 学习' : '知识刷题';
-  readonly builtinSeedLabel = this.isIosLearning
-    ? 'iOS 学习题库'
-    : this.isAngularLearning
-      ? 'Angular 学习题库'
-      : '内置 iOS 题库';
-  readonly builtinSeedButtonText = this.isIosLearning
-    ? '加载 iOS 学习题库'
-    : this.isAngularLearning
-      ? '加载 Angular 学习题库'
-      : '加载内置 iOS 题库';
-  readonly builtinSeedShortLabel = this.isIosLearning ? 'iOS题库' : this.isAngularLearning ? 'Angular题库' : '内置 iOS';
+  readonly isIosLearning = this.routeScope === 'ios-learning';
+  readonly isAngularLearning = this.routeScope === 'angular-learning';
+  readonly questionMode = signal<PracticeQuestionMode>(this.isIosLearning ? 'objective' : 'subjective');
+  readonly activeStorageScope = computed<PracticeStorageScope>(() =>
+    this.isIosLearning && this.questionMode() === 'objective' ? 'ios-objective-learning' : this.routeScope
+  );
+
+  get pageName(): string {
+    if (this.isIosLearning) return 'iOS 学习';
+    if (this.isAngularLearning) return 'Angular 学习';
+    return '知识刷题';
+  }
+
+  get builtinSeedLabel(): string {
+    if (this.isIosLearning && this.questionMode() === 'objective') return 'iOS 客观题题库';
+    if (this.isIosLearning) return 'iOS 简答题题库';
+    if (this.isAngularLearning) return 'Angular 学习题库';
+    return '内置 iOS 题库';
+  }
+
+  get builtinSeedButtonText(): string {
+    if (this.isIosLearning && this.questionMode() === 'objective') return '加载 iOS 客观题';
+    if (this.isIosLearning) return '加载 iOS 简答题';
+    if (this.isAngularLearning) return '加载 Angular 学习题库';
+    return '加载内置 iOS 题库';
+  }
+
+  get builtinSeedShortLabel(): string {
+    if (this.isIosLearning && this.questionMode() === 'objective') return 'iOS客观题';
+    if (this.isIosLearning) return 'iOS简答题';
+    if (this.isAngularLearning) return 'Angular题库';
+    return '内置 iOS';
+  }
   
   // 页面核心状态：题库、筛选、当前题、答案显隐、搜索与自检结果。
   readonly items = signal<PracticeItem[]>([]);
@@ -129,6 +154,10 @@ export class PracticeComponent implements OnInit, OnDestroy {
   readonly userAnswer = signal('');
   readonly compareResult = signal<ComparePracticeResult | null>(null);
   readonly categoryMenuOpen = signal(false);
+  readonly selectedObjectiveAnswers = signal<string[]>([]);
+  readonly objectiveSubmitted = signal(false);
+  readonly sourceQuestionVisible = signal(false);
+  readonly sourceQuestionItem = signal<PracticeItem | null>(null);
 
   // 视觉与每日练习状态：字号、日期记录、日历月份。
   readonly fontScale = signal(FONT_DEFAULT);
@@ -301,29 +330,90 @@ export class PracticeComponent implements OnInit, OnDestroy {
     return PRACTICE_CATEGORY_LABELS[cat];
   }
 
+  isObjectiveQuestion(item: PracticeItem | null): boolean {
+    return item?.questionType === 'trueFalse' || item?.questionType === 'single' || item?.questionType === 'multiple';
+  }
+
+  objectiveTypeLabel(item: PracticeItem): string {
+    if (item.questionType === 'trueFalse') return '判断题';
+    if (item.questionType === 'multiple') return '多选题';
+    return '单选题';
+  }
+
+  optionSelected(optionId: string): boolean {
+    return this.selectedObjectiveAnswers().includes(optionId);
+  }
+
+  toggleObjectiveOption(item: PracticeItem, optionId: string): void {
+    if (!this.isObjectiveQuestion(item) || this.objectiveSubmitted()) return;
+    if (item.questionType === 'multiple') {
+      const selected = new Set(this.selectedObjectiveAnswers());
+      if (selected.has(optionId)) {
+        selected.delete(optionId);
+      } else {
+        selected.add(optionId);
+      }
+      this.selectedObjectiveAnswers.set([...selected]);
+      return;
+    }
+    this.selectedObjectiveAnswers.set([optionId]);
+  }
+
+  submitObjectiveAnswer(): void {
+    const item = this.currentItem();
+    if (!item || !this.isObjectiveQuestion(item)) return;
+    if (!this.selectedObjectiveAnswers().length) {
+      this.msg.warning('先选一个答案再提交。');
+      return;
+    }
+    this.objectiveSubmitted.set(true);
+    if (this.objectiveAnswerCorrect(item)) {
+      this.msg.success('答对了，可以标记为记住。');
+    } else {
+      this.msg.warning('这题再看一下解析。');
+    }
+  }
+
+  objectiveAnswerCorrect(item: PracticeItem): boolean {
+    const selected = [...this.selectedObjectiveAnswers()].sort();
+    const correct = [...(item.correctAnswers ?? [])].sort();
+    return selected.length === correct.length && selected.every((id, index) => id === correct[index]);
+  }
+
+  isCorrectObjectiveOption(item: PracticeItem, optionId: string): boolean {
+    return !!item.correctAnswers?.includes(optionId);
+  }
+
+  isWrongSelectedObjectiveOption(item: PracticeItem, optionId: string): boolean {
+    return this.objectiveSubmitted() && this.optionSelected(optionId) && !this.isCorrectObjectiveOption(item, optionId);
+  }
+
+  showSourceQuestion(item: PracticeItem): void {
+    const sourceId = item.sourceQuestionId;
+    if (!sourceId) {
+      this.msg.info('这道题没有记录来源简答题。');
+      return;
+    }
+    const sourceItem = iosJobSeedToPracticeItems(Date.now()).find((it) => it.id === sourceId) ?? null;
+    if (!sourceItem) {
+      this.msg.warning('没有找到对应的原简答题。');
+      return;
+    }
+    this.sourceQuestionItem.set(sourceItem);
+    this.sourceQuestionVisible.set(true);
+  }
+
+  closeSourceQuestion(): void {
+    this.sourceQuestionVisible.set(false);
+    this.sourceQuestionItem.set(null);
+  }
+
   // MARK: 初始化
   // 初始化本地题库、内置题库、每日记录与上次保存的分类筛选。
   ngOnInit(): void {
     this.fontScale.set(this.readFontScale());
     this.speechRate.set(this.readSpeechRate());
-    this.reloadFromStorage();
-    const skipBuiltin =
-      typeof localStorage !== 'undefined' &&
-      localStorage.getItem(PRACTICE_SKIP_BUILTIN_SEED_KEY) === '1';
-    if (!this.items().length && !skipBuiltin) {
-      const seeded = this.builtinSeedItems(Date.now());
-      this.storage.save(seeded, this.storageScope);
-      this.reloadFromStorage();
-    } else if (!skipBuiltin) {
-      const seeded = this.builtinSeedItems(Date.now());
-      const { added, updated } = this.storage.mergeItems(seeded, this.storageScope);
-      if (added || updated) {
-        this.reloadFromStorage();
-      }
-    }
-    this.dailyState.set(this.storage.readDailyState(this.storageScope));
-    this.ensureTodayPractice();
-    this.setFilter(this.storage.readSavedFilterCategory(this.storageScope));
+    this.loadActiveScope();
   }
 
   // MARK: 销毁清理
@@ -344,7 +434,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
   // 合并内置 iOS 题库到本地题库，重复题目会跳过。
   mergeBuiltinIosSeed(): void {
     const seeded = this.builtinSeedItems(Date.now());
-    const { added, updated, skipped } = this.storage.mergeItems(seeded, this.storageScope);
+    const { added, updated, skipped } = this.storage.mergeItems(seeded, this.activeStorageScope());
     this.reloadFromStorage();
     this.ensureTodayPractice();
     this.clampIndex();
@@ -361,9 +451,19 @@ export class PracticeComponent implements OnInit, OnDestroy {
   // 切换分类筛选，并重置当前题的答案、自检和播放状态。
   setFilter(value: FilterValue): void {
     this.filterCategory.set(value);
-    this.storage.saveFilterCategory(value, this.storageScope);
+    this.storage.saveFilterCategory(value, this.activeStorageScope());
     this.categoryMenuOpen.set(false);
     this.clampIndex();
+    this.resetQuestionUi();
+  }
+
+  setQuestionMode(mode: PracticeQuestionMode): void {
+    if (!this.isIosLearning || this.questionMode() === mode) return;
+    this.stopSpeech();
+    this.questionMode.set(mode);
+    this.currentIndex.set(0);
+    this.searchQuery.set('');
+    this.loadActiveScope();
     this.resetQuestionUi();
   }
 
@@ -601,7 +701,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
       }
       
       
-      const { added, skipped } = this.storage.importDrafts(drafts, this.storageScope);
+      const { added, skipped } = this.storage.importDrafts(drafts, this.activeStorageScope());
       this.reloadFromStorage();
       this.ensureTodayPractice();
       this.clampIndex();
@@ -628,9 +728,9 @@ export class PracticeComponent implements OnInit, OnDestroy {
       nzOkDanger: true,
       nzCancelText: '取消',
       nzOnOk: () => {
-        this.storage.clearAll(this.storageScope);
+        this.storage.clearAll(this.activeStorageScope());
         this.reloadFromStorage();
-        this.dailyState.set(this.storage.readDailyState(this.storageScope));
+        this.dailyState.set(this.storage.readDailyState(this.activeStorageScope()));
         this.currentIndex.set(0);
         this.resetQuestionUi();
         this.msg.info('已清空题库。');
@@ -767,12 +867,26 @@ export class PracticeComponent implements OnInit, OnDestroy {
   // MARK: 文本
   // 生成适合朗读的题目文本：只读题目本体，跳过分类与标签。
   private questionSpeechText(item: PracticeItem): string {
+    if (this.isObjectiveQuestion(item) && item.options?.length) {
+      const options = item.options.map((opt) => `${opt.id}。${opt.text}`).join('。');
+      return `${this.objectiveTypeLabel(item)}。${item.question}。选项。${options}`;
+    }
     return item.question;
   }
 
   // MARK: 文本
   // 生成适合朗读的答案文本，优先包含口播要点。
   private answerSpeechText(item: PracticeItem): string {
+    if (this.isObjectiveQuestion(item)) {
+      const correctText = (item.correctAnswers ?? [])
+        .map((id) => {
+          const opt = item.options?.find((candidate) => candidate.id === id);
+          return opt ? `${id}。${opt.text}` : id;
+        })
+        .join('。');
+      const explanation = item.explanation || item.answer;
+      return `正确答案。${correctText || '未录入'}。解析。${explanation || '本题暂未录入解析。'}`;
+    }
     const oneLiner = item.oralOneLiner?.trim();
     const answer = item.answer?.trim();
     if (oneLiner && answer) return `口播要点。${oneLiner}。参考答案。${answer}`;
@@ -894,8 +1008,29 @@ export class PracticeComponent implements OnInit, OnDestroy {
   // MARK: 重载
   // 从本地存储重新载入题库。
   private reloadFromStorage(): void {
-    this.items.set(this.storage.load(this.storageScope));
+    this.items.set(this.storage.load(this.activeStorageScope()));
     this.clampIndex();
+  }
+
+  private loadActiveScope(): void {
+    this.reloadFromStorage();
+    const skipBuiltin =
+      typeof localStorage !== 'undefined' &&
+      localStorage.getItem(PRACTICE_SKIP_BUILTIN_SEED_KEY) === '1';
+    if (!this.items().length && !skipBuiltin) {
+      const seeded = this.builtinSeedItems(Date.now());
+      this.storage.save(seeded, this.activeStorageScope());
+      this.reloadFromStorage();
+    } else if (!skipBuiltin) {
+      const seeded = this.builtinSeedItems(Date.now());
+      const { added, updated } = this.storage.mergeItems(seeded, this.activeStorageScope());
+      if (added || updated) {
+        this.reloadFromStorage();
+      }
+    }
+    this.dailyState.set(this.storage.readDailyState(this.activeStorageScope()));
+    this.ensureTodayPractice();
+    this.setFilter(this.storage.readSavedFilterCategory(this.activeStorageScope()));
   }
 
   // MARK: 日期
@@ -903,7 +1038,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
   private ensureTodayPractice(): void {
     const items = this.items();
     if (!items.length) return;
-    const state = this.storage.readDailyState(this.storageScope);
+    const state = this.storage.readDailyState(this.activeStorageScope());
     const date = this.todayKey();
     const existing = state.records[date];
     const validIds = new Set(items.map((item) => item.id));
@@ -923,7 +1058,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
       delete state.records[date].completedAt;
     }
     this.dailyState.set(state);
-    this.storage.saveDailyState(state, this.storageScope);
+    this.storage.saveDailyState(state, this.activeStorageScope());
     this.clampIndex();
   }
 
@@ -944,7 +1079,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
     const state = { records: { ...this.dailyState().records } };
     state.records[this.todayKey()] = updater(record);
     this.dailyState.set(state);
-    this.storage.saveDailyState(state, this.storageScope);
+    this.storage.saveDailyState(state, this.activeStorageScope());
   }
 
   // MARK: 处理
@@ -984,10 +1119,15 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.showAnswer.set(false);
     this.userAnswer.set('');
     this.compareResult.set(null);
+    this.selectedObjectiveAnswers.set([]);
+    this.objectiveSubmitted.set(false);
   }
 
   // MARK: 条目
   private builtinSeedItems(importedAt: number): PracticeItem[] {
+    if (this.isIosLearning && this.questionMode() === 'objective') {
+      return iosJobObjectiveSeedToPracticeItems(importedAt);
+    }
     if (this.isIosLearning) return iosJobSeedToPracticeItems(importedAt);
     if (this.isAngularLearning) return angularJobSeedToPracticeItems(importedAt);
     return iosSeedToPracticeItems(importedAt);

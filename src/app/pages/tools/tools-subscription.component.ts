@@ -96,7 +96,7 @@ export class ToolsSubscriptionComponent implements OnInit {
     const icsContent = 
 `BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//Angular20//Tools//CN
+PRODID:-//Gongfang//Tools//CN
 BEGIN:VEVENT
 UID:${uid}
 DTSTAMP:${stamp}

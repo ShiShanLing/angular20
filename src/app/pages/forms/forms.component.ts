@@ -41,15 +41,15 @@ import { NzTagModule } from 'ng-zorro-antd/tag';
 export class FormsComponent {
   private readonly fb = inject(FormBuilder);
   private readonly msg = inject(NzMessageService);
-
+  
   readonly form: FormGroup;
   readonly submitted = signal(false);
   readonly formValues = signal<any>(null);
-
+  
   readonly skills = signal<string[]>(['Angular', 'React', 'Vue']);
   readonly hobbyOptions = ['阅读', '音乐', '旅行', '编程', '摄影'];
   readonly checkboxOptions = this.hobbyOptions.map(h => ({ label: h, value: h }));
-
+  
   constructor() {
     this.form = this.fb.group({
       username: ['', [Validators.required, Validators.minLength(2)]],
@@ -64,7 +64,7 @@ export class FormsComponent {
       hobbies: [[]]
     });
   }
-
+  //
   /** 模板中 `f.xxx` 访问各 `AbstractControl`。 */
   get f() { return this.form.controls; }
 
@@ -74,7 +74,7 @@ export class FormsComponent {
     return `${value}%`;
   }
 
-  // MARK: 添加
+  // MARK: 添加 
   // 动态追加技能选项到下拉数据源。
   addSkill(skill: string) {
     if (!this.skills().includes(skill)) {

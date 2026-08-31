@@ -14,17 +14,20 @@
  *   node crawler/daily-report.mjs --email-only # 跳过分析，用已有结果发邮件+入库
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, statSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
 import nodemailer from 'nodemailer';
-import { mergeSectors, marketIndexFromSectors, sentimentLevel } from './sector-utils.mjs';
-import { isInAnalysisWindow } from './time-window.mjs';
+import { mergeSectors, marketIndexFromSectors, sentimentLevel, heatSectors, MIN_POSTS_FOR_HEAT } from './sector-utils.mjs';
+import { isInAnalysisWindow, getBjToday } from './time-window.mjs';
+import { analyzePostSentiment } from './guba-analyze.mjs';
+import { aggregateFromKeywordReport, bearFearPct } from './sentiment-calibrate.mjs';
 import {
   getMarketFundFlow,
   getIndustryFundFlow,
   getConceptFundFlow,
+  getMarketSnapshot,
 } from './eastmoney-market.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -135,15 +138,18 @@ function runAnalysis() {
 
     output = execSync(`node ${ANALYSIS_SCRIPT} --pages=5 2>&1`, {
       encoding: 'utf-8',
-      timeout: 2700000, // 45分钟超时（板块增多后 AI 分批更久）
+      timeout: 9000000, // 150分钟：3批 × 13分钟 × 最多3次，外加抓取
       cwd: PROJECT_ROOT,
       maxBuffer: 20 * 1024 * 1024,
     });
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`\n分析完成，耗时 ${elapsed} 秒\n`);
+    if (output) console.log(output.slice(-2000));
     return output;
   } catch (err) {
+    const partial = err.stdout ? String(err.stdout) : '';
+    if (partial) console.log(partial.slice(-3000));
     if (err.killed) {
       output += '\n\n❌ 分析超时（>15分钟）';
     } else {
@@ -163,7 +169,8 @@ const PANIC_WORDS = ['销户', '爆仓', '天台', '家破人亡', '倾家荡产
 const TOPIC_CATEGORY_MAP = {
   '科技': ['科技', 'AI', '人工智能', '芯片', '半导体', '互联网', '机器人', '无人驾驶', '科创板', '低空经济'],
   '金融': ['银行', '证券', '保险', '券商', '非银'],
-  '消费': ['白酒', '酿酒', '消费', '医药'],
+  '消费': ['白酒', '酿酒', '消费'],
+  '医药医疗': ['医药', '医药生物', '医药ETF', '医疗', '医疗器械', '医疗服务', '医疗ETF', '中药', '生物制品', '化学制药'],
   '新能源': ['新能源', '光伏', '锂电', '电力', '煤炭'],
   '军工有色': ['军工', '稀土', '有色', '钢铁'],
   '地产': ['地产', '房地产'],
@@ -217,7 +224,8 @@ function buildTopicPieSvg(slices, size = 200) {
 
   let angle = -Math.PI / 2;
   const paths = [];
-
+  
+  //
   for (let i = 0; i < slices.length; i++) {
     const slice = slices[i];
     const frac = slice.count / sum;
@@ -225,6 +233,7 @@ function buildTopicPieSvg(slices, size = 200) {
     const x1 = cx + r * Math.cos(angle);
     const y1 = cy + r * Math.sin(angle);
     angle += sweep;
+    
     const x2 = cx + r * Math.cos(angle);
     const y2 = cy + r * Math.sin(angle);
     const large = sweep > Math.PI ? 1 : 0;
@@ -246,26 +255,112 @@ function buildTopicPieSvg(slices, size = 200) {
 }
 
 
-// 简单帖子情绪判断（基于关键词）
-const BULL_WORDS = ['牛市', '看涨', '反弹', '加仓', '抄底', '利好', '突破', '拉升', '底部', '起飞', '暴涨', '满仓', '大涨', '上攻', '翻红', '起涨'];
-const BEAR_WORDS = ['下跌', '暴跌', '割肉', '清仓', '套牢', '崩盘', '利空', '大跌', '破位', '跑路', '跳水', '绿盘', '阴跌', '杀跌', '跌停', '做空'];
-function guessPostSentiment(title, content) {
-  const text = (title || '') + (content || '');
-  let bull = 0, bear = 0, panic = 0;
-  for (const w of BULL_WORDS) if (text.includes(w)) bull++;
-  for (const w of BEAR_WORDS) if (text.includes(w)) bear++;
-  for (const w of PANIC_WORDS) if (text.includes(w)) panic++;
-  if (panic >= 2) return { label: '恐慌', color: '#dc2626', bg: '#fef2f2' };
-  if (bear > bull + panic) return { label: '看空', color: '#ea580c', bg: '#fff7ed' };
-  if (panic >= 1) return { label: '恐慌', color: '#dc2626', bg: '#fef2f2' };
-  if (bull > bear) return { label: '看多', color: '#059669', bg: '#ecfdf5' };
-  // 讽刺检测
-  const sarcasm = ['太漂亮了', '厉害了', '太牛了', '颤抖吧', '加速赶底', '老乡别走'];
-  for (const s of sarcasm) if (text.includes(s)) return { label: '讽刺', color: '#7c3aed', bg: '#f5f3ff' };
-  return { label: '中性', color: '#6b7280', bg: '#f9fafb' };
+const SENTIMENT_DISPLAY = {
+  bullish: { label: '看多', color: '#059669', bg: '#ecfdf5' },
+  bearish: { label: '看空', color: '#ea580c', bg: '#fff7ed' },
+  fear: { label: '恐慌', color: '#dc2626', bg: '#fef2f2' },
+  greed: { label: '贪婪', color: '#ca8a04', bg: '#fefce8' },
+  neutral: { label: '中性', color: '#6b7280', bg: '#f9fafb' },
+};
+
+function guessPostSentiment(title, content, marketDirection = '未知') {
+  const s = analyzePostSentiment({ title, content }, { marketDirection });
+  const d = SENTIMENT_DISPLAY[s.label] || SENTIMENT_DISPLAY.neutral;
+  return { label: d.label, color: d.color, bg: d.bg };
 }
 
 // 根据 barCode + postId 构建股吧帖子链接
+function numericIndex(v) {
+  if (v == null) return null;
+  if (typeof v === 'number' && Number.isFinite(v)) return v;
+  if (typeof v === 'object' && v.index != null) {
+    const n = Number(v.index);
+    return Number.isFinite(n) ? n : null;
+  }
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function normalizeSentimentBlock(block) {
+  if (!block) return null;
+  const marketIndex = numericIndex(block.marketIndex);
+  if (marketIndex == null) return null;
+  const dist = block.distribution && typeof block.distribution === 'object' ? block.distribution : {};
+  const totalPosts = Number(block.totalPosts) || 0;
+  return {
+    marketIndex,
+    level: block.level || null,
+    totalPosts,
+    distribution: dist,
+    bearFearPct: block.bearFearPct ?? bearFearPct(dist, totalPosts),
+  };
+}
+
+function resolveSentimentBlocks(aiData, kwData) {
+  const kwFromFile = kwData
+    ? normalizeSentimentBlock({
+        marketIndex: kwData.marketIndex?.index ?? kwData.marketIndex,
+        level: kwData.marketIndex?.level,
+        ...aggregateFromKeywordReport(kwData),
+      })
+    : null;
+
+  const kw = normalizeSentimentBlock(aiData?.keywordSentiment) || kwFromFile;
+
+  // AI 只采独立字段，禁止回退到顶层/关键词计数
+  let ai = null;
+  if (aiData?.sentimentSource !== 'keyword') {
+    ai = normalizeSentimentBlock(aiData?.aiSentiment) || normalizeSentimentBlock(aiData?.aiRaw);
+  }
+
+  return { ai, kw };
+}
+
+function renderSentimentPanel(title, icon, s, indexColor, levelEmojiFn) {
+  if (!s || s.marketIndex == null) return '';
+  const mi = s.marketIndex;
+  const level = s.level || sentimentLevel(mi).level;
+  const d = s.distribution || {};
+  const t = s.totalPosts || 1;
+  const bf = s.bearFearPct ?? bearFearPct(d, t);
+
+  return `
+<div style="flex:1;min-width:280px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;margin-bottom:12px;">
+  <div style="font-size:13px;font-weight:600;color:#475569;margin-bottom:10px;">${icon} ${title}</div>
+  <div style="display:flex;gap:12px;">
+    <div style="flex:0 0 88px;text-align:center;">
+      <div style="font-size:36px;font-weight:bold;color:${indexColor(mi)};">${mi}</div>
+      <div style="font-size:11px;color:#94a3b8;">/ 100</div>
+      <div style="margin-top:4px;font-size:13px;font-weight:600;">${levelEmojiFn(mi)} ${level}</div>
+      <div style="margin-top:4px;font-size:11px;color:#64748b;">看空+恐慌 ${bf}%</div>
+    </div>
+    <div style="flex:1;font-size:12px;line-height:1.9;color:#374151;">
+      <div style="display:flex;justify-content:space-between;"><span style="color:#22c55e;">看多</span><span>${d.bullish || 0} (${((d.bullish || 0) / t * 100).toFixed(1)}%)</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:#eab308;">贪婪</span><span>${d.greed || 0} (${((d.greed || 0) / t * 100).toFixed(1)}%)</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:#6b7280;">中性</span><span>${d.neutral || 0} (${((d.neutral || 0) / t * 100).toFixed(1)}%)</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:#ea580c;">看空</span><span>${d.bearish || 0} (${((d.bearish || 0) / t * 100).toFixed(1)}%)</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:#ef4444;">恐慌</span><span>${d.fear || 0} (${((d.fear || 0) / t * 100).toFixed(1)}%)</span></div>
+      <div style="font-size:10px;color:#94a3b8;margin-top:4px;">${t} 条帖子</div>
+    </div>
+  </div>
+</div>`;
+}
+
+function isFreshResultFile(filePath, data, dateStr) {
+  if (!existsSync(filePath)) return false;
+  if (data?.date === dateStr) return true;
+  if (data?.generatedAt) {
+    try {
+      return getBjToday(new Date(data.generatedAt)) === dateStr;
+    } catch {}
+  }
+  try {
+    return getBjToday(statSync(filePath).mtime) === dateStr;
+  } catch {
+    return false;
+  }
+}
+
 function buildPostUrl(barCode, postId) {
   if (!barCode || !postId) return '';
   // barCode 形如 "zssh000001"，URL 需要去掉 "zs" 前缀
@@ -350,6 +445,19 @@ function computeEnrichedData(dateStr) {
     enriched.fundFlow = { market: { available: false, reason: err.message }, industry: null, concept: null };
   }
 
+  // 6. 行情快照（指数 + 涨跌家数，与 moveReason 同源接口）
+  try {
+    const snapshot = getMarketSnapshot();
+    enriched.marketSnapshot = snapshot;
+    writeFileSync(join(DATA_DIR, 'market_snapshot.json'), JSON.stringify({
+      date: dateStr,
+      generatedAt: new Date().toISOString(),
+      ...snapshot,
+    }, null, 2), 'utf-8');
+  } catch (err) {
+    enriched.marketSnapshot = { indices: [], breadth: null, direction: '未知', error: err.message };
+  }
+
   return enriched;
 }
 
@@ -403,15 +511,11 @@ function buildHtmlEmail(analysisOutput, tradingInfo) {
   const aiJsonFile = join(DATA_DIR, 'qoder_ai_result.json');
   if (existsSync(aiJsonFile)) {
     try {
-      aiData = JSON.parse(readFileSync(aiJsonFile, 'utf-8'));
-      if (aiData?.sectors) {
-        const sectors = mergeSectors(aiData.sectors);
-        const marketIndex = marketIndexFromSectors(
-          sectors,
-          aiData.distribution,
-          aiData.totalPosts
-        );
-        aiData = { ...aiData, sectors, marketIndex };
+      const parsed = JSON.parse(readFileSync(aiJsonFile, 'utf-8'));
+      if (isFreshResultFile(aiJsonFile, parsed, dateStr)) {
+        aiData = parsed;
+      } else {
+        console.warn(`⚠️ 忽略过期 AI 结果: ${aiJsonFile}`);
       }
     } catch {}
   }
@@ -429,8 +533,11 @@ function buildHtmlEmail(analysisOutput, tradingInfo) {
   const history = saveToHistory(dateStr, aiData, kwData, enriched);
   const recentHistory = history.filter(h => h.date <= dateStr).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5).reverse();
 
-  // 操作建议
-  const suggestion = aiData ? getActionSuggestion(aiData.marketIndex) : null;
+  const { ai: aiSentiment, kw: kwSentiment } = resolveSentimentBlocks(aiData, kwData);
+
+  // 操作建议（优先关键词指数，更可审计）
+  const primaryMi = kwSentiment?.marketIndex ?? aiSentiment?.marketIndex ?? aiData?.marketIndex;
+  const suggestion = primaryMi != null ? getActionSuggestion(primaryMi) : null;
 
   const indexColor = (val) => val < 30 ? '#22c55e' : val < 50 ? '#eab308' : val < 70 ? '#f97316' : '#ef4444';
   const levelEmoji = (val) => val < 30 ? '🟢' : val < 50 ? '🟡' : val < 70 ? '🟠' : '🔴';
@@ -444,52 +551,98 @@ function buildHtmlEmail(analysisOutput, tradingInfo) {
 <div style="background:white;padding:24px;border-radius:0 0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
 `;
 
-  // === 1. AI 核心指数 + 操作建议 ===
-  if (aiData) {
-    const mi = aiData.marketIndex;
-    const level = sentimentLevel(mi).level;
-    const d = aiData.distribution;
-    const t = aiData.totalPosts || 1;
-
+  // === 0. 行情概览（实际涨跌，与股吧情绪分开） ===
+  const ms = enriched.marketSnapshot || {};
+  const msIndices = ms.indices || aiData?.moveReason?.indices || [];
+  const msBreadth = ms.breadth || aiData?.moveReason?.breadth || null;
+  const marketDir = ms.direction || aiData?.moveReason?.marketDirection || aiData?.moveReason?.direction || '未知';
+  if (msIndices.length > 0) {
+    const dirColor = marketDir === '涨' ? '#16a34a' : marketDir === '跌' ? '#dc2626' : '#6b7280';
+    const fmtPct = (v) => (v == null ? '-' : `${v > 0 ? '+' : ''}${v}%`);
     html += `
-<h2 style="color:#1e3a5f;border-bottom:2px solid #e5e7eb;padding-bottom:8px;">🤖 AI 情绪分析</h2>
-<div style="display:flex;gap:16px;margin:16px 0;">
-  <div style="flex:1;background:#f8fafc;border-radius:8px;padding:16px;text-align:center;">
-    <div style="font-size:42px;font-weight:bold;color:${indexColor(mi)};">${mi}</div>
-    <div style="color:#6b7280;font-size:14px;">市场指数 / 100</div>
-    <div style="margin-top:4px;font-size:15px;font-weight:600;">${levelEmoji(mi)} ${level}</div>
+<h2 style="color:#1e3a5f;border-bottom:2px solid #e5e7eb;padding-bottom:8px;">📈 今日行情概览</h2>
+<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px;margin:12px 0;">
+  <div style="font-size:14px;margin-bottom:10px;">
+    综合方向：<strong style="color:${dirColor};font-size:18px;">${marketDir}</strong>
+    ${msBreadth?.upCount != null ? `<span style="color:#64748b;font-size:12px;margin-left:10px;">涨${msBreadth.upCount} / 跌${msBreadth.downCount}${msBreadth.limitUp?.count != null ? ` · 涨停${msBreadth.limitUp.count}` : ''}${msBreadth.limitDown?.count != null ? ` · 跌停${msBreadth.limitDown.count}` : ''}</span>` : ''}
   </div>
-  <div style="flex:1;background:#f8fafc;border-radius:8px;padding:16px;">
-    <div style="font-size:14px;color:#6b7280;margin-bottom:8px;">情绪分布（${t}条帖子）</div>
-    <div style="font-size:13px;line-height:2;">
-      <div style="display:flex;justify-content:space-between;"><span style="color:#ef4444;">看空</span><span>${d.bearish} (${(d.bearish/t*100).toFixed(1)}%)</span></div>
-      <div style="display:flex;justify-content:space-between;"><span style="color:#f97316;">恐慌</span><span>${d.fear} (${(d.fear/t*100).toFixed(1)}%)</span></div>
-      <div style="display:flex;justify-content:space-between;"><span style="color:#6b7280;">中性</span><span>${d.neutral} (${(d.neutral/t*100).toFixed(1)}%)</span></div>
-      <div style="display:flex;justify-content:space-between;"><span style="color:#22c55e;">看多</span><span>${d.bullish} (${(d.bullish/t*100).toFixed(1)}%)</span></div>
-      <div style="display:flex;justify-content:space-between;"><span style="color:#eab308;">贪婪</span><span>${d.greed} (${(d.greed/t*100).toFixed(1)}%)</span></div>
-    </div>
-  </div>
-</div>`;
+  <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:12px;">`;
+    for (const idx of msIndices.slice(0, 4)) {
+      const c = (idx.pct ?? 0) > 0 ? '#dc2626' : (idx.pct ?? 0) < 0 ? '#16a34a' : '#6b7280';
+      html += `<span style="background:white;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;"><strong>${idx.name}</strong> ${idx.price ?? '-'} <span style="color:${c};font-weight:600;">${fmtPct(idx.pct)}</span></span>`;
+    }
+    html += `</div></div>`;
+  }
 
-    // 操作建议
-    if (suggestion) {
-      html += `
+  // === 1. 股吧情绪分析（AI + 关键词并排） ===
+  if (aiSentiment || kwSentiment) {
+    html += `
+<h2 style="color:#1e3a5f;border-bottom:2px solid #e5e7eb;padding-bottom:8px;">📊 股吧情绪分析</h2>
+<p style="font-size:12px;color:#64748b;margin:8px 0 12px;">基于股吧帖子多空分布，反映散户情绪，不等于实际涨跌。AI 与关键词两套指数<strong>均保留</strong>，便于对照。</p>
+<div style="display:flex;flex-wrap:wrap;gap:12px;margin:12px 0;">`;
+
+    html += renderSentimentPanel('AI 分析', '🤖', aiSentiment, indexColor, levelEmoji);
+    html += renderSentimentPanel('关键词分析', '🔤', kwSentiment, indexColor, levelEmoji);
+
+    if (!aiSentiment) {
+      html += `</div>
+<div style="font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:8px 12px;margin-bottom:12px;">
+  本次没有独立的 Qoder 情绪计数，因此不展示 AI 面板（不会用关键词结果冒充 AI）。
+</div>`;
+    } else if (aiSentiment && kwSentiment) {
+      const diff = Math.abs((aiSentiment.marketIndex ?? 0) - (kwSentiment.marketIndex ?? 0));
+      html += `</div>
+<div style="font-size:12px;color:#64748b;background:#f8fafc;border-radius:6px;padding:8px 12px;margin-bottom:12px;">
+  两套指数差 <strong>${diff}°</strong> · AI ${aiSentiment.marketIndex}° vs 关键词 ${kwSentiment.marketIndex}°
+</div>`;
+    } else {
+      html += `</div>`;
+    }
+
+    // 情绪与行情背离提示（以关键词指数为主）
+    const mi = kwSentiment?.marketIndex ?? aiSentiment?.marketIndex;
+    const d = kwSentiment?.distribution ?? aiSentiment?.distribution ?? {};
+    const t = kwSentiment?.totalPosts ?? aiSentiment?.totalPosts ?? 1;
+    if (mi != null) {
+      const bearFearPctVal = ((d.bearish || 0) + (d.fear || 0)) / t * 100;
+      if (marketDir === '涨' && mi < 35) {
+        html += `
+<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:12px;margin:12px 0;font-size:13px;color:#92400e;line-height:1.6;">
+  ⚡ <strong>情绪背离</strong>：今日行情<strong>${marketDir}</strong>，但股吧看空+恐慌占比 ${bearFearPctVal.toFixed(1)}%（关键词指数 ${mi}）。常见于「指数涨了、散户仍亏/仍悲观」的结构性行情。
+</div>`;
+      } else if (marketDir === '跌' && mi > 65) {
+        html += `
+<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:12px;margin:12px 0;font-size:13px;color:#92400e;line-height:1.6;">
+  ⚡ <strong>情绪背离</strong>：今日行情<strong>${marketDir}</strong>，但股吧情绪偏乐观（关键词指数 ${mi}），注意追高风险。
+</div>`;
+      }
+    }
+  }
+
+  if (suggestion) {
+    html += `
 <div style="background:${suggestion.color}11;border:1px solid ${suggestion.color}44;border-radius:8px;padding:14px;margin:12px 0;">
   <span style="font-size:18px;">${suggestion.emoji}</span>
   <strong style="color:${suggestion.color};font-size:15px;"> ${suggestion.label}</strong>
+  <span style="font-size:11px;color:#94a3b8;margin-left:6px;">（基于关键词情绪指数，非行情预测）</span>
   <p style="margin:8px 0 0;font-size:13px;color:#374151;line-height:1.6;">${suggestion.desc}</p>
 </div>`;
-    }
+  }
 
-    // 今天涨跌原因（优先新闻）
+  if (aiData) {
     const mr = aiData.moveReason || { direction: '未知', reason: '未知', points: [], sources: [] };
-    const dirColor = mr.direction === '涨' ? '#16a34a' : mr.direction === '跌' ? '#dc2626' : '#6b7280';
+    const mrDir = marketDir !== '未知' ? marketDir : (mr.marketDirection || mr.direction || '未知');
+    const dirColor = mrDir === '涨' ? '#16a34a' : mrDir === '跌' ? '#dc2626' : '#6b7280';
+    const mrIndices = mr.indices || msIndices;
+    const indexSummary = mrIndices.length
+      ? mrIndices.map(i => `${i.name} ${i.pct != null ? (i.pct > 0 ? '+' : '') + i.pct + '%' : ''}`).join(' · ')
+      : '';
     html += `
 <h2 style="color:#1e3a5f;border-bottom:2px solid #e5e7eb;padding-bottom:8px;margin-top:24px;">📌 今天涨跌原因</h2>
 <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;margin:12px 0;">
   <div style="font-size:13px;margin-bottom:8px;">
-    方向：<strong style="color:${dirColor};">${mr.direction || '未知'}</strong>
-    ${Array.isArray(mr.indices) && mr.indices[0] ? `<span style="color:#94a3b8;margin-left:8px;font-size:12px;">上证 ${mr.indices[0].pct != null ? mr.indices[0].pct + '%' : ''}</span>` : ''}
+    方向：<strong style="color:${dirColor};">${mrDir || '未知'}</strong>
+    ${indexSummary ? `<span style="color:#64748b;margin-left:8px;font-size:12px;">${indexSummary}</span>` : ''}
   </div>
   <div style="font-size:14px;color:#1e293b;line-height:1.7;">${mr.reason || '未知'}</div>`;
     if (Array.isArray(mr.points) && mr.points.length > 0 && mr.reason !== '未知') {
@@ -630,16 +783,20 @@ function buildHtmlEmail(analysisOutput, tradingInfo) {
 </div>`;
   }
 
-  // === 5. 板块分化 ===
+  // === 5. 板块分化（帖子数 < 5 的板块热度不参与排名） ===
   if (aiData && aiData.sectors && Object.keys(aiData.sectors).length > 0) {
-    const sorted = Object.entries(aiData.sectors).sort((a, b) => a[1].temperature - b[1].temperature);
-    const coldest = sorted.slice(0, 3);
-    const hottest = sorted.slice(-3).reverse();
+    const ranked = heatSectors(aiData.sectors).sort((a, b) => a[1].temperature - b[1].temperature);
+    const skipped = Object.entries(aiData.sectors).filter(([, s]) => (s.posts || 0) < MIN_POSTS_FOR_HEAT);
+    const coldest = ranked.slice(0, 3);
+    const hottest = ranked.slice(-3).reverse();
 
     html += `<h2 style="color:#1e3a5f;border-bottom:2px solid #e5e7eb;padding-bottom:8px;margin-top:24px;">🌡️ 板块分化</h2>`;
+    if (ranked.length === 0) {
+      html += `<p style="font-size:13px;color:#6b7280;">有效样本板块不足（需至少 ${MIN_POSTS_FOR_HEAT} 条帖子）</p>`;
+    } else {
     html += `<div style="display:flex;gap:12px;margin:12px 0;">`;
 
-    // 最恐慌
+    // 最乐观
     html += `<div style="flex:1;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;">`;
     html += `<div style="font-size:13px;font-weight:600;color:#16a34a;margin-bottom:8px;">🟢 最乐观</div>`;
     for (const [name, s] of hottest) {
@@ -647,22 +804,26 @@ function buildHtmlEmail(analysisOutput, tradingInfo) {
     }
     html += `</div>`;
 
-    // 最乐观
+    // 最恐慌
     html += `<div style="flex:1;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;">`;
-    html += `<div style="font-size:13px;font-weight:600;color:#dc2626;margin-bottom:8px;">🟢 最恐慌</div>`;
+    html += `<div style="font-size:13px;font-weight:600;color:#dc2626;margin-bottom:8px;">🔴 最恐慌</div>`;
     for (const [name, s] of coldest) {
       html += `<div style="font-size:12px;padding:3px 0;display:flex;justify-content:space-between;"><span>${name.substring(0, 8)}</span><span style="color:#22c55e;font-weight:bold;">${s.temperature}°</span></div>`;
     }
     html += `</div></div>`;
 
-    // 完整板块表
+    // 完整板块表（仅 ≥5 帖）
     html += `<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;">`;
     html += `<tr style="background:#f1f5f9;"><th style="padding:6px;text-align:left;">板块</th><th>温度</th><th>帖子</th><th>看空</th><th>恐慌</th><th>中性</th><th>看多</th></tr>`;
-    for (const [name, s] of Object.entries(aiData.sectors).sort((a, b) => b[1].posts - a[1].posts).slice(0, 10)) {
+    for (const [name, s] of [...ranked].sort((a, b) => b[1].posts - a[1].posts).slice(0, 10)) {
       const tc = s.temperature < 30 ? '#22c55e' : s.temperature < 50 ? '#eab308' : '#ef4444';
       html += `<tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:5px 6px;">${name}</td><td style="text-align:center;font-weight:bold;color:${tc};">${s.temperature}°</td><td style="text-align:center;">${s.posts}</td><td style="text-align:center;">${s.bearish}</td><td style="text-align:center;">${s.fear}</td><td style="text-align:center;">${s.neutral}</td><td style="text-align:center;">${s.bullish}</td></tr>`;
     }
     html += `</table>`;
+    if (skipped.length > 0) {
+      html += `<p style="font-size:11px;color:#94a3b8;margin:8px 0 0;">已排除样本不足板块（&lt;${MIN_POSTS_FOR_HEAT}帖）：${skipped.map(([n, s]) => `${n}(${s.posts})`).join('、')}</p>`;
+    }
+    }
   }
 
   // === 6. 热门话题词 + 分类占比饼图 ===
@@ -707,7 +868,7 @@ function buildHtmlEmail(analysisOutput, tradingInfo) {
     for (let i = 0; i < enriched.topPosts.length; i++) {
       const p = enriched.topPosts[i];
       const title = (p.title || '').substring(0, 40) + (p.title?.length > 40 ? '...' : '');
-      const sentiment = guessPostSentiment(p.title, p.content);
+      const sentiment = guessPostSentiment(p.title, p.content, marketDir);
       const url = buildPostUrl(p.barCode, p.postId);
       const titleHtml = url
         ? `<a href="${url}" target="_blank" style="color:#1e40af;text-decoration:none;border-bottom:1px dashed #93c5fd;" title="点击打开原文">${title}</a>`
@@ -732,34 +893,6 @@ function buildHtmlEmail(analysisOutput, tradingInfo) {
       html += `<div style="padding:6px 0;border-bottom:1px solid #e5e7eb;font-size:13px;line-height:1.6;">• ${s}</div>`;
     }
     html += `</div>`;
-  }
-
-  // === 9. 关键词 vs AI 对比 ===
-  if (kwData && kwData.marketIndex && aiData) {
-    const kwMi = kwData.marketIndex.index;
-    const aiMi = aiData.marketIndex;
-    const diff = aiMi - kwMi;
-    const dist = aiData.distribution || {};
-    const total = Math.max(aiData.totalPosts || 1, 1);
-    const aiNeutralPct = ((dist.neutral || 0) / total * 100).toFixed(1);
-    html += `
-<h2 style="color:#1e3a5f;border-bottom:2px solid #e5e7eb;padding-bottom:8px;margin-top:24px;">⚖️ 关键词 vs AI 对比</h2>
-<div style="display:flex;gap:12px;margin:12px 0;">
-  <div style="flex:1;background:#f8fafc;border-radius:8px;padding:14px;text-align:center;">
-    <div style="font-size:12px;color:#6b7280;">关键词指数</div>
-    <div style="font-size:28px;font-weight:bold;color:${indexColor(kwMi)};">${kwMi}°</div>
-    <div style="font-size:12px;color:#6b7280;">${kwData.marketIndex.level}</div>
-  </div>
-  <div style="flex:0 0 40px;display:flex;align-items:center;justify-content:center;font-size:20px;">VS</div>
-  <div style="flex:1;background:#f8fafc;border-radius:8px;padding:14px;text-align:center;">
-    <div style="font-size:12px;color:#6b7280;">AI指数</div>
-    <div style="font-size:28px;font-weight:bold;color:${indexColor(aiMi)};">${aiMi}°</div>
-    <div style="font-size:12px;color:#6b7280;">${sentimentLevel(aiMi).short}</div>
-  </div>
-</div>
-<div style="background:#fffbeb;border:1px solid #fbbf24;border-radius:8px;padding:10px;margin:8px 0;font-size:12px;color:#92400e;">
-  💡 差异 ${Math.abs(diff)}° — AI 更擅长识别讽刺/反语；AI 中性占比 ${aiNeutralPct}%，指数已按情绪计数公式重算。
-</div>`;
   }
 
   // === 页脚 ===
@@ -852,15 +985,20 @@ async function main() {
   const dateStr = new Date(today.getTime() + 8 * 60 * 60 * 1000).toISOString().substring(0, 10);
 
   let aiIndex = '?';
+  let kwIndex = '?';
   const aiJsonFile = join(DATA_DIR, 'qoder_ai_result.json');
   if (existsSync(aiJsonFile)) {
     try {
       const d = JSON.parse(readFileSync(aiJsonFile, 'utf-8'));
-      aiIndex = d.marketIndex;
+      if (isFreshResultFile(aiJsonFile, d, dateStr)) {
+        const { ai, kw } = resolveSentimentBlocks(d, null);
+        aiIndex = ai?.marketIndex ?? '?';
+        kwIndex = kw?.marketIndex ?? '?';
+      }
     } catch {}
   }
 
-  const subject = `📊 市场情绪日报 ${dateStr} · AI指数${aiIndex}°`;
+  const subject = `📊 市场情绪日报 ${dateStr} · AI${aiIndex}° 关键词${kwIndex}°`;
   await sendEmail(html, subject);
 
   // 推送到 API 入库
@@ -897,15 +1035,9 @@ async function pushToApi(dateStr, htmlContent) {
     const aiFile = join(DATA_DIR, 'qoder_ai_result.json');
     if (existsSync(aiFile)) {
       try {
-        aiData = JSON.parse(readFileSync(aiFile, 'utf-8'));
-        if (aiData.sectors) {
-          const sectors = mergeSectors(aiData.sectors);
-          const marketIndex = marketIndexFromSectors(
-            sectors,
-            aiData.distribution,
-            aiData.totalPosts
-          );
-          aiData = { ...aiData, sectors, marketIndex };
+        const parsed = JSON.parse(readFileSync(aiFile, 'utf-8'));
+        if (isFreshResultFile(aiFile, parsed, dateStr)) {
+          aiData = parsed;
         }
       } catch {}
     }
@@ -916,14 +1048,14 @@ async function pushToApi(dateStr, htmlContent) {
       try { kwData = JSON.parse(readFileSync(kwFile, 'utf-8')); } catch {}
     }
 
-    const dist = aiData.distribution || {};
-    const total = aiData.totalPosts || 0;
+    const dist = aiData.aiSentiment?.distribution || aiData.distribution || {};
+    const total = aiData.aiSentiment?.totalPosts || aiData.totalPosts || 0;
 
     // 3. 构建请求体
     const body = {
       date: dateStr,
-      aiIndex: aiData.marketIndex ?? null,
-      kwIndex: kwData.marketIndex?.index ?? null,
+      aiIndex: aiData.aiSentiment?.marketIndex ?? (aiData.sentimentSource === 'keyword' ? null : aiData.marketIndex) ?? null,
+      kwIndex: aiData.keywordSentiment?.marketIndex ?? kwData.marketIndex?.index ?? null,
       totalPosts: total,
       bullish: dist.bullish || 0,
       bearish: dist.bearish || 0,

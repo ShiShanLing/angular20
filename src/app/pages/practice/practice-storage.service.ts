@@ -3,7 +3,7 @@ import type { PracticeCategory, PracticeFilterCategory, PracticeItem, PracticeIt
 
 const STORAGE_KEY = 'angular20_practice_v1';
 const DAILY_STATE_KEY = 'angular20_practice_daily_state_v1';
-export type PracticeStorageScope = 'practice' | 'ios-learning' | 'angular-learning';
+export type PracticeStorageScope = 'practice' | 'ios-learning' | 'ios-objective-learning' | 'angular-learning';
 
 /** E2E / 调试：设为 `1` 时不自动注入内置题库（见 PracticeComponent） */
 export const PRACTICE_SKIP_BUILTIN_SEED_KEY = 'angular20_practice_skip_builtin_seed_v1';
@@ -109,7 +109,12 @@ export class PracticeStorageService {
           old.answer !== item.answer ||
           old.tags !== item.tags ||
           old.markD !== item.markD ||
-          old.oralOneLiner !== item.oralOneLiner
+          old.oralOneLiner !== item.oralOneLiner ||
+          old.questionType !== item.questionType ||
+          JSON.stringify(old.options ?? []) !== JSON.stringify(item.options ?? []) ||
+          JSON.stringify(old.correctAnswers ?? []) !== JSON.stringify(item.correctAnswers ?? []) ||
+          old.explanation !== item.explanation ||
+          old.sourceQuestionId !== item.sourceQuestionId
         ) {
           old.category = item.category;
           old.question = item.question;
@@ -117,6 +122,11 @@ export class PracticeStorageService {
           old.tags = item.tags;
           old.markD = item.markD;
           old.oralOneLiner = item.oralOneLiner;
+          old.questionType = item.questionType;
+          old.options = item.options;
+          old.correctAnswers = item.correctAnswers;
+          old.explanation = item.explanation;
+          old.sourceQuestionId = item.sourceQuestionId;
           updated++;
         }
         continue;
@@ -268,6 +278,34 @@ export class PracticeStorageService {
     }
     if (typeof o['oralOneLiner'] === 'string' && o['oralOneLiner'].trim()) {
       item.oralOneLiner = o['oralOneLiner'].trim();
+    }
+    if (
+      o['questionType'] === 'shortAnswer' ||
+      o['questionType'] === 'trueFalse' ||
+      o['questionType'] === 'single' ||
+      o['questionType'] === 'multiple'
+    ) {
+      item.questionType = o['questionType'];
+    }
+    if (Array.isArray(o['options'])) {
+      const options = o['options']
+        .filter((opt): opt is Record<string, unknown> => !!opt && typeof opt === 'object')
+        .map((opt) => ({
+          id: typeof opt['id'] === 'string' ? opt['id'] : '',
+          text: typeof opt['text'] === 'string' ? opt['text'] : '',
+        }))
+        .filter((opt) => opt.id && opt.text);
+      if (options.length) item.options = options;
+    }
+    if (Array.isArray(o['correctAnswers'])) {
+      const correctAnswers = o['correctAnswers'].filter((id): id is string => typeof id === 'string');
+      if (correctAnswers.length) item.correctAnswers = [...new Set(correctAnswers)];
+    }
+    if (typeof o['explanation'] === 'string') {
+      item.explanation = o['explanation'];
+    }
+    if (typeof o['sourceQuestionId'] === 'string') {
+      item.sourceQuestionId = o['sourceQuestionId'];
     }
     return item;
   }

@@ -124,7 +124,7 @@ export class ToolsTimeComponent implements OnInit, OnDestroy {
     }
   }
 
-  // MARK: 开始
+  // MARK: 开始 
   startPomo(): void {
     this.pomoIsRunning.set(true);
     this.pomoTimerId = setInterval(() => {
@@ -176,7 +176,7 @@ export class ToolsTimeComponent implements OnInit, OnDestroy {
       nzOnOk: () => this.nextPomo()
     });
   }
-
+  
   // MARK: 更新
   updateTitle(): void {
     const mm = Math.floor(this.pomoRemainingSec() / 60);
@@ -186,7 +186,7 @@ export class ToolsTimeComponent implements OnInit, OnDestroy {
     // Accessing document globally is acceptable in Angular for title updates
     document.title = `${timeStr} - ${label}`;
   }
-
+  //
   // MARK: 格式化
   formatTime(sec: number): string {
     const mm = Math.floor(sec / 60);
@@ -280,7 +280,7 @@ export class ToolsTimeComponent implements OnInit, OnDestroy {
     }
     return count;
   }
-
+  
   // MARK: 格式化
   private formatCountdown(ms: number): string {
     const s = Math.floor(ms / 1000);

@@ -6,16 +6,16 @@
 <ng-template #menuTpl>
   <!-- logo 区域：桌面折叠时隐藏文字，移动端始终展示文字 -->
   <div class="logo" [class.collapsed]="isCollapsed() && !isMobile()">
-    <span class="logo-icon">⚡</span>
+    <img src="logo.svg" alt="工坊" class="logo-mark" width="28" height="28" />
     @if (!isCollapsed() || isMobile()) {
-      <span class="logo-text">Angular Demo</span>
+      <span class="logo-text">工坊</span>
     }
   </div>
   <!-- 菜单：桌面折叠时收起图标模式，移动端始终展开 -->
   <ul nz-menu nzTheme="dark" nzMode="inline" [nzInlineCollapsed]="isCollapsed() && !isMobile()">
     @for (item of visibleMenuItems(); track item.label) {
       @if (item.children) {
-        <!-- 有子菜单：桌面折叠时收起，移动端始终展开 -->
+        <!-- 有子菜单：桌面折叠时收起，移动端始终展开  -->
         <li nz-submenu [nzTitle]="item.label" [nzIcon]="item.icon || ''" [nzOpen]="!isCollapsed() || isMobile()">
           <ul>
             @for (child of item.children; track child.path) {
@@ -35,6 +35,7 @@
         </li>
       }
     }
+    
   </ul>
 </ng-template>
 
@@ -141,7 +142,7 @@
         功能设置
       </button>
 
-      <span class="header-title">Angular 22 功能演示</span>
+      <span class="header-title">计算、记录、演示，随手可用</span>
       <!-- 技术标签在移动端通过 CSS 隐藏（节省空间） -->
       <div class="header-right">
         <span class="header-tag" nz-tooltip nzTooltipTitle="基于 Ant Design 的企业级 UI 组件库">ng-zorro-antd v22</span>
@@ -162,10 +163,19 @@
         <span class="header-user">
           <span nz-icon nzType="user" nzTheme="outline"></span>
           <span class="header-user-name">{{ authService.currentUser()?.nickname || authService.currentUser()?.username }}</span>
+          @if (authService.isGuest()) {
+            <span class="header-guest-badge">游客</span>
+          }
         </span>
-        <button type="button" class="logout-btn" nz-tooltip nzTooltipTitle="退出登录" (click)="logout()">
+        <button
+          type="button"
+          class="logout-btn"
+          nz-tooltip
+          [nzTooltipTitle]="authService.isGuest() ? '退出游客' : '退出登录'"
+          (click)="logout()"
+        >
           <span nz-icon nzType="logout" nzTheme="outline"></span>
-          <span class="logout-text">退出</span>
+          <span class="logout-text">{{ authService.isGuest() ? '退出游客' : '退出' }}</span>
         </button>
       </div>
     </nz-header>
@@ -176,7 +186,7 @@
     </nz-content>
 
     <nz-footer class="app-footer">
-      Angular 22 + ng-zorro-antd + ECharts ©2026
+      工坊 · 工具与演示 ©2026
     </nz-footer>
   </nz-layout>
 </nz-layout>

@@ -278,7 +278,16 @@ export class ToolsQrcodeComponent implements OnInit, OnDestroy {
     this.lastScanResult = '';
 
     if (!navigator.mediaDevices?.getUserMedia) {
-      this.cameraError.set('当前浏览器不支持摄像头访问，或页面不是 HTTPS / localhost');
+      const viaHttp =
+        typeof location !== 'undefined' &&
+        location.protocol === 'http:' &&
+        location.hostname !== 'localhost' &&
+        location.hostname !== '127.0.0.1';
+      this.cameraError.set(
+        viaHttp
+          ? '摄像头只能在 HTTPS 或 localhost 使用。请任选其一：1) 用 SSH 隧道后打开 http://localhost:18080/angular20/ ；2) Chrome 打开 chrome://flags/#unsafely-treat-insecure-origin-as-secure ，把 http://106.13.175.227 加进去并重启浏览器；3) 在百度云安全组放行 443 后用 HTTPS 访问'
+          : '当前浏览器不支持摄像头，请换 Chrome / Edge，并允许摄像头权限',
+      );
       return;
     }
 
