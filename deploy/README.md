@@ -34,3 +34,13 @@ bash /path/to/project/deploy/install-deploy-access.sh
 - 回滚快照：`/var/lib/angular20-deploy/releases/`（保留最近 3 次）
 
 `deploy` 不能执行任意 root 命令，只能调用 `/usr/local/sbin/angular20-release apply ...`。后端继续以无登录权限的 `angular20` 账号运行，并由 systemd 限制文件系统写入范围。
+
+## 首次恢复或 SSH 暂不可用
+
+只有首次安装、正式目录损坏且普通 SSH 上传通道暂不可用时，才能从服务器控制台运行：
+
+```bash
+bash deploy/bootstrap-server-release.sh 完整的40位提交SHA
+```
+
+它会从固定 GitHub 仓库下载指定提交，在临时目录完成一次构建，并交给同一个受校验的发布工具处理；结束后会删除临时源码。此入口不用于日常发布，也不会在服务器保留 Git 仓库。
