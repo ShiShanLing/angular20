@@ -1,44 +1,62 @@
 <div class="login-container">
-  <div class="login-card">
-    <div class="login-brand">
-      <img src="logo.svg" alt="工坊" class="login-logo" width="56" height="56" />
-      <h2 class="login-title">工坊</h2>
-      <p class="login-sub">使用 Agent 统一账号登录</p>
-    </div>
+  <main class="login-main">
+    <div class="login-card">
+      <div class="login-brand">
+        <img src="logo.svg" alt="工坊" class="login-logo" width="56" height="56" />
+        <h2 class="login-title">工坊</h2>
+        <p class="login-sub">使用 Agent 统一账号登录</p>
+      </div>
 
-    <button
-      nz-button
-      nzType="primary"
-      nzBlock
-      nzSize="large"
-      class="agent-login-btn"
-      [nzLoading]="loading()"
-      (click)="onAgentLogin()"
-    >
-      使用统一账号登录
-    </button>
-    @if (showLocalDevLogin()) {
+      <button
+        nz-button
+        nzType="primary"
+        nzBlock
+        nzSize="large"
+        class="agent-login-btn"
+        [nzLoading]="loading()"
+        (click)="onAgentLogin()"
+      >
+        使用统一账号登录
+      </button>
+      @if (showLocalDevLogin()) {
+        <button
+          type="button"
+          nz-button
+          nzBlock
+          class="local-dev-btn"
+          [disabled]="loading()"
+          (click)="onLocalDevLogin()"
+        >
+          本地开发登录
+        </button>
+      }
       <button
         type="button"
         nz-button
         nzBlock
-        class="local-dev-btn"
+        class="guest-btn"
         [disabled]="loading()"
-        (click)="onLocalDevLogin()"
+        (click)="onGuestEnter()"
       >
-        本地开发登录
+        游客访问
       </button>
-    }
-    <button
-      type="button"
-      nz-button
-      nzBlock
-      class="guest-btn"
-      [disabled]="loading()"
-      (click)="onGuestEnter()"
+      <p class="guest-hint">没有账号请先到 Agent 注册。游客可使用工具与游戏，记录不会保存。</p>
+    </div>
+  </main>
+
+  <footer class="login-record-footer" aria-label="网站备案信息">
+    <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">
+      皖ICP备2026028301号-1
+    </a>
+    <span class="login-record-separator" aria-hidden="true">·</span>
+    <a
+      class="login-public-security-record"
+      href="https://beian.mps.gov.cn/#/query/webSearch?code=34122102000658"
+      target="_blank"
+      rel="noopener noreferrer"
     >
-      游客访问
-    </button>
-    <p class="guest-hint">没有账号请先到 Agent 注册。游客可使用工具与游戏，记录不会保存。</p>
-  </div>
+      <img src="public-security-record.png" alt="公安备案图标" width="16" height="17" />
+      <span>皖公网安备34122102000658号</span>
+    </a>
+  </footer>
 </div>
