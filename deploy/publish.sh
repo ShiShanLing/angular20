@@ -113,6 +113,7 @@ if $want_frontend; then
     "$ROOT/dist/angular20/browser/index.html"; then
     fail "frontend build contains root-relative assets outside /angular20/"
   fi
+  chmod -R u=rwX,go=rX "$ROOT/dist/angular20/browser"
 fi
 
 if $want_backend; then
@@ -133,8 +134,7 @@ ssh "$HOST" "install -d -m 0755 '$stage'"
 
 if $want_frontend; then
   ssh "$HOST" "install -d -m 0755 '$stage/frontend'"
-  rsync -az --delete --chmod=D755,F644 \
-    "$ROOT/dist/angular20/browser/" "$HOST:$stage/frontend/"
+  rsync -az --delete "$ROOT/dist/angular20/browser/" "$HOST:$stage/frontend/"
 fi
 
 if $want_backend; then

@@ -43,9 +43,10 @@ npm --prefix server ci --no-audit --no-fund
 npm --prefix server run build
 npm --prefix server prune --omit=dev --no-audit --no-fund
 test -f server/dist/main.js
+chmod -R u=rwX,go=rX dist/angular20/browser
 
 install -d -m 0755 "$stage/frontend" "$stage/backend"
-rsync -a --delete --chmod=D755,F644 dist/angular20/browser/ "$stage/frontend/"
+rsync -a --delete dist/angular20/browser/ "$stage/frontend/"
 rsync -a --delete server/dist/ "$stage/backend/dist/"
 rsync -a --delete server/node_modules/ "$stage/backend/node_modules/"
 install -m 0644 server/package.json server/package-lock.json "$stage/backend/"
