@@ -362,12 +362,59 @@
 }
 
 .app-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   text-align: center;
   font-size: 13px;
   color: var(--text-tertiary, #999);
   padding: 14px;
   background: var(--footer-bg, transparent);
   transition: background-color 0.3s ease;
+}
+
+.footer-brand {
+  line-height: 20px;
+}
+
+.footer-records {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  line-height: 20px;
+}
+
+.footer-record-link {
+  color: inherit;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--accent-color, #1677ff);
+    text-decoration: underline;
+  }
+}
+
+.footer-record-separator {
+  margin: 0 4px;
+}
+
+.public-security-record-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.public-security-record-icon {
+  width: 18px;
+  height: 19px;
+  flex: 0 0 auto;
+  object-fit: contain;
 }
 
 // ── 移动端适配 ────────────────────────────────────────────────────────────────
@@ -447,7 +494,20 @@
 
   .app-content { padding: 12px; }    // 内容区减小内边距，扩大可用面积
 
-  .app-footer { padding: 10px; font-size: 11px; }
+  .app-footer {
+    gap: 4px;
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+
+  .footer-records {
+    gap: 3px 8px;
+  }
+
+  .public-security-record-icon {
+    width: 16px;
+    height: 17px;
+  }
 
   .menu-settings-panel {
     top: 76px;
@@ -455,5 +515,15 @@
     left: 12px;
     width: auto;
     max-height: calc(100vh - 96px);
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-records {
+    flex-direction: column;
+  }
+
+  .footer-record-separator {
+    display: none;
   }
 }
