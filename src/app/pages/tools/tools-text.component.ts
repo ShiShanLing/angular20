@@ -116,10 +116,9 @@ export class ToolsTextComponent implements OnInit {
       if (line.includes(',')) return line.split(',');
       return line.split(/\s+/);
     };
-
     const parsedData = lines.map(parseLine);
     const colCount = Math.max(...parsedData.map(r => r.length));
-
+    
     let table = '';
     parsedData.forEach((row, i) => {
       // pad row

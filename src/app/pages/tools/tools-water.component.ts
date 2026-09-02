@@ -41,8 +41,7 @@ export class ToolsWaterComponent implements OnInit {
     status: 'info',
     hint: ''
   });
-
-  // MARK: 初始化
+  // MARK: 初始化 
   // 组件初始化：同步移动端断点、订阅视口变化与路由事件
   ngOnInit(): void {
     const today = new Date();
@@ -52,12 +51,13 @@ export class ToolsWaterComponent implements OnInit {
       startDate: [today, [Validators.required]],
       days: [30, [Validators.required, Validators.min(1), Validators.max(365)]],
       timeList: ['09:30\n11:00\n14:00\n16:00\n18:30', [Validators.required]],
-      tzid: ['Asia/Shanghai', [Validators.required]]
+      tzid: ['Asia/Shanghai', [Validators.required]],
+      
     });
 
     this.loadState();
     this.computePlan();
-
+    
     this.form.valueChanges.subscribe(() => {
       this.saveState();
       this.computePlan();
@@ -135,6 +135,8 @@ export class ToolsWaterComponent implements OnInit {
       return { hh: h, mm: m, raw };
     });
     return uniq.sort((a, b) => (a.hh * 60 + a.mm) - (b.hh * 60 + b.mm));
+    
+    
   }
 
   // MARK: 构建日历文件
@@ -144,12 +146,12 @@ export class ToolsWaterComponent implements OnInit {
     if (!val.startDate || times.length === 0 || !val.per) {
       return { ok: false, error: '请先填写完整参数', ics: '' };
     }
-
+    
     const start = new Date(val.startDate);
     const days = val.days || 30;
     const tzid = val.tzid;
     const nowStampUtc = formatDate(new Date(), "yyyyMMdd'T'HHmmss'Z'", 'en', 'UTC');
-
+    
     const lines = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
@@ -157,20 +159,20 @@ export class ToolsWaterComponent implements OnInit {
       'CALSCALE:GREGORIAN',
       'METHOD:PUBLISH'
     ];
-
+    
     let uidCounter = 0;
     for (let dayIdx = 0; dayIdx < days; dayIdx++) {
       const cur = new Date(start.getTime());
       cur.setDate(start.getDate() + dayIdx);
       const hostYmd = formatDate(cur, 'yyyyMMdd', 'en');
-
+      
       for (const t of times) {
         uidCounter++;
         const dtStartLocal = `${hostYmd}T${t.hh.toString().padStart(2, '0')}${t.mm.toString().padStart(2, '0')}00`;
         const end = new Date(cur.getTime());
         end.setHours(t.hh, t.mm + 5); // 5 min duration
         const dtEndLocal = formatDate(end, "yyyyMMdd'T'HHmmss", 'en');
-
+        //添加事件处理
         lines.push('BEGIN:VEVENT');
         lines.push(`UID:water-${hostYmd}-${t.hh}${t.mm}-${uidCounter}@angular-demo`);
         lines.push(`DTSTAMP:${nowStampUtc}`);
@@ -181,7 +183,8 @@ export class ToolsWaterComponent implements OnInit {
         lines.push('END:VEVENT');
       }
     }
-
+    
+    
     lines.push('END:VCALENDAR');
     return { ok: true, error: '', ics: lines.join('\r\n') };
   }
@@ -190,6 +193,7 @@ export class ToolsWaterComponent implements OnInit {
   private saveState(): void {
     localStorage.setItem('tools_water_state', JSON.stringify(this.form.getRawValue()));
   }
+  
 
   // MARK: 加载
   private loadState(): void {

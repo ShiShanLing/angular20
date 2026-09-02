@@ -72,7 +72,7 @@ export class ToolsWeatherComponent {
       minTemp: daily.temperature_2m_min[i],
     }));
   });
-
+  
   readonly hourlyForecast = computed(() => {
     const data = this.weatherData();
     if (!data?.hourly) return [];
@@ -82,6 +82,8 @@ export class ToolsWeatherComponent {
     let startIndex = hourly.time.findIndex(
       (t: string) => new Date(t).getHours() === now.getHours() && new Date(t).getDate() === now.getDate(),
     );
+    
+
     if (startIndex === -1) startIndex = 0;
 
     const result = [];
@@ -107,12 +109,12 @@ export class ToolsWeatherComponent {
   searchWeather(): void {
     const cityName = this.city().trim();
     if (!cityName) return;
-
+    
     localStorage.setItem('tools_weather_city', cityName);
     this.loading.set(true);
     this.showGeocodePicker.set(false);
     this.geocodeResults.set([]);
-
+    
     const geoUrl = `/api/weather/geocode?name=${encodeURIComponent(cityName)}`;
     this.http.get(geoUrl).subscribe({
       next: (geoRes: any) => {
@@ -121,7 +123,7 @@ export class ToolsWeatherComponent {
           this.loading.set(false);
           return;
         }
-
+        
         if (geoRes.results.length > 1) {
           this.geocodeResults.set(geoRes.results);
           this.showGeocodePicker.set(true);
@@ -217,7 +219,7 @@ export class ToolsWeatherComponent {
       error: () => this.recentCities.set([]),
     });
   }
-
+  
   // MARK: 添加
   // 添加成功搜索的城市到历史（通过后端 API）
   addRecentCity(location: any): void {
@@ -228,6 +230,7 @@ export class ToolsWeatherComponent {
       country: location.country || '',
       admin1: location.admin1 || '',
     });
+    
     this.http.post(`/api/weather/history?${params.toString()}`, {}).subscribe({
       next: () => this.loadRecentCities(),
       error: () => {},
@@ -273,13 +276,13 @@ export class ToolsWeatherComponent {
     });
   }
 
-  // MARK: 更新
+  // MARK: 更新 
   // 根据逐小时数据刷新图表配置
   updateChartOptions(): void {
     const hourly = this.hourlyForecast();
     const times = hourly.map((h) => new Date(h.time).getHours() + ':00');
     const temps = hourly.map((h) => h.temp);
-
+    
     this.chartOptions.set({
       grid: { left: '3%', right: '4%', bottom: '3%', top: '15%', containLabel: true },
       tooltip: { trigger: 'axis', formatter: '{b}<br/>温度: {c}°C' },
@@ -309,7 +312,7 @@ export class ToolsWeatherComponent {
       ],
     });
   }
-
+  //
   // MARK: 天气图标
   getConditionIcon(code: number): string {
     if (code === 0) return '🌞';
@@ -323,7 +326,7 @@ export class ToolsWeatherComponent {
     if (code >= 95) return '⚡';
     return '⛅';
   }
-
+  
   // MARK: 天气文案
   getConditionDesc(code: number): string {
     const mapping: Record<number, string> = {

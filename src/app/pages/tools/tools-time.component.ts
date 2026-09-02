@@ -200,7 +200,7 @@ export class ToolsTimeComponent implements OnInit, OnDestroy {
     const d = new Date();
     return `todo-${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
   }
-
+  
   // MARK: 添加
   addTodo(): void {
     if (!this.newTodoText().trim()) return;
@@ -253,7 +253,7 @@ export class ToolsTimeComponent implements OnInit, OnDestroy {
 
     const daysAvail = this.countAvailableDays(now, target, val.workdaysOnly === 'yes');
     const needPerDay = daysAvail > 0 ? remain / daysAvail : (remain > 0 ? 999 : 0);
-
+    
     this.scheduleResult.set({
       countdownStr: this.formatCountdown(diffMs),
       remainHours: remain,
