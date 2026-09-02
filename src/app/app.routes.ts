@@ -38,9 +38,39 @@ export const routes: Routes = [
         data: { practiceScope: 'ios-learning' }
       },
       {
+        path: 'ios-learning/review',
+        loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
+        data: { practiceScope: 'ios-learning', practiceFlow: 'full' }
+      },
+      {
+        path: 'android-learning',
+        loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
+        data: { practiceScope: 'android-learning' }
+      },
+      {
+        path: 'android-learning/review',
+        loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
+        data: { practiceScope: 'android-learning', practiceFlow: 'full' }
+      },
+      {
         path: 'angular-learning',
         loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
         data: { practiceScope: 'angular-learning' }
+      },
+      {
+        path: 'angular-learning/review',
+        loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
+        data: { practiceScope: 'angular-learning', practiceFlow: 'full' }
+      },
+      {
+        path: 'ts-learning',
+        loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
+        data: { practiceScope: 'ts-learning' }
+      },
+      {
+        path: 'ts-learning/review',
+        loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
+        data: { practiceScope: 'ts-learning', practiceFlow: 'full' }
       },
       {
         path: 'practice-list',

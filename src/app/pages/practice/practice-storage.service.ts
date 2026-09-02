@@ -3,7 +3,16 @@ import type { PracticeCategory, PracticeFilterCategory, PracticeItem, PracticeIt
 
 const STORAGE_KEY = 'angular20_practice_v1';
 const DAILY_STATE_KEY = 'angular20_practice_daily_state_v1';
-export type PracticeStorageScope = 'practice' | 'ios-learning' | 'ios-objective-learning' | 'angular-learning';
+export type PracticeStorageScope =
+  | 'practice'
+  | 'ios-learning'
+  | 'ios-objective-learning'
+  | 'android-learning'
+  | 'android-objective-learning'
+  | 'angular-learning'
+  | 'angular-objective-learning'
+  | 'ts-learning'
+  | 'ts-objective-learning';
 
 /** E2E / 调试：设为 `1` 时不自动注入内置题库（见 PracticeComponent） */
 export const PRACTICE_SKIP_BUILTIN_SEED_KEY = 'angular20_practice_skip_builtin_seed_v1';

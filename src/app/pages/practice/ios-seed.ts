@@ -60,9 +60,19 @@ export function iosJobObjectiveSeedToPracticeItems(importedAt: number): Practice
 }
 
 /** 将 Angular 知识刷题计划 JSON 转为本应用 PracticeItem。 */
-export function angularJobSeedToPracticeItems(importedAt: number): PracticeItem[] {
+export function angularJobSeedToPracticeItems(
+  importedAt: number,
+  track: 'angular' | 'ts' | 'all' = 'all'
+): PracticeItem[] {
   const rows = angularJobSeedJson as IosSeedRow[];
-  return rowsToPracticeItems(rows, importedAt, 'angular');
+  return rows
+    .map((row) => ({ row, category: angularRowCategory(row) }))
+    .filter(({ category }) => {
+      if (track === 'ts') return category === 'angular-ts';
+      if (track === 'angular') return category !== 'angular-ts';
+      return true;
+    })
+    .map(({ row, category }) => rowToPracticeItem(row, importedAt, category));
 }
 
 function rowsToPracticeItems(
@@ -70,24 +80,34 @@ function rowsToPracticeItems(
   importedAt: number,
   category: PracticeItem['category']
 ): PracticeItem[] {
-  return rows.map((row) => {
-    const tags = [row.topic, row.difficulty].filter(Boolean).join(' · ');
-    const item: PracticeItem = {
-      id: row.id,
-      category,
-      question: row.question,
-      answer: row.answer,
-      tags,
-      importedAt,
-    };
-    if (row.markD !== false) {
-      item.markD = true;
-    }
-    if (row.oralOneLiner?.trim()) {
-      item.oralOneLiner = row.oralOneLiner.trim();
-    }
-    return item;
-  });
+  return rows.map((row) => rowToPracticeItem(row, importedAt, category));
+}
+
+function rowToPracticeItem(row: IosSeedRow, importedAt: number, category: PracticeItem['category']): PracticeItem {
+  const tags = [row.topic, row.difficulty].filter(Boolean).join(' · ');
+  const item: PracticeItem = {
+    id: row.id,
+    category,
+    question: row.question,
+    answer: row.answer,
+    tags,
+    importedAt,
+  };
+  if (row.markD !== false) {
+    item.markD = true;
+  }
+  if (row.oralOneLiner?.trim()) {
+    item.oralOneLiner = row.oralOneLiner.trim();
+  }
+  return item;
+}
+
+function angularRowCategory(row: IosSeedRow): PracticeItem['category'] {
+  const topic = row.topic ?? '';
+  if (topic.startsWith('TypeScript')) return 'angular-ts';
+  if (topic.startsWith('JavaScript')) return 'angular-js';
+  if (topic === 'CSS' || topic.includes('样式')) return 'angular-css';
+  return 'angular';
 }
 
 function objectiveTypeLabel(type: ObjectiveSeedRow['type']): string {

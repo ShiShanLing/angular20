@@ -48,6 +48,8 @@ import {
 type FilterValue = PracticeFilterCategory;
 type ChantPhase = 'idle' | 'question' | 'answer';
 type PracticeQuestionMode = 'objective' | 'subjective';
+type LearningTrack = 'ios' | 'android' | 'angular' | 'ts' | 'general';
+type PracticeFlowMode = 'daily' | 'full';
 
 const FONT_SCALE_KEY = 'angular20_practice_font_scale_v1';
 const SPEECH_RATE_KEY = 'angular20_practice_speech_rate_v1';
@@ -67,6 +69,13 @@ interface PracticeCalendarDay {
   remembered: number;
   done: boolean;
 }
+
+interface FullQuizWrongItem {
+  item: PracticeItem;
+  selectedText: string;
+  correctText: string;
+}
+
 
 // MARK: 格式化
 // 将 Date 格式化为本地日期键，供每日刷题记录索引使用。
@@ -96,7 +105,7 @@ function hashString(s: string): number {
   selector: 'app-practice',
   imports: [FormsModule, NzButtonModule, NzIconModule, NzModalModule, MarkdPipe],
   templateUrl: './practice.component.html',
-  styleUrl: './practice.component.scss',
+  styleUrls: ['./practice.component.scss', './practice-full-quiz.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PracticeComponent implements OnInit, OnDestroy {
@@ -105,6 +114,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
   private readonly msg = inject(NzMessageService);
   private readonly modal = inject(NzModalService);
   private readonly routeScope = this.readPracticeScope();
+  readonly learningTrack = this.readLearningTrack();
   /** 唱题模式中题目与答案之间、答案与下一题之间的短暂停顿。 */
   private chantTimer: ReturnType<typeof setTimeout> | null = null;
   /** 每次播放递增，防止已取消的语音回调继续推进唱题流程。 */
@@ -113,20 +123,27 @@ export class PracticeComponent implements OnInit, OnDestroy {
   readonly categoryList = PRACTICE_CATEGORY_LIST;
   readonly isIosLearning = this.routeScope === 'ios-learning';
   readonly isAngularLearning = this.routeScope === 'angular-learning';
+  readonly isLearningPage = this.learningTrack !== 'general';
   readonly questionMode = signal<PracticeQuestionMode>(this.isIosLearning ? 'objective' : 'subjective');
+  readonly practiceFlowMode = signal<PracticeFlowMode>('daily');
   readonly activeStorageScope = computed<PracticeStorageScope>(() =>
-    this.isIosLearning && this.questionMode() === 'objective' ? 'ios-objective-learning' : this.routeScope
+    this.objectiveScopeForCurrentTrack() ?? this.routeScope
   );
+
 
   get pageName(): string {
     if (this.isIosLearning) return 'iOS 学习';
+    if (this.learningTrack === 'android') return 'Android 学习';
     if (this.isAngularLearning) return 'Angular 学习';
+    if (this.learningTrack === 'ts') return 'TypeScript 学习';
     return '知识刷题';
   }
 
   get builtinSeedLabel(): string {
     if (this.isIosLearning && this.questionMode() === 'objective') return 'iOS 客观题题库';
     if (this.isIosLearning) return 'iOS 简答题题库';
+    if (this.learningTrack === 'android') return 'Android 学习题库';
+    if (this.learningTrack === 'ts') return 'TypeScript 学习题库';
     if (this.isAngularLearning) return 'Angular 学习题库';
     return '内置 iOS 题库';
   }
@@ -134,6 +151,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
   get builtinSeedButtonText(): string {
     if (this.isIosLearning && this.questionMode() === 'objective') return '加载 iOS 客观题';
     if (this.isIosLearning) return '加载 iOS 简答题';
+    if (this.learningTrack === 'android') return '加载 Android 学习题库';
+    if (this.learningTrack === 'ts') return '加载 TypeScript 学习题库';
     if (this.isAngularLearning) return '加载 Angular 学习题库';
     return '加载内置 iOS 题库';
   }
@@ -141,6 +160,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
   get builtinSeedShortLabel(): string {
     if (this.isIosLearning && this.questionMode() === 'objective') return 'iOS客观题';
     if (this.isIosLearning) return 'iOS简答题';
+    if (this.learningTrack === 'android') return 'Android题库';
+    if (this.learningTrack === 'ts') return 'TS题库';
     if (this.isAngularLearning) return 'Angular题库';
     return '内置 iOS';
   }
@@ -158,6 +179,12 @@ export class PracticeComponent implements OnInit, OnDestroy {
   readonly objectiveSubmitted = signal(false);
   readonly sourceQuestionVisible = signal(false);
   readonly sourceQuestionItem = signal<PracticeItem | null>(null);
+  readonly fullQuizMode = signal(false);
+  readonly fullQuizSubmitted = signal(false);
+  readonly fullQuizItemIds = signal<string[]>([]);
+  readonly fullQuizAnswers = signal<Record<string, string[]>>({});
+  readonly fullQuizTextAnswers = signal<Record<string, string>>({});
+  readonly fullQuizWrongOnly = signal(false);
 
   // 视觉与每日练习状态：字号、日期记录、日历月份。
   readonly fontScale = signal(FONT_DEFAULT);
@@ -174,7 +201,9 @@ export class PracticeComponent implements OnInit, OnDestroy {
   
   /** 当前分类筛选后的题目列表。 */
   readonly categoryFiltered = computed(() => {
-    const all = this.items();
+    const all = this.items().filter((item) =>
+      this.questionMode() === 'objective' ? this.isObjectiveQuestion(item) : !this.isObjectiveQuestion(item)
+    );
     const f = this.filterCategory();
     if (f === 'all') return all;
     return all.filter((i) => i.category === f);
@@ -318,6 +347,61 @@ export class PracticeComponent implements OnInit, OnDestroy {
   /** 唱题视图是否展示答案；题目播完进入答案阶段才展开。 */
   readonly chantAnswerVisible = computed(() => this.chantPhase() === 'answer');
 
+  /** 当前题型下可一次性练习的题目；一次刷完不受搜索影响，保持试卷感。 */
+  readonly fullQuizCandidates = computed(() =>
+    this.categoryFiltered().filter((item) =>
+      this.questionMode() === 'objective' ? this.isObjectiveQuestion(item) : !this.isObjectiveQuestion(item)
+    )
+  );
+
+  /** 一次性练习锁定的题目，避免作答中搜索或筛选变化影响评分。 */
+  readonly fullQuizItems = computed(() => {
+    const byId = new Map(this.items().map((item) => [item.id, item]));
+    return this.fullQuizItemIds().map((id) => byId.get(id)).filter((item): item is PracticeItem => !!item);
+  });
+
+  readonly fullQuizAnsweredCount = computed(() =>
+    this.fullQuizItems().filter((item) =>
+      this.isObjectiveQuestion(item)
+        ? (this.fullQuizAnswers()[item.id] ?? []).length > 0
+        : !!this.fullQuizTextAnswers()[item.id]?.trim()
+    ).length
+  );
+
+  readonly fullQuizCorrectCount = computed(() =>
+    this.fullQuizSubmitted() ? this.fullQuizItems().reduce((sum, item) => sum + this.fullQuizItemScore(item), 0) : 0
+  );
+
+  readonly fullQuizWrongItems = computed<FullQuizWrongItem[]>(() =>
+    this.fullQuizSubmitted()
+      ? this.fullQuizItems()
+          .filter((item) => !this.fullQuizAnswerCorrect(item))
+          .map((item) => ({
+            item,
+            selectedText: this.fullQuizUserAnswerText(item),
+            correctText: this.fullQuizCorrectAnswerText(item),
+          }))
+      : []
+  );
+
+  readonly fullQuizScoreText = computed(() => {
+    const total = this.fullQuizItems().length;
+    if (!total) return '0 / 0';
+    return `${this.formatQuizScore(this.fullQuizCorrectCount())} / ${total}`;
+  });
+
+  readonly fullQuizPercent = computed(() => {
+    const total = this.fullQuizItems().length;
+    if (!total) return 0;
+    return Math.round((this.fullQuizCorrectCount() / total) * 100);
+  });
+
+  readonly fullQuizVisibleItems = computed(() =>
+    this.fullQuizWrongOnly() && this.fullQuizSubmitted()
+      ? this.fullQuizWrongItems().map((entry) => entry.item)
+      : this.fullQuizItems()
+  );
+
   /** 右侧分类悬浮按钮展示的短标签。 */
   readonly categoryFabLabel = computed(() => {
     const f = this.filterCategory();
@@ -408,12 +492,203 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.sourceQuestionItem.set(null);
   }
 
+  startFullQuiz(): void {
+    const candidates = this.fullQuizCandidates();
+    if (!candidates.length) {
+      this.msg.warning('当前范围没有可评分的客观题。');
+      return;
+    }
+    this.stopSpeech();
+    this.fullQuizItemIds.set(candidates.map((item) => item.id));
+    this.fullQuizAnswers.set({});
+    this.fullQuizTextAnswers.set({});
+    this.fullQuizSubmitted.set(false);
+    this.fullQuizWrongOnly.set(false);
+    this.practiceFlowMode.set('full');
+    this.fullQuizMode.set(true);
+  }
+
+  exitFullQuiz(): void {
+    this.fullQuizMode.set(false);
+    this.fullQuizSubmitted.set(false);
+    this.fullQuizWrongOnly.set(false);
+    this.fullQuizAnswers.set({});
+    this.fullQuizTextAnswers.set({});
+    this.fullQuizItemIds.set([]);
+    this.practiceFlowMode.set('daily');
+  }
+
+  submitFullQuiz(): void {
+    const total = this.fullQuizItems().length;
+    if (!total) return;
+    const unanswered = total - this.fullQuizAnsweredCount();
+    if (unanswered > 0) {
+      this.msg.warning(`还有 ${unanswered} 道题未作答，已按未答计错。`);
+    }
+    this.fullQuizSubmitted.set(true);
+    this.fullQuizWrongOnly.set(false);
+    this.msg.success(`本次得分 ${this.fullQuizScoreText()}，正确率 ${this.fullQuizPercent()}%。`);
+  }
+
+  submitOrJumpFullQuiz(): void {
+    const unanswered = this.nextUnansweredFullQuizItem();
+    if (unanswered) {
+      this.scrollToFullQuizItem(unanswered);
+      this.msg.info('已跳到下一道未作答题。');
+      return;
+    }
+    this.submitFullQuiz();
+  }
+
+  restartFullQuiz(): void {
+    const ids = this.fullQuizItemIds();
+    if (!ids.length) {
+      this.startFullQuiz();
+      return;
+    }
+    this.fullQuizAnswers.set({});
+    this.fullQuizTextAnswers.set({});
+    this.fullQuizSubmitted.set(false);
+    this.fullQuizWrongOnly.set(false);
+  }
+
+  toggleFullQuizWrongOnly(): void {
+    if (!this.fullQuizSubmitted()) return;
+    this.fullQuizWrongOnly.update((value) => !value);
+  }
+
+  fullQuizOptionSelected(item: PracticeItem, optionId: string): boolean {
+    return (this.fullQuizAnswers()[item.id] ?? []).includes(optionId);
+  }
+
+  toggleFullQuizOption(item: PracticeItem, optionId: string): void {
+    if (!this.isObjectiveQuestion(item) || this.fullQuizSubmitted()) return;
+    const answers = { ...this.fullQuizAnswers() };
+    const current = answers[item.id] ?? [];
+    if (item.questionType === 'multiple') {
+      const selected = new Set(current);
+      if (selected.has(optionId)) {
+        selected.delete(optionId);
+      } else {
+        selected.add(optionId);
+      }
+      answers[item.id] = [...selected];
+    } else {
+      answers[item.id] = [optionId];
+    }
+    this.fullQuizAnswers.set(answers);
+  }
+
+  fullQuizAnswerCorrect(item: PracticeItem): boolean {
+    if (!this.isObjectiveQuestion(item)) {
+      return this.fullQuizSubjectiveResult(item).level !== 'low';
+    }
+    const selected = [...(this.fullQuizAnswers()[item.id] ?? [])].sort();
+    const correct = [...(item.correctAnswers ?? [])].sort();
+    return selected.length === correct.length && selected.every((id, index) => id === correct[index]);
+  }
+
+  fullQuizOptionCorrect(item: PracticeItem, optionId: string): boolean {
+    return !!item.correctAnswers?.includes(optionId);
+  }
+
+  fullQuizOptionWrong(item: PracticeItem, optionId: string): boolean {
+    return this.fullQuizSubmitted() && this.fullQuizOptionSelected(item, optionId) && !this.fullQuizOptionCorrect(item, optionId);
+  }
+
+  onFullQuizTextAnswerInput(item: PracticeItem, value: string): void {
+    if (this.fullQuizSubmitted()) return;
+    this.fullQuizTextAnswers.set({ ...this.fullQuizTextAnswers(), [item.id]: value });
+  }
+
+  fullQuizTextAnswer(item: PracticeItem): string {
+    return this.fullQuizTextAnswers()[item.id] ?? '';
+  }
+
+  fullQuizResultLabel(item: PracticeItem): string {
+    if (this.isObjectiveQuestion(item)) {
+      return this.fullQuizAnswerCorrect(item) ? '回答正确' : '回答错误';
+    }
+    const result = this.fullQuizSubjectiveResult(item);
+    if (result.level === 'ok') return '较完整';
+    if (result.level === 'mid') return '部分命中';
+    return '需要复盘';
+  }
+
+  fullQuizQuestionTypeLabel(item: PracticeItem): string {
+    return this.isObjectiveQuestion(item) ? this.objectiveTypeLabel(item) : '简答题';
+  }
+
+  fullQuizCardId(item: PracticeItem): string {
+    return `full-quiz-card-${this.safeDomId(item.id)}`;
+  }
+
+  fullQuizUserAnswerText(item: PracticeItem): string {
+    if (this.isObjectiveQuestion(item)) return this.fullQuizOptionAnswerText(item, this.fullQuizAnswers()[item.id] ?? []);
+    return this.fullQuizTextAnswer(item).trim() || '未作答';
+  }
+
+  fullQuizCorrectAnswerText(item: PracticeItem): string {
+    if (this.isObjectiveQuestion(item)) return this.fullQuizOptionAnswerText(item, item.correctAnswers ?? []);
+    return item.answer || '本题暂未录入参考答案。';
+  }
+
+  private fullQuizOptionAnswerText(item: PracticeItem, answerIds: string[]): string {
+    if (!answerIds.length) return '未作答';
+    return answerIds
+      .map((id) => {
+        const option = item.options?.find((candidate) => candidate.id === id);
+        return option ? `${id}. ${option.text}` : id;
+      })
+      .join('；');
+  }
+
+  private nextUnansweredFullQuizItem(): PracticeItem | null {
+    const items = this.fullQuizItems();
+    return items.find((item) =>
+      this.isObjectiveQuestion(item)
+        ? !(this.fullQuizAnswers()[item.id] ?? []).length
+        : !this.fullQuizTextAnswer(item).trim()
+    ) ?? null;
+  }
+
+  private scrollToFullQuizItem(item: PracticeItem): void {
+    if (typeof document === 'undefined') return;
+    document.getElementById(this.fullQuizCardId(item))?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    });
+  }
+
+  private safeDomId(value: string): string {
+    return String(value).replace(/[^a-zA-Z0-9_-]/g, '-');
+  }
+
+  private fullQuizItemScore(item: PracticeItem): number {
+    if (this.isObjectiveQuestion(item)) return this.fullQuizAnswerCorrect(item) ? 1 : 0;
+    const level = this.fullQuizSubjectiveResult(item).level;
+    if (level === 'ok') return 1;
+    if (level === 'mid') return 0.5;
+    return 0;
+  }
+
+  private fullQuizSubjectiveResult(item: PracticeItem): ComparePracticeResult {
+    return compareUserAnswerToReference(this.fullQuizTextAnswer(item), item.answer ?? '');
+  }
+
+  private formatQuizScore(score: number): string {
+    return Number.isInteger(score) ? String(score) : score.toFixed(1);
+  }
+
   // MARK: 初始化
   // 初始化本地题库、内置题库、每日记录与上次保存的分类筛选。
   ngOnInit(): void {
     this.fontScale.set(this.readFontScale());
     this.speechRate.set(this.readSpeechRate());
     this.loadActiveScope();
+    if (this.readInitialPracticeFlow() === 'full') {
+      this.startFullQuiz();
+    }
   }
 
   // MARK: 销毁清理
@@ -450,6 +725,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
   // MARK: 设置
   // 切换分类筛选，并重置当前题的答案、自检和播放状态。
   setFilter(value: FilterValue): void {
+    this.exitFullQuiz();
     this.filterCategory.set(value);
     this.storage.saveFilterCategory(value, this.activeStorageScope());
     this.categoryMenuOpen.set(false);
@@ -458,8 +734,9 @@ export class PracticeComponent implements OnInit, OnDestroy {
   }
 
   setQuestionMode(mode: PracticeQuestionMode): void {
-    if (!this.isIosLearning || this.questionMode() === mode) return;
+    if (this.questionMode() === mode) return;
     this.stopSpeech();
+    this.exitFullQuiz();
     this.questionMode.set(mode);
     this.currentIndex.set(0);
     this.searchQuery.set('');
@@ -470,6 +747,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
   // MARK: 事件处理
   // 更新搜索关键词，并让当前题索引保持在合法范围。
   onSearchInput(value: string): void {
+    this.exitFullQuiz();
     this.searchQuery.set(value);
     this.clampIndex();
     this.resetQuestionUi();
@@ -478,6 +756,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
   // MARK: 清空
   // 清空搜索条件并恢复当前导航列表。
   clearSearch(): void {
+    this.exitFullQuiz();
     this.searchQuery.set('');
     this.clampIndex();
     this.resetQuestionUi();
@@ -1129,13 +1408,44 @@ export class PracticeComponent implements OnInit, OnDestroy {
       return iosJobObjectiveSeedToPracticeItems(importedAt);
     }
     if (this.isIosLearning) return iosJobSeedToPracticeItems(importedAt);
-    if (this.isAngularLearning) return angularJobSeedToPracticeItems(importedAt);
+    if (this.learningTrack === 'android') return [];
+    if (this.learningTrack === 'ts') return angularJobSeedToPracticeItems(importedAt, 'ts');
+    if (this.isAngularLearning) return angularJobSeedToPracticeItems(importedAt, 'angular');
     return iosSeedToPracticeItems(importedAt);
+  }
+
+  private objectiveScopeForCurrentTrack(): PracticeStorageScope | null {
+    if (this.questionMode() !== 'objective') return null;
+    if (this.learningTrack === 'ios') return 'ios-objective-learning';
+    if (this.learningTrack === 'android') return 'android-objective-learning';
+    if (this.learningTrack === 'angular') return 'angular-objective-learning';
+    if (this.learningTrack === 'ts') return 'ts-objective-learning';
+    return null;
   }
 
   // MARK: 读取
   private readPracticeScope(): PracticeStorageScope {
     const scope = this.route.snapshot.data['practiceScope'];
-    return scope === 'ios-learning' || scope === 'angular-learning' ? scope : 'practice';
+    if (
+      scope === 'ios-learning' ||
+      scope === 'android-learning' ||
+      scope === 'angular-learning' ||
+      scope === 'ts-learning'
+    ) {
+      return scope;
+    }
+    return 'practice';
+  }
+
+  private readInitialPracticeFlow(): PracticeFlowMode {
+    return this.route.snapshot.data['practiceFlow'] === 'full' ? 'full' : 'daily';
+  }
+
+  private readLearningTrack(): LearningTrack {
+    if (this.routeScope === 'ios-learning') return 'ios';
+    if (this.routeScope === 'android-learning') return 'android';
+    if (this.routeScope === 'angular-learning') return 'angular';
+    if (this.routeScope === 'ts-learning') return 'ts';
+    return 'general';
   }
 }
