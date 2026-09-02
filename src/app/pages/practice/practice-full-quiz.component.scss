@@ -52,18 +52,15 @@
   flex: 1;
   min-width: 0;
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 12px;
-  min-height: 24px;
+  min-height: 22px;
 }
 
 .full-quiz__title {
   margin: 0;
-  display: inline-flex;
-  align-items: center;
-  min-height: 24px;
-  font-size: 1em;
-  line-height: 1;
+  font-size: 14px;
+  line-height: 22px;
 }
 
 .full-quiz__actions,
@@ -80,13 +77,10 @@
 }
 
 .full-quiz__answered {
-  display: inline-flex;
-  align-items: center;
-  min-height: 24px;
   color: var(--fg);
-  font-size: 0.95em;
+  font-size: 14px;
   font-weight: 700;
-  line-height: 1;
+  line-height: 22px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
