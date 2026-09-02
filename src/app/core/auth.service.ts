@@ -219,10 +219,21 @@ export class AuthService {
     if (typeof localStorage === 'undefined') return [];
     try {
       const raw = localStorage.getItem(PERM_KEY);
-      return raw ? (JSON.parse(raw) as string[]) : [];
+      if (!raw) return [];
+      return this.normalizePermissions(JSON.parse(raw) as string[]);
     } catch {
       return [];
     }
+  }
+
+  private normalizePermissions(permissions: string[]): string[] {
+    const normalized = permissions
+      .map((item) => String(item).trim())
+      .filter((item) => item.length > 0);
+    if (normalized.length > 0 && !normalized.includes('practice.view')) {
+      return [...normalized, 'practice.view'];
+    }
+    return normalized;
   }
 
   private loadGuest(): boolean {
