@@ -17,6 +17,7 @@ export const BASIC_PERMISSIONS: string[] = [
   'tools.qrcode', 'tools.notes', 'tools.dev',
   'snake.play', 'tetris.play',
   'chart.showcase',
+  'practice.view',
 ];
 
 const LOCAL_DEV_PERMISSIONS: string[] = [

@@ -38,6 +38,7 @@ const BASIC_PERMISSIONS = [
   'snake.play',
   'tetris.play',
   'chart.showcase',
+  'practice.view',
 ];
 
 @Injectable()

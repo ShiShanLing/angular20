@@ -30,36 +30,36 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
         label: 'iOS',
         icon: 'book',
         children: [
-          { path: '/ios-learning', label: '每日学习', permission: 'practice.view', activationCode: '999' },
-          { path: '/ios-learning/review', label: '复习', permission: 'practice.view', activationCode: '999' },
+          { path: '/ios-learning', label: '每日学习', permission: 'practice.view' },
+          { path: '/ios-learning/review', label: '复习', permission: 'practice.view' },
         ]
       },
       {
         label: 'Android',
         icon: 'appstore',
         children: [
-          { path: '/android-learning', label: '每日学习', permission: 'practice.view', activationCode: '999' },
-          { path: '/android-learning/review', label: '复习', permission: 'practice.view', activationCode: '999' },
+          { path: '/android-learning', label: '每日学习', permission: 'practice.view' },
+          { path: '/android-learning/review', label: '复习', permission: 'practice.view' },
         ]
       },
       {
         label: 'Angular',
         icon: 'block',
         children: [
-          { path: '/angular-learning', label: '每日学习', permission: 'practice.view', activationCode: '999' },
-          { path: '/angular-learning/review', label: '复习', permission: 'practice.view', activationCode: '999' },
+          { path: '/angular-learning', label: '每日学习', permission: 'practice.view' },
+          { path: '/angular-learning/review', label: '复习', permission: 'practice.view' },
         ]
       },
       {
         label: 'TS',
         icon: 'experiment',
         children: [
-          { path: '/ts-learning', label: '每日学习', permission: 'practice.view', activationCode: '999' },
-          { path: '/ts-learning/review', label: '复习', permission: 'practice.view', activationCode: '999' },
+          { path: '/ts-learning', label: '每日学习', permission: 'practice.view' },
+          { path: '/ts-learning/review', label: '复习', permission: 'practice.view' },
         ]
       },
-      { path: '/practice', label: '知识刷题', permission: 'practice.view', activationCode: '999' },
-      { path: '/practice-list', label: '列表刷题', permission: 'practice.view', activationCode: '999' },
+      { path: '/practice', label: '知识刷题', permission: 'practice.view' },
+      { path: '/practice-list', label: '列表刷题', permission: 'practice.view' },
     ]
   },
   {
