@@ -103,6 +103,32 @@ export const routes: Routes = [
         data: { practiceHistoryTrack: 'ts' }
       },
       {
+        path: 'agent-objective-learning',
+        loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
+        data: { practiceScope: 'agent-objective-learning' }
+      },
+      {
+        path: 'agent-objective-learning/review',
+        loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
+        data: { practiceScope: 'agent-objective-learning', practiceFlow: 'full' }
+      },
+      {
+        path: 'agent-learning',
+        loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
+        data: { practiceScope: 'agent-learning' }
+      },
+      {
+        path: 'agent-learning/review',
+        loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
+        data: { practiceScope: 'agent-learning', practiceFlow: 'full' }
+      },
+      {
+        path: 'agent-learning/history',
+        loadComponent: () =>
+          import('./pages/practice/practice-score-history.component').then(m => m.PracticeScoreHistoryComponent),
+        data: { practiceHistoryTrack: 'agent' }
+      },
+      {
         path: 'practice-list',
         loadComponent: () => import('./pages/practice/practice-list.component').then(m => m.PracticeListComponent),
       },

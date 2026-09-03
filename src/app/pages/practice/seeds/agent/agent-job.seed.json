@@ -1,0 +1,110 @@
+[
+  {
+    "id": "agent-memory-how",
+    "category": "Agent",
+    "topic": "长期记忆",
+    "question": "长期记忆是怎么实现的？和聊天历史、知识库有什么区别？",
+    "answer": "长期记忆落在服务端 SQLite（`SqliteMemoryStore`），按用户隔离，不是浏览器临时存储。每条记忆有四类：preference（偏好）、fact（事实）、goal（目标）、constraint（约束）；单条不超过 200 字，每用户最多约 50 条。\n\n写入有两条路：1）模型调用 `remember_fact` / `forget_fact` / `list_memories`；2）规则抽取，从用户话里匹配「请记住」「我叫…」「我喜欢/不喜欢」「以后不要…」等模式，自动 upsert 或按关键词删除。一次性任务、临时行程不会写成长期记忆。\n\n回答前用当前问题做简单分词打分（`select_relevant_memories`），最多注入约 8 条相关记忆，约束类加权；格式化成 `[偏好] …` 这类上下文，要求模型遵守尤其是约束，但不要主动复述无关隐私。\n\n和另外两类信息要分开：聊天历史只覆盖本会话近期问答；知识库是文档资料，不是用户画像。",
+    "difficulty": "Medium",
+    "oralOneLiner": "记忆按用户存 SQLite，工具写入加规则抽取，回答前检索相关条目注入；它不是聊天记录，也不是知识库。"
+  },
+  {
+    "id": "agent-skill-how",
+    "category": "Agent",
+    "topic": "Skills",
+    "question": "Skill 是怎么工作的？为什么不把说明书全文放进系统提示？",
+    "answer": "Skill 是 `skills/<name>/SKILL.md`：YAML frontmatter 里有 `name` 和 `description`，后面是完整工作说明书正文。启动时扫描目录，只把「名称 + 用途」拼进系统提示（`skill_catalog_prompt` / `with_skill_catalog`），明确告诉模型：完整说明书不在上下文里，匹配到用途时必须先调 `load_skill`。\n\n`load_skill` 按名称读文件，返回 JSON：`name`、`description`、`instructions`（正文）。模型拿到说明书后再按里面的步骤去调 `calculate`、知识检索等其它工具。名称必须符合 `^[a-z0-9-]{1,64}$`。\n\n这样做是为了按需加载，避免把所有 Skill 正文常驻系统提示把 Token 撑满，也避免模型把「还没加载的说明书」当成已经知道。",
+    "difficulty": "Medium",
+    "oralOneLiner": "系统提示只放 Skill 目录；任务匹配时再 load_skill 拉全文，避免说明书把上下文撑爆。"
+  },
+  {
+    "id": "agent-mcp-how",
+    "category": "Agent",
+    "topic": "MCP",
+    "question": "MCP 在这个项目里是怎么工作的？模型调用天气或知识库时，代码实际走哪一层？",
+    "answer": "MCP（Model Context Protocol）把「工具实现」从 Agent 进程里拆出去：Server 暴露工具名、说明和参数结构，Client 负责握手和转发调用。Hello Agent 里 `mcp_client.py` 把 MCP 工具适配成 DeepSeek 的 Tool Calling 格式，所以模型看起来仍是在调普通 function。\n\n内置两条本地 STDIO Server：天气（`weather_mcp_server`，`python -m` 拉起子进程）和知识库。Client 启动时握手、动态 `list_tools`，把 `get_weather`、`search_knowledge` 等注册进可用工具。模型决定调用后，Agent **不再直接执行天气函数**，而是 `MCPClientRegistry.call_tool` 按工具名路由到所属 Server。\n\nRegistry 聚合多个 Client：同名工具属于多个 Server 会报错。用户还可以加远程 MCP（SSE 或 Streamable HTTP），URL 要校验公网 http/https，拒绝内网和云元数据。天气侧先离线匹配中国行政区划再调 Open-Meteo；知识库 Server 按用户目录检索。",
+    "difficulty": "Hard",
+    "oralOneLiner": "MCP Server 提供工具，Client 转成模型 function；调用时按名字路由到天气或知识库进程，而不是 Agent 里写死函数。"
+  },
+  {
+    "id": "agent-memory-inject",
+    "category": "Agent",
+    "topic": "长期记忆",
+    "question": "一次对话开始前，相关长期记忆是怎么被选出来并交给模型的？",
+    "answer": "先 `SqliteMemoryStore.list()` 取出该用户全部记忆。再用当前用户问题做中英分词，和每条 `content` 算重叠分：token 交集、覆盖率，constraint 额外加分。`select_relevant_memories` 按分数排序，默认最多 8 条；问题完全对不上时，非约束记忆可能被跳过，但仍会保底塞少量条目，避免完全没上下文。\n\n选中后 `format_memory_context` 编成带类别标签的文本，作为本轮系统侧补充，而不是写进聊天气泡。用过的记忆会 `touch` 更新 last_used_at。模型被要求遵守这些记忆（尤其约束），但不要对无关问题主动复述隐私。",
+    "difficulty": "Hard",
+    "oralOneLiner": "按当前问题给记忆打分，约束加权，最多注入约 8 条到本轮上下文，不写进聊天气泡。"
+  },
+  {
+    "id": "agent-mcp-registry",
+    "category": "Agent",
+    "topic": "MCP",
+    "question": "多个 MCP Server 如何同时存在？远程 MCP 和本地 STDIO 有什么差别？",
+    "answer": "`MCPClientRegistry` 持有一组 Client。默认内置：`WeatherMCPClient`（STDIO 子进程）和按用户目录配置的 `KnowledgeMCPClient`。登录用户还会从 `SqliteMcpServerStore` 读出已启用的远程项，建成 `RemoteMCPClient`（SSE 或 HTTP），Token 存在账号下不回显。\n\n`tools` 是各 Client 工具列表的拼接；`call_tool(name)` 找到唯一拥有该工具名的 Client 再转发。本地 STDIO 用当前 Python 执行 `-m hello_agent.xxx_mcp_server`；远程则校验 URL、禁止内网/metadata，连接失败记在 `last_error`，探活与错误隔离，避免一个坏 Server 拖垮全部工具。功能菜单「MCP 工具」展示的就是 `server_infos()`。",
+    "difficulty": "Hard",
+    "oralOneLiner": "Registry 合并本地 STDIO 和远程 SSE/HTTP；按工具名路由，远程要防 SSRF，坏掉的 Server 要隔离。"
+  },
+  {
+    "id": "agent-offload-how",
+    "category": "Agent",
+    "topic": "工具结果 Offload",
+    "question": "工具结果 Offload 是怎么实现的？什么时候会触发？",
+    "answer": "工具结果写回模型前，`tool_offload.py` 看长度。大约 ≥ 4000 字符时，全文写入 SQLite 表 `tool_result_blobs`（`SqliteToolResultStore`，按用户、会话隔离），回灌模型的只是精简 JSON：`offloaded`、`ref`、`preview`、`hint`。短结果原样返回。\n\n模型要看完整字段时再调 `fetch_tool_result`，传入 stub 里的 `ref`。每会话大约保留 40 份卸载结果，超出淘汰旧记录。覆盖普通对话和多 Agent 临时工具循环。目的是多轮 MCP / OpenAPI / 长 `run_python` 不把窗口撑爆，同时避免「直接截断丢关键信息」。",
+    "difficulty": "Medium",
+    "oralOneLiner": "超长结果进 SQLite，上下文只留摘要和 ref，需要时再 fetch_tool_result 取全文。"
+  },
+  {
+    "id": "agent-openapi-how",
+    "category": "Agent",
+    "topic": "OpenAPI 工具",
+    "question": "粘贴一份 OpenAPI JSON 之后，接口是怎么变成 Agent 能调的工具的？",
+    "answer": "用户在功能中心粘贴 OpenAPI JSON（暂不支持 YAML），可选填根地址和 Bearer Token。先解析预览，勾选接口（默认少选 DELETE），确认后由 `openapi_tools.py` 解析、`openapi_registry.py` 注册成 DeepSeek function，`SqliteOpenApiSourceStore` 按账号持久化。对话里这些操作以动态工具名出现。\n\n安全：拒绝 localhost、内网、云元数据（SSRF）；Token 只存当前账号，列表只回 `has_auth`；POST/PUT/PATCH/DELETE 调用前要用户确认，和 `complete_todo` 一类。每账号最多 8 个来源、每来源最多 20 个启用工具。动态注册工具名，但不扩大默认权限面。",
+    "difficulty": "Medium",
+    "oralOneLiner": "解析 OpenAPI → 注册成 function → 按账号保存；内网拒绝，写操作要确认。"
+  },
+  {
+    "id": "agent-collab-how",
+    "category": "Agent",
+    "topic": "多 Agent 协作",
+    "question": "多 Agent「规划 → 确认 → 执行 → 审核」在工程上是怎么串起来的？为什么规划完不能卡在同一条 SSE 里等人点确认？",
+    "answer": "规划 Agent 拿到真实工具目录拆步骤（常用 cheap 模型），禁止发明工具名，且本阶段不直接调工具。规划结束把状态写入 `collaboration_runs` 检查点，结束本轮 SSE（类似工作流 `waiting_approval`）。用户点确认走 `POST /collaborations/{id}/approve`，再开一条 SSE：执行 Agent 按计划真调计算器、`run_python`、天气、Todo 添加、知识库、已导入 OpenAPI 读操作、`fetch_tool_result` 等。审核 Agent 查有没有工具证据，不合格打回执行一轮。\n\n不能把「等人点击」挂在同一条流里：SSE 长时间阻塞会碰到锁和超时。`complete_todo`、旅行确认、OpenAPI 写操作仍不能由协作替用户确认。未选手动 `/多智能体` 时，前端先打 `POST /routing/collaboration`，复杂目标才自动进协作。",
+    "difficulty": "Hard",
+    "oralOneLiner": "规划后落检查点并断开 SSE，确认后再续跑执行和审核；不能在一条长连接里干等用户。"
+  },
+  {
+    "id": "agent-rag-how",
+    "category": "Agent",
+    "topic": "知识检索",
+    "question": "普通提问时，知识检索（RAG）实际怎么走？命中和未命中分别怎样？",
+    "answer": "普通问题也会先调 `search_knowledge`，不必用户说「请根据本地知识库」。知识库 MCP 把资料切段，用关键词 + 向量混合检索（`fastembed` + `sqlite-vec`），按账号隔离。命中时最多把约 3 个片段当成本轮临时上下文，并要求标注来源；这些临时片段不写入聊天历史，避免膨胀。未命中再 `web_search` 做网页摘要兜底，同样要求来源。\n\n评测侧用关键词/精确匹配/LLM Judge 和可信度、失败原因，把「幻觉、漏工具」收成可回归问题。聊天附件是另一条路径：只属于当前会话，不入向量库。",
+    "difficulty": "Medium",
+    "oralOneLiner": "先混合检索本地知识，命中带上来源片段；没有再联网兜底；临时片段不进聊天历史。"
+  },
+  {
+    "id": "agent-routing-how",
+    "category": "Agent",
+    "topic": "多模型路由",
+    "question": "多模型路由是怎么工作的？什么任务走 cheap，什么走 strong？",
+    "answer": "`model_routing.py` 按任务档位选模型，环境变量 `DEEPSEEK_MODEL_CHEAP` / `STRONG` / `FALLBACK`。对话和复杂规划默认偏 strong；简报等辅助任务可用 cheap。调用失败按 fallback 链降级。监控看板能看到当前路由配置。目的是在效果和成本/延迟之间拆档，而不是全程死磕最贵模型。",
+    "difficulty": "Easy",
+    "oralOneLiner": "简单或辅助走 cheap，复杂对话和规划走 strong，失败再按 fallback 降级。"
+  },
+  {
+    "id": "agent-loop-how",
+    "category": "Agent",
+    "topic": "Agent 循环",
+    "question": "一次带工具的提问，从用户输入到最终回答，代码和模型各自做什么？",
+    "answer": "用户问题进入后，程序把可用工具说明（本地工具 + MCP 动态工具 + 已导入 OpenAPI + Skill 目录）和相关长期记忆、检索片段一起发给 DeepSeek。模型用 Tool Calling / JSON 决定要不要调工具、调哪个、参数是什么。Python 按名字执行：本地函数、MCP Client 转发、或 OpenAPI 调用（写操作先 HITL）。工具结果（或 Offload stub）回灌消息列表，模型再生成自然语言。`AgentSession.messages` 保存本轮历史以便追问。\n\n成功回答后，用户问题和最终回答写入 `chat_messages`；工具参数和原始工具结果一般不作为聊天气泡长期展示。这就是「模型决策、工程执行和安全边界」。",
+    "difficulty": "Medium",
+    "oralOneLiner": "模型选工具和参数，Python 执行并回灌结果，再让模型组织回答；聊天里长期只留问答，不堆完整工具日志。"
+  },
+  {
+    "id": "agent-attachment-ocr-how",
+    "category": "Agent",
+    "topic": "聊天附件",
+    "question": "会话附件里的 PDF 和图片，文字是怎么进到 Agent 上下文的？和知识库有何不同？",
+    "answer": "附件挂在当前会话（`chat_attachments`），单文件约 8MB 上限、每会话最多 5 个。文字版 PDF/Word/Markdown 直接抽文本。扫描件和图片没有文字层时，走本地 Tesseract（默认 `chi_sim+eng`，Pillow / pypdfium2），可用 `OCR_ENABLED=false` 关掉。长文件先注入目录和预览，模型用 `read_chat_attachment` 分段读。\n\n和知识库的差别：附件不入向量索引、不跨会话、不进 RAG 混合检索；知识库才是按账号可检索的文档。OCR 可能有错字，回答应注明来源文件。数据默认不出机。",
+    "difficulty": "Medium",
+    "oralOneLiner": "附件只属于本会话：能抽文本就抽，否则本地 OCR；不进知识库向量。"
+  }
+]

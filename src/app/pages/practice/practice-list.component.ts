@@ -30,6 +30,8 @@ import {
 } from './practice-storage.service';
 import {
   angularJobSeedToPracticeItems,
+  agentObjectiveSeedToPracticeItems,
+  agentJobSeedToPracticeItems,
   iosJobObjectiveSeedToPracticeItems,
   iosJobSeedToPracticeItems,
   iosSeedToPracticeItems,
@@ -429,7 +431,14 @@ export class PracticeListComponent implements OnInit {
     this.ensureAllSeeds();
 
     // 合并所有题库（practice + ios-learning + ios-objective-learning + angular-learning）
-    const allScopes: PracticeStorageScope[] = ['practice', 'ios-learning', 'ios-objective-learning', 'angular-learning'];
+    const allScopes: PracticeStorageScope[] = [
+      'practice',
+      'ios-learning',
+      'ios-objective-learning',
+      'angular-learning',
+      'agent-objective-learning',
+      'agent-learning',
+    ];
     const merged: PracticeItem[] = [];
     const seenIds = new Set<string>();
     for (const scope of allScopes) {
@@ -453,6 +462,8 @@ export class PracticeListComponent implements OnInit {
       { scope: 'ios-learning', seed: iosJobSeedToPracticeItems },
       { scope: 'ios-objective-learning', seed: iosJobObjectiveSeedToPracticeItems },
       { scope: 'angular-learning', seed: angularJobSeedToPracticeItems },
+      { scope: 'agent-objective-learning', seed: agentObjectiveSeedToPracticeItems },
+      { scope: 'agent-learning', seed: agentJobSeedToPracticeItems },
     ];
     for (const { scope, seed } of scopes) {
       const existing = this.storage.load(scope);
@@ -483,6 +494,7 @@ export class PracticeListComponent implements OnInit {
       'angular-ts': 'orange',
       'angular-js': 'cyan',
       'angular-css': 'purple',
+      agent: 'geekblue',
     };
     return colors[cat] || 'default';
   }

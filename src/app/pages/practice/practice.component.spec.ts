@@ -132,6 +132,10 @@ describe('PracticeComponent', () => {
     expect(component.categoryLabel('ios')).toBe('iOS');
   });
 
+  it('categoryLabel returns correct label for agent', () => {
+    expect(component.categoryLabel('agent')).toBe('Agent');
+  });
+
   it('statsTotal reflects items count', () => {
     component.items.set([makeItem(), makeItem(), makeItem()]);
     expect(component.statsTotal()).toBe(3);

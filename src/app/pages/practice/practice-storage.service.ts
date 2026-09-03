@@ -14,14 +14,17 @@ export type PracticeStorageScope =
   | 'angular-learning'
   | 'angular-objective-learning'
   | 'ts-learning'
-  | 'ts-objective-learning';
-export type PracticeHistoryTrack = 'ios' | 'android' | 'angular' | 'ts' | 'practice';
+  | 'ts-objective-learning'
+  | 'agent-learning'
+  | 'agent-objective-learning';
+export type PracticeHistoryTrack = 'ios' | 'android' | 'angular' | 'ts' | 'agent' | 'practice';
 
 export const PRACTICE_HISTORY_TRACK_SCOPES: Record<PracticeHistoryTrack, PracticeStorageScope[]> = {
   ios: ['ios-learning', 'ios-objective-learning'],
   android: ['android-learning', 'android-objective-learning'],
   angular: ['angular-learning', 'angular-objective-learning'],
   ts: ['ts-learning', 'ts-objective-learning'],
+  agent: ['agent-learning', 'agent-objective-learning'],
   practice: ['practice'],
 };
 
@@ -30,6 +33,7 @@ export const PRACTICE_HISTORY_TRACK_LABELS: Record<PracticeHistoryTrack, string>
   android: 'Android',
   angular: 'Angular',
   ts: 'TypeScript',
+  agent: 'Agent',
   practice: '知识刷题',
 };
 
@@ -76,6 +80,7 @@ const VALID_CATEGORIES: PracticeCategory[] = [
   'angular-ts',
   'angular-js',
   'angular-css',
+  'agent',
 ];
 
 // MARK: 判断
@@ -472,6 +477,7 @@ export class PracticeStorageService {
       'angular-ts': 0,
       'angular-js': 0,
       'angular-css': 0,
+      agent: 0,
     };
     for (const i of items) {
       if (i.category in base) base[i.category]++;

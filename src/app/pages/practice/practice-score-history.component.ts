@@ -17,7 +17,7 @@ echarts.use([LineChart, GridComponent, LegendComponent, TooltipComponent, DataZo
 
 function readHistoryTrack(route: ActivatedRoute): PracticeHistoryTrack {
   const track = route.snapshot.data['practiceHistoryTrack'];
-  if (track === 'ios' || track === 'android' || track === 'angular' || track === 'ts' || track === 'practice') {
+  if (track === 'ios' || track === 'android' || track === 'angular' || track === 'ts' || track === 'agent' || track === 'practice') {
     return track;
   }
   return 'practice';

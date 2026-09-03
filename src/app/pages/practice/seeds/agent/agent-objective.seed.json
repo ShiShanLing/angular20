@@ -1,0 +1,592 @@
+[
+  {
+    "id": "agent-obj-001-tf-loop",
+    "sourceQuestionId": "agent-core-loop",
+    "category": "Agent",
+    "topic": "Agent 循环",
+    "type": "trueFalse",
+    "question": "判断：Hello Agent 的核心循环是 DeepSeek 负责判断是否调用工具及参数，Python 负责安全执行工具并把结果回灌上下文。",
+    "options": [
+      { "id": "true", "text": "正确" },
+      { "id": "false", "text": "错误" }
+    ],
+    "correctAnswers": ["true"],
+    "explanation": "文档把分工写得很明确：模型做决策，工程做执行。这是和普通 Chatbot 的本质差别。",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "agent-obj-002-single-loop",
+    "sourceQuestionId": "agent-core-loop",
+    "category": "Agent",
+    "topic": "Agent 循环",
+    "type": "single",
+    "question": "单选：关于最小 Agent 循环，下面哪一项最准确？",
+    "options": [
+      { "id": "A", "text": "模型直接改数据库，Python 只负责画界面。" },
+      { "id": "B", "text": "程序把工具说明随问题发给模型，模型决定是否调用；Python 执行工具后再把结果交给模型生成自然语言回答。" },
+      { "id": "C", "text": "所有计算都必须在浏览器里用 JavaScript 完成，后端只转发文本。" },
+      { "id": "D", "text": "只要 Prompt 写得好，就不需要工具调用和会话状态。" }
+    ],
+    "correctAnswers": ["B"],
+    "explanation": "README 里的最小循环：input → 带上计算器说明发给模型 → 模型判断是否调用 calculate → Python 执行 → 模型根据工具结果作答。AgentSession.messages 保存本轮历史。",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "agent-obj-003-multi-tools",
+    "sourceQuestionId": "agent-builtin-tools",
+    "category": "Agent",
+    "topic": "内置工具",
+    "type": "multiple",
+    "question": "多选：下列哪些是 Hello Agent 文档中列出的常用工具能力？",
+    "options": [
+      { "id": "A", "text": "calculate：精确计算数学表达式" },
+      { "id": "B", "text": "run_python：在隔离沙箱执行短 Python（无网络/文件/系统命令）" },
+      { "id": "C", "text": "ssh_root：模型可直接用 root 改生产 nginx" },
+      { "id": "D", "text": "remember_fact / forget_fact / list_memories：跨会话长期记忆" },
+      { "id": "E", "text": "fetch_tool_result：读取被 Offload 的完整工具结果" }
+    ],
+    "correctAnswers": ["A", "B", "D", "E"],
+    "explanation": "生产改配置必须走受控发布，不会做成模型可调的 ssh_root。其余四项都在 README 常用工具列表里。",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "agent-obj-004-tf-hitl-todo",
+    "sourceQuestionId": "agent-hitl-todo",
+    "category": "Agent",
+    "topic": "人机确认",
+    "type": "trueFalse",
+    "question": "判断：完成 Todo 时，模型建议执行即可立刻改数据；用户不必再确认。",
+    "options": [
+      { "id": "true", "text": "正确" },
+      { "id": "false", "text": "错误" }
+    ],
+    "correctAnswers": ["false"],
+    "explanation": "完成任务前必须用户确认（输入 y/yes）。模型可以建议，修改数据的最终决定由用户作出。API 侧默认返回 approval_required，需 approve: true 才会执行。",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "agent-obj-005-single-offload",
+    "sourceQuestionId": "agent-tool-offload",
+    "category": "Agent",
+    "topic": "工具结果 Offload",
+    "type": "single",
+    "question": "单选：工具结果 Offload 要解决什么问题？怎么做？",
+    "options": [
+      { "id": "A", "text": "超长工具结果全部塞进上下文，宁可撑爆窗口也不截断。" },
+      { "id": "B", "text": "超过约 4000 字符的结果写入 SQLite（tool_result_blobs），上下文只留摘要和 ref，需要细节时再调 fetch_tool_result。" },
+      { "id": "C", "text": "超长结果直接丢弃，模型凭记忆补全即可。" },
+      { "id": "D", "text": "把完整结果写进浏览器 Local Storage，后端不再保存。" }
+    ],
+    "correctAnswers": ["B"],
+    "explanation": "做法是外置存储 + 摘要/ref，在「不丢信息」和「省 Token」之间折中。简单截断会丢关键信息，全部塞进上下文会撑爆窗口。",
+    "difficulty": "Medium"
+  },
+  {
+    "id": "agent-obj-006-tf-offload-table",
+    "sourceQuestionId": "agent-tool-offload",
+    "category": "Agent",
+    "topic": "工具结果 Offload",
+    "type": "trueFalse",
+    "question": "判断：工具 Offload 的全文存放在 SQLite 表 tool_result_blobs 中，而不是只存在模型 Prompt 里。",
+    "options": [
+      { "id": "true", "text": "正确" },
+      { "id": "false", "text": "错误" }
+    ],
+    "correctAnswers": ["true"],
+    "explanation": "AGENTS.md 标明 SqliteToolResultStore，表名 tool_result_blobs。",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "agent-obj-007-single-routing",
+    "sourceQuestionId": "agent-model-routing",
+    "category": "Agent",
+    "topic": "多模型路由",
+    "type": "single",
+    "question": "单选：多模型路由的策略是？",
+    "options": [
+      { "id": "A", "text": "所有任务固定走最贵的 strong 模型。" },
+      { "id": "B", "text": "简单任务走 cheap，复杂任务走 strong，失败可降级到 fallback。" },
+      { "id": "C", "text": "前端按按钮颜色随机选模型。" },
+      { "id": "D", "text": "路由只存在于文档，代码里没有独立模块。" }
+    ],
+    "correctAnswers": ["B"],
+    "explanation": "入口是 model_routing.py，环境变量 DEEPSEEK_MODEL_CHEAP / STRONG / FALLBACK。",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "agent-obj-008-multi-memory",
+    "sourceQuestionId": "agent-long-term-memory",
+    "category": "Agent",
+    "topic": "长期记忆",
+    "type": "multiple",
+    "question": "多选：关于长期记忆，哪些说法正确？",
+    "options": [
+      { "id": "A", "text": "偏好 / 事实 / 目标 / 约束可以跨会话保留" },
+      { "id": "B", "text": "回答前会自动注入相关条目" },
+      { "id": "C", "text": "记忆只存在浏览器 sessionStorage，关标签就没了" },
+      { "id": "D", "text": "实现入口包括 memory.py 与 SqliteMemoryStore" }
+    ],
+    "correctAnswers": ["A", "B", "D"],
+    "explanation": "记忆在服务端 SQLite，不是浏览器临时存储。功能中心「记忆」对应这套能力。",
+    "difficulty": "Medium"
+  },
+  {
+    "id": "agent-obj-009-single-openapi",
+    "sourceQuestionId": "agent-openapi-ssrf",
+    "category": "Agent",
+    "topic": "OpenAPI 工具",
+    "type": "single",
+    "question": "单选：用户粘贴 OpenAPI JSON 动态生成工具时，安全上应怎么做？",
+    "options": [
+      { "id": "A", "text": "任意 URL 都放行，包括内网地址，方便调试。" },
+      { "id": "B", "text": "校验公网可达、拒绝内网；写操作进入确认门闩；工具名可动态注册但不扩大默认权限面。" },
+      { "id": "C", "text": "写操作由模型直接执行，不再打扰用户。" },
+      { "id": "D", "text": "OpenAPI 工具和 MCP 必须共用同一个无隔离进程。" }
+    ],
+    "correctAnswers": ["B"],
+    "explanation": "经历文档写了 SSRF、误调写接口、内网探测风险。对应 openapi_tools.py / openapi_registry.py。",
+    "difficulty": "Medium"
+  },
+  {
+    "id": "agent-obj-010-tf-openapi-confirm",
+    "sourceQuestionId": "agent-openapi-ssrf",
+    "category": "Agent",
+    "topic": "OpenAPI 工具",
+    "type": "trueFalse",
+    "question": "判断：OpenAPI 导入的写操作需要用户确认后才会真正调用。",
+    "options": [
+      { "id": "true", "text": "正确" },
+      { "id": "false", "text": "错误" }
+    ],
+    "correctAnswers": ["true"],
+    "explanation": "README：勾选接口后 Agent 可调用；内网地址拒绝；写操作需确认。",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "agent-obj-011-multi-collaboration",
+    "sourceQuestionId": "agent-multi-agent",
+    "category": "Agent",
+    "topic": "多 Agent 协作",
+    "type": "multiple",
+    "question": "多选：多 Agent 协作流水线包含哪些环节？",
+    "options": [
+      { "id": "A", "text": "规划" },
+      { "id": "B", "text": "人确认计划（HITL）" },
+      { "id": "C", "text": "执行角色真实调用工具" },
+      { "id": "D", "text": "审核，缺工具证据必须打回" },
+      { "id": "E", "text": "三个角色只接力写文案，禁止调用任何工具" }
+    ],
+    "correctAnswers": ["A", "B", "C", "D"],
+    "explanation": "难点是三角色退化成纯文案接力。做法是给规划注入真实工具目录、执行用可调工具集、审核要求工具证据；高风险写操作从协作工具集排除。",
+    "difficulty": "Medium"
+  },
+  {
+    "id": "agent-obj-012-single-collab-sse",
+    "sourceQuestionId": "agent-collab-checkpoint",
+    "category": "Agent",
+    "topic": "协作检查点",
+    "type": "single",
+    "question": "单选：协作规划完成后为什么不能把「等人点击确认」挂在同一条 SSE 请求里？正确做法是？",
+    "options": [
+      { "id": "A", "text": "SSE 可以无限阻塞，锁和超时都不是问题。" },
+      { "id": "B", "text": "规划结束后持久化 collaboration_runs 检查点并结束本轮流；用户确认后走 approve 再开 SSE 续跑执行与审核。" },
+      { "id": "C", "text": "把确认按钮画在模型输出的 Markdown 里，点了也只是前端假状态。" },
+      { "id": "D", "text": "确认必须重启整个 FastAPI 进程。" }
+    ],
+    "correctAnswers": ["B"],
+    "explanation": "参考工作流 waiting_approval：检查点落库、结束本轮流，避免长连接挂起。表 collaboration_runs，模块 collaboration.py。",
+    "difficulty": "Hard"
+  },
+  {
+    "id": "agent-obj-013-tf-collab-route",
+    "sourceQuestionId": "agent-collab-routing",
+    "category": "Agent",
+    "topic": "协作自动路由",
+    "type": "trueFalse",
+    "question": "判断：所有「计算 + 记一条 Todo」这类短组合，都必须自动进入多 Agent 协作。",
+    "options": [
+      { "id": "true", "text": "正确" },
+      { "id": "false", "text": "错误" }
+    ],
+    "correctAnswers": ["false"],
+    "explanation": "复杂目标可自动进协作；计算+记 Todo 等短组合保持普通单 Agent 对话。路由接口 POST /routing/collaboration。",
+    "difficulty": "Medium"
+  },
+  {
+    "id": "agent-obj-014-single-rag",
+    "sourceQuestionId": "agent-rag",
+    "category": "Agent",
+    "topic": "知识检索",
+    "type": "single",
+    "question": "单选：普通提问时知识检索的默认策略是？",
+    "options": [
+      { "id": "A", "text": "必须先说「请根据本地知识库」，否则绝不检索。" },
+      { "id": "B", "text": "自动优先检索本地知识；命中则带上来源片段；未命中再联网摘要兜底，并要求标注来源。" },
+      { "id": "C", "text": "永远只用模型参数里的记忆，禁止查库。" },
+      { "id": "D", "text": "每次都把整个知识库原文塞进系统提示。" }
+    ],
+    "correctAnswers": ["B"],
+    "explanation": "自动优先 search_knowledge；临时片段不写入聊天历史以免膨胀。评测用 LLM Judge + 可信度，把幻觉/漏工具变成可回归问题。",
+    "difficulty": "Medium"
+  },
+  {
+    "id": "agent-obj-015-multi-rag-stack",
+    "sourceQuestionId": "agent-rag",
+    "category": "Agent",
+    "topic": "知识检索",
+    "type": "multiple",
+    "question": "多选：当前知识检索相关技术栈包括哪些？",
+    "options": [
+      { "id": "A", "text": "关键词 + 向量混合检索" },
+      { "id": "B", "text": "fastembed" },
+      { "id": "C", "text": "sqlite-vec" },
+      { "id": "D", "text": "必须外接独立的商业向量云才能工作" }
+    ],
+    "correctAnswers": ["A", "B", "C"],
+    "explanation": "经历文档写的是自研混合检索 + fastembed + sqlite-vec，不是绑定某一家云向量库。",
+    "difficulty": "Medium"
+  },
+  {
+    "id": "agent-obj-016-single-attach",
+    "sourceQuestionId": "agent-chat-attachment",
+    "category": "Agent",
+    "topic": "聊天附件",
+    "type": "single",
+    "question": "单选：会话聊天附件和知识库上传的关键差别是？",
+    "options": [
+      { "id": "A", "text": "附件会立刻写入全站向量索引，所有用户共享。" },
+      { "id": "B", "text": "附件只属于当前会话，不入向量库、不跨会话共享；文字版抽文本，扫描件/图片走本地 Tesseract OCR。" },
+      { "id": "C", "text": "附件必须上传到公有对象存储才能给 Agent 读。" },
+      { "id": "D", "text": "图片 OCR 一律发到第三方云，本机不处理。" }
+    ],
+    "correctAnswers": ["B"],
+    "explanation": "控制成本与隐私（数据不出机）。OCR 可用 OCR_ENABLED=false 关闭。较长文件只注入目录与预览，可用 read_chat_attachment 分段读。",
+    "difficulty": "Medium"
+  },
+  {
+    "id": "agent-obj-017-tf-ocr",
+    "sourceQuestionId": "agent-chat-attachment",
+    "category": "Agent",
+    "topic": "聊天附件",
+    "type": "trueFalse",
+    "question": "判断：扫描件 PDF 与图片默认使用本地 Tesseract（chi_sim+eng），而不是先假设文件一定有文字层。",
+    "options": [
+      { "id": "true", "text": "正确" },
+      { "id": "false", "text": "错误" }
+    ],
+    "correctAnswers": ["true"],
+    "explanation": "先文本抽取，空结果再 OCR。加密 PDF 和纯扫描件在知识库上传路径上另有限制。",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "agent-obj-018-multi-mcp",
+    "sourceQuestionId": "agent-mcp",
+    "category": "Agent",
+    "topic": "MCP",
+    "type": "multiple",
+    "question": "多选：关于天气 MCP，哪些说法正确？",
+    "options": [
+      { "id": "A", "text": "weather_mcp_server.py 是独立工具服务" },
+      { "id": "B", "text": "mcp_client.py 可通过 STDIO 拉起本地 Server 并握手，动态读取 get_weather 的名称、说明和参数" },
+      { "id": "C", "text": "Agent 收到工具调用后不再直接执行天气函数，而是经 MCP Client 请求 MCP Server" },
+      { "id": "D", "text": "天气查询目前面向中国省市区县，优先离线匹配行政区划再调 Open-Meteo" }
+    ],
+    "correctAnswers": ["A", "B", "C", "D"],
+    "explanation": "同名地区无法消歧时会要求用户补充，不会擅自选择。还可配置远程 SSE/HTTP MCP。",
+    "difficulty": "Medium"
+  },
+  {
+    "id": "agent-obj-019-single-frontends",
+    "sourceQuestionId": "agent-three-frontends",
+    "category": "Agent",
+    "topic": "多前端部署",
+    "type": "single",
+    "question": "单选：三个前端在生产上应如何对待？",
+    "options": [
+      { "id": "A", "text": "三个站点必须独立保留、独立发布；主站 /agent/、Todo /agent/todo/、管理后台 /agent/admin/。" },
+      { "id": "B", "text": "可以把三个 dist 合并进同一个 index.html。" },
+      { "id": "C", "text": "管理后台和主站共用同一颗登录 Cookie 即可进入。" },
+      { "id": "D", "text": "发布主站时用无排除的 rsync --delete 同步整个 /var/www/projects/agent/ 最干净。" }
+    ],
+    "correctAnswers": ["A"],
+    "explanation": "主站和 Todo 共用 Agent Cookie；管理后台是另一套管理员账号和 MFA。无排除的 --delete 会删掉 todo/ 和 admin/。",
+    "difficulty": "Medium"
+  },
+  {
+    "id": "agent-obj-020-tf-rsync",
+    "sourceQuestionId": "agent-publish-redline",
+    "category": "Agent",
+    "topic": "发布红线",
+    "type": "trueFalse",
+    "question": "判断：禁止把 frontend/dist/ 用无排除规则的 rsync --delete 同步到 /var/www/projects/agent/，因为会删除 todo/ 和 admin/。",
+    "options": [
+      { "id": "true", "text": "正确" },
+      { "id": "false", "text": "错误" }
+    ],
+    "correctAnswers": ["true"],
+    "explanation": "AGENTS.md 发布红线。主站同步必须 exclude admin/ 和 todo/。即使只发主站，发布后也要检查四个生产地址。",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "agent-obj-021-multi-runtime",
+    "sourceQuestionId": "agent-runtime-data",
+    "category": "Agent",
+    "topic": "运行时数据",
+    "type": "multiple",
+    "question": "多选：下列哪些属于运行时数据，发布时不得用仓库文件覆盖或删除？",
+    "options": [
+      { "id": "A", "text": "SQLite：/var/lib/hello-agent/agent.db" },
+      { "id": "B", "text": "知识上传目录、聊天附件目录" },
+      { "id": "C", "text": "/etc/hello-agent.env 里的真实密钥" },
+      { "id": "D", "text": "仓库里的 frontend/src 源码（这本来就该随发布更新）" }
+    ],
+    "correctAnswers": ["A", "B", "C"],
+    "explanation": "源码和构建产物可以发布；库、上传、env、Redis 数据不是代码包的一部分。更新后端时也不要删除 .venv。",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "agent-obj-022-single-stack",
+    "sourceQuestionId": "agent-tech-stack",
+    "category": "Agent",
+    "topic": "技术栈",
+    "type": "single",
+    "question": "单选：后端与前端的主体技术栈是？",
+    "options": [
+      { "id": "A", "text": "后端 NestJS + MongoDB；前端 Angular Universal SSR。" },
+      { "id": "B", "text": "后端 Python 3.10+、FastAPI、Uvicorn、Pydantic、SQLAlchemy、SQLite；前端 React、TypeScript、Vite；异步任务 Redis + RQ。" },
+      { "id": "C", "text": "全部跑在浏览器，没有服务端。" },
+      { "id": "D", "text": "后端 PHP + MySQL；前端 jQuery。" }
+    ],
+    "correctAnswers": ["B"],
+    "explanation": "三个前端都是 React 19 + TS + Vite。认证是 Cookie 会话、PBKDF2、管理端 TOTP MFA。API 生产上由 Nginx 把 /agent/api/ 反代到 127.0.0.1:8000。",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "agent-obj-023-tf-cookie",
+    "sourceQuestionId": "agent-auth",
+    "category": "Agent",
+    "topic": "认证",
+    "type": "trueFalse",
+    "question": "判断：登录 Cookie hello_agent_login 是 HttpOnly、path=/，对 JavaScript 不可见；密码用带盐的 PBKDF2-SHA256 保存。",
+    "options": [
+      { "id": "true", "text": "正确" },
+      { "id": "false", "text": "错误" }
+    ],
+    "correctAnswers": ["true"],
+    "explanation": "数据库不存明文密码。聊天、历史、计划、Todo 同步和 MCP 接口都要登录，并校验会话属于当前用户。",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "agent-obj-024-single-admin-mfa",
+    "sourceQuestionId": "agent-auth",
+    "category": "Agent",
+    "topic": "认证",
+    "type": "single",
+    "question": "单选：管理后台和 Agent 主站的登录关系是？",
+    "options": [
+      { "id": "A", "text": "带上主站 Cookie 就能进 /agent/admin/。" },
+      { "id": "B", "text": "管理后台是另一套管理员账号，并使用 MFA（TOTP）；主站 Cookie 不能进入。" },
+      { "id": "C", "text": "三个前端完全不需要登录。" },
+      { "id": "D", "text": "管理员密码明文写在前端环境变量里。" }
+    ],
+    "correctAnswers": ["B"],
+    "explanation": "Todo 与主站共用 Agent Cookie；Admin 权限隔离。生产必须 HTTPS。",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "agent-obj-025-single-sse",
+    "sourceQuestionId": "agent-sse-chat",
+    "category": "Agent",
+    "topic": "流式对话",
+    "type": "single",
+    "question": "单选：主站聊天发送走哪条接口？停止生成时怎样通知后端？",
+    "options": [
+      { "id": "A", "text": "只使用非流式 POST /chat，前端必须等全文返回再渲染。" },
+      { "id": "B", "text": "POST /chat/stream，FastAPI 把模型输出包成 SSE；停止时中止读取并 POST /chat/generations/{request_id}/cancel。" },
+      { "id": "C", "text": "用 WebSocket 替代一切 HTTP，取消时关闭浏览器即可，后端无需知道。" },
+      { "id": "D", "text": "用 GET 把整段对话放在 URL 查询参数里。" }
+    ],
+    "correctAnswers": ["B"],
+    "explanation": "非流式 POST /chat 仍保留便于对比。session_id 存在 Local Storage，历史用 GET /sessions/{id}/messages 拉最近 200 条。",
+    "difficulty": "Medium"
+  },
+  {
+    "id": "agent-obj-026-tf-sse-restart",
+    "sourceQuestionId": "agent-sse-restart",
+    "category": "Agent",
+    "topic": "流式对话",
+    "type": "trueFalse",
+    "question": "判断：对话 SSE 长连接可能导致 systemd 停服卡在 deactivating；发布流程应对 API 进程可控强杀后拉起，并轮询 /health 直到恢复。",
+    "options": [
+      { "id": "true", "text": "正确" },
+      { "id": "false", "text": "错误" }
+    ],
+    "correctAnswers": ["true"],
+    "explanation": "经历文档「流式体验与服务重启」：避免发了但半死不活、健康检查 502。",
+    "difficulty": "Hard"
+  },
+  {
+    "id": "agent-obj-027-single-session",
+    "sourceQuestionId": "agent-session-context",
+    "category": "Agent",
+    "topic": "会话上下文",
+    "type": "single",
+    "question": "单选：FastAPI 用 SQLAlchemy 存对话时，如何控制发给模型的上下文长度？",
+    "options": [
+      { "id": "A", "text": "每次恢复最近 40 条消息给模型；数据库里的完整记录不会因此删除。" },
+      { "id": "B", "text": "每次请求删除该 session 的全部历史，只留最后一句。" },
+      { "id": "C", "text": "上下文长度没有限制，把整库拼进 Prompt。" },
+      { "id": "D", "text": "对话只存在内存，重启后 session_id 失效且无法恢复。" }
+    ],
+    "correctAnswers": ["A"],
+    "explanation": "Todo 在 todos 表，对话在 chat_messages，用 session_id 隔离。重启后同一 session_id 可恢复。",
+    "difficulty": "Medium"
+  },
+  {
+    "id": "agent-obj-028-tf-apikey",
+    "sourceQuestionId": "agent-secrets",
+    "category": "Agent",
+    "topic": "密钥",
+    "type": "trueFalse",
+    "question": "判断：DeepSeek API Key 应放在后端或本地环境变量中，不要写进源代码，也不要提交到 Git。",
+    "options": [
+      { "id": "true", "text": "正确" },
+      { "id": "false", "text": "错误" }
+    ],
+    "correctAnswers": ["true"],
+    "explanation": "README 明确禁止把 Key 写进源码。真实 /etc/hello-agent.env 也不得进仓库。",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "agent-obj-029-multi-publish",
+    "sourceQuestionId": "agent-publish-flow",
+    "category": "Agent",
+    "topic": "发布规范",
+    "type": "multiple",
+    "question": "多选：Hello Agent 自动发布应遵守哪些规则？",
+    "options": [
+      { "id": "A", "text": "不要手写 rsync；用 ./deploy/publish.sh 并显式 --targets" },
+      { "id": "B", "text": "发布到服务器前，对应源码必须 commit 并 push 到 GitHub" },
+      { "id": "C", "text": "失败会回滚并写入 /var/lib/hello-agent/releases/" },
+      { "id": "D", "text": "可以提交 .env、数据库和 dist/ 以便服务器直接用" }
+    ],
+    "correctAnswers": ["A", "B", "C"],
+    "explanation": "禁止提交 .env、密钥、数据库、上传、缓存或 dist/。targets 可选 frontend、todo、admin、backend、knowledge、skills。",
+    "difficulty": "Medium"
+  },
+  {
+    "id": "agent-obj-030-single-nginx",
+    "sourceQuestionId": "agent-nginx",
+    "category": "Agent",
+    "topic": "网关",
+    "type": "single",
+    "question": "单选：生产上 Agent API 如何暴露？",
+    "options": [
+      { "id": "A", "text": "Uvicorn 直接对公网监听 8000，浏览器跨域打过去。" },
+      { "id": "B", "text": "Uvicorn 只听本机；Nginx 把 /agent/api/ 代理到 127.0.0.1:8000，并托管三个前端静态资源。" },
+      { "id": "C", "text": "API 和静态文件都放在 GitHub Pages。" },
+      { "id": "D", "text": "管理后台走 8000，主站走 3000，中间没有反代。" }
+    ],
+    "correctAnswers": ["B"],
+    "explanation": "开发时 Vite 用同源 /api 代理到 8000。生产必须 HTTPS，并设置 AUTH_COOKIE_SECURE 等。",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "agent-obj-031-tf-scheduler",
+    "sourceQuestionId": "agent-todo-brief",
+    "category": "Agent",
+    "topic": "自动化",
+    "type": "trueFalse",
+    "question": "判断：每日 Todo 简报默认关闭；开启后还需要 AUTOMATION_SCHEDULER_ENABLED=true，并由 scheduler 按小时生成。",
+    "options": [
+      { "id": "true", "text": "正确" },
+      { "id": "false", "text": "错误" }
+    ],
+    "correctAnswers": ["true"],
+    "explanation": "automations.py + scheduler.py + hello-agent-scheduler.service。默认关闭避免未预期的定时任务。",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "agent-obj-032-single-skills",
+    "sourceQuestionId": "agent-skills",
+    "category": "Agent",
+    "topic": "Skills",
+    "type": "single",
+    "question": "单选：load_skill 的作用是？",
+    "options": [
+      { "id": "A", "text": "按需加载 skills/ 中的工作说明书，扩展行为说明而不把所有说明书塞进系统提示。" },
+      { "id": "B", "text": "把操作系统内核模块热加载进浏览器。" },
+      { "id": "C", "text": "永久替换 DeepSeek 为本地小模型。" },
+      { "id": "D", "text": "删除用户的长期记忆。" }
+    ],
+    "correctAnswers": ["A"],
+    "explanation": "Skills 是按需说明书，避免系统提示膨胀。",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "agent-obj-033-multi-eval",
+    "sourceQuestionId": "agent-eval",
+    "category": "Agent",
+    "topic": "评测",
+    "type": "multiple",
+    "question": "多选：评测中心可以覆盖哪些能力？",
+    "options": [
+      { "id": "A", "text": "关键词 / 精确匹配 / LLM Judge" },
+      { "id": "B", "text": "可信度、失败原因、基线对比、导出" },
+      { "id": "C", "text": "Prompt 版本草稿、发布与回滚" },
+      { "id": "D", "text": "测试默认会调用真实收费 API，无法用模拟客户端跑 unittest" }
+    ],
+    "correctAnswers": ["A", "B", "C"],
+    "explanation": "python -m unittest 使用模拟客户端，不产生模型费用。评测运行本身可在网页任务中心看进度；费用估算默认关闭。",
+    "difficulty": "Medium"
+  },
+  {
+    "id": "agent-obj-034-single-plan-hitl",
+    "sourceQuestionId": "agent-plan-card",
+    "category": "Agent",
+    "topic": "人机确认",
+    "type": "single",
+    "question": "单选：聊天里「/制定计划」同步到 Todo 的流程是？",
+    "options": [
+      { "id": "A", "text": "模型一生成步骤就立刻写入 Todo，无需用户勾选。" },
+      { "id": "B", "text": "DeepSeek JSON Output 经 Pydantic 校验后显示计划卡片；用户勾选步骤并确认同步后，后端才写入当前会话 Todo。" },
+      { "id": "C", "text": "计划只存在 React state，刷新即丢失，也不写聊天历史。" },
+      { "id": "D", "text": "计划必须用纯自然语言，禁止 JSON 和校验。" }
+    ],
+    "correctAnswers": ["B"],
+    "explanation": "这是规划 → 人工确认 → 执行。计划同时以 Markdown 写入聊天历史，刷新可恢复。",
+    "difficulty": "Medium"
+  },
+  {
+    "id": "agent-obj-035-tf-base-href",
+    "sourceQuestionId": "agent-frontend-base",
+    "category": "Agent",
+    "topic": "前端构建",
+    "type": "trueFalse",
+    "question": "判断：Todo 生产构建的资源基础路径必须是 /agent/todo/；若 dist/index.html 仍引用 /assets/...，浏览器会从错误的站点根路径加载资源。",
+    "options": [
+      { "id": "true", "text": "正确" },
+      { "id": "false", "text": "错误" }
+    ],
+    "correctAnswers": ["true"],
+    "explanation": "主站 /agent/，Todo /agent/todo/，Admin /agent/admin/。发布脚本会检查 dist/index.html 资源前缀。",
+    "difficulty": "Medium"
+  },
+  {
+    "id": "agent-obj-036-single-principle",
+    "sourceQuestionId": "agent-engineering-principle",
+    "category": "Agent",
+    "topic": "工程原则",
+    "type": "single",
+    "question": "单选：文档总结的工程原则是？",
+    "options": [
+      { "id": "A", "text": "模型做决策，代码做执行与安全边界；要可观测、可评测、可发布，而不是只做能聊的 Demo。" },
+      { "id": "B", "text": "能聊就行，工具、状态、确认和观测都是多余的。" },
+      { "id": "C", "text": "所有写操作都应对模型自动放行，以提高「自主性」。" },
+      { "id": "D", "text": "发布时可以覆盖兄弟站点和运行时数据库，只要本地能跑通。" }
+    ],
+    "correctAnswers": ["A"],
+    "explanation": "个人收获也强调：Agent 与普通 Chatbot 的差别是工具、状态、确认、观测缺一不可。",
+    "difficulty": "Easy"
+  }
+]

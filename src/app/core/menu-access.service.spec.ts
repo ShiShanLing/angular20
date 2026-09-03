@@ -20,6 +20,8 @@ describe('MenuAccessService activation gate', () => {
     expect(service.hasAccessToPath('/practice')).toBeFalse();
     expect(service.hasAccessToPath('/ios-learning')).toBeFalse();
     expect(service.hasAccessToPath('/angular-learning')).toBeFalse();
+    expect(service.hasAccessToPath('/agent-learning')).toBeFalse();
+    expect(service.hasAccessToPath('/agent-objective-learning')).toBeFalse();
   });
 
   it('allows practice routes after activating code 999', () => {
@@ -31,6 +33,8 @@ describe('MenuAccessService activation gate', () => {
     expect(service.hasAccessToPath('/practice')).toBeTrue();
     expect(service.hasAccessToPath('/ios-learning')).toBeTrue();
     expect(service.hasAccessToPath('/angular-learning')).toBeTrue();
+    expect(service.hasAccessToPath('/agent-learning')).toBeTrue();
+    expect(service.hasAccessToPath('/agent-objective-learning')).toBeTrue();
   });
 
   it('blocks practice routes again after deactivating code 999', () => {
@@ -43,6 +47,8 @@ describe('MenuAccessService activation gate', () => {
     expect(service.hasAccessToPath('/practice')).toBeFalse();
     expect(service.hasAccessToPath('/ios-learning')).toBeFalse();
     expect(service.hasAccessToPath('/angular-learning')).toBeFalse();
+    expect(service.hasAccessToPath('/agent-learning')).toBeFalse();
+    expect(service.hasAccessToPath('/agent-objective-learning')).toBeFalse();
   });
 
   it('keeps unrelated routes accessible without activation', () => {
