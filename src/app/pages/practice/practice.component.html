@@ -29,32 +29,49 @@
       </div>
     </div>  
   } @else {
+    @if (!fullQuizMode()) {
     <header class="practice-topbar">
       <div class="practice-topbar__nav">
-        <button type="button" class="practice-btn" (click)="prev()" [disabled]="navDisabled() || !canPrev()">
-          上一题
-        </button>
-        <button type="button" class="practice-btn" (click)="next()" [disabled]="navDisabled() || !canNext()">
-          下一题
-        </button>
-        <button type="button" class="practice-btn" (click)="randomOne()" [disabled]="navDisabled()">
-          随机一题
-        </button>
-        
-        <button
-          type="button"
-          class="practice-btn practice-btn--listen"
-          [class.is-active]="chantMode()"
-          [disabled]="!speechAvailable() || !listenList().length"
-          (click)="toggleChantMode()">
-          {{ chantMode() ? '停止唱题' : '唱题模式' }}
-        </button>
-        <span class="progress" title="今日刷题进度">
-          今日 {{ dailyRememberedCount() }} / {{ dailyTotal() }}
-        </span>
-        @if (chantMode()) {
-          <span class="progress progress--chant" title="唱题模式不计入学习统计">
-            唱题 {{ chantIndex() + 1 }} / {{ listenList().length }}
+        @if (!fullQuizMode()) {
+          <button type="button" class="practice-btn" (click)="prev()" [disabled]="navDisabled() || !canPrev()">
+            上一题
+          </button>
+          <button type="button" class="practice-btn" (click)="next()" [disabled]="navDisabled() || !canNext()">
+            下一题
+          </button>
+          <button type="button" class="practice-btn" (click)="randomOne()" [disabled]="navDisabled()">
+            随机一题
+          </button>
+          @if (!isLearningPage) {
+            <button
+              type="button"
+              class="practice-btn practice-btn--quiz"
+              [class.is-active]="fullQuizMode()"
+              [disabled]="!fullQuizCandidates().length"
+              (click)="startFullQuiz()">
+              一次刷完
+            </button>
+          }
+
+          <button
+            type="button"
+            class="practice-btn practice-btn--listen"
+            [class.is-active]="chantMode()"
+            [disabled]="!speechAvailable() || !listenList().length"
+            (click)="toggleChantMode()">
+            {{ chantMode() ? '停止唱题' : '唱题模式' }}
+          </button>
+          <span class="progress" title="今日刷题进度">
+            今日 {{ dailyRememberedCount() }} / {{ dailyTotal() }}
+          </span>
+          @if (chantMode()) {
+            <span class="progress progress--chant" title="唱题模式不计入学习统计">
+              唱题 {{ chantIndex() + 1 }} / {{ listenList().length }}
+            </span>
+          }
+        } @else {
+          <span class="progress">
+            一次刷完 · {{ questionMode() === 'objective' ? '客观题' : '简答题' }} · {{ fullQuizItems().length }} 题
           </span>
         }
         <div class="practice-topbar__extras">
@@ -79,8 +96,9 @@
           <button type="button" class="practice-btn practice-btn--ghost" (click)="showImportHelp()">说明</button>
         </div>
       </div>
+      @if (!fullQuizMode()) {
       <div class="practice-search" role="search">
-        @if (isIosLearning) {
+        @if (!isLearningPage && isIosLearning) {
           <div class="practice-mode-tabs" aria-label="iOS 题型">
             <button
               type="button"
@@ -118,7 +136,9 @@
           ×
         </button>
       </div>
+      }
       <!-- 搜索下拉放在 topbar 内，确保 sticky 后下拉不随内容滚走 -->
+      @if (!fullQuizMode()) {
       <div class="practice-search-dropdown">
         @if (searchQuery().trim() && listForNav().length) {
           <div class="search-results-host">
@@ -140,9 +160,11 @@
           </div>
         }
       </div>
+      }
     </header>
+    }
 
-    @if (!chantMode()) {
+    @if (!chantMode() && !fullQuizMode()) {
     <div class="fab-rail practice-fab-block" (click)="$event.stopPropagation()" aria-label="练习设置">
       <div class="fab-block practice-fab-block">
         <button
@@ -265,6 +287,115 @@
       </main>
     } @else {
     <main class="practice-scroll">
+      @if (fullQuizMode()) {
+        <section class="full-quiz" aria-label="一次性刷完">
+          <div class="full-quiz__head">
+            <div class="full-quiz__title-row">
+              <h1 class="full-quiz__title">
+                @if (fullQuizSubmitted()) {
+                  得分 {{ fullQuizScoreText() }} · 正确率 {{ fullQuizPercent() }}%
+                } @else {
+                  复习
+                }
+              </h1>
+              <span class="full-quiz__answered">
+                已答 {{ fullQuizAnsweredCount() }} / {{ fullQuizItems().length }}
+              </span>
+            </div>
+            @if (fullQuizSubmitted()) {
+              <div class="full-quiz__actions">
+                <button type="button" class="practice-btn" (click)="toggleFullQuizWrongOnly()">
+                  {{ fullQuizWrongOnly() ? '查看全部题' : (questionMode() === 'objective' ? '查看错题' : '查看薄弱题') }}
+                </button>
+                <button type="button" class="practice-btn" (click)="restartFullQuiz()">重新刷一遍</button>
+              </div>
+            } @else {
+              <button type="button" class="full-quiz-submit-head" (click)="submitOrJumpFullQuiz()">
+                提交
+              </button>
+            }
+          </div>
+
+          @if (fullQuizSubmitted()) {
+            <div
+              class="full-quiz-result"
+              [class.full-quiz-result--ok]="!fullQuizWrongItems().length"
+              [class.full-quiz-result--wrong]="fullQuizWrongItems().length">
+              @if (fullQuizWrongItems().length) {
+                {{ questionMode() === 'objective' ? '错题' : '薄弱题' }} {{ fullQuizWrongItems().length }} 道，下面可以直接复盘。
+              } @else {
+                全部通过，可以进入下一轮练习了。
+              }
+            </div>
+          }
+
+          <div class="full-quiz-list">
+            @for (quizItem of fullQuizVisibleItems(); track quizItem.id; let idx = $index) {
+              <article
+                [id]="fullQuizCardId(quizItem)"
+                class="full-quiz-card"
+                [class.is-correct]="fullQuizSubmitted() && fullQuizAnswerCorrect(quizItem)"
+                [class.is-wrong]="fullQuizSubmitted() && !fullQuizAnswerCorrect(quizItem)">
+                <div class="full-quiz-card__meta">
+                  <span class="badge">{{ fullQuizQuestionTypeLabel(quizItem) }}</span>
+                  <span class="tags">第 {{ idx + 1 }} 题 / {{ fullQuizVisibleItems().length }}</span>
+                </div>
+                <h2 class="full-quiz-card__question">{{ quizItem.question }}</h2>
+                @if (isObjectiveQuestion(quizItem)) {
+                  <div class="objective-options" [class.is-submitted]="fullQuizSubmitted()">
+                    @for (opt of quizItem.options ?? []; track opt.id) {
+                      <button
+                        type="button"
+                        class="objective-option"
+                        [class.is-selected]="fullQuizOptionSelected(quizItem, opt.id)"
+                        [class.is-correct]="fullQuizSubmitted() && fullQuizOptionCorrect(quizItem, opt.id)"
+                        [class.is-wrong]="fullQuizOptionWrong(quizItem, opt.id)"
+                        (click)="toggleFullQuizOption(quizItem, opt.id)">
+                        <span class="objective-option__key">{{ opt.id }}</span>
+                        <span class="objective-option__text">{{ opt.text }}</span>
+                      </button>
+                    }
+                  </div>
+                } @else {
+                  <textarea
+                    class="practice-textarea full-quiz-textarea"
+                    rows="5"
+                    placeholder="像正式面试一样，先完整写出你的回答…"
+                    spellcheck="false"
+                    [disabled]="fullQuizSubmitted()"
+                    [ngModel]="fullQuizTextAnswer(quizItem)"
+                    (ngModelChange)="onFullQuizTextAnswerInput(quizItem, $event)">
+                  </textarea>
+                }
+                @if (fullQuizSubmitted()) {
+                  <div
+                    class="objective-result"
+                    [class.objective-result--ok]="fullQuizAnswerCorrect(quizItem)"
+                    [class.objective-result--wrong]="!fullQuizAnswerCorrect(quizItem)">
+                    {{ fullQuizResultLabel(quizItem) }}
+                  </div>
+                  <div class="full-quiz-answer-compare">
+                    <strong>你的回答：</strong>
+                    {{ fullQuizUserAnswerText(quizItem) }}
+                  </div>
+                  <div class="reference-body reference-body--plain">
+                    <strong>正确答案：</strong>
+                    {{ fullQuizCorrectAnswerText(quizItem) }}
+                    <br />
+                    <strong>解析：</strong>
+                    {{ quizItem.explanation || quizItem.answer || '本题暂未录入解析。' }}
+                  </div>
+                  <div class="objective-actions">
+                    <button type="button" class="practice-btn practice-btn--ghost" (click)="showSourceQuestion(quizItem)">
+                      查看原题
+                    </button>
+                  </div>
+                }
+              </article>
+            }
+          </div>
+        </section>
+      } @else {
       <section class="daily-panel" aria-label="今日刷题">
         <div>
           <div class="daily-panel__eyebrow">今日 5 题</div>
@@ -479,6 +610,7 @@
           }
         </div>
       </section>
+      }
     </main>
     }
   }

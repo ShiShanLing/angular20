@@ -18,16 +18,28 @@
         <!-- 有子菜单：桌面折叠时收起，移动端始终展开  -->
         <li nz-submenu [nzTitle]="item.label" [nzIcon]="item.icon || ''" [nzOpen]="!isCollapsed() || isMobile()">
           <ul>
-            @for (child of item.children; track child.path) {
-              <!-- 用 <a routerLink> 而非直接绑定 routerLink 到 li，确保导航稳定触发 -->
-              <li nz-menu-item nzMatchRouter>
-                <a [routerLink]="child.path">{{ child.label }}</a>
-              </li>
+            @for (child of item.children; track child.label) {
+              @if (child.children) {
+                <li nz-submenu [nzTitle]="child.label" [nzIcon]="child.icon || ''" [nzOpen]="!isCollapsed() || isMobile()">
+                  <ul>
+                    @for (grandChild of child.children; track grandChild.path) {
+                      <li nz-menu-item nzMatchRouter [nzMatchRouterExact]="true">
+                        <a [routerLink]="grandChild.path">{{ grandChild.label }}</a>
+                      </li>
+                    }
+                  </ul>
+                </li>
+              } @else {
+                <!-- 用 <a routerLink> 而非直接绑定 routerLink 到 li，确保导航稳定触发 -->
+                <li nz-menu-item nzMatchRouter [nzMatchRouterExact]="true">
+                  <a [routerLink]="child.path">{{ child.label }}</a>
+                </li>
+              }
             }
           </ul>
         </li>
       } @else {
-        <li nz-menu-item nzMatchRouter>
+        <li nz-menu-item nzMatchRouter [nzMatchRouterExact]="true">
           <a [routerLink]="item.path">
             <span nz-icon [nzType]="item.icon || ''"></span>
             <span>{{ item.label }}</span>

@@ -93,9 +93,7 @@ export class LayoutComponent {
     this.availableMenuItems()
       .map((item) => ({
         label: item.label,
-        children: (item.children ?? [])
-          .filter((child): child is MenuItem & { path: string } => typeof child.path === 'string')
-          .map((child) => ({ path: child.path, label: child.label })),
+        children: this.collectMenuSettingsChildren(item.children ?? []),
       }))
       .filter((group) => group.children.length > 0),
   );
@@ -307,6 +305,19 @@ export class LayoutComponent {
       }
     }
     return paths;
+  }
+
+  private collectMenuSettingsChildren(items: MenuItem[], prefix = ''): Array<{ path: string; label: string }> {
+    const result: Array<{ path: string; label: string }> = [];
+    for (const item of items) {
+      const label = prefix ? `${prefix} / ${item.label}` : item.label;
+      if (item.children?.length) {
+        result.push(...this.collectMenuSettingsChildren(item.children, label));
+      } else if (item.path) {
+        result.push({ path: item.path, label });
+      }
+    }
+    return result;
   }
 
   // MARK: 规范路径

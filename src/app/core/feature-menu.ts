@@ -20,10 +20,46 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
       { path: '/tools/qrcode', label: '二维码', permission: 'tools.qrcode' },
       { path: '/tools/notes', label: '记事本', permission: 'tools.notes' },
       { path: '/tools/dev', label: '开发助手', permission: 'tools.dev' },
-      { path: '/practice', label: '知识刷题', permission: 'practice.view', activationCode: '999' },
-      { path: '/practice-list', label: '列表刷题', permission: 'practice.view', activationCode: '999' },
-      { path: '/ios-learning', label: 'iOS学习', permission: 'practice.view', activationCode: '999' },
-      { path: '/angular-learning', label: 'Angular学习', permission: 'practice.view', activationCode: '999' },
+    ]
+  },
+  {
+    label: '学习',
+    icon: 'book',
+    children: [
+      {
+        label: 'iOS',
+        icon: 'book',
+        children: [
+          { path: '/ios-learning', label: '每日学习', permission: 'practice.view' },
+          { path: '/ios-learning/review', label: '复习', permission: 'practice.view' },
+        ]
+      },
+      {
+        label: 'Android',
+        icon: 'appstore',
+        children: [
+          { path: '/android-learning', label: '每日学习', permission: 'practice.view' },
+          { path: '/android-learning/review', label: '复习', permission: 'practice.view' },
+        ]
+      },
+      {
+        label: 'Angular',
+        icon: 'block',
+        children: [
+          { path: '/angular-learning', label: '每日学习', permission: 'practice.view' },
+          { path: '/angular-learning/review', label: '复习', permission: 'practice.view' },
+        ]
+      },
+      {
+        label: 'TS',
+        icon: 'experiment',
+        children: [
+          { path: '/ts-learning', label: '每日学习', permission: 'practice.view' },
+          { path: '/ts-learning/review', label: '复习', permission: 'practice.view' },
+        ]
+      },
+      { path: '/practice', label: '知识刷题', permission: 'practice.view' },
+      { path: '/practice-list', label: '列表刷题', permission: 'practice.view' },
     ]
   },
   {
