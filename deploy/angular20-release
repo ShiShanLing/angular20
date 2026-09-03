@@ -4,7 +4,8 @@ set -Eeuo pipefail
 PATH=/usr/bin:/bin:/usr/sbin:/sbin
 STAGING_ROOT=/var/lib/angular20-deploy/staging
 RELEASE_ROOT=/var/lib/angular20-deploy/releases
-WEB_ROOT=/var/www/projects/angular20
+WEB_ROOT=/var/www/projects/workshop
+NGINX_PATCHER=/usr/local/lib/angular20/patch-workshop-nginx.py
 BACKEND_ROOT=/opt/angular20-server
 SERVICE=nest-server.service
 LOCK_FILE=/run/angular20-release.lock
@@ -98,6 +99,21 @@ flock -n 9 || {
   exit 4
 }
 
+[ -f "$NGINX_PATCHER" ] || {
+  echo "missing $NGINX_PATCHER; run install-deploy-access.sh as root" >&2
+  exit 2
+}
+if [ ! -d "$WEB_ROOT" ] && [ -d /var/www/projects/angular20 ]; then
+  mkdir -p "$WEB_ROOT"
+  rsync -a /var/www/projects/angular20/ "$WEB_ROOT/"
+fi
+nginx_patch_output="$(python3 "$NGINX_PATCHER")"
+printf '%s\n' "$nginx_patch_output"
+if printf '%s\n' "$nginx_patch_output" | grep -q CHANGED; then
+  nginx -t
+  systemctl reload nginx
+fi
+
 mkdir -p "$RELEASE_ROOT"
 snapshot="$RELEASE_ROOT/$release_id/snapshot"
 mkdir -p "$snapshot"
@@ -165,7 +181,7 @@ fi
 if $want_backend; then
   for _ in $(seq 1 30); do
     if systemctl is-active --quiet "$SERVICE" && \
-       curl -fsS http://127.0.0.1/angular20/api/docs >/dev/null; then
+       curl -fsS http://127.0.0.1/workshop/api/docs >/dev/null; then
       backend_healthy=true
       break
     fi
@@ -175,7 +191,7 @@ if $want_backend; then
   $backend_healthy
 fi
 if $want_frontend; then
-  curl -fsS http://127.0.0.1/angular20/ >/dev/null
+  curl -fsS http://127.0.0.1/workshop/ >/dev/null
 fi
 
 trap - ERR

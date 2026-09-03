@@ -1,5 +1,5 @@
 import { ApplicationConfig, provideZoneChangeDetection, APP_INITIALIZER, inject } from '@angular/core';
-import { provideRouter, withComponentInputBinding, withHashLocation } from '@angular/router';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { zh_CN, provideNzI18n } from 'ng-zorro-antd/i18n';
@@ -70,11 +70,11 @@ function initializeTheme(): () => void {
   return () => { /* ThemeService 构造函数已自动 applyTheme */ };
 }
 
-/** 全局 Angular providers：Hash 路由、动画、HTTP、Ng-Zorro 中文与按需图标、ECharts 核心。 */
+/** 全局 Angular providers：路径路由、动画、HTTP、Ng-Zorro 中文与按需图标、ECharts 核心。 */
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(routes, withComponentInputBinding(), withHashLocation()),
+    provideRouter(routes, withComponentInputBinding()),
     provideAnimationsAsync(),
     provideHttpClient(withInterceptors([apiBaseInterceptor, guestApiInterceptor, authInterceptor])),
     provideNzI18n(zh_CN),

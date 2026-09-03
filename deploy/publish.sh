@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 HOST="${ANGULAR20_DEPLOY_HOST:-baidu-bcc}"
 STAGING_ROOT="${ANGULAR20_STAGING_ROOT:-/var/lib/angular20-deploy/staging}"
-PUBLIC_BASE="${ANGULAR20_PUBLIC_BASE:-https://shishanling.cn/angular20/}"
+PUBLIC_BASE="${ANGULAR20_PUBLIC_BASE:-https://shishanling.cn/workshop/}"
 ALLOW_DIRTY=false
 DRY_RUN=false
 TARGETS_RAW=""
@@ -24,7 +24,7 @@ Usage:
   ./deploy/publish.sh publish --targets frontend[,backend] [--allow-dirty] [--dry-run]
 
 Targets:
-  frontend   Build and publish /var/www/projects/angular20
+  frontend   Build and publish /var/www/projects/workshop
   backend    Build and publish /opt/angular20-server, then restart nest-server.service
 EOF
 }
@@ -106,12 +106,12 @@ if $want_frontend; then
   log "installing frontend dependencies"
   npm ci --no-audit --no-fund
   log "building frontend"
-  npm run build -- --base-href /angular20/
+  npm run build -- --base-href /workshop/
   test -f "$ROOT/dist/angular20/browser/index.html"
-  grep -q '<base href="/angular20/">' "$ROOT/dist/angular20/browser/index.html"
+  grep -q '<base href="/workshop/">' "$ROOT/dist/angular20/browser/index.html"
   if grep -Eq '(src|href)="/(assets/|main-|polyfills-|styles-)' \
     "$ROOT/dist/angular20/browser/index.html"; then
-    fail "frontend build contains root-relative assets outside /angular20/"
+    fail "frontend build contains root-relative assets outside /workshop/"
   fi
   chmod -R u=rwX,go=rX "$ROOT/dist/angular20/browser"
 fi

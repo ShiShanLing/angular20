@@ -37,7 +37,7 @@ Host baidu-bcc
 
 服务器端固定边界：
 
-- 静态站点：`/var/www/projects/angular20/`
+- 静态站点：`/var/www/projects/workshop/`（对外路径 `/workshop/`）
 - 后端程序：`/opt/angular20-server/`
 - 上传文件：`/var/www/uploads/`（发布绝不覆盖）
 - 数据库及运行数据：`/var/lib/mydata/`（发布绝不覆盖）

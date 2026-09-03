@@ -1,3 +1,4 @@
+import { PlatformLocation } from '@angular/common';
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap, map, catchError, of } from 'rxjs';
@@ -58,6 +59,7 @@ export class AuthService {
 
   private readonly permissionService = inject(PermissionService);
   private readonly http = inject(HttpClient);
+  private readonly platformLocation = inject(PlatformLocation);
 
   constructor() {
     if (this.localDev() && this.isLocalDevHost()) {
@@ -70,13 +72,10 @@ export class AuthService {
   }
 
   goToAgentLogin(returnUrl = '/'): void {
-    const hashPath = returnUrl.startsWith('#')
-      ? returnUrl
-      : `#${returnUrl.startsWith('/') ? returnUrl : `/${returnUrl}`}`;
-    const isLocalDev =
-      typeof window !== 'undefined' &&
-      ['localhost', '127.0.0.1'].includes(window.location.hostname);
-    const next = isLocalDev ? `/${hashPath}` : `/angular20/${hashPath}`;
+    const path = returnUrl.startsWith('/') ? returnUrl : `/${returnUrl}`;
+    const baseHref = this.platformLocation.getBaseHrefFromDOM() || '/';
+    const prefix = baseHref === '/' ? '' : baseHref.replace(/\/$/, '');
+    const next = `${prefix}${path}`;
     window.location.assign(`/agent/?next=${encodeURIComponent(next)}`);
   }
 

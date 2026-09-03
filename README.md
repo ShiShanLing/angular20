@@ -2,8 +2,8 @@
 
 ## 线上入口
 
-- 工坊：<https://shishanling.cn/angular20/>
-- 接口文档：<https://shishanling.cn/angular20/api/docs>
+- 工坊：<https://shishanling.cn/workshop/>
+- 接口文档：<https://shishanling.cn/workshop/api/docs>
 
 二维码功能
 1.还需要优化,图片高度会影响下方结果展示位置,
@@ -25,8 +25,8 @@
 
 工坊不再维护独立账号。登录、注册、退出都走 **Hello Agent** 的统一账号（Cookie `hello_agent_login`，`path=/`）。
 
-- 登录页点「使用统一账号登录」会跳到 `/agent/?next=/angular20/#...`，在 Agent 登录或注册成功后回到工坊。
-- 已在 Agent 登录时，直接打开 `/angular20/` 即可进入，不必再登一次。
+- 登录页点「使用统一账号登录」会跳到 `/agent/?next=/workshop/...`，在 Agent 登录或注册成功后回到工坊。
+- 已在 Agent 登录时，直接打开 `/workshop/` 即可进入，不必再登一次。
 - 游客模式仍可用：能用工具和游戏，使用记录不会写到服务器。
 - 工坊后端不再签发 JWT。受保护接口会把浏览器带来的 Agent Cookie 转到 `http://127.0.0.1:8000/auth/me` 校验；通过后按 Agent 用户在本地 `users` 表建立或更新一条映射（笔记、记录仍用这条本地用户 id）。
 - Agent 管理员（`can_access_admin`）在工坊拥有完整菜单权限；普通成员只有基础工具权限。

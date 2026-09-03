@@ -23,6 +23,19 @@ install -d -o root -g root -m 0755 /usr/local/sbin
 install -o root -g root -m 0755 \
   "$ROOT_DIR/deploy/angular20-release" /usr/local/sbin/angular20-release
 
+install -d -o root -g root -m 0755 /usr/local/lib/angular20
+install -o root -g root -m 0755 \
+  "$ROOT_DIR/deploy/patch-workshop-nginx.py" /usr/local/lib/angular20/patch-workshop-nginx.py
+
+if [ -d /var/www/projects/angular20 ] && [ ! -e /var/www/projects/workshop ]; then
+  rsync -a /var/www/projects/angular20/ /var/www/projects/workshop/
+  chown -R root:root /var/www/projects/workshop
+fi
+
+python3 /usr/local/lib/angular20/patch-workshop-nginx.py
+nginx -t
+systemctl reload nginx
+
 install -d -o root -g root -m 0755 /etc/sudoers.d
 install -o root -g root -m 0440 \
   "$ROOT_DIR/deploy/angular20-deploy.sudoers" /etc/sudoers.d/angular20-deploy

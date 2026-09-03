@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test';
 test.describe('房贷计算器', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => localStorage.removeItem('tools_mortgage_state'));
-    await page.goto('/#/tools/mortgage');
+    await page.goto('/tools/mortgage');
     await page.waitForSelector('nz-statistic', { timeout: 15_000 });
   });
 
@@ -56,7 +56,7 @@ test.describe('房贷计算器', () => {
 test.describe('AC-MORT-005 状态持久化', () => {
   test('修改输入后刷新页面值保持', async ({ page }) => {
     // 1. 进入页面后手动清空旧状态，确保从默认值开始
-    await page.goto('/#/tools/mortgage');
+    await page.goto('/tools/mortgage');
     await page.evaluate(() => localStorage.removeItem('tools_mortgage_state'));
     await page.reload();
     await page.waitForSelector('nz-statistic', { timeout: 15_000 });
