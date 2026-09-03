@@ -183,6 +183,14 @@ describe('PracticeComponent', () => {
     expect(component.pendingDailyItems().length).toBe(0);
     expect(component.dailyCompleted()).toBeTrue();
     expect(component.todayRecord()?.completedAt).toEqual(jasmine.any(Number));
+    expect(TestBed.inject(PracticeStorageService).readSessionHistory().records[0]).toEqual(
+      jasmine.objectContaining({
+        kind: 'daily',
+        score: 1,
+        total: 1,
+        percent: 100,
+      })
+    );
   });
 
   it('speakQuestion reads the current question', () => {
@@ -263,5 +271,48 @@ describe('PracticeComponent', () => {
     expect(component.todayRecord()?.rememberedIds).toEqual([]);
     expect(speechSpeakSpy).toHaveBeenCalled();
     component.stopSpeech();
+  });
+
+  it('submitFullQuiz records a review score in session history', () => {
+    const items = [
+      makeItem({
+        id: 'q-obj-1',
+        question: '1+1?',
+        questionType: 'single',
+        options: [
+          { id: 'A', text: '1' },
+          { id: 'B', text: '2' },
+        ],
+        correctAnswers: ['B'],
+      }),
+      makeItem({
+        id: 'q-obj-2',
+        question: '2+2?',
+        questionType: 'single',
+        options: [
+          { id: 'A', text: '3' },
+          { id: 'B', text: '4' },
+        ],
+        correctAnswers: ['B'],
+      }),
+    ];
+    component.items.set(items);
+    component.questionMode.set('objective');
+    component.startFullQuiz();
+    component.toggleFullQuizOption(items[0], 'B');
+    component.toggleFullQuizOption(items[1], 'A');
+    component.submitFullQuiz();
+
+    expect(component.fullQuizSubmitted()).toBeTrue();
+    expect(TestBed.inject(PracticeStorageService).readSessionHistory().records[0]).toEqual(
+      jasmine.objectContaining({
+        kind: 'review',
+        score: 1,
+        total: 2,
+        percent: 50,
+        wrongCount: 1,
+        questionMode: 'objective',
+      })
+    );
   });
 });

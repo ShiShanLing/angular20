@@ -32,6 +32,7 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
         children: [
           { path: '/ios-learning', label: '每日学习', permission: 'practice.view' },
           { path: '/ios-learning/review', label: '复习', permission: 'practice.view' },
+          { path: '/ios-learning/history', label: '成绩走势', permission: 'practice.view' },
         ]
       },
       {
@@ -40,6 +41,7 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
         children: [
           { path: '/android-learning', label: '每日学习', permission: 'practice.view' },
           { path: '/android-learning/review', label: '复习', permission: 'practice.view' },
+          { path: '/android-learning/history', label: '成绩走势', permission: 'practice.view' },
         ]
       },
       {
@@ -48,6 +50,7 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
         children: [
           { path: '/angular-learning', label: '每日学习', permission: 'practice.view' },
           { path: '/angular-learning/review', label: '复习', permission: 'practice.view' },
+          { path: '/angular-learning/history', label: '成绩走势', permission: 'practice.view' },
         ]
       },
       {
@@ -56,9 +59,11 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
         children: [
           { path: '/ts-learning', label: '每日学习', permission: 'practice.view' },
           { path: '/ts-learning/review', label: '复习', permission: 'practice.view' },
+          { path: '/ts-learning/history', label: '成绩走势', permission: 'practice.view' },
         ]
       },
       { path: '/practice', label: '知识刷题', permission: 'practice.view' },
+      { path: '/practice/history', label: '刷题成绩', permission: 'practice.view' },
       { path: '/practice-list', label: '列表刷题', permission: 'practice.view' },
     ]
   },

@@ -29,6 +29,7 @@ import {
   type PracticeStorageScope,
   type PracticeDailyState,
   type PracticeDayRecord,
+  type PracticeSessionRecord,
   PRACTICE_SKIP_BUILTIN_SEED_KEY,
 } from './practice-storage.service';
 import {
@@ -527,6 +528,13 @@ export class PracticeComponent implements OnInit, OnDestroy {
     }
     this.fullQuizSubmitted.set(true);
     this.fullQuizWrongOnly.set(false);
+    this.recordPracticeSession({
+      kind: 'review',
+      score: this.fullQuizCorrectCount(),
+      total: this.fullQuizItems().length,
+      percent: this.fullQuizPercent(),
+      wrongCount: this.fullQuizWrongItems().length,
+    });
     this.msg.success(`本次得分 ${this.fullQuizScoreText()}，正确率 ${this.fullQuizPercent()}%。`);
   }
 
@@ -834,6 +842,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
   markRemembered(): void {
     const item = this.currentItem();
     if (!item || !this.currentItemInDaily()) return;
+    const alreadyCompleted = !!this.todayRecord()?.completedAt;
     this.updateTodayRecord((record) => {
       const remembered = new Set(record.rememberedIds);
       remembered.add(item.id);
@@ -850,6 +859,15 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.advanceAfterDailyAction();
     if (this.dailyCompleted()) {
       const n = this.dailyTotal();
+      if (!alreadyCompleted) {
+        this.recordPracticeSession({
+          kind: 'daily',
+          score: this.dailyRememberedCount(),
+          total: n,
+          percent: n ? Math.round((this.dailyRememberedCount() / n) * 100) : 0,
+          wrongCount: 0,
+        });
+      }
       this.msg.success(`今天 ${n} 题已全部记住了。`);
     }
   }
@@ -1310,6 +1328,20 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.dailyState.set(this.storage.readDailyState(this.activeStorageScope()));
     this.ensureTodayPractice();
     this.setFilter(this.storage.readSavedFilterCategory(this.activeStorageScope()));
+  }
+
+  private recordPracticeSession(
+    record: Omit<PracticeSessionRecord, 'id' | 'at' | 'questionMode'>
+  ): void {
+    if (record.total <= 0) return;
+    this.storage.appendSessionRecord(
+      {
+        ...record,
+        at: Date.now(),
+        questionMode: this.questionMode(),
+      },
+      this.activeStorageScope()
+    );
   }
 
   // MARK: 日期

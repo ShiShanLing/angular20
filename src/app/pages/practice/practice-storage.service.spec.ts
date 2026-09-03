@@ -104,6 +104,61 @@ describe('PracticeStorageService', () => {
     expect(service.load()).toEqual([]);
   });
 
+  it('appends session history newest first and keeps it when clearing questions', () => {
+    service.appendSessionRecord({
+      kind: 'review',
+      at: 100,
+      score: 3,
+      total: 5,
+      percent: 60,
+      questionMode: 'objective',
+      wrongCount: 2,
+    }, 'ios-learning');
+    service.appendSessionRecord({
+      kind: 'daily',
+      at: 200,
+      score: 5,
+      total: 5,
+      percent: 100,
+      questionMode: 'subjective',
+      wrongCount: 0,
+    }, 'ios-learning');
+
+    const history = service.readSessionHistory('ios-learning').records;
+    expect(history.length).toBe(2);
+    expect(history[0].kind).toBe('daily');
+    expect(history[0].percent).toBe(100);
+    expect(history[1].score).toBe(3);
+
+    service.clearAll('ios-learning');
+    expect(service.readSessionHistory('ios-learning').records.length).toBe(2);
+  });
+
+  it('merges subjective and objective scopes for a subject track in chronological order', () => {
+    service.appendSessionRecord({
+      kind: 'review',
+      at: 300,
+      score: 8,
+      total: 10,
+      percent: 80,
+      questionMode: 'objective',
+      wrongCount: 2,
+    }, 'ios-objective-learning');
+    service.appendSessionRecord({
+      kind: 'daily',
+      at: 100,
+      score: 5,
+      total: 5,
+      percent: 100,
+      questionMode: 'subjective',
+      wrongCount: 0,
+    }, 'ios-learning');
+
+    const merged = service.readSessionHistoryForTrack('ios');
+    expect(merged.map((record) => record.percent)).toEqual([100, 80]);
+    expect(merged.map((record) => record.kind)).toEqual(['daily', 'review']);
+  });
+
   it('persists and reads filter category', () => {
     expect(service.readSavedFilterCategory()).toBe('all');
     service.saveFilterCategory('ios');

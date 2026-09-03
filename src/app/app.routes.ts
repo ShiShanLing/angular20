@@ -33,6 +33,12 @@ export const routes: Routes = [
         data: { practiceScope: 'practice' }
       },
       {
+        path: 'practice/history',
+        loadComponent: () =>
+          import('./pages/practice/practice-score-history.component').then(m => m.PracticeScoreHistoryComponent),
+        data: { practiceHistoryTrack: 'practice' }
+      },
+      {
         path: 'ios-learning',
         loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
         data: { practiceScope: 'ios-learning' }
@@ -41,6 +47,12 @@ export const routes: Routes = [
         path: 'ios-learning/review',
         loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
         data: { practiceScope: 'ios-learning', practiceFlow: 'full' }
+      },
+      {
+        path: 'ios-learning/history',
+        loadComponent: () =>
+          import('./pages/practice/practice-score-history.component').then(m => m.PracticeScoreHistoryComponent),
+        data: { practiceHistoryTrack: 'ios' }
       },
       {
         path: 'android-learning',
@@ -53,6 +65,12 @@ export const routes: Routes = [
         data: { practiceScope: 'android-learning', practiceFlow: 'full' }
       },
       {
+        path: 'android-learning/history',
+        loadComponent: () =>
+          import('./pages/practice/practice-score-history.component').then(m => m.PracticeScoreHistoryComponent),
+        data: { practiceHistoryTrack: 'android' }
+      },
+      {
         path: 'angular-learning',
         loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
         data: { practiceScope: 'angular-learning' }
@@ -63,6 +81,12 @@ export const routes: Routes = [
         data: { practiceScope: 'angular-learning', practiceFlow: 'full' }
       },
       {
+        path: 'angular-learning/history',
+        loadComponent: () =>
+          import('./pages/practice/practice-score-history.component').then(m => m.PracticeScoreHistoryComponent),
+        data: { practiceHistoryTrack: 'angular' }
+      },
+      {
         path: 'ts-learning',
         loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
         data: { practiceScope: 'ts-learning' }
@@ -71,6 +95,12 @@ export const routes: Routes = [
         path: 'ts-learning/review',
         loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
         data: { practiceScope: 'ts-learning', practiceFlow: 'full' }
+      },
+      {
+        path: 'ts-learning/history',
+        loadComponent: () =>
+          import('./pages/practice/practice-score-history.component').then(m => m.PracticeScoreHistoryComponent),
+        data: { practiceHistoryTrack: 'ts' }
       },
       {
         path: 'practice-list',

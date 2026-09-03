@@ -53,12 +53,11 @@ export class ThemeService {
   // MARK: 应用主题
   private applyTheme(mode: ThemeMode): void {
     if (typeof document === 'undefined') return;
+    // html 也打标，保证 CDK overlay（message/modal/dropdown）能吃到暗色变量
+    document.documentElement.setAttribute('data-theme', mode);
     document.body.setAttribute('data-theme', mode);
-    if (mode === 'dark') {
-      document.body.classList.add('nz-theme-dark');
-    } else {
-      document.body.classList.remove('nz-theme-dark');
-    }
+    document.documentElement.classList.toggle('nz-theme-dark', mode === 'dark');
+    document.body.classList.toggle('nz-theme-dark', mode === 'dark');
   }
 
   // MARK: 保存
