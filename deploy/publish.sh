@@ -5,7 +5,6 @@ ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 HOST="${ANGULAR20_DEPLOY_HOST:-baidu-bcc}"
 STAGING_ROOT="${ANGULAR20_STAGING_ROOT:-/var/lib/angular20-deploy/staging}"
 PUBLIC_BASE="${ANGULAR20_PUBLIC_BASE:-https://shishanling.cn/workshop/}"
-ALLOW_DIRTY=false
 DRY_RUN=false
 TARGETS_RAW=""
 
@@ -21,11 +20,15 @@ fail() {
 usage() {
   cat <<'EOF'
 Usage:
-  ./deploy/publish.sh publish --targets frontend[,backend] [--allow-dirty] [--dry-run]
+  ./deploy/publish.sh publish --targets frontend[,backend] [--dry-run]
 
 Targets:
   frontend   Build and publish /var/www/projects/workshop
   backend    Build and publish /opt/angular20-server, then restart nest-server.service
+
+GitHub:
+  HEAD must already be pushed to origin before packaging or publishing.
+  Uncommitted or unpushed local commits are rejected.
 EOF
 }
 
@@ -43,8 +46,7 @@ while [ "$#" -gt 0 ]; do
       shift 2
       ;;
     --allow-dirty)
-      ALLOW_DIRTY=true
-      shift
+      fail "--allow-dirty is disabled; commit and push to GitHub before publishing"
       ;;
     --dry-run)
       DRY_RUN=true
@@ -79,9 +81,26 @@ $want_backend && targets+=(backend)
 targets_csv="$(IFS=,; printf '%s' "${targets[*]}")"
 
 cd "$ROOT"
-if [ "$ALLOW_DIRTY" != true ] && [ -n "$(git status --porcelain)" ]; then
-  fail "working tree is dirty; commit the reviewed changes or explicitly use --allow-dirty"
+if [ -n "$(git status --porcelain)" ]; then
+  fail "uncommitted changes are not on GitHub; commit and push before publishing"
 fi
+
+origin_url="$(git remote get-url origin 2>/dev/null || true)"
+[ -n "$origin_url" ] || fail "origin remote is missing; push this repo to GitHub first"
+case "$origin_url" in
+  *github.com*) ;;
+  *) fail "origin is not GitHub ($origin_url)" ;;
+esac
+
+branch="$(git rev-parse --abbrev-ref HEAD)"
+[ "$branch" != HEAD ] || fail "detached HEAD cannot be published; checkout a branch and push it to GitHub"
+
+log "verifying $branch@$(git rev-parse --short HEAD) is on GitHub"
+git fetch origin "$branch" || fail "could not fetch origin/$branch from GitHub"
+git rev-parse --verify "origin/$branch" >/dev/null 2>&1 || \
+  fail "origin/$branch does not exist; git push -u origin HEAD"
+git merge-base --is-ancestor HEAD "origin/$branch" || \
+  fail "HEAD is not on GitHub; git push origin HEAD before publishing"
 
 if [ -s "$ROOT/.nvmrc" ] && [ -s "${NVM_DIR:-$HOME/.nvm}/nvm.sh" ]; then
   # shellcheck disable=SC1090

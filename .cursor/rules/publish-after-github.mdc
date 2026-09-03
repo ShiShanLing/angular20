@@ -1,0 +1,14 @@
+---
+description: Push to GitHub before any production publish
+alwaysApply: true
+---
+
+# Publish only after GitHub
+
+Before packaging or publishing this app to the production server:
+
+1. Commit the reviewed changes.
+2. `git push` to GitHub (`origin`).
+3. Only then run `./deploy/publish.sh`.
+
+Do not publish uncommitted work, unpushed local commits, or use `--allow-dirty`. The publish script must reject those cases. If publish is blocked because HEAD is not on GitHub, push first, then publish.

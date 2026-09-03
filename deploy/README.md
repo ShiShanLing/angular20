@@ -2,6 +2,16 @@
 
 生产环境不保存 Git 仓库，也不接受公网部署 webhook。代码只在本地修改和构建，通过 SSH 普通账号 `deploy` 上传到隔离暂存目录，再由 root 所有且不可被 `deploy` 修改的固定发布工具完成原子切换、健康检查和失败回滚。
 
+## 发布流程（必须先 GitHub）
+
+打包或发布到服务器之前，当前提交必须已经在 GitHub 上。`./deploy/publish.sh` 会拒绝未提交的工作区和未 `git push` 的本地提交。
+
+1. 改代码并完成本地验证。
+2. `git commit`，再 `git push` 到 GitHub（`origin`）。
+3. `./deploy/publish.sh publish --targets frontend`（或 `backend` / `frontend,backend`）。
+
+不要用未推送的本地提交直接发生产。应急入口 `bootstrap-server-release.sh` 也是按 GitHub 上的完整 SHA 拉源码。
+
 ## 首次安装服务器权限
 
 在服务器控制台中以 root 运行一次：
@@ -33,7 +43,7 @@ Host baidu-bcc
 ./deploy/publish.sh publish --targets frontend,backend
 ```
 
-脚本默认拒绝发布未提交的工作区。仅在明确审查过本地修改后才使用 `--allow-dirty`；只做构建和连接检查可加 `--dry-run`。
+脚本会先确认工作区干净，并且 `HEAD` 已在 `origin/<当前分支>` 上；未推送到 GitHub 会直接失败。只做构建和连接检查可加 `--dry-run`，同样要先 push。
 
 服务器端固定边界：
 
