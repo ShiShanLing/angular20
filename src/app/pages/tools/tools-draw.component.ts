@@ -35,21 +35,26 @@ export const DRAW_TOOLS = [
   { id: 'rect', label: '方块' },
 ] as const;
 
-export type DrawToolId = (typeof DRAW_TOOLS)[number]['id'];
+export type DrawPenId = (typeof DRAW_TOOLS)[number]['id'];
+export type DrawToolId = DrawPenId | 'eraser';
+
+const DRAW_PAPER = '#f7f7f5';
+const ERASER_EDGE_ALPHA = 0.18;
+const ERASER_CORE_AREA = 0.9;
 
 interface DrawPoint {
   x: number;
   y: number;
 }
 
-/** 简易画板：颜色、粗细、画笔类型（随意画 / 直线 / 椭圆 / 圆 / 方块）。 */
+/** 简易画板：颜色、粗细、画笔，以及独立橡皮。 */
 @Component({
   selector: 'app-tools-draw',
   templateUrl: './tools-draw.component.html',
   styleUrl: './tools-draw.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    '(document:keydown)': 'onDocumentKeydown($event)',
+    '(document:keydown.escape)': 'onEscape()',
   },
 })
 export class ToolsDrawComponent implements AfterViewInit, OnDestroy {
@@ -60,6 +65,7 @@ export class ToolsDrawComponent implements AfterViewInit, OnDestroy {
   private startPoint: DrawPoint | null = null;
   private lineAnchor: DrawPoint | null = null;
   private snapshot: ImageData | null = null;
+  private undoStack: ImageData[] = [];
   private resizeObserver: ResizeObserver | null = null;
 
   readonly colors = DRAW_COLORS;
@@ -69,17 +75,20 @@ export class ToolsDrawComponent implements AfterViewInit, OnDestroy {
     DRAW_COLORS.find((item) => item.id === 'red')?.value ?? '#f5222d'
   );
   readonly width = signal<number>(DRAW_WIDTHS[1].value);
-  readonly tool = signal<DrawToolId>('free');
+  readonly pen = signal<DrawPenId>('free');
+  readonly erasing = signal(false);
+  readonly tool = computed<DrawToolId>(() => (this.erasing() ? 'eraser' : this.pen()));
   readonly lineChaining = signal(false);
   readonly currentColorLabel = computed(
     () => this.colors.find((item) => item.value === this.color())?.label ?? '颜色'
   );
   readonly currentToolLabel = computed(
-    () => this.tools.find((item) => item.id === this.tool())?.label ?? '画笔'
+    () => this.tools.find((item) => item.id === this.pen())?.label ?? '画笔'
   );
   readonly currentWidthLabel = computed(
     () => this.widths.find((item) => item.value === this.width())?.label ?? '粗细'
   );
+  readonly canUndo = signal(false);
 
   ngAfterViewInit(): void {
     const canvas = this.canvasRef()?.nativeElement;
@@ -107,9 +116,20 @@ export class ToolsDrawComponent implements AfterViewInit, OnDestroy {
     this.width.set(value);
   }
 
-  setTool(value: DrawToolId): void {
+  setTool(value: DrawPenId): void {
     this.finishPolyline();
-    this.tool.set(value);
+    this.erasing.set(false);
+    this.pen.set(value);
+  }
+
+  usePen(): void {
+    this.finishPolyline();
+    this.erasing.set(false);
+  }
+
+  useEraser(): void {
+    this.finishPolyline();
+    this.erasing.set(true);
   }
 
   clearCanvas(): void {
@@ -117,17 +137,33 @@ export class ToolsDrawComponent implements AfterViewInit, OnDestroy {
     const canvas = this.canvasRef()?.nativeElement;
     const ctx = this.ctx;
     if (!canvas || !ctx) return;
-    ctx.save();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.restore();
+    this.pushUndo(this.captureCanvas(canvas, ctx));
+    this.fillPaper(canvas, ctx);
     this.snapshot = null;
   }
 
-  onDocumentKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape') {
-      this.finishPolyline();
+  undo(): void {
+    if (this.drawing && this.snapshot) {
+      this.applyImageData(this.snapshot);
+      this.drawing = false;
+      this.startPoint = null;
+      this.snapshot = null;
+      this.undoStack.pop();
+      this.canUndo.set(this.undoStack.length > 0);
+      this.ctx?.beginPath();
+      return;
     }
+
+    this.finishPolyline();
+    const prev = this.undoStack.pop();
+    this.canUndo.set(this.undoStack.length > 0);
+    if (!prev) return;
+    this.applyImageData(prev);
+    this.ctx?.beginPath();
+  }
+
+  onEscape(): void {
+    this.finishPolyline();
   }
 
   onPointerDown(event: PointerEvent): void {
@@ -151,7 +187,13 @@ export class ToolsDrawComponent implements AfterViewInit, OnDestroy {
     this.drawing = true;
     this.startPoint = point;
     this.snapshot = this.captureCanvas(canvas, ctx);
+    this.pushUndo(this.snapshot);
     this.applyStrokeStyle(ctx);
+
+    if (this.tool() === 'eraser') {
+      this.rubEraser(ctx, point);
+      return;
+    }
 
     if (this.tool() === 'free') {
       ctx.beginPath();
@@ -173,6 +215,12 @@ export class ToolsDrawComponent implements AfterViewInit, OnDestroy {
     if (!this.drawing || !this.startPoint) return;
 
     const point = this.pointFromEvent(event, canvas);
+    if (this.tool() === 'eraser') {
+      this.rubEraserPath(ctx, this.startPoint, point);
+      this.startPoint = point;
+      return;
+    }
+
     if (this.tool() === 'free') {
       ctx.lineTo(point.x, point.y);
       this.applyStrokeStyle(ctx);
@@ -199,7 +247,7 @@ export class ToolsDrawComponent implements AfterViewInit, OnDestroy {
       // ignore
     }
 
-    if (this.drawing && this.startPoint && canvas && ctx && this.tool() !== 'free') {
+    if (this.drawing && this.startPoint && canvas && ctx && this.tool() !== 'free' && this.tool() !== 'eraser') {
       const point = this.pointFromEvent(event, canvas);
       this.restoreSnapshot(ctx);
       this.drawShape(ctx, this.startPoint, point);
@@ -208,7 +256,11 @@ export class ToolsDrawComponent implements AfterViewInit, OnDestroy {
     this.drawing = false;
     this.startPoint = null;
     this.snapshot = null;
-    this.ctx?.beginPath();
+    if (this.ctx) {
+      this.ctx.globalCompositeOperation = 'source-over';
+      this.ctx.globalAlpha = 1;
+      this.ctx.beginPath();
+    }
   }
 
   private fitCanvas(): void {
@@ -224,16 +276,32 @@ export class ToolsDrawComponent implements AfterViewInit, OnDestroy {
     const nextWidth = Math.floor(cssWidth * dpr);
     const nextHeight = Math.floor(cssHeight * dpr);
     if (canvas.width === nextWidth && canvas.height === nextHeight) return;
+
+    const prev = document.createElement('canvas');
+    prev.width = canvas.width;
+    prev.height = canvas.height;
+    const hadPixels = prev.width > 0 && prev.height > 0;
+    if (hadPixels) {
+      prev.getContext('2d')?.drawImage(canvas, 0, 0);
+    }
+
     canvas.width = nextWidth;
     canvas.height = nextHeight;
     canvas.style.width = `${cssWidth}px`;
     canvas.style.height = `${cssHeight}px`;
+    this.fillPaper(canvas, ctx);
+    if (hadPixels) {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.drawImage(prev, 0, 0, prev.width, prev.height, 0, 0, nextWidth, nextHeight);
+    }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     this.snapshot = null;
     this.lineAnchor = null;
     this.lineChaining.set(false);
+    this.undoStack = [];
+    this.canUndo.set(false);
   }
 
   private onLinePointerDown(
@@ -258,7 +326,9 @@ export class ToolsDrawComponent implements AfterViewInit, OnDestroy {
     if (Math.hypot(point.x - this.lineAnchor.x, point.y - this.lineAnchor.y) < 4) {
       return;
     }
+    if (!this.snapshot) return;
 
+    this.pushUndo(this.snapshot);
     this.restoreSnapshot(ctx);
     this.drawShape(ctx, this.lineAnchor, point);
     this.snapshot = this.captureCanvas(canvas, ctx);
@@ -292,11 +362,25 @@ export class ToolsDrawComponent implements AfterViewInit, OnDestroy {
     return ctx.getImageData(0, 0, canvas.width, canvas.height);
   }
 
-  private restoreSnapshot(ctx: CanvasRenderingContext2D): void {
-    if (!this.snapshot) return;
-    ctx.putImageData(this.snapshot, 0, 0);
+  private applyImageData(image: ImageData): void {
+    const ctx = this.ctx;
+    if (!ctx) return;
+    ctx.putImageData(image, 0, 0);
     const dpr = Math.max(1, window.devicePixelRatio || 1);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  private pushUndo(image: ImageData): void {
+    this.undoStack.push(image);
+    if (this.undoStack.length > 20) {
+      this.undoStack.shift();
+    }
+    this.canUndo.set(true);
+  }
+
+  private restoreSnapshot(ctx: CanvasRenderingContext2D): void {
+    if (!this.snapshot) return;
+    this.applyImageData(this.snapshot);
   }
 
   private drawShape(ctx: CanvasRenderingContext2D, start: DrawPoint, end: DrawPoint): void {
@@ -340,11 +424,55 @@ export class ToolsDrawComponent implements AfterViewInit, OnDestroy {
   }
 
   private applyStrokeStyle(ctx: CanvasRenderingContext2D): void {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
     ctx.strokeStyle = this.color();
     ctx.fillStyle = this.color();
     ctx.lineWidth = this.width();
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
+  }
+
+  private fillPaper(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D): void {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = DRAW_PAPER;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+  }
+
+  private eraserTip(): { width: number; height: number } {
+    const size = 7 + this.width();
+    return { width: size, height: size * 1.35 };
+  }
+
+  private rubEraser(ctx: CanvasRenderingContext2D, point: DrawPoint): void {
+    const tip = this.eraserTip();
+    const coreScale = Math.sqrt(ERASER_CORE_AREA);
+    const coreWidth = tip.width * coreScale;
+    const coreHeight = tip.height * coreScale;
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = DRAW_PAPER;
+    ctx.globalAlpha = ERASER_EDGE_ALPHA;
+    ctx.fillRect(point.x - tip.width / 2, point.y - tip.height / 2, tip.width, tip.height);
+    ctx.globalAlpha = 1;
+    ctx.fillRect(point.x - coreWidth / 2, point.y - coreHeight / 2, coreWidth, coreHeight);
+    ctx.restore();
+  }
+
+  private rubEraserPath(ctx: CanvasRenderingContext2D, from: DrawPoint, to: DrawPoint): void {
+    const distance = Math.hypot(to.x - from.x, to.y - from.y);
+    const steps = Math.max(1, Math.ceil(distance / 5));
+    for (let i = 1; i <= steps; i++) {
+      const t = i / steps;
+      this.rubEraser(ctx, {
+        x: from.x + (to.x - from.x) * t,
+        y: from.y + (to.y - from.y) * t,
+      });
+    }
   }
 
   private pointFromEvent(event: PointerEvent, canvas: HTMLCanvasElement): DrawPoint {

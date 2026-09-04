@@ -1,5 +1,73 @@
 <div class="draw">
   <div class="draw-toolbar" role="toolbar" aria-label="画笔">
+    <button
+      type="button"
+      class="draw-undo"
+      (click)="undo()"
+      [disabled]="!canUndo()">
+      撤回
+    </button>
+    <div class="draw-modes" role="group" aria-label="画笔或橡皮">
+      <div class="draw-picker">
+        <button
+          type="button"
+          class="draw-picker-trigger"
+          [class.is-active]="!erasing()"
+          aria-haspopup="true"
+          (click)="usePen()">
+          画笔
+          <span class="draw-picker-caret">▾</span>
+        </button>
+        <div class="draw-picker-menu draw-picker-menu--tools" role="menu" aria-label="选择画笔">
+          @for (item of tools; track item.id) {
+            <button
+              type="button"
+              class="draw-tool-cell"
+              role="menuitem"
+              [class.is-active]="!erasing() && pen() === item.id"
+              (click)="setTool(item.id)">
+              <span class="draw-tool-glyph" aria-hidden="true">
+                @switch (item.id) {
+                  @case ('free') {
+                    <svg viewBox="0 0 24 24">
+                      <path d="M4 17c2-8 4-2 6-6s3 7 5 3 3-7 5-3" />
+                    </svg>
+                  }
+                  @case ('line') {
+                    <svg viewBox="0 0 24 24">
+                      <path d="M5 19 19 5" />
+                    </svg>
+                  }
+                  @case ('ellipse') {
+                    <svg viewBox="0 0 24 24">
+                      <ellipse cx="12" cy="12" rx="9" ry="6" />
+                    </svg>
+                  }
+                  @case ('circle') {
+                    <svg viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="7" />
+                    </svg>
+                  }
+                  @case ('rect') {
+                    <svg viewBox="0 0 24 24">
+                      <rect x="5" y="6" width="14" height="12" rx="1" />
+                    </svg>
+                  }
+                }
+              </span>
+              {{ item.label }}
+            </button>
+          }
+        </div>
+      </div>
+      <button
+        type="button"
+        class="draw-mode"
+        [class.is-active]="erasing()"
+        (click)="useEraser()">
+        橡皮
+      </button>
+    </div>
     <div class="draw-picker">
       <button type="button" class="draw-picker-trigger" aria-haspopup="true">
         <span class="draw-swatch draw-swatch--current" [style.--swatch]="color()"></span>
@@ -16,54 +84,6 @@
             [attr.aria-label]="item.label"
             [attr.title]="item.label"
             (click)="setColor(item.value)"></button>
-        }
-      </div>
-    </div>
-
-    <div class="draw-picker">
-      <button type="button" class="draw-picker-trigger" aria-haspopup="true">
-        {{ currentToolLabel() }}
-        <span class="draw-picker-caret">▾</span>
-      </button>
-      <div class="draw-picker-menu draw-picker-menu--tools" role="menu" aria-label="选择画笔">
-        @for (item of tools; track item.id) {
-          <button
-            type="button"
-            class="draw-tool-cell"
-            role="menuitem"
-            [class.is-active]="tool() === item.id"
-            (click)="setTool(item.id)">
-            <span class="draw-tool-glyph" aria-hidden="true">
-              @switch (item.id) {
-                @case ('free') {
-                  <svg viewBox="0 0 24 24">
-                    <path d="M4 17c2-8 4-2 6-6s3 7 5 3 3-7 5-3" />
-                  </svg>
-                }
-                @case ('line') {
-                  <svg viewBox="0 0 24 24">
-                    <path d="M5 19 19 5" />
-                  </svg>
-                }
-                @case ('ellipse') {
-                  <svg viewBox="0 0 24 24">
-                    <ellipse cx="12" cy="12" rx="9" ry="6" />
-                  </svg>
-                }
-                @case ('circle') {
-                  <svg viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="7" />
-                  </svg>
-                }
-                @case ('rect') {
-                  <svg viewBox="0 0 24 24">
-                    <rect x="5" y="6" width="14" height="12" rx="1" />
-                  </svg>
-                }
-              }
-            </span>
-            {{ item.label }}
-          </button>
         }
       </div>
     </div>
@@ -88,22 +108,27 @@
       </div>
     </div>
 
-    <button type="button" class="draw-clear" (click)="clearCanvas()">清空</button>
+    <div class="draw-actions">
+      <button type="button" class="draw-clear" (click)="clearCanvas()">清空</button>
+    </div>
   </div>
-  @if (tool() === 'line') {
-    <p class="draw-hint">
+  <p class="draw-hint">
+    @if (tool() === 'line') {
       @if (lineChaining()) {
         已定点：移动鼠标拉线，再单击接下一段，双击或 Esc 结束。
       } @else {
         单击画布固定起点，然后从该点继续拉线。
       }
-    </p>
-  }
+    } @else if (erasing()) {
+      中心经过处擦干净，边缘仍会淡一点。
+    }
+  </p>
 
   <div #stage class="draw-stage">
     <canvas
       #canvas
       class="draw-canvas"
+      [class.draw-canvas--erase]="erasing()"
       aria-label="画布"
       (pointerdown)="onPointerDown($event)"
       (pointermove)="onPointerMove($event)"

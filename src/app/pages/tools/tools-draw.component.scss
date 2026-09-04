@@ -164,8 +164,52 @@
   background: currentColor;
 }
 
-.draw-clear {
+.draw-undo {
+  height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 6px;
+  background: #1677ff;
+  color: #fff;
+  cursor: pointer;
+}
+
+.draw-undo:disabled {
+  background: #91caff;
+  color: #fff;
+  cursor: default;
+}
+
+.draw-modes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.draw-mode {
+  height: 36px;
+  padding: 0 16px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: var(--bg-primary, transparent);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.draw-modes .draw-picker-trigger.is-active,
+.draw-mode.is-active {
+  border-color: #f0f0f0;
+  background: #f5f5f5;
+  color: #141414;
+}
+
+.draw-actions {
+  display: flex;
+  gap: 8px;
   margin-left: auto;
+}
+
+.draw-clear {
   height: 32px;
   padding: 0 12px;
   border: 1px solid var(--border-light);
@@ -173,6 +217,11 @@
   background: transparent;
   color: var(--text-primary);
   cursor: pointer;
+}
+
+.draw-clear:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 .draw-stage {
@@ -186,7 +235,12 @@
 
 .draw-hint {
   margin: -4px 0 0;
+  min-height: 18px;
   font-size: 12px;
+  line-height: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--text-secondary, #8c8c8c);
 }
 
@@ -196,4 +250,8 @@
   height: 100%;
   touch-action: none;
   cursor: crosshair;
+}
+
+.draw-canvas--erase {
+  cursor: cell;
 }

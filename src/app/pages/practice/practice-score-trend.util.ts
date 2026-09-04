@@ -23,7 +23,7 @@ function pointsForKind(
 ): Array<[number, number]> {
   return records
     .filter((record) => record.kind === kind)
-    .sort((a, b) => a.at - b.at)
+    .sort((a: PracticeSessionRecord, b: PracticeSessionRecord) => a.at - b.at)
     .map((record) => [record.at, record.percent]);
 }
 
@@ -44,7 +44,9 @@ export function buildScoreTrendOption(
 ): EChartsOption {
   const axis = dark ? 'rgba(255, 255, 255, 0.65)' : 'rgba(0, 0, 0, 0.55)';
   const split = dark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)';
-  const chronological = [...records].sort((a, b) => a.at - b.at);
+  const chronological = [...records].sort(
+    (a: PracticeSessionRecord, b: PracticeSessionRecord) => a.at - b.at
+  );
   const labels = chronological.map((record) => formatSessionAt(record.at));
   const useCategory = chronological.length < 4;
   const canSlide = chronological.length >= SLIDE_AFTER;

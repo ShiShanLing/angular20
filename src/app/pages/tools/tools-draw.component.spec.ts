@@ -26,6 +26,21 @@ describe('ToolsDrawComponent', () => {
     expect(component.tool()).toBe('circle');
   });
 
+  it('uses pen to draw and eraser to erase as exclusive tools', () => {
+    const component = new ToolsDrawComponent();
+    component.setTool('circle');
+    component.useEraser();
+    expect(component.erasing()).toBeTrue();
+    expect(component.tool()).toBe('eraser');
+    component.usePen();
+    expect(component.erasing()).toBeFalse();
+    expect(component.tool()).toBe('circle');
+    component.useEraser();
+    component.setTool('free');
+    expect(component.erasing()).toBeFalse();
+    expect(component.tool()).toBe('free');
+  });
+
   it('clears polyline chaining when leaving the line tool', () => {
     const component = new ToolsDrawComponent();
     component.setTool('line');
@@ -33,5 +48,12 @@ describe('ToolsDrawComponent', () => {
     component.setTool('free');
     expect(component.tool()).toBe('free');
     expect(component.lineChaining()).toBeFalse();
+  });
+
+  it('cannot undo before any drawing', () => {
+    const component = new ToolsDrawComponent();
+    expect(component.canUndo()).toBeFalse();
+    component.undo();
+    expect(component.canUndo()).toBeFalse();
   });
 });
