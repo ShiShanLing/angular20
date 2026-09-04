@@ -1,0 +1,113 @@
+<div class="draw">
+  <div class="draw-toolbar" role="toolbar" aria-label="画笔">
+    <div class="draw-picker">
+      <button type="button" class="draw-picker-trigger" aria-haspopup="true">
+        <span class="draw-swatch draw-swatch--current" [style.--swatch]="color()"></span>
+        <span>{{ currentColorLabel() }}</span>
+      </button>
+      <div class="draw-picker-menu draw-picker-menu--colors" role="menu" aria-label="选择颜色">
+        @for (item of colors; track item.id) {
+          <button
+            type="button"
+            class="draw-color-cell"
+            role="menuitem"
+            [class.is-active]="color() === item.value"
+            [style.--swatch]="item.value"
+            [attr.aria-label]="item.label"
+            [attr.title]="item.label"
+            (click)="setColor(item.value)"></button>
+        }
+      </div>
+    </div>
+
+    <div class="draw-picker">
+      <button type="button" class="draw-picker-trigger" aria-haspopup="true">
+        {{ currentToolLabel() }}
+        <span class="draw-picker-caret">▾</span>
+      </button>
+      <div class="draw-picker-menu draw-picker-menu--tools" role="menu" aria-label="选择画笔">
+        @for (item of tools; track item.id) {
+          <button
+            type="button"
+            class="draw-tool-cell"
+            role="menuitem"
+            [class.is-active]="tool() === item.id"
+            (click)="setTool(item.id)">
+            <span class="draw-tool-glyph" aria-hidden="true">
+              @switch (item.id) {
+                @case ('free') {
+                  <svg viewBox="0 0 24 24">
+                    <path d="M4 17c2-8 4-2 6-6s3 7 5 3 3-7 5-3" />
+                  </svg>
+                }
+                @case ('line') {
+                  <svg viewBox="0 0 24 24">
+                    <path d="M5 19 19 5" />
+                  </svg>
+                }
+                @case ('ellipse') {
+                  <svg viewBox="0 0 24 24">
+                    <ellipse cx="12" cy="12" rx="9" ry="6" />
+                  </svg>
+                }
+                @case ('circle') {
+                  <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="7" />
+                  </svg>
+                }
+                @case ('rect') {
+                  <svg viewBox="0 0 24 24">
+                    <rect x="5" y="6" width="14" height="12" rx="1" />
+                  </svg>
+                }
+              }
+            </span>
+            {{ item.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="draw-picker">
+      <button type="button" class="draw-picker-trigger" aria-haspopup="true">
+        <span class="draw-width-dot" [style.--dot]="width() + 'px'"></span>
+        {{ currentWidthLabel() }}
+      </button>
+      <div class="draw-picker-menu draw-picker-menu--widths" role="menu" aria-label="选择粗细">
+        @for (item of widths; track item.id) {
+          <button
+            type="button"
+            class="draw-width-cell"
+            role="menuitem"
+            [class.is-active]="width() === item.value"
+            (click)="setWidth(item.value)">
+            <span class="draw-width-dot" [style.--dot]="item.value + 'px'"></span>
+            {{ item.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <button type="button" class="draw-clear" (click)="clearCanvas()">清空</button>
+  </div>
+  @if (tool() === 'line') {
+    <p class="draw-hint">
+      @if (lineChaining()) {
+        已定点：移动鼠标拉线，再单击接下一段，双击或 Esc 结束。
+      } @else {
+        单击画布固定起点，然后从该点继续拉线。
+      }
+    </p>
+  }
+
+  <div #stage class="draw-stage">
+    <canvas
+      #canvas
+      class="draw-canvas"
+      aria-label="画布"
+      (pointerdown)="onPointerDown($event)"
+      (pointermove)="onPointerMove($event)"
+      (pointerup)="onPointerUp($event)"
+      (pointercancel)="onPointerUp($event)"></canvas>
+  </div>
+</div>

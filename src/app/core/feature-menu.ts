@@ -18,6 +18,7 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
       { path: '/tools/calendar', label: '万年历', permission: 'tools.calendar' },
       { path: '/tools/text', label: '文本处理', permission: 'tools.text' },
       { path: '/tools/qrcode', label: '二维码', permission: 'tools.qrcode' },
+      { path: '/tools/draw', label: '画图' },
       { path: '/tools/notes', label: '记事本', permission: 'tools.notes' },
       { path: '/tools/dev', label: '开发助手', permission: 'tools.dev' },
     ]

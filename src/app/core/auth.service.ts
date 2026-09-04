@@ -15,7 +15,7 @@ export const BASIC_PERMISSIONS: string[] = [
   'tools.subscription', 'tools.saving', 'tools.fire', 'tools.anhui-pension',
   'tools.bmi', 'tools.water', 'tools.weight', 'tools.sleep',
   'tools.time', 'tools.weather', 'tools.calendar', 'tools.text',
-  'tools.qrcode', 'tools.notes', 'tools.dev',
+  'tools.qrcode', 'tools.draw', 'tools.notes', 'tools.dev',
   'snake.play', 'tetris.play',
   'chart.showcase',
   'practice.view',
@@ -230,7 +230,7 @@ export class AuthService {
       .map((item) => String(item).trim())
       .filter((item) => item.length > 0);
     if (normalized.length > 0 && !normalized.includes('practice.view')) {
-      return [...normalized, 'practice.view'];
+      normalized.push('practice.view');
     }
     return normalized;
   }

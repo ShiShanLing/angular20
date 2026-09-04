@@ -26,7 +26,7 @@ const ADMIN_PERMISSIONS = [
   'tools.subscription', 'tools.saving', 'tools.fire', 'tools.anhui-pension',
   'tools.bmi', 'tools.water', 'tools.weight', 'tools.sleep',
   'tools.time', 'tools.weather', 'tools.calendar', 'tools.text',
-  'tools.qrcode', 'tools.notes', 'tools.dev',
+  'tools.qrcode', 'tools.notes', 'tools.dev', 'tools.draw',
 ];
 
 const BASIC_PERMISSIONS = [
@@ -34,7 +34,7 @@ const BASIC_PERMISSIONS = [
   'tools.subscription', 'tools.saving', 'tools.fire', 'tools.anhui-pension',
   'tools.bmi', 'tools.water', 'tools.weight', 'tools.sleep',
   'tools.time', 'tools.weather', 'tools.calendar', 'tools.text',
-  'tools.qrcode', 'tools.notes', 'tools.dev',
+  'tools.qrcode', 'tools.notes', 'tools.dev', 'tools.draw',
   'snake.play',
   'tetris.play',
   'chart.showcase',
