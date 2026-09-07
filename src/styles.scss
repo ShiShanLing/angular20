@@ -3,6 +3,7 @@
 
 /* ========== CSS Variables for Theming ========== */
 :root {
+  color-scheme: light;
   /* Light mode (default) */
   --bg-primary: #f0f2f5;
   --bg-secondary: #ffffff;
@@ -40,6 +41,7 @@
 
 /* Dark mode */
 [data-theme="dark"] {
+  color-scheme: dark;
   --bg-primary: #141414;
   --bg-secondary: #1f1f1f;
   --bg-tertiary: #262626;
