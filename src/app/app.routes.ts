@@ -49,6 +49,11 @@ export const routes: Routes = [
         data: { practiceScope: 'ios-learning', practiceFlow: 'full' }
       },
       {
+        path: 'ios-learning/recite',
+        loadComponent: () => import('./pages/practice/practice-list.component').then(m => m.PracticeListComponent),
+        data: { reciteTrack: 'ios' }
+      },
+      {
         path: 'ios-learning/history',
         loadComponent: () =>
           import('./pages/practice/practice-score-history.component').then(m => m.PracticeScoreHistoryComponent),
@@ -63,6 +68,11 @@ export const routes: Routes = [
         path: 'android-learning/review',
         loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
         data: { practiceScope: 'android-learning', practiceFlow: 'full' }
+      },
+      {
+        path: 'android-learning/recite',
+        loadComponent: () => import('./pages/practice/practice-list.component').then(m => m.PracticeListComponent),
+        data: { reciteTrack: 'android' }
       },
       {
         path: 'android-learning/history',
@@ -81,6 +91,11 @@ export const routes: Routes = [
         data: { practiceScope: 'angular-learning', practiceFlow: 'full' }
       },
       {
+        path: 'angular-learning/recite',
+        loadComponent: () => import('./pages/practice/practice-list.component').then(m => m.PracticeListComponent),
+        data: { reciteTrack: 'angular' }
+      },
+      {
         path: 'angular-learning/history',
         loadComponent: () =>
           import('./pages/practice/practice-score-history.component').then(m => m.PracticeScoreHistoryComponent),
@@ -95,6 +110,11 @@ export const routes: Routes = [
         path: 'ts-learning/review',
         loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
         data: { practiceScope: 'ts-learning', practiceFlow: 'full' }
+      },
+      {
+        path: 'ts-learning/recite',
+        loadComponent: () => import('./pages/practice/practice-list.component').then(m => m.PracticeListComponent),
+        data: { reciteTrack: 'ts' }
       },
       {
         path: 'ts-learning/history',
@@ -113,6 +133,11 @@ export const routes: Routes = [
         data: { practiceScope: 'agent-objective-learning', practiceFlow: 'full' }
       },
       {
+        path: 'agent-objective-learning/recite',
+        loadComponent: () => import('./pages/practice/practice-list.component').then(m => m.PracticeListComponent),
+        data: { reciteTrack: 'agent' }
+      },
+      {
         path: 'agent-learning',
         loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
         data: { practiceScope: 'agent-learning' }
@@ -121,6 +146,11 @@ export const routes: Routes = [
         path: 'agent-learning/review',
         loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
         data: { practiceScope: 'agent-learning', practiceFlow: 'full' }
+      },
+      {
+        path: 'agent-learning/recite',
+        loadComponent: () => import('./pages/practice/practice-list.component').then(m => m.PracticeListComponent),
+        data: { reciteTrack: 'agent' }
       },
       {
         path: 'agent-learning/history',

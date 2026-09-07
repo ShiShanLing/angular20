@@ -33,6 +33,7 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
         children: [
           { path: '/ios-learning', label: '每日学习', permission: 'practice.view' },
           { path: '/ios-learning/review', label: '复习', permission: 'practice.view' },
+          { path: '/ios-learning/recite', label: '背题', permission: 'practice.view' },
           { path: '/ios-learning/history', label: '成绩走势', permission: 'practice.view' },
         ]
       },
@@ -42,6 +43,7 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
         children: [
           { path: '/android-learning', label: '每日学习', permission: 'practice.view' },
           { path: '/android-learning/review', label: '复习', permission: 'practice.view' },
+          { path: '/android-learning/recite', label: '背题', permission: 'practice.view' },
           { path: '/android-learning/history', label: '成绩走势', permission: 'practice.view' },
         ]
       },
@@ -51,6 +53,7 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
         children: [
           { path: '/angular-learning', label: '每日学习', permission: 'practice.view' },
           { path: '/angular-learning/review', label: '复习', permission: 'practice.view' },
+          { path: '/angular-learning/recite', label: '背题', permission: 'practice.view' },
           { path: '/angular-learning/history', label: '成绩走势', permission: 'practice.view' },
         ]
       },
@@ -60,6 +63,7 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
         children: [
           { path: '/ts-learning', label: '每日学习', permission: 'practice.view' },
           { path: '/ts-learning/review', label: '复习', permission: 'practice.view' },
+          { path: '/ts-learning/recite', label: '背题', permission: 'practice.view' },
           { path: '/ts-learning/history', label: '成绩走势', permission: 'practice.view' },
         ]
       },
@@ -71,6 +75,7 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
           { path: '/agent-objective-learning/review', label: '选择判断复习', permission: 'practice.view' },
           { path: '/agent-learning', label: '简答题', permission: 'practice.view' },
           { path: '/agent-learning/review', label: '简答题复习', permission: 'practice.view' },
+          { path: '/agent-learning/recite', label: '背题', permission: 'practice.view' },
           { path: '/agent-learning/history', label: '成绩走势', permission: 'practice.view' },
         ]
       },
