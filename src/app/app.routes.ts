@@ -134,8 +134,8 @@ export const routes: Routes = [
       },
       {
         path: 'agent-objective-learning/recite',
-        loadComponent: () => import('./pages/practice/practice-list.component').then(m => m.PracticeListComponent),
-        data: { reciteTrack: 'agent' }
+        redirectTo: '/agent-learning/recite',
+        pathMatch: 'full',
       },
       {
         path: 'agent-learning',

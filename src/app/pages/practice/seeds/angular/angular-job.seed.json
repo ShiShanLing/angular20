@@ -1,5 +1,6 @@
 [
   {
+    "no": 1,
     "id": "ng-js-var-let-const",
     "category": "Angular",
     "topic": "JavaScript 基础",
@@ -9,6 +10,7 @@
     "oralOneLiner": "var 函数作用域且会提升，let/const 块级作用域更安全。"
   },
   {
+    "no": 2,
     "id": "ng-js-scope-closure",
     "category": "Angular",
     "topic": "JavaScript 基础",
@@ -18,6 +20,7 @@
     "oralOneLiner": "闭包就是函数记住了定义时的外部作用域。"
   },
   {
+    "no": 3,
     "id": "ng-js-closure-leak",
     "category": "Angular",
     "topic": "JavaScript 基础",
@@ -27,6 +30,7 @@
     "oralOneLiner": "闭包能保状态，也会延长被捕获对象的生命周期。"
   },
   {
+    "no": 4,
     "id": "ng-js-prototype-chain",
     "category": "Angular",
     "topic": "JavaScript 基础",
@@ -36,6 +40,7 @@
     "oralOneLiner": "原型链就是对象属性查找的向上委托链。"
   },
   {
+    "no": 5,
     "id": "ng-js-new-operator",
     "category": "Angular",
     "topic": "JavaScript 基础",
@@ -45,6 +50,7 @@
     "oralOneLiner": "new 做四件事：建对象、接原型、绑 this、返回对象。"
   },
   {
+    "no": 6,
     "id": "ng-js-this-binding",
     "category": "Angular",
     "topic": "JavaScript 基础",
@@ -54,6 +60,7 @@
     "oralOneLiner": "this 看调用方式，不看函数在哪里定义。"
   },
   {
+    "no": 7,
     "id": "ng-js-arrow-this",
     "category": "Angular",
     "topic": "JavaScript 基础",
@@ -63,6 +70,7 @@
     "oralOneLiner": "箭头函数的 this 来自定义时外层作用域。"
   },
   {
+    "no": 8,
     "id": "ng-js-call-apply-bind",
     "category": "Angular",
     "topic": "JavaScript 基础",
@@ -72,6 +80,7 @@
     "oralOneLiner": "call/apply 立即执行，bind 返回新函数。"
   },
   {
+    "no": 9,
     "id": "ng-js-promise-states",
     "category": "Angular",
     "topic": "JavaScript 异步",
@@ -81,6 +90,7 @@
     "oralOneLiner": "Promise 状态一旦从 pending 落定，就不可再改变。"
   },
   {
+    "no": 10,
     "id": "ng-js-promise-chain-error",
     "category": "Angular",
     "topic": "JavaScript 异步",
@@ -90,6 +100,7 @@
     "oralOneLiner": "Promise 链靠返回值传递结果，靠 throw/reject 传递错误。"
   },
   {
+    "no": 11,
     "id": "ng-js-async-await-promise",
     "category": "Angular",
     "topic": "JavaScript 异步",
@@ -99,6 +110,7 @@
     "oralOneLiner": "async/await 是 Promise 的语法糖，让异步流程更像同步代码。"
   },
   {
+    "no": 12,
     "id": "ng-js-event-loop-order",
     "category": "Angular",
     "topic": "JavaScript 异步",
@@ -108,6 +120,7 @@
     "oralOneLiner": "事件循环口诀：同步先跑，微任务清空，再下一个宏任务。"
   },
   {
+    "no": 13,
     "id": "ng-js-debounce-throttle",
     "category": "Angular",
     "topic": "JavaScript 手写题",
@@ -117,6 +130,7 @@
     "oralOneLiner": "防抖等停下来执行，节流按固定频率执行。"
   },
   {
+    "no": 14,
     "id": "ng-js-type-detect",
     "category": "Angular",
     "topic": "JavaScript 基础",
@@ -126,6 +140,7 @@
     "oralOneLiner": "类型判断常用 typeof、instanceof 和 Object.prototype.toString 组合。"
   },
   {
+    "no": 15,
     "id": "ng-js-deep-clone",
     "category": "Angular",
     "topic": "JavaScript 手写题",
@@ -135,6 +150,7 @@
     "oralOneLiner": "深拷贝难点是循环引用和特殊对象。"
   },
   {
+    "no": 16,
     "id": "ng-js-esm-commonjs",
     "category": "Angular",
     "topic": "JavaScript 模块化",
@@ -144,6 +160,7 @@
     "oralOneLiner": "ESM 静态、利于 tree-shaking；CommonJS 偏运行时。"
   },
   {
+    "no": 17,
     "id": "ng-js-nullish-optional",
     "category": "Angular",
     "topic": "JavaScript 基础",
@@ -153,6 +170,7 @@
     "oralOneLiner": "?. 防空访问，?? 只处理 null 和 undefined。"
   },
   {
+    "no": 18,
     "id": "ng-js-array-methods",
     "category": "Angular",
     "topic": "JavaScript 基础",
@@ -162,6 +180,7 @@
     "oralOneLiner": "数组方法按目的选：转 map，筛 filter，累 reduce，遍历 forEach。"
   },
   {
+    "no": 19,
     "id": "ng-ts-type-interface",
     "category": "Angular",
     "topic": "TypeScript",
@@ -171,6 +190,7 @@
     "oralOneLiner": "interface 偏对象契约，type 偏类型表达能力。"
   },
   {
+    "no": 20,
     "id": "ng-ts-any-unknown",
     "category": "Angular",
     "topic": "TypeScript",
@@ -180,6 +200,7 @@
     "oralOneLiner": "unknown 是安全版 any，使用前必须收窄。"
   },
   {
+    "no": 21,
     "id": "ng-ts-never-void",
     "category": "Angular",
     "topic": "TypeScript",
@@ -189,6 +210,7 @@
     "oralOneLiner": "void 是不返回有用值，never 是不可能有值。"
   },
   {
+    "no": 22,
     "id": "ng-ts-union-intersection",
     "category": "Angular",
     "topic": "TypeScript",
@@ -198,6 +220,7 @@
     "oralOneLiner": "联合是二选一，交叉是都要有。"
   },
   {
+    "no": 23,
     "id": "ng-ts-generics-basics",
     "category": "Angular",
     "topic": "TypeScript",
@@ -207,6 +230,7 @@
     "oralOneLiner": "泛型是类型参数，解决复用和类型安全。"
   },
   {
+    "no": 24,
     "id": "ng-ts-keyof-typeof",
     "category": "Angular",
     "topic": "TypeScript",
@@ -216,6 +240,7 @@
     "oralOneLiner": "keyof 取键，typeof 从值反推类型。"
   },
   {
+    "no": 25,
     "id": "ng-ts-type-guard",
     "category": "Angular",
     "topic": "TypeScript",
@@ -225,6 +250,7 @@
     "oralOneLiner": "类型守卫让运行时判断变成编译期类型收窄。"
   },
   {
+    "no": 26,
     "id": "ng-ts-discriminated-union",
     "category": "Angular",
     "topic": "TypeScript",
@@ -234,6 +260,7 @@
     "oralOneLiner": "可辨识联合用一个 tag 字段表达状态机。"
   },
   {
+    "no": 27,
     "id": "ng-ts-conditional-mapped",
     "category": "Angular",
     "topic": "TypeScript",
@@ -243,6 +270,7 @@
     "oralOneLiner": "条件类型做分支，映射类型遍历属性。"
   },
   {
+    "no": 28,
     "id": "ng-ts-utility-partial-pick-omit",
     "category": "Angular",
     "topic": "TypeScript",
@@ -252,6 +280,7 @@
     "oralOneLiner": "工具类型是把已有类型按规则变形。"
   },
   {
+    "no": 29,
     "id": "ng-ts-assertion-risk",
     "category": "Angular",
     "topic": "TypeScript",
@@ -261,6 +290,7 @@
     "oralOneLiner": "断言是绕过检查，类型守卫才是证明类型。"
   },
   {
+    "no": 30,
     "id": "ng-ts-api-response-model",
     "category": "Angular",
     "topic": "TypeScript",
@@ -270,6 +300,7 @@
     "oralOneLiner": "API 类型建模用泛型承载 data，用联合表达成功失败。"
   },
   {
+    "no": 31,
     "id": "ng-ts-template-check",
     "category": "Angular",
     "topic": "TypeScript / Angular",
@@ -279,6 +310,7 @@
     "oralOneLiner": "模板类型检查让 HTML 模板也享受 TS 的安全网。"
   },
   {
+    "no": 32,
     "id": "ng-ts-tsconfig-strict",
     "category": "Angular",
     "topic": "TypeScript 工程化",
@@ -288,6 +320,7 @@
     "oralOneLiner": "strict 提高前期约束，换长期可维护性。"
   },
   {
+    "no": 33,
     "id": "ng-angular-react-vue-diff",
     "category": "Angular",
     "topic": "Angular 核心",
@@ -297,6 +330,7 @@
     "oralOneLiner": "Angular 是完整框架，适合强规范的大型业务应用。"
   },
   {
+    "no": 34,
     "id": "ng-angular-standalone",
     "category": "Angular",
     "topic": "Angular 核心",
@@ -306,6 +340,7 @@
     "oralOneLiner": "Standalone 让组件自带依赖声明，减少 NgModule 心智。"
   },
   {
+    "no": 35,
     "id": "ng-angular-component-directive-pipe",
     "category": "Angular",
     "topic": "Angular 核心",
@@ -315,6 +350,7 @@
     "oralOneLiner": "组件管视图，指令管行为，管道管展示转换。"
   },
   {
+    "no": 36,
     "id": "ng-angular-data-binding",
     "category": "Angular",
     "topic": "Angular 模板",
@@ -324,6 +360,7 @@
     "oralOneLiner": "Angular 数据绑定分插值、属性、事件和双向绑定。"
   },
   {
+    "no": 37,
     "id": "ng-angular-input-output",
     "category": "Angular",
     "topic": "Angular 组件通信",
@@ -333,6 +370,7 @@
     "oralOneLiner": "Input 向下传数据，Output 向上传事件。"
   },
   {
+    "no": 38,
     "id": "ng-angular-lifecycle",
     "category": "Angular",
     "topic": "Angular 生命周期",
@@ -342,6 +380,7 @@
     "oralOneLiner": "生命周期按输入变化、初始化、内容视图完成、销毁来记。"
   },
   {
+    "no": 39,
     "id": "ng-angular-constructor-oninit",
     "category": "Angular",
     "topic": "Angular 生命周期",
@@ -351,6 +390,7 @@
     "oralOneLiner": "constructor 管注入，ngOnInit 管 Angular 初始化后的业务启动。"
   },
   {
+    "no": 40,
     "id": "ng-angular-viewchild-contentchild",
     "category": "Angular",
     "topic": "Angular 视图查询",
@@ -360,6 +400,7 @@
     "oralOneLiner": "ViewChild 查自己模板，ContentChild 查投影内容。"
   },
   {
+    "no": 41,
     "id": "ng-angular-content-projection",
     "category": "Angular",
     "topic": "Angular 组件",
@@ -369,6 +410,7 @@
     "oralOneLiner": "ng-content 让组件提供壳，内容由外部投影进来。"
   },
   {
+    "no": 42,
     "id": "ng-angular-service-business",
     "category": "Angular",
     "topic": "Angular 架构",
@@ -378,6 +420,7 @@
     "oralOneLiner": "Service 放业务和状态，Component 负责展示和交互。"
   },
   {
+    "no": 43,
     "id": "ng-angular-di-basics",
     "category": "Angular",
     "topic": "Angular DI",
@@ -387,6 +430,7 @@
     "oralOneLiner": "DI = 用 Token 找 Provider，由 Injector 提供实例。"
   },
   {
+    "no": 44,
     "id": "ng-angular-provider-scope",
     "category": "Angular",
     "topic": "Angular DI",
@@ -396,6 +440,7 @@
     "oralOneLiner": "Provider 放在哪里，实例作用域就在哪里。"
   },
   {
+    "no": 45,
     "id": "ng-angular-inject-function",
     "category": "Angular",
     "topic": "Angular DI",
@@ -405,6 +450,7 @@
     "oralOneLiner": "inject() 是函数式 DI，只能在注入上下文使用。"
   },
   {
+    "no": 46,
     "id": "ng-angular-injection-token",
     "category": "Angular",
     "topic": "Angular DI",
@@ -414,6 +460,7 @@
     "oralOneLiner": "InjectionToken 给配置和接口抽象一个运行时注入标识。"
   },
   {
+    "no": 47,
     "id": "ng-angular-pipe-pure-impure",
     "category": "Angular",
     "topic": "Angular Pipe",
@@ -423,6 +470,7 @@
     "oralOneLiner": "纯管道看输入引用变化，非纯管道会频繁执行。"
   },
   {
+    "no": 48,
     "id": "ng-angular-signals-basics",
     "category": "Angular",
     "topic": "Angular Signals",
@@ -432,6 +480,7 @@
     "oralOneLiner": "signal 存状态，computed 派生状态，effect 处理副作用。"
   },
   {
+    "no": 49,
     "id": "ng-angular-effect-risk",
     "category": "Angular",
     "topic": "Angular Signals",
@@ -441,6 +490,7 @@
     "oralOneLiner": "effect 做副作用，不要拿它替代 computed 写派生状态。"
   },
   {
+    "no": 50,
     "id": "ng-angular-signal-input-output",
     "category": "Angular",
     "topic": "Angular Signals",
@@ -450,6 +500,7 @@
     "oralOneLiner": "信号 IO 让组件输入输出更自然接入 Signals。"
   },
   {
+    "no": 51,
     "id": "ng-angular-new-control-flow",
     "category": "Angular",
     "topic": "Angular 模板",
@@ -459,6 +510,7 @@
     "oralOneLiner": "新控制流更清晰，@for 要认真写 track。"
   },
   {
+    "no": 52,
     "id": "ng-angular-for-track",
     "category": "Angular",
     "topic": "Angular 模板 / 性能",
@@ -468,6 +520,7 @@
     "oralOneLiner": "track 是列表 diff 的身份标识，稳定 id 最靠谱。"
   },
   {
+    "no": 53,
     "id": "ng-angular-defer",
     "category": "Angular",
     "topic": "Angular 性能",
@@ -477,6 +530,7 @@
     "oralOneLiner": "@defer 把非关键视图延后加载，改善首屏。"
   },
   {
+    "no": 54,
     "id": "ng-angular-hostbinding-hostlistener",
     "category": "Angular",
     "topic": "Angular 指令",
@@ -486,6 +540,7 @@
     "oralOneLiner": "HostBinding 改宿主属性，HostListener 听宿主事件。"
   },
   {
+    "no": 55,
     "id": "ng-router-lazy-loading",
     "category": "Angular",
     "topic": "Angular 路由",
@@ -495,6 +550,7 @@
     "oralOneLiner": "路由懒加载用空间换首屏速度，访问时再加载代码。"
   },
   {
+    "no": 56,
     "id": "ng-router-guards",
     "category": "Angular",
     "topic": "Angular 路由",
@@ -504,6 +560,7 @@
     "oralOneLiner": "菜单隐藏管入口，路由守卫管真正访问权限。"
   },
   {
+    "no": 57,
     "id": "ng-router-resolver",
     "category": "Angular",
     "topic": "Angular 路由",
@@ -513,6 +570,7 @@
     "oralOneLiner": "Resolver 是进页面前取数据，但会阻塞导航。"
   },
   {
+    "no": 58,
     "id": "ng-router-activated-route",
     "category": "Angular",
     "topic": "Angular 路由",
@@ -522,6 +580,7 @@
     "oralOneLiner": "snapshot 读一次，paramMap 监听参数变化。"
   },
   {
+    "no": 59,
     "id": "ng-router-events-loading",
     "category": "Angular",
     "topic": "Angular 路由",
@@ -531,6 +590,7 @@
     "oralOneLiner": "Router Events 适合全局 loading、埋点和导航状态处理。"
   },
   {
+    "no": 60,
     "id": "ng-router-github-pages-404",
     "category": "Angular",
     "topic": "Angular 部署",
@@ -540,6 +600,7 @@
     "oralOneLiner": "静态托管刷新 404，本质是服务器不认识前端路由。"
   },
   {
+    "no": 61,
     "id": "ng-router-permission-menu",
     "category": "Angular",
     "topic": "Angular 路由 / 权限",
@@ -549,6 +610,7 @@
     "oralOneLiner": "权限不能只靠隐藏菜单，路由和接口也要拦住。"
   },
   {
+    "no": 62,
     "id": "ng-forms-reactive-template",
     "category": "Angular",
     "topic": "Angular 表单",
@@ -558,6 +620,7 @@
     "oralOneLiner": "复杂表单用 Reactive Forms，简单表单可用模板驱动。"
   },
   {
+    "no": 63,
     "id": "ng-forms-control-group-array",
     "category": "Angular",
     "topic": "Angular 表单",
@@ -567,6 +630,7 @@
     "oralOneLiner": "Control 是字段，Group 是对象，Array 是动态列表。"
   },
   {
+    "no": 64,
     "id": "ng-forms-custom-validator",
     "category": "Angular",
     "topic": "Angular 表单",
@@ -576,6 +640,7 @@
     "oralOneLiner": "校验器返回错误对象表示失败，返回 null 表示通过。"
   },
   {
+    "no": 65,
     "id": "ng-forms-typed-forms",
     "category": "Angular",
     "topic": "Angular 表单",
@@ -585,6 +650,7 @@
     "oralOneLiner": "强类型表单把表单值纳入 TS 类型安全。"
   },
   {
+    "no": 66,
     "id": "ng-forms-patch-set-raw",
     "category": "Angular",
     "topic": "Angular 表单",
@@ -594,6 +660,7 @@
     "oralOneLiner": "setValue 要完整，patchValue 可部分，getRawValue 含禁用值。"
   },
   {
+    "no": 67,
     "id": "ng-httpclient-observable",
     "category": "Angular",
     "topic": "Angular HTTP",
@@ -603,6 +670,7 @@
     "oralOneLiner": "HttpClient 返回冷 Observable，不订阅不发送。"
   },
   {
+    "no": 68,
     "id": "ng-http-interceptor",
     "category": "Angular",
     "topic": "Angular HTTP",
@@ -612,6 +680,7 @@
     "oralOneLiner": "Interceptor 统一处理请求和响应的横切逻辑。"
   },
   {
+    "no": 69,
     "id": "ng-http-functional-interceptor",
     "category": "Angular",
     "topic": "Angular HTTP",
@@ -621,6 +690,7 @@
     "oralOneLiner": "函数式拦截器更轻量，配合 inject 和 provideHttpClient 使用。"
   },
   {
+    "no": 70,
     "id": "ng-http-token-refresh",
     "category": "Angular",
     "topic": "Angular HTTP / 鉴权",
@@ -630,6 +700,7 @@
     "oralOneLiner": "Token 刷新重点是并发合并和失败兜底。"
   },
   {
+    "no": 71,
     "id": "ng-http-cancel-request",
     "category": "Angular",
     "topic": "Angular HTTP / RxJS",
@@ -639,6 +710,7 @@
     "oralOneLiner": "取消请求本质是取消订阅，搜索常用 switchMap。"
   },
   {
+    "no": 72,
     "id": "ng-http-api-service-design",
     "category": "Angular",
     "topic": "Angular 架构",
@@ -648,6 +720,7 @@
     "oralOneLiner": "API 层要统一类型、错误、鉴权、重试和测试。"
   },
   {
+    "no": 73,
     "id": "ng-http-testing-controller",
     "category": "Angular",
     "topic": "Angular 测试",
@@ -657,6 +730,7 @@
     "oralOneLiner": "HttpTestingController 让 HTTP 测试不发真实请求。"
   },
   {
+    "no": 74,
     "id": "ng-rxjs-observable-promise",
     "category": "Angular",
     "topic": "RxJS",
@@ -666,6 +740,7 @@
     "oralOneLiner": "Promise 一次结果，Observable 多值、懒执行、可取消。"
   },
   {
+    "no": 75,
     "id": "ng-rxjs-subject-types",
     "category": "Angular",
     "topic": "RxJS",
@@ -675,6 +750,7 @@
     "oralOneLiner": "Subject 家族区别在是否保存和回放历史值。"
   },
   {
+    "no": 76,
     "id": "ng-rxjs-map-operators",
     "category": "Angular",
     "topic": "RxJS",
@@ -684,6 +760,7 @@
     "oralOneLiner": "四大高阶映射：取消、并发、排队、忽略。"
   },
   {
+    "no": 77,
     "id": "ng-rxjs-search-debounce",
     "category": "Angular",
     "topic": "RxJS",
@@ -693,6 +770,7 @@
     "oralOneLiner": "搜索流三件套：防抖、去重、switchMap 取消旧请求。"
   },
   {
+    "no": 78,
     "id": "ng-rxjs-combine-forkjoin",
     "category": "Angular",
     "topic": "RxJS",
@@ -702,6 +780,7 @@
     "oralOneLiner": "combineLatest 组合持续状态，forkJoin 等全部完成一次性返回。"
   },
   {
+    "no": 79,
     "id": "ng-rxjs-unsubscribe-leak",
     "category": "Angular",
     "topic": "RxJS",
@@ -711,6 +790,7 @@
     "oralOneLiner": "长期 Observable 要取消订阅，优先 async pipe 或 takeUntilDestroyed。"
   },
   {
+    "no": 80,
     "id": "ng-rxjs-async-pipe",
     "category": "Angular",
     "topic": "RxJS / Angular",
@@ -720,6 +800,7 @@
     "oralOneLiner": "AsyncPipe 自动订阅、更新视图并在销毁时取消。"
   },
   {
+    "no": 81,
     "id": "ng-rxjs-share-replay",
     "category": "Angular",
     "topic": "RxJS",
@@ -729,6 +810,7 @@
     "oralOneLiner": "shareReplay 能缓存和共享，也要管理生命周期。"
   },
   {
+    "no": 82,
     "id": "ng-rxjs-catch-error-position",
     "category": "Angular",
     "topic": "RxJS",
@@ -738,6 +820,7 @@
     "oralOneLiner": "catchError 放内层保外层流，放外层可能终止整个流。"
   },
   {
+    "no": 83,
     "id": "ng-rxjs-hot-cold",
     "category": "Angular",
     "topic": "RxJS",
@@ -747,6 +830,7 @@
     "oralOneLiner": "冷流每次订阅独立执行，热流多个订阅共享源。"
   },
   {
+    "no": 84,
     "id": "ng-rxjs-signal-bridge",
     "category": "Angular",
     "topic": "RxJS / Signals",
@@ -756,6 +840,7 @@
     "oralOneLiner": "Signals 管状态，RxJS 管流；桥接放在边界。"
   },
   {
+    "no": 85,
     "id": "ng-cd-zonejs",
     "category": "Angular",
     "topic": "Angular 变更检测",
@@ -765,6 +850,7 @@
     "oralOneLiner": "Zone.js 追踪异步任务，通知 Angular 做变更检测。"
   },
   {
+    "no": 86,
     "id": "ng-cd-default-onpush",
     "category": "Angular",
     "topic": "Angular 变更检测",
@@ -774,6 +860,7 @@
     "oralOneLiner": "Default 更自动，OnPush 更克制、更依赖清晰数据流。"
   },
   {
+    "no": 87,
     "id": "ng-cd-onpush-trigger",
     "category": "Angular",
     "topic": "Angular 变更检测",
@@ -783,6 +870,7 @@
     "oralOneLiner": "OnPush 看引用和显式触发，别原地改对象。"
   },
   {
+    "no": 88,
     "id": "ng-cd-mark-detect",
     "category": "Angular",
     "topic": "Angular 变更检测",
@@ -792,6 +880,7 @@
     "oralOneLiner": "markForCheck 等下一轮，detectChanges 立刻检查子树。"
   },
   {
+    "no": 89,
     "id": "ng-cd-expression-changed",
     "category": "Angular",
     "topic": "Angular 变更检测",
@@ -801,6 +890,7 @@
     "oralOneLiner": "这个错误说明同一轮检查里展示值被改了。"
   },
   {
+    "no": 90,
     "id": "ng-performance-trackby",
     "category": "Angular",
     "topic": "Angular 性能",
@@ -810,6 +900,7 @@
     "oralOneLiner": "trackBy 让列表更新复用 DOM，减少重建。"
   },
   {
+    "no": 91,
     "id": "ng-performance-pipe",
     "category": "Angular",
     "topic": "Angular 性能",
@@ -819,6 +910,7 @@
     "oralOneLiner": "非纯管道会频繁执行，重逻辑别放里面。"
   },
   {
+    "no": 92,
     "id": "ng-performance-bundle",
     "category": "Angular",
     "topic": "Angular 性能",
@@ -828,6 +920,7 @@
     "oralOneLiner": "首屏体积优化靠懒加载、按需引入和 ESM 依赖。"
   },
   {
+    "no": 93,
     "id": "ng-performance-slow-list",
     "category": "Angular",
     "topic": "Angular 性能",
@@ -837,6 +930,7 @@
     "oralOneLiner": "慢列表先定位瓶颈，再从 DOM 数量和变更检测下手。"
   },
   {
+    "no": 94,
     "id": "ng-performance-web-vitals",
     "category": "Angular",
     "topic": "前端性能",
@@ -846,6 +940,7 @@
     "oralOneLiner": "Web Vitals 用来量化加载、稳定性和交互体验。"
   },
   {
+    "no": 95,
     "id": "ng-performance-devtools",
     "category": "Angular",
     "topic": "前端性能",
@@ -855,6 +950,7 @@
     "oralOneLiner": "DevTools 三板斧：Network、Performance、Memory。"
   },
   {
+    "no": 96,
     "id": "ng-performance-web-worker",
     "category": "Angular",
     "topic": "前端性能",
@@ -864,6 +960,7 @@
     "oralOneLiner": "Worker 用来把重计算挪出主线程。"
   },
   {
+    "no": 97,
     "id": "ng-performance-ssr-hydration",
     "category": "Angular",
     "topic": "Angular 性能",
@@ -873,6 +970,7 @@
     "oralOneLiner": "SSR/SSG 改善首屏和 SEO，Hydration 负责客户端接管。"
   },
   {
+    "no": 98,
     "id": "ng-browser-url-flow",
     "category": "Angular",
     "topic": "浏览器基础",
@@ -882,6 +980,7 @@
     "oralOneLiner": "URL 到页面展示可按网络、解析、渲染三段讲。"
   },
   {
+    "no": 99,
     "id": "ng-browser-render-flow",
     "category": "Angular",
     "topic": "浏览器渲染",
@@ -891,6 +990,7 @@
     "oralOneLiner": "浏览器渲染链路是 DOM/CSSOM、布局、绘制、合成。"
   },
   {
+    "no": 100,
     "id": "ng-browser-reflow-repaint",
     "category": "Angular",
     "topic": "浏览器渲染",
@@ -900,6 +1000,7 @@
     "oralOneLiner": "回流改布局，重绘改外观；回流通常更贵。"
   },
   {
+    "no": 101,
     "id": "ng-browser-event-flow",
     "category": "Angular",
     "topic": "浏览器事件",
@@ -909,6 +1010,7 @@
     "oralOneLiner": "事件委托靠冒泡，把监听放父级。"
   },
   {
+    "no": 102,
     "id": "ng-browser-storage",
     "category": "Angular",
     "topic": "浏览器存储",
@@ -918,6 +1020,7 @@
     "oralOneLiner": "浏览器存储按生命周期、容量和是否随请求发送来选。"
   },
   {
+    "no": 103,
     "id": "ng-browser-http-cache",
     "category": "Angular",
     "topic": "网络 / 缓存",
@@ -927,6 +1030,7 @@
     "oralOneLiner": "强缓存不请求，协商缓存请求后可能 304。"
   },
   {
+    "no": 104,
     "id": "ng-browser-cors",
     "category": "Angular",
     "topic": "网络 / CORS",
@@ -936,6 +1040,7 @@
     "oralOneLiner": "CORS 是浏览器限制，最终要服务端响应头允许。"
   },
   {
+    "no": 105,
     "id": "ng-browser-cookie-jwt",
     "category": "Angular",
     "topic": "网络 / 鉴权",
@@ -945,6 +1050,7 @@
     "oralOneLiner": "Cookie Session 偏服务端状态，JWT 偏客户端携带声明。"
   },
   {
+    "no": 106,
     "id": "ng-browser-xss",
     "category": "Angular",
     "topic": "前端安全",
@@ -954,6 +1060,7 @@
     "oralOneLiner": "XSS 防范核心是转义、过滤和少信任 HTML。"
   },
   {
+    "no": 107,
     "id": "ng-browser-csrf",
     "category": "Angular",
     "topic": "前端安全",
@@ -963,6 +1070,7 @@
     "oralOneLiner": "CSRF 是借用户 Cookie 发请求，靠 SameSite 和 token 防。"
   },
   {
+    "no": 108,
     "id": "ng-browser-csp",
     "category": "Angular",
     "topic": "前端安全",
@@ -972,6 +1080,7 @@
     "oralOneLiner": "CSP 用白名单限制资源和脚本执行来源。"
   },
   {
+    "no": 109,
     "id": "ng-browser-websocket-sse",
     "category": "Angular",
     "topic": "网络",
@@ -981,6 +1090,7 @@
     "oralOneLiner": "双向实时用 WebSocket，单向推送可用 SSE，简单兼容用轮询。"
   },
   {
+    "no": 110,
     "id": "ng-css-host-ngdeep",
     "category": "Angular",
     "topic": "Angular 样式",
@@ -990,6 +1100,7 @@
     "oralOneLiner": "Angular 样式默认封装，::ng-deep 会破坏边界。"
   },
   {
+    "no": 111,
     "id": "ng-css-flex-grid",
     "category": "Angular",
     "topic": "CSS",
@@ -999,6 +1110,7 @@
     "oralOneLiner": "Flex 管一维，Grid 管二维。"
   },
   {
+    "no": 112,
     "id": "ng-dom-renderer2",
     "category": "Angular",
     "topic": "Angular DOM",
@@ -1008,6 +1120,7 @@
     "oralOneLiner": "Angular 优先数据驱动，直接 DOM 操作要克制。"
   },
   {
+    "no": 113,
     "id": "ng-a11y-basics",
     "category": "Angular",
     "topic": "前端可访问性",
@@ -1017,6 +1130,7 @@
     "oralOneLiner": "A11y 先用语义化，再用 ARIA 补不足。"
   },
   {
+    "no": 114,
     "id": "ng-engineering-cli-build",
     "category": "Angular",
     "topic": "工程化",
@@ -1026,6 +1140,7 @@
     "oralOneLiner": "production build 会编译、打包、压缩、拆分和加 hash。"
   },
   {
+    "no": 115,
     "id": "ng-engineering-package-lock",
     "category": "Angular",
     "topic": "工程化",
@@ -1035,6 +1150,7 @@
     "oralOneLiner": "锁文件保证依赖安装可重复。"
   },
   {
+    "no": 116,
     "id": "ng-engineering-npm-pnpm-yarn",
     "category": "Angular",
     "topic": "工程化",
@@ -1044,6 +1160,7 @@
     "oralOneLiner": "pnpm 省空间且依赖更严格，npm 最通用。"
   },
   {
+    "no": 117,
     "id": "ng-engineering-env-config",
     "category": "Angular",
     "topic": "工程化",
@@ -1053,6 +1170,7 @@
     "oralOneLiner": "多环境配置要集中，构建时或运行时注入。"
   },
   {
+    "no": 118,
     "id": "ng-engineering-cicd",
     "category": "Angular",
     "topic": "工程化",
@@ -1062,6 +1180,7 @@
     "oralOneLiner": "CI/CD 把检查、测试、构建和部署自动化。"
   },
   {
+    "no": 119,
     "id": "ng-testing-unit-component-e2e",
     "category": "Angular",
     "topic": "测试",
@@ -1071,6 +1190,7 @@
     "oralOneLiner": "单测测逻辑，组件测交互，E2E 测业务流程。"
   },
   {
+    "no": 120,
     "id": "ng-testing-testbed-fixture",
     "category": "Angular",
     "topic": "Angular 测试",
@@ -1080,6 +1200,7 @@
     "oralOneLiner": "TestBed 搭环境，fixture 拿组件，detectChanges 刷模板。"
   },
   {
+    "no": 121,
     "id": "ng-testing-fakeasync",
     "category": "Angular",
     "topic": "Angular 测试",
@@ -1089,6 +1210,7 @@
     "oralOneLiner": "fakeAsync 让异步时间在测试里可控。"
   },
   {
+    "no": 122,
     "id": "ng-testing-mock-service",
     "category": "Angular",
     "topic": "Angular 测试",
@@ -1098,6 +1220,7 @@
     "oralOneLiner": "Mock Service 是为了隔离组件和外部依赖。"
   },
   {
+    "no": 123,
     "id": "ng-engineering-commonjs-warning",
     "category": "Angular",
     "topic": "工程化 / 构建",
@@ -1107,6 +1230,7 @@
     "oralOneLiner": "CommonJS warning 表示可能影响 tree-shaking 和体积优化。"
   },
   {
+    "no": 124,
     "id": "ng-engineering-gh-pages",
     "category": "Angular",
     "topic": "工程化 / 部署",
@@ -1116,6 +1240,7 @@
     "oralOneLiner": "GitHub Pages 部署 Angular 要处理 base-href 和刷新 404。"
   },
   {
+    "no": 125,
     "id": "ng-architecture-smart-dumb",
     "category": "Angular",
     "topic": "Angular 架构",
@@ -1125,6 +1250,7 @@
     "oralOneLiner": "Smart 管数据，Dumb 管展示。"
   },
   {
+    "no": 126,
     "id": "ng-architecture-service-signal-ngrx",
     "category": "Angular",
     "topic": "Angular 架构",
@@ -1134,6 +1260,7 @@
     "oralOneLiner": "状态方案看规模：局部 signal，共享 Service，大型复杂再 NgRx。"
   },
   {
+    "no": 127,
     "id": "ng-architecture-facade",
     "category": "Angular",
     "topic": "Angular 架构",
@@ -1143,6 +1270,7 @@
     "oralOneLiner": "Facade 给组件一个干净门面，隐藏复杂实现。"
   },
   {
+    "no": 128,
     "id": "ng-architecture-circular-deps",
     "category": "Angular",
     "topic": "Angular 架构",
@@ -1152,6 +1280,7 @@
     "oralOneLiner": "循环依赖要调边界和方向，不只靠 forwardRef。"
   },
   {
+    "no": 129,
     "id": "ng-project-three-minute",
     "category": "Angular",
     "topic": "项目表达",
@@ -1161,6 +1290,7 @@
     "oralOneLiner": "三分钟项目介绍讲背景、职责、技术、难点和结果。"
   },
   {
+    "no": 130,
     "id": "ng-project-permission-route",
     "category": "Angular",
     "topic": "项目表达 / 权限",
@@ -1170,6 +1300,7 @@
     "oralOneLiner": "权限不能只藏菜单，要有守卫和后端校验。"
   },
   {
+    "no": 131,
     "id": "ng-project-complex-form",
     "category": "Angular",
     "topic": "项目表达 / 表单",
@@ -1179,6 +1310,7 @@
     "oralOneLiner": "复杂表单要讲建模、动态字段、校验和提交转换。"
   },
   {
+    "no": 132,
     "id": "ng-project-api-layer",
     "category": "Angular",
     "topic": "项目表达 / API",
@@ -1188,6 +1320,7 @@
     "oralOneLiner": "API 层亮点是统一、类型安全、可测和可观测。"
   },
   {
+    "no": 133,
     "id": "ng-project-rxjs-flow",
     "category": "Angular",
     "topic": "项目表达 / RxJS",
@@ -1197,6 +1330,7 @@
     "oralOneLiner": "RxJS 项目题要把操作符选择和业务语义对上。"
   },
   {
+    "no": 134,
     "id": "ng-project-signal-state",
     "category": "Angular",
     "topic": "项目表达 / Signals",
@@ -1206,6 +1340,7 @@
     "oralOneLiner": "Signal 状态案例讲原始状态、派生状态和副作用边界。"
   },
   {
+    "no": 135,
     "id": "ng-project-performance-case",
     "category": "Angular",
     "topic": "项目表达 / 性能",
@@ -1215,6 +1350,7 @@
     "oralOneLiner": "性能案例要有指标、工具、瓶颈、方案和结果。"
   },
   {
+    "no": 136,
     "id": "ng-project-ci-cd",
     "category": "Angular",
     "topic": "项目表达 / 工程化",
@@ -1224,6 +1360,7 @@
     "oralOneLiner": "CI/CD 项目题讲从提交到部署的自动化链路。"
   },
   {
+    "no": 137,
     "id": "ng-project-hardest-bug",
     "category": "Angular",
     "topic": "项目表达 / Bug 定位",
@@ -1233,6 +1370,7 @@
     "oralOneLiner": "Bug 案例要讲证据链和预防措施。"
   },
   {
+    "no": 138,
     "id": "ng-project-tradeoff",
     "category": "Angular",
     "topic": "项目表达 / 技术取舍",
@@ -1242,6 +1380,7 @@
     "oralOneLiner": "取舍题不是选最强，而是在约束下选最合适。"
   },
   {
+    "no": 139,
     "id": "ng-handwrite-debounce",
     "category": "Angular",
     "topic": "手写题",
@@ -1252,6 +1391,7 @@
     "markD": true
   },
   {
+    "no": 140,
     "id": "ng-handwrite-throttle",
     "category": "Angular",
     "topic": "手写题",
@@ -1262,6 +1402,7 @@
     "markD": true
   },
   {
+    "no": 141,
     "id": "ng-handwrite-promise-all",
     "category": "Angular",
     "topic": "手写题",
@@ -1272,6 +1413,7 @@
     "markD": true
   },
   {
+    "no": 142,
     "id": "ng-handwrite-promise-race",
     "category": "Angular",
     "topic": "手写题",
@@ -1282,6 +1424,7 @@
     "markD": true
   },
   {
+    "no": 143,
     "id": "ng-handwrite-new",
     "category": "Angular",
     "topic": "手写题",
@@ -1292,6 +1435,7 @@
     "markD": true
   },
   {
+    "no": 144,
     "id": "ng-handwrite-instanceof",
     "category": "Angular",
     "topic": "手写题",
@@ -1302,6 +1446,7 @@
     "markD": true
   },
   {
+    "no": 145,
     "id": "ng-handwrite-bind",
     "category": "Angular",
     "topic": "手写题",
@@ -1312,6 +1457,7 @@
     "markD": true
   },
   {
+    "no": 146,
     "id": "ng-handwrite-event-emitter",
     "category": "Angular",
     "topic": "手写题",
@@ -1322,6 +1468,7 @@
     "markD": true
   },
   {
+    "no": 147,
     "id": "ng-handwrite-array-flat",
     "category": "Angular",
     "topic": "手写题",
@@ -1332,6 +1479,7 @@
     "markD": true
   },
   {
+    "no": 148,
     "id": "ng-handwrite-curry",
     "category": "Angular",
     "topic": "手写题",
@@ -1342,6 +1490,7 @@
     "markD": true
   },
   {
+    "no": 149,
     "id": "ng-handwrite-lru",
     "category": "Angular",
     "topic": "手写题",
@@ -1352,6 +1501,7 @@
     "markD": true
   },
   {
+    "no": 150,
     "id": "ng-algo-two-sum",
     "category": "Angular",
     "topic": "算法",
@@ -1362,6 +1512,7 @@
     "markD": true
   },
   {
+    "no": 151,
     "id": "ng-algo-valid-parentheses",
     "category": "Angular",
     "topic": "算法",
@@ -1372,6 +1523,7 @@
     "markD": true
   },
   {
+    "no": 152,
     "id": "ng-algo-longest-substring",
     "category": "Angular",
     "topic": "算法",
@@ -1382,6 +1534,7 @@
     "markD": true
   },
   {
+    "no": 153,
     "id": "ng-algo-binary-search",
     "category": "Angular",
     "topic": "算法",

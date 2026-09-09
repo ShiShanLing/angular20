@@ -36,6 +36,8 @@ export const PRACTICE_CATEGORY_LIST: PracticeCategory[] = [
 export type PracticeFilterCategory = PracticeCategory | 'all';
 export interface PracticeItem {
   id: string;
+  /** 题库 JSON 中的稳定编号，背题页展示并便于按数字检索 */
+  no?: number;
   category: PracticeCategory;
   /** 问题 / 题干 */
   question: string;

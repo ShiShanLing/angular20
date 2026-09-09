@@ -1,6 +1,9 @@
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
+  Injector,
   OnInit,
   inject,
   signal,
@@ -26,8 +29,8 @@ import {
 } from './practice.types';
 import {
   PRACTICE_HISTORY_TRACK_LABELS,
-  PRACTICE_HISTORY_TRACK_SCOPES,
   PracticeStorageService,
+  reciteScopesForTrack,
   type PracticeHistoryTrack,
   type PracticeStorageScope,
 } from './practice-storage.service';
@@ -54,49 +57,51 @@ type FilterValue = PracticeFilterCategory;
   ],
   template: `
     <div class="practice-list-page">
-      <!-- 顶部工具栏 -->
-      <div class="toolbar">
-        <h3 class="title">{{ pageTitle() }}</h3>
-        <div class="toolbar-right">
-          @if (!reciteMode && showCategoryTabs()) {
-            <div class="category-tabs">
-              @for (cat of filterCategories; track cat) {
-                <button
-                  nz-button
-                  [nzType]="currentFilter() === cat ? 'primary' : 'default'"
-                  nzSize="small"
-                  (click)="setFilter(cat)"
-                >
-                  {{ getCategoryLabel(cat) }}
-                </button>
-              }
-            </div>
-          }
-          <!-- 搜索框 -->
-          <nz-input-wrapper nzSize="small" class="search-box">
-            <span nzInputPrefix><span nz-icon nzType="search"></span></span>
-            <input
-              nz-input
-              placeholder="搜索题目..."
-              [ngModel]="searchText()"
-              (ngModelChange)="searchText.set($event)"
-            />
-          </nz-input-wrapper>
+      <div class="list-head" [class.list-head-sticky]="reciteMode">
+        <!-- 顶部工具栏 -->
+        <div class="toolbar">
+          <h3 class="title">{{ pageTitle() }}</h3>
+          <div class="toolbar-right">
+            @if (!reciteMode && showCategoryTabs()) {
+              <div class="category-tabs">
+                @for (cat of filterCategories; track cat) {
+                  <button
+                    nz-button
+                    [nzType]="currentFilter() === cat ? 'primary' : 'default'"
+                    nzSize="small"
+                    (click)="setFilter(cat)"
+                  >
+                    {{ getCategoryLabel(cat) }}
+                  </button>
+                }
+              </div>
+            }
+            <!-- 搜索框 -->
+            <nz-input-wrapper nzSize="small" class="search-box">
+              <span nzInputPrefix><span nz-icon nzType="search"></span></span>
+              <input
+                nz-input
+                placeholder="搜索题目或编号..."
+                [ngModel]="searchText()"
+                (ngModelChange)="searchText.set($event)"
+              />
+            </nz-input-wrapper>
+          </div>
         </div>
-      </div>
 
-      <!-- 统计 -->
-      <div class="stats-bar">
-        <span>共 <strong>{{ filteredItems().length }}</strong> 题@if (reciteMode && searchText().trim()) {（全库 {{ allItems().length }}）}</span>
-        <span class="spacer"></span>
-        @if (!reciteMode) {
-          <button nz-button nzType="link" nzSize="small" (click)="toggleAllAnswers()">
-            {{ allExpanded() ? '全部隐藏答案' : '全部显示答案' }}
-          </button>
-          <button nz-button nzType="link" nzSize="small" (click)="collapseAll()">
-            全部折叠
-          </button>
-        }
+        <!-- 统计 -->
+        <div class="stats-bar">
+          <span>共 <strong>{{ filteredItems().length }}</strong> 题@if (reciteMode && searchText().trim()) {（全库 {{ allItems().length }}）}</span>
+          <span class="spacer"></span>
+          @if (!reciteMode) {
+            <button nz-button nzType="link" nzSize="small" (click)="toggleAllAnswers()">
+              {{ allExpanded() ? '全部隐藏答案' : '全部显示答案' }}
+            </button>
+            <button nz-button nzType="link" nzSize="small" (click)="collapseAll()">
+              全部折叠
+            </button>
+          }
+        </div>
       </div>
 
       <!-- 题目列表 -->
@@ -106,10 +111,14 @@ type FilterValue = PracticeFilterCategory;
         }
 
         @for (item of filteredItems(); track item.id; let i = $index) {
-          <div class="question-card" [class.expanded]="expandedIds().has(item.id)">
+          <div
+            class="question-card"
+            [class.expanded]="expandedIds().has(item.id)"
+            [attr.data-question-id]="item.id"
+          >
             <!-- 题目头部 -->
             <div class="question-header" (click)="toggleExpand(item.id)">
-              <span class="question-index">{{ i + 1 }}</span>
+              <span class="question-index">{{ item.no ?? i + 1 }}</span>
               <nz-tag [nzColor]="getCategoryColor(item.category)" class="cat-tag">
                 {{ getCategoryLabel(item.category) }}
               </nz-tag>
@@ -218,6 +227,18 @@ type FilterValue = PracticeFilterCategory;
       width: 180px;
     }
 
+    .list-head-sticky {
+      position: sticky;
+      top: 0;
+      z-index: 6;
+      background: var(--bg-primary, #f5f5f5);
+      padding-bottom: 8px;
+    }
+
+    .list-head-sticky .stats-bar {
+      margin-bottom: 0;
+    }
+
     .stats-bar {
       display: flex;
       align-items: center;
@@ -264,7 +285,7 @@ type FilterValue = PracticeFilterCategory;
 
     .question-index {
       flex-shrink: 0;
-      min-width: 28px;
+      min-width: 32px;
       height: 28px;
       padding: 0 6px;
       background: var(--bg-tertiary, #f0f5ff);
@@ -394,6 +415,8 @@ type FilterValue = PracticeFilterCategory;
 export class PracticeListComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly storage = inject(PracticeStorageService);
+  private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly injector = inject(Injector);
   private readonly reciteTrack = this.readReciteTrack();
   private readonly scopedBank = this.readPracticeScope();
   readonly reciteMode = this.reciteTrack !== null || this.scopedBank !== null;
@@ -442,6 +465,7 @@ export class PracticeListComponent implements OnInit {
     if (searchText.trim()) {
       const kw = searchText.trim().toLowerCase();
       items = items.filter(i =>
+        (i.no != null && String(i.no) === kw) ||
         i.question.toLowerCase().includes(kw) ||
         i.answer.toLowerCase().includes(kw) ||
         i.tags.toLowerCase().includes(kw)
@@ -466,7 +490,7 @@ export class PracticeListComponent implements OnInit {
   }
 
   private scopesToLoad(): PracticeStorageScope[] {
-    if (this.reciteTrack) return PRACTICE_HISTORY_TRACK_SCOPES[this.reciteTrack];
+    if (this.reciteTrack) return reciteScopesForTrack(this.reciteTrack);
     if (this.scopedBank) return [this.scopedBank];
     return [
       'practice',
@@ -502,6 +526,7 @@ export class PracticeListComponent implements OnInit {
     const seenIds = new Set<string>();
     const seenQuestions = new Set<string>();
     const pushUnique = (item: PracticeItem) => {
+      if (this.reciteMode && this.isChoiceQuestion(item)) return;
       const questionKey = `${item.category}::${item.question.trim()}`;
       if (seenIds.has(item.id) || seenQuestions.has(questionKey)) return;
       seenIds.add(item.id);
@@ -583,6 +608,55 @@ export class PracticeListComponent implements OnInit {
     }
     this.expandedIds.set(new Set([id]));
     this.revealedIds.set(this.reciteMode ? new Set([id]) : new Set());
+    if (this.reciteMode) {
+      afterNextRender(
+        () => requestAnimationFrame(() => this.scrollExpandedCardToTop(id)),
+        { injector: this.injector },
+      );
+    }
+  }
+
+  private scrollExpandedCardToTop(id: string): void {
+    const root = this.host.nativeElement as HTMLElement;
+    const card = root.querySelector(`[data-question-id="${this.cssEscape(id)}"]`) as HTMLElement | null;
+    if (!card) return;
+    const sticky = root.querySelector('.list-head-sticky') as HTMLElement | null;
+    const scroller = this.findScrollParent(card);
+    const frameGap = 8;
+    const targetTop =
+      (sticky?.getBoundingClientRect().bottom ??
+        (scroller === window ? 0 : (scroller as HTMLElement).getBoundingClientRect().top)) + frameGap;
+    const delta = card.getBoundingClientRect().top - targetTop;
+    if (Math.abs(delta) < 1) return;
+    if (scroller === window) {
+      window.scrollBy({ top: delta, behavior: 'auto' });
+      return;
+    }
+    (scroller as HTMLElement).scrollBy({ top: delta, behavior: 'auto' });
+  }
+
+  private findScrollParent(el: HTMLElement): HTMLElement | Window {
+    let current = el.parentElement;
+    while (current) {
+      const style = getComputedStyle(current);
+      const overflowY = style.overflowY;
+      if ((overflowY === 'auto' || overflowY === 'scroll') && current.scrollHeight > current.clientHeight + 1) {
+        return current;
+      }
+      current = current.parentElement;
+    }
+    return window;
+  }
+
+  private cssEscape(value: string): string {
+    if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
+      return CSS.escape(value);
+    }
+    return value.replace(/["\\]/g, '\\$&');
+  }
+
+  private isChoiceQuestion(item: PracticeItem): boolean {
+    return item.questionType === 'trueFalse' || item.questionType === 'single' || item.questionType === 'multiple';
   }
 
   isCorrectOption(item: PracticeItem, optionId: string): boolean {

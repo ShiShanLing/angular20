@@ -21,11 +21,9 @@ describe('PracticeListComponent recite mode', () => {
 
     expect(component.reciteMode).toBeTrue();
     expect(component.pageTitle()).toBe('iOS 背题');
-    expect(component.allItems().length).toBe(
-      builtinSeedForScope('ios-learning', 1).length +
-        builtinSeedForScope('ios-objective-learning', 1).length
-    );
+    expect(component.allItems().length).toBe(builtinSeedForScope('ios-learning', 1).length);
     expect(component.filteredItems().length).toBe(component.allItems().length);
+    expect(component.allItems().every((item) => !item.questionType || item.questionType === 'shortAnswer')).toBeTrue();
 
     const firstId = component.allItems()[0].id;
     component.toggleExpand(firstId);
@@ -40,7 +38,7 @@ describe('PracticeListComponent recite mode', () => {
     }
   });
 
-  it('loads every Agent short-answer and objective question in one recite list', () => {
+  it('loads only Agent short-answer questions in the recite list', () => {
     const storage = new PracticeStorageService();
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
@@ -55,10 +53,8 @@ describe('PracticeListComponent recite mode', () => {
     component.ngOnInit();
 
     expect(component.pageTitle()).toBe('Agent 背题');
-    expect(component.allItems().length).toBe(
-      builtinSeedForScope('agent-learning', 1).length +
-        builtinSeedForScope('agent-objective-learning', 1).length
-    );
+    expect(component.allItems().length).toBe(builtinSeedForScope('agent-learning', 1).length);
+    expect(component.allItems().some((item) => item.questionType === 'trueFalse' || item.questionType === 'single' || item.questionType === 'multiple')).toBeFalse();
   });
 });
 
@@ -67,5 +63,11 @@ describe('builtinSeedForScope', () => {
     expect(builtinSeedForScope('ios-learning', 1).length).toBeGreaterThan(0);
     expect(builtinSeedForScope('agent-objective-learning', 1).length).toBeGreaterThan(0);
     expect(builtinSeedForScope('android-learning', 1).length).toBe(0);
+  });
+
+  it('copies sequential JSON numbers onto each seed item', () => {
+    const items = builtinSeedForScope('ios-learning', 1);
+    expect(items.map((item) => item.no)).toEqual(items.map((_, index) => index + 1));
+    expect(builtinSeedForScope('ios-objective-learning', 1)[0].no).toBe(1);
   });
 });

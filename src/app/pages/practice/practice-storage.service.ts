@@ -37,6 +37,15 @@ export const PRACTICE_HISTORY_TRACK_LABELS: Record<PracticeHistoryTrack, string>
   practice: '知识刷题',
 };
 
+export function isObjectiveStorageScope(scope: PracticeStorageScope): boolean {
+  return scope.includes('objective');
+}
+
+/** 背题只走简答库，不纳入判断 / 选择。 */
+export function reciteScopesForTrack(track: PracticeHistoryTrack): PracticeStorageScope[] {
+  return PRACTICE_HISTORY_TRACK_SCOPES[track].filter((scope) => !isObjectiveStorageScope(scope));
+}
+
 /** E2E / 调试：设为 `1` 时不自动注入内置题库（见 PracticeComponent） */
 export const PRACTICE_SKIP_BUILTIN_SEED_KEY = 'angular20_practice_skip_builtin_seed_v1';
 
@@ -165,7 +174,8 @@ export class PracticeStorageService {
           JSON.stringify(old.options ?? []) !== JSON.stringify(item.options ?? []) ||
           JSON.stringify(old.correctAnswers ?? []) !== JSON.stringify(item.correctAnswers ?? []) ||
           old.explanation !== item.explanation ||
-          old.sourceQuestionId !== item.sourceQuestionId
+          old.sourceQuestionId !== item.sourceQuestionId ||
+          old.no !== item.no
         ) {
           old.category = item.category;
           old.question = item.question;
@@ -178,6 +188,7 @@ export class PracticeStorageService {
           old.correctAnswers = item.correctAnswers;
           old.explanation = item.explanation;
           old.sourceQuestionId = item.sourceQuestionId;
+          old.no = item.no;
           updated++;
         }
         continue;

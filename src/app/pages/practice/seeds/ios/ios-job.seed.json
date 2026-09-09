@@ -1,5 +1,6 @@
 [
   {
+    "no": 1,
     "id": "ios-swift-optional-basics",
     "category": "iOS",
     "topic": "Swift 基础",
@@ -9,6 +10,7 @@
     "oralOneLiner": "Optional 是 Swift 用类型系统表达“可能为空”的方式，本质接近 some/none 枚举。"
   },
   {
+    "no": 2,
     "id": "ios-swift-iflet-guardlet",
     "category": "iOS",
     "topic": "Swift 基础",
@@ -18,6 +20,7 @@
     "oralOneLiner": "if let 管局部解包，guard let 管前置校验和提前退出。"
   },
   {
+    "no": 3,
     "id": "ios-swift-struct-class",
     "category": "iOS",
     "topic": "Swift 基础",
@@ -27,6 +30,7 @@
     "oralOneLiner": "Struct 是值语义，Class 是引用语义；优先用 Struct 能减少共享状态，也常能减少堆分配和 ARC 成本。"
   },
   {
+    "no": 4,
     "id": "ios-swift-struct-class-performance-stack-heap",
     "category": "iOS",
     "topic": "Swift 基础 / 值类型与引用类型",
@@ -36,6 +40,7 @@
     "oralOneLiner": "Struct 在常见局部场景下通常栈上或内联存储，减少堆分配和 ARC 成本；但不保证一定在栈上，本质区别仍是值语义和引用语义。"
   },
   {
+    "no": 5,
     "id": "ios-swift-value-reference",
     "category": "iOS",
     "topic": "Swift 基础",
@@ -45,6 +50,7 @@
     "oralOneLiner": "值类型复制值，引用类型复制引用；值类型更独立，引用类型适合共享对象。"
   },
   {
+    "no": 6,
     "id": "ios-swift-copy-on-write",
     "category": "iOS",
     "topic": "Swift 基础",
@@ -54,6 +60,7 @@
     "oralOneLiner": "COW 是读共享、写时才复制，让值语义和性能兼得。"
   },
   {
+    "no": 7,
     "id": "ios-swift-enum-associated-values",
     "category": "iOS",
     "topic": "Swift 基础",
@@ -63,6 +70,7 @@
     "oralOneLiner": "原始值是固定映射，关联值是 case 携带动态数据。"
   },
   {
+    "no": 8,
     "id": "ios-swift-protocol-vs-inheritance",
     "category": "iOS",
     "topic": "Swift 基础",
@@ -72,6 +80,7 @@
     "oralOneLiner": "继承表达类型层级，协议表达能力边界。"
   },
   {
+    "no": 9,
     "id": "ios-swift-protocol-extension-dispatch",
     "category": "iOS",
     "topic": "Swift 基础",
@@ -81,6 +90,7 @@
     "oralOneLiner": "协议要求的方法，通过协议类型调用通常走动态派发；协议扩展里的非要求方法，更偏静态派发。"
   },
   {
+    "no": 10,
     "id": "ios-swift-generics-basics",
     "category": "iOS",
     "topic": "Swift 基础",
@@ -90,6 +100,7 @@
     "oralOneLiner": "泛型保留具体类型，协议类型隐藏具体类型。"
   },
   {
+    "no": 11,
     "id": "ios-swift-closure-capture",
     "category": "iOS",
     "topic": "Swift 基础",
@@ -99,6 +110,7 @@
     "oralOneLiner": "闭包默认捕获外部变量；引用类型小心 weak self；值类型可用 [x] 固定快照。"
   },
   {
+    "no": 12,
     "id": "ios-swift-escaping-closure",
     "category": "iOS",
     "topic": "Swift 基础",
@@ -108,6 +120,7 @@
     "oralOneLiner": "escaping 闭包会逃出函数生命周期，所以异步回调通常需要它。"
   },
   {
+    "no": 13,
     "id": "ios-swift-autoclosure",
     "category": "iOS",
     "topic": "Swift 基础",
@@ -117,6 +130,7 @@
     "oralOneLiner": "@autoclosure 是把表达式自动包成延迟执行的闭包。"
   },
   {
+    "no": 14,
     "id": "ios-swift-access-control",
     "category": "iOS",
     "topic": "Swift 基础",
@@ -126,6 +140,7 @@
     "oralOneLiner": "访问控制从小到大是 private、fileprivate、internal、public、open。"
   },
   {
+    "no": 15,
     "id": "ios-swift-codable-key-mapping",
     "category": "iOS",
     "topic": "Swift 基础",
@@ -135,6 +150,7 @@
     "oralOneLiner": "Codable 字段映射靠 CodingKeys，复杂解析自定义 init(from:)。"
   },
   {
+    "no": 16,
     "id": "ios-swift-result-error-handling",
     "category": "iOS",
     "topic": "Swift 基础",
@@ -144,6 +160,7 @@
     "oralOneLiner": "Optional 表达有无，throws 表达流程错误，Result 把成功失败包装成值。"
   },
   {
+    "no": 17,
     "id": "ios-objc-msgsend-flow",
     "category": "iOS",
     "topic": "Objective-C / Runtime",
@@ -153,6 +170,7 @@
     "oralOneLiner": "objc_msgSend 先查缓存，再查类和父类；找不到时可在动态解析、快速转发、完整转发中补救。"
   },
   {
+    "no": 18,
     "id": "ios-objc-class-metaclass",
     "category": "iOS",
     "topic": "Objective-C / Runtime",
@@ -162,6 +180,7 @@
     "oralOneLiner": "对象找 Class，类对象找 Meta Class；实例方法在类，类方法在元类。"
   },
   {
+    "no": 19,
     "id": "ios-objc-isa-pointer",
     "category": "iOS",
     "topic": "Objective-C / Runtime",
@@ -171,6 +190,7 @@
     "oralOneLiner": "isa 是对象进入 Runtime 类型系统和方法查找的入口。"
   },
   {
+    "no": 20,
     "id": "ios-objc-category-property",
     "category": "iOS",
     "topic": "Objective-C / Runtime",
@@ -180,6 +200,7 @@
     "oralOneLiner": "Category 能声明属性但不加 ivar，存值靠 Associated Object。"
   },
   {
+    "no": 21,
     "id": "ios-objc-category-extension",
     "category": "iOS",
     "topic": "Objective-C / Runtime",
@@ -189,6 +210,7 @@
     "oralOneLiner": "Extension 参与类本体，Category 运行期扩展已有类。"
   },
   {
+    "no": 22,
     "id": "ios-objc-kvo-principle",
     "category": "iOS",
     "topic": "Objective-C / Runtime",
@@ -198,6 +220,7 @@
     "oralOneLiner": "KVO 靠 Runtime 动态子类重写 setter；OC 老式 KVO 手动移除，Swift block KVO 用 token 管理。"
   },
   {
+    "no": 23,
     "id": "ios-objc-kvc-search-order",
     "category": "iOS",
     "topic": "Objective-C / Runtime",
@@ -207,6 +230,7 @@
     "oralOneLiner": "KVC 先找访问器，再找 ivar，找不到走 undefinedKey。"
   },
   {
+    "no": 24,
     "id": "ios-objc-method-swizzling-risk",
     "category": "iOS",
     "topic": "Objective-C / Runtime",
@@ -216,6 +240,7 @@
     "oralOneLiner": "Swizzling 是换 IMP，强大但全局生效、顺序和冲突风险高。"
   },
   {
+    "no": 25,
     "id": "ios-objc-block-types",
     "category": "iOS",
     "topic": "Objective-C / Runtime",
@@ -225,6 +250,7 @@
     "oralOneLiner": "Block 有全局、栈、堆三类；保存或异步使用时 copy 到堆上更安全。"
   },
   {
+    "no": 26,
     "id": "ios-objc-block-capture-rules",
     "category": "iOS",
     "topic": "Objective-C / Runtime",
@@ -234,6 +260,7 @@
     "oralOneLiner": "Block 捕获外部变量；修改外部局部变量用 __block，避免 self 循环引用用 __weak。"
   },
   {
+    "no": 27,
     "id": "ios-objc-block-property-copy",
     "category": "iOS",
     "topic": "Objective-C / Runtime",
@@ -243,6 +270,7 @@
     "oralOneLiner": "Block 属性用 copy，是为了把可能在栈上的 Block 复制到堆上，保证保存后还能安全执行。"
   },
   {
+    "no": 28,
     "id": "ios-objc-block-under-the-hood",
     "category": "iOS",
     "topic": "Objective-C / Runtime",
@@ -252,6 +280,7 @@
     "oralOneLiner": "Block 底层像对象，里面有 invoke 函数指针、descriptor 和捕获变量；可以理解为代码加上下文。"
   },
   {
+    "no": 29,
     "id": "ios-objc-arc-compile-runtime",
     "category": "iOS",
     "topic": "Objective-C / Runtime",
@@ -261,6 +290,7 @@
     "oralOneLiner": "ARC 是编译器插入内存管理调用，Runtime 配合维护引用计数和 weak。"
   },
   {
+    "no": 30,
     "id": "ios-uikit-app-launch-basic",
     "category": "iOS",
     "topic": "UIKit / App 生命周期",
@@ -270,6 +300,7 @@
     "oralOneLiner": "启动链路是 dyld、Runtime、main、Application、Scene、首屏。"
   },
   {
+    "no": 31,
     "id": "ios-uikit-appdelegate-scenedelegate",
     "category": "iOS",
     "topic": "UIKit / App 生命周期",
@@ -279,6 +310,7 @@
     "oralOneLiner": "AppDelegate 管应用级生命周期，SceneDelegate 管窗口场景生命周期。"
   },
   {
+    "no": 32,
     "id": "ios-uikit-vc-lifecycle",
     "category": "iOS",
     "topic": "UIKit / App 生命周期",
@@ -288,6 +320,7 @@
     "oralOneLiner": "VC 生命周期按加载、布局、出现、消失来记。"
   },
   {
+    "no": 33,
     "id": "ios-uikit-loadview-viewdidload",
     "category": "iOS",
     "topic": "UIKit / App 生命周期",
@@ -297,6 +330,7 @@
     "oralOneLiner": "loadView 建 view，viewDidLoad 初始化一次，viewWillAppear 每次显示前刷新。"
   },
   {
+    "no": 34,
     "id": "ios-uikit-autolayout-principle",
     "category": "iOS",
     "topic": "UIKit / 布局",
@@ -306,6 +340,7 @@
     "oralOneLiner": "Auto Layout 是约束求解，冲突从日志、优先级、缺失重复约束查。"
   },
   {
+    "no": 35,
     "id": "ios-uikit-tableview-reuse",
     "category": "iOS",
     "topic": "UIKit / 列表",
@@ -315,6 +350,7 @@
     "oralOneLiner": "Cell 会复用，所以配置要完整，复用前要清理异步和状态。"
   },
   {
+    "no": 36,
     "id": "ios-uikit-collectionview-layout",
     "category": "iOS",
     "topic": "UIKit / 列表",
@@ -324,6 +360,7 @@
     "oralOneLiner": "CollectionView 是更通用的列表容器，Layout 决定它的空间排列。"
   },
   {
+    "no": 37,
     "id": "ios-uikit-list-scroll-performance",
     "category": "iOS",
     "topic": "UIKit / 性能",
@@ -333,6 +370,7 @@
     "oralOneLiner": "列表流畅靠主线程减负、图片异步、复用干净，并控制离屏渲染和透明混合。"
   },
   {
+    "no": 38,
     "id": "ios-uikit-uiview-calayer",
     "category": "iOS",
     "topic": "UIKit / 渲染",
@@ -342,6 +380,7 @@
     "oralOneLiner": "UIView 管交互和布局，CALayer 管显示和动画。"
   },
   {
+    "no": 39,
     "id": "ios-uikit-offscreen-rendering",
     "category": "iOS",
     "topic": "UIKit / 渲染",
@@ -351,6 +390,7 @@
     "oralOneLiner": "离屏渲染是先画到屏幕外缓冲区再合成回屏幕；优化重点是少裁剪、拆圆角阴影、设 shadowPath、少 mask 和模糊。"
   },
   {
+    "no": 40,
     "id": "ios-uikit-responder-chain",
     "category": "iOS",
     "topic": "UIKit / 事件响应",
@@ -360,6 +400,7 @@
     "oralOneLiner": "响应链就是事件从命中的 view 一路向上传递的链。"
   },
   {
+    "no": 41,
     "id": "ios-uikit-hit-test",
     "category": "iOS",
     "topic": "UIKit / 事件响应",
@@ -369,6 +410,7 @@
     "oralOneLiner": "pointInside 判断在不在，hitTest 决定谁接收。"
   },
   {
+    "no": 42,
     "id": "ios-uikit-gesture-conflict",
     "category": "iOS",
     "topic": "UIKit / 事件响应",
@@ -378,6 +420,7 @@
     "oralOneLiner": "手势冲突用 delegate 和失败依赖来协调识别顺序。"
   },
   {
+    "no": 43,
     "id": "ios-http-vs-https",
     "category": "iOS",
     "topic": "网络 / 安全",
@@ -387,6 +430,7 @@
     "oralOneLiner": "HTTP 是 TCP 上直接跑明文 HTTP；HTTPS 是 TCP 上先做 TLS 握手，验证证书并协商密钥，再加密传输 HTTP。"
   },
   {
+    "no": 44,
     "id": "ios-https-tls-basics",
     "category": "iOS",
     "topic": "网络 / 安全",
@@ -396,6 +440,7 @@
     "oralOneLiner": "TLS 握手是为了认证身份、协商算法、生成会话密钥。"
   },
   {
+    "no": 45,
     "id": "ios-https-is-always-safe",
     "category": "iOS",
     "topic": "网络 / 安全",
@@ -405,6 +450,7 @@
     "oralOneLiner": "HTTPS 保护链路，不保护所有业务和客户端风险。"
   },
   {
+    "no": 46,
     "id": "ios-tcp-handshake-wave",
     "category": "iOS",
     "topic": "网络 / TCP",
@@ -414,6 +460,7 @@
     "oralOneLiner": "三次握手建连接，四次挥手关双向通道。"
   },
   {
+    "no": 47,
     "id": "ios-http-get-post",
     "category": "iOS",
     "topic": "网络 / HTTP",
@@ -423,6 +470,7 @@
     "oralOneLiner": "GET 偏获取和幂等，POST 偏提交和修改。"
   },
   {
+    "no": 48,
     "id": "ios-cookie-vs-token",
     "category": "iOS",
     "topic": "网络 / 鉴权",
@@ -432,6 +480,7 @@
     "oralOneLiner": "移动端常用 Token，重点是携带、刷新和安全存储。"
   },
   {
+    "no": 49,
     "id": "ios-token-refresh",
     "category": "iOS",
     "topic": "网络 / 鉴权",
@@ -441,6 +490,7 @@
     "oralOneLiner": "Token 刷新要合并并发请求，避免同时刷新多次。"
   },
   {
+    "no": 50,
     "id": "ios-urlsession-cancel-retry",
     "category": "iOS",
     "topic": "网络 / URLSession",
@@ -450,6 +500,7 @@
     "oralOneLiner": "URLSession 管取消和超时，重试要看错误、次数和幂等性。"
   },
   {
+    "no": 51,
     "id": "ios-network-layer-design",
     "category": "iOS",
     "topic": "网络 / 架构",
@@ -459,6 +510,7 @@
     "oralOneLiner": "好网络层要统一请求、解析、鉴权、错误、取消和测试替身。"
   },
   {
+    "no": 52,
     "id": "ios-image-cache-design",
     "category": "iOS",
     "topic": "网络 / 缓存",
@@ -468,6 +520,7 @@
     "oralOneLiner": "图片缓存要管内存、磁盘、去重、取消、解码和清理。"
   },
   {
+    "no": 53,
     "id": "ios-storage-userdefaults-keychain-file-db",
     "category": "iOS",
     "topic": "数据存储",
@@ -477,6 +530,7 @@
     "oralOneLiner": "存储选择看敏感性、数据量、结构化和查询需求。"
   },
   {
+    "no": 54,
     "id": "ios-keychain-sensitive-data",
     "category": "iOS",
     "topic": "数据存储 / 安全",
@@ -486,6 +540,7 @@
     "oralOneLiner": "敏感凭证放 Keychain，UserDefaults 只放非敏感配置。"
   },
   {
+    "no": 55,
     "id": "ios-coredata-core-objects",
     "category": "iOS",
     "topic": "数据存储 / Core Data",
@@ -495,6 +550,7 @@
     "oralOneLiner": "Core Data 是模型、上下文、协调器、持久化存储四块。"
   },
   {
+    "no": 56,
     "id": "ios-database-migration",
     "category": "iOS",
     "topic": "数据存储 / 迁移",
@@ -504,6 +560,7 @@
     "oralOneLiner": "迁移要有版本、兼容、测试、备份和失败策略。"
   },
   {
+    "no": 57,
     "id": "ios-thread-process",
     "category": "iOS",
     "topic": "并发 / 线程",
@@ -513,6 +570,7 @@
     "oralOneLiner": "进程管资源，线程管执行，主线程管 UI 和事件。"
   },
   {
+    "no": 58,
     "id": "ios-main-thread-blocking",
     "category": "iOS",
     "topic": "并发 / 线程",
@@ -522,6 +580,7 @@
     "oralOneLiner": "主线程被耗时任务占住，UI 就不能及时响应和绘制。"
   },
   {
+    "no": 59,
     "id": "ios-gcd-sync-async",
     "category": "iOS",
     "topic": "并发 / GCD",
@@ -531,6 +590,7 @@
     "oralOneLiner": "sync 等结果，async 不等结果；它们不等于是否开线程。"
   },
   {
+    "no": 60,
     "id": "ios-gcd-serial-concurrent",
     "category": "iOS",
     "topic": "并发 / GCD",
@@ -540,6 +600,7 @@
     "oralOneLiner": "队列管任务顺序，线程负责实际执行。"
   },
   {
+    "no": 61,
     "id": "ios-gcd-main-sync-deadlock",
     "category": "iOS",
     "topic": "并发 / GCD",
@@ -549,6 +610,7 @@
     "oralOneLiner": "主线程同步派发到主队列，就是串行队列等待自己，必死锁。"
   },
   {
+    "no": 62,
     "id": "ios-gcd-dispatchgroup",
     "category": "iOS",
     "topic": "并发 / GCD",
@@ -558,6 +620,7 @@
     "oralOneLiner": "DispatchGroup 用来汇总多个异步任务的完成时机。"
   },
   {
+    "no": 63,
     "id": "ios-gcd-semaphore",
     "category": "iOS",
     "topic": "并发 / GCD",
@@ -567,6 +630,7 @@
     "oralOneLiner": "Semaphore 能限流和同步，但主线程 wait 很危险。"
   },
   {
+    "no": 64,
     "id": "ios-operationqueue-vs-gcd",
     "category": "iOS",
     "topic": "并发 / OperationQueue",
@@ -576,6 +640,7 @@
     "oralOneLiner": "复杂任务编排用 OperationQueue，简单异步派发用 GCD。"
   },
   {
+    "no": 65,
     "id": "ios-runloop-basics",
     "category": "iOS",
     "topic": "并发 / RunLoop",
@@ -585,6 +650,7 @@
     "oralOneLiner": "RunLoop 是线程的事件循环，负责调度事件、Timer 和观察者。"
   },
   {
+    "no": 66,
     "id": "ios-runloop-timer-accuracy",
     "category": "iOS",
     "topic": "并发 / RunLoop",
@@ -594,6 +660,7 @@
     "oralOneLiner": "Timer 不准通常是 RunLoop 忙或 mode 不匹配。"
   },
   {
+    "no": 67,
     "id": "ios-runloop-persistent-thread",
     "category": "iOS",
     "topic": "并发 / RunLoop",
@@ -603,6 +670,7 @@
     "oralOneLiner": "常驻线程的关键是给子线程启动并保活 RunLoop。"
   },
   {
+    "no": 68,
     "id": "ios-concurrency-async-await-vs-gcd",
     "category": "iOS",
     "topic": "Swift Concurrency",
@@ -612,6 +680,7 @@
     "oralOneLiner": "GCD 管派发，async/await 管异步流程表达。"
   },
   {
+    "no": 69,
     "id": "ios-concurrency-async-await-advantage",
     "category": "iOS",
     "topic": "Swift Concurrency",
@@ -621,6 +690,7 @@
     "oralOneLiner": "async/await 让异步代码像同步代码，并统一错误和取消。"
   },
   {
+    "no": 70,
     "id": "ios-concurrency-task-basics",
     "category": "iOS",
     "topic": "Swift Concurrency",
@@ -630,6 +700,7 @@
     "oralOneLiner": "Task 是异步任务；同步代码要调用 async 时常用 Task 开上下文。"
   },
   {
+    "no": 71,
     "id": "ios-concurrency-structured-unstructured",
     "category": "iOS",
     "topic": "Swift Concurrency",
@@ -639,6 +710,7 @@
     "oralOneLiner": "结构化并发有父子生命周期，Task {} 更独立要谨慎。"
   },
   {
+    "no": 72,
     "id": "ios-concurrency-asynclet-taskgroup",
     "category": "iOS",
     "topic": "Swift Concurrency",
@@ -648,6 +720,7 @@
     "oralOneLiner": "固定少量并发用 async let，动态批量并发用 TaskGroup。"
   },
   {
+    "no": 73,
     "id": "ios-concurrency-actor-basics",
     "category": "iOS",
     "topic": "Swift Concurrency",
@@ -657,6 +730,7 @@
     "oralOneLiner": "actor 用隔离机制保护共享可变状态。"
   },
   {
+    "no": 74,
     "id": "ios-concurrency-mainactor",
     "category": "iOS",
     "topic": "Swift Concurrency",
@@ -666,6 +740,7 @@
     "oralOneLiner": "@MainActor 让 UI 相关代码回到主线程执行，并让编译器检查不安全访问。"
   },
   {
+    "no": 75,
     "id": "ios-concurrency-sendable",
     "category": "iOS",
     "topic": "Swift Concurrency",
@@ -675,6 +750,7 @@
     "oralOneLiner": "Sendable 是并发传递安全标记，不是自动加锁。"
   },
   {
+    "no": 76,
     "id": "ios-concurrency-sendable-closure",
     "category": "iOS",
     "topic": "Swift Concurrency",
@@ -684,6 +760,7 @@
     "oralOneLiner": "@Sendable 检查闭包跨并发执行时的捕获安全。"
   },
   {
+    "no": 77,
     "id": "ios-concurrency-task-cancellation",
     "category": "iOS",
     "topic": "Swift Concurrency",
@@ -693,6 +770,7 @@
     "oralOneLiner": "Task 取消是协作式，代码要主动检查和响应。"
   },
   {
+    "no": 78,
     "id": "ios-concurrency-actor-isolation",
     "category": "iOS",
     "topic": "Swift Concurrency",
@@ -702,6 +780,7 @@
     "oralOneLiner": "Actor Isolation 让外部访问 actor 状态必须排队 await。"
   },
   {
+    "no": 79,
     "id": "ios-concurrency-actor-reentrancy-await",
     "category": "iOS",
     "topic": "Swift Concurrency",
@@ -711,6 +790,7 @@
     "oralOneLiner": "actor 方法里的 await 会让出 actor，恢复后状态可能已变化；await 后要重新校验状态，避免按旧状态写回。"
   },
   {
+    "no": 80,
     "id": "ios-memory-arc-principle",
     "category": "iOS",
     "topic": "内存管理",
@@ -720,6 +800,7 @@
     "oralOneLiner": "ARC 靠引用计数释放对象，但解决不了循环引用。"
   },
   {
+    "no": 81,
     "id": "ios-memory-property-semantics",
     "category": "iOS",
     "topic": "内存管理",
@@ -729,6 +810,7 @@
     "oralOneLiner": "strong 持有，weak 不持有，assign 不管理，copy 复制语义。"
   },
   {
+    "no": 82,
     "id": "ios-memory-weak-nil",
     "category": "iOS",
     "topic": "内存管理",
@@ -738,6 +820,7 @@
     "oralOneLiner": "weak 自动置 nil 依赖 Runtime 的 weak 引用表。"
   },
   {
+    "no": 83,
     "id": "ios-memory-retain-cycle",
     "category": "iOS",
     "topic": "内存管理",
@@ -747,6 +830,7 @@
     "oralOneLiner": "循环引用就是强引用形成闭环，ARC 无法释放。"
   },
   {
+    "no": 84,
     "id": "ios-memory-closure-retain-cycle",
     "category": "iOS",
     "topic": "内存管理",
@@ -756,6 +840,7 @@
     "oralOneLiner": "异步闭包默认用 weak self，unowned 只在生命周期绝对确定时用。"
   },
   {
+    "no": 85,
     "id": "ios-memory-delegate-weak",
     "category": "iOS",
     "topic": "内存管理",
@@ -765,6 +850,7 @@
     "oralOneLiner": "delegate 通常 weak，是为了避免反向强持有造成循环引用。"
   },
   {
+    "no": 86,
     "id": "ios-memory-timer-cycle",
     "category": "iOS",
     "topic": "内存管理",
@@ -774,6 +860,7 @@
     "oralOneLiner": "Timer 循环来自 RunLoop 持有 Timer，Timer 持有 target。"
   },
   {
+    "no": 87,
     "id": "ios-memory-autoreleasepool",
     "category": "iOS",
     "topic": "内存管理",
@@ -783,6 +870,7 @@
     "oralOneLiner": "autoreleasepool 用来提前释放一批临时对象，降低峰值。"
   },
   {
+    "no": 88,
     "id": "ios-memory-leak-debug",
     "category": "iOS",
     "topic": "内存管理 / 调试",
@@ -792,6 +880,7 @@
     "oralOneLiner": "泄漏定位看 deinit、强引用链、Leaks 和对象增长趋势。"
   },
   {
+    "no": 89,
     "id": "ios-architecture-mvc-problem",
     "category": "iOS",
     "topic": "架构 / MVC",
@@ -801,6 +890,7 @@
     "oralOneLiner": "MVC 变胖是职责混在 VC，优化就是拆职责。"
   },
   {
+    "no": 90,
     "id": "ios-architecture-mvvm-purpose",
     "category": "iOS",
     "topic": "架构 / MVVM",
@@ -810,6 +900,7 @@
     "oralOneLiner": "MVVM 让 VC 变薄，让状态转换更可测试。"
   },
   {
+    "no": 91,
     "id": "ios-architecture-viewmodel-boundary",
     "category": "iOS",
     "topic": "架构 / MVVM",
@@ -819,6 +910,7 @@
     "oralOneLiner": "ViewModel 管状态转换，不管具体 UI 和导航。"
   },
   {
+    "no": 92,
     "id": "ios-architecture-coordinator",
     "category": "iOS",
     "topic": "架构 / Coordinator",
@@ -828,6 +920,7 @@
     "oralOneLiner": "Coordinator 管导航流程，让页面不互相硬依赖。"
   },
   {
+    "no": 93,
     "id": "ios-architecture-dependency-injection",
     "category": "iOS",
     "topic": "架构 / 依赖注入",
@@ -837,6 +930,7 @@
     "oralOneLiner": "依赖注入让依赖显式、可替换、可测试。"
   },
   {
+    "no": 94,
     "id": "ios-architecture-testable-network",
     "category": "iOS",
     "topic": "架构 / 可测试性",
@@ -846,6 +940,7 @@
     "oralOneLiner": "可测试网络层靠协议抽象和 Mock 注入。"
   },
   {
+    "no": 95,
     "id": "ios-architecture-modularization",
     "category": "iOS",
     "topic": "架构 / 模块化",
@@ -855,6 +950,7 @@
     "oralOneLiner": "模块化重点是边界清楚、依赖单向、跨模块靠接口。"
   },
   {
+    "no": 96,
     "id": "ios-architecture-component-vs-module",
     "category": "iOS",
     "topic": "架构 / 模块化",
@@ -864,6 +960,7 @@
     "oralOneLiner": "模块化控边界，组件化重复用。"
   },
   {
+    "no": 97,
     "id": "ios-architecture-circular-dependency",
     "category": "iOS",
     "topic": "架构 / 模块化",
@@ -873,6 +970,7 @@
     "oralOneLiner": "破循环依赖靠协议下沉、依赖倒置和路由解耦。"
   },
   {
+    "no": 98,
     "id": "ios-architecture-multi-env",
     "category": "iOS",
     "topic": "工程化 / 配置",
@@ -882,6 +980,7 @@
     "oralOneLiner": "多环境靠 Scheme 和配置文件，业务只读统一配置。"
   },
   {
+    "no": 99,
     "id": "ios-architecture-cicd",
     "category": "iOS",
     "topic": "工程化 / CI/CD",
@@ -891,6 +990,7 @@
     "oralOneLiner": "CI/CD 是把检查、测试、签名、打包、分发自动化。"
   },
   {
+    "no": 100,
     "id": "ios-architecture-unit-test-scope",
     "category": "iOS",
     "topic": "工程化 / 测试",
@@ -900,6 +1000,7 @@
     "oralOneLiner": "单测测逻辑和边界，业务别绑死 UI。"
   },
   {
+    "no": 101,
     "id": "ios-performance-launch-stages",
     "category": "iOS",
     "topic": "性能 / 启动优化",
@@ -909,6 +1010,7 @@
     "oralOneLiner": "启动按 main 前、main 后和首屏链路拆。"
   },
   {
+    "no": 102,
     "id": "ios-performance-launch-optimization",
     "category": "iOS",
     "topic": "性能 / 启动优化",
@@ -918,6 +1020,7 @@
     "oralOneLiner": "启动优化就是减少 main 前成本，把非首屏工作延后。"
   },
   {
+    "no": 103,
     "id": "ios-performance-launch-measure",
     "category": "iOS",
     "topic": "性能 / 启动优化",
@@ -927,6 +1030,7 @@
     "oralOneLiner": "启动统计要先定义口径，再用埋点和工具验证。"
   },
   {
+    "no": 104,
     "id": "ios-performance-lag-monitor",
     "category": "iOS",
     "topic": "性能 / 卡顿优化",
@@ -936,6 +1040,7 @@
     "oralOneLiner": "卡顿监控看 FPS、RunLoop 状态和主线程堆栈。"
   },
   {
+    "no": 105,
     "id": "ios-performance-list-lag-debug",
     "category": "iOS",
     "topic": "性能 / 列表优化",
@@ -945,6 +1050,7 @@
     "oralOneLiner": "列表卡顿从主线程耗时、图片、布局和渲染查。"
   },
   {
+    "no": 106,
     "id": "ios-performance-image-decode",
     "category": "iOS",
     "topic": "性能 / 图片优化",
@@ -954,6 +1060,7 @@
     "oralOneLiner": "图片卡顿常因主线程解码，解决是后台解码和按需缩放。"
   },
   {
+    "no": 107,
     "id": "ios-performance-memory-peak",
     "category": "iOS",
     "topic": "性能 / 内存优化",
@@ -963,6 +1070,7 @@
     "oralOneLiner": "内存峰值优化靠缩小大对象、分批、限缓存和及时释放。"
   },
   {
+    "no": 108,
     "id": "ios-performance-oom-debug",
     "category": "iOS",
     "topic": "性能 / 内存优化",
@@ -972,6 +1080,7 @@
     "oralOneLiner": "OOM 没普通堆栈，要靠内存曲线、日志和场景还原。"
   },
   {
+    "no": 109,
     "id": "ios-performance-binary-size",
     "category": "iOS",
     "topic": "性能 / 包体积",
@@ -981,6 +1090,7 @@
     "oralOneLiner": "包体积看资源、依赖、架构切片和 Link Map。"
   },
   {
+    "no": 110,
     "id": "ios-performance-network-slow",
     "category": "iOS",
     "topic": "性能 / 网络优化",
@@ -990,6 +1100,7 @@
     "oralOneLiner": "网络慢按 DNS、连接、TLS、服务端、传输和缓存拆。"
   },
   {
+    "no": 111,
     "id": "ios-instruments-common-tools",
     "category": "iOS",
     "topic": "性能 / Instruments",
@@ -999,6 +1110,7 @@
     "oralOneLiner": "Instruments 要带着场景和指标看前后对比。"
   },
   {
+    "no": 112,
     "id": "ios-mach-o-basics",
     "category": "iOS",
     "topic": "Mach-O / dyld",
@@ -1008,6 +1120,7 @@
     "oralOneLiner": "Mach-O 是 Apple 可执行文件格式，由 Header、Load Commands、Segment、Section 组成。"
   },
   {
+    "no": 113,
     "id": "ios-mach-o-static-dynamic-lib",
     "category": "iOS",
     "topic": "Mach-O / dyld",
@@ -1017,6 +1130,7 @@
     "oralOneLiner": "静态库编进包里，动态库运行时加载。"
   },
   {
+    "no": 114,
     "id": "ios-mach-o-framework",
     "category": "iOS",
     "topic": "Mach-O / dyld",
@@ -1026,6 +1140,7 @@
     "oralOneLiner": "Framework 是打包形式，里面可以是静态也可以是动态。"
   },
   {
+    "no": 115,
     "id": "ios-dyld-launch-flow",
     "category": "iOS",
     "topic": "Mach-O / dyld",
@@ -1035,6 +1150,7 @@
     "oralOneLiner": "dyld 负责加载动态库、重定位、符号绑定、初始化，然后进 main。"
   },
   {
+    "no": 116,
     "id": "ios-dyld-rebase-bind",
     "category": "iOS",
     "topic": "Mach-O / dyld",
@@ -1044,6 +1160,7 @@
     "oralOneLiner": "Rebase 修内部地址，Bind 绑定外部符号。"
   },
   {
+    "no": 117,
     "id": "ios-dyld-too-many-dylibs",
     "category": "iOS",
     "topic": "Mach-O / dyld",
@@ -1053,6 +1170,7 @@
     "oralOneLiner": "动态库多会增加 dyld 加载和绑定成本。"
   },
   {
+    "no": 118,
     "id": "ios-objc-load-initialize",
     "category": "iOS",
     "topic": "Mach-O / Runtime 初始化",
@@ -1062,6 +1180,7 @@
     "oralOneLiner": "+load 早于 main 且影响启动，+initialize 首次消息前懒执行。"
   },
   {
+    "no": 119,
     "id": "ios-linkmap-usage",
     "category": "iOS",
     "topic": "Mach-O / 包体积",
@@ -1071,6 +1190,7 @@
     "oralOneLiner": "Link Map 用来看二进制里谁占空间。"
   },
   {
+    "no": 120,
     "id": "ios-project-three-minute-intro",
     "category": "iOS",
     "topic": "项目表达",
@@ -1080,6 +1200,7 @@
     "oralOneLiner": "三分钟项目介绍讲背景、职责、技术、难点和结果。"
   },
   {
+    "no": 121,
     "id": "ios-project-architecture-design",
     "category": "iOS",
     "topic": "项目表达 / 架构",
@@ -1089,6 +1210,7 @@
     "oralOneLiner": "架构项目题讲边界、依赖、数据流、取舍和演进。"
   },
   {
+    "no": 122,
     "id": "ios-project-hardest-bug",
     "category": "iOS",
     "topic": "项目表达 / Bug 定位",
@@ -1098,6 +1220,7 @@
     "oralOneLiner": "Bug 案例要讲清现象、证据链、根因、修复和预防。"
   },
   {
+    "no": 123,
     "id": "ios-project-performance-case",
     "category": "iOS",
     "topic": "项目表达 / 性能",
@@ -1107,6 +1230,7 @@
     "oralOneLiner": "性能案例要有指标、工具、瓶颈、方案和前后对比。"
   },
   {
+    "no": 124,
     "id": "ios-project-network-layer-case",
     "category": "iOS",
     "topic": "项目表达 / 网络层",
@@ -1116,6 +1240,7 @@
     "oralOneLiner": "网络层亮点是统一、可测、可观测和可扩展。"
   },
   {
+    "no": 125,
     "id": "ios-project-cache-case",
     "category": "iOS",
     "topic": "项目表达 / 缓存",
@@ -1125,6 +1250,7 @@
     "oralOneLiner": "缓存案例讲对象、key、层级、过期、容量、一致性和效果。"
   },
   {
+    "no": 126,
     "id": "ios-project-refactor-case",
     "category": "iOS",
     "topic": "项目表达 / 重构",
@@ -1134,6 +1260,7 @@
     "oralOneLiner": "重构案例讲痛点、目标、阶段、测试和收益。"
   },
   {
+    "no": 127,
     "id": "ios-project-tradeoff",
     "category": "iOS",
     "topic": "项目表达 / 技术取舍",
@@ -1143,6 +1270,7 @@
     "oralOneLiner": "取舍题讲约束、备选、选择理由、代价和补救。"
   },
   {
+    "no": 128,
     "id": "ios-project-scale-ten-times",
     "category": "iOS",
     "topic": "项目表达 / 扩展性",
@@ -1152,6 +1280,7 @@
     "oralOneLiner": "扩展性看数据、流量、缓存、监控、降级和模块边界。"
   },
   {
+    "no": 129,
     "id": "ios-algo-two-sum",
     "category": "iOS",
     "topic": "算法 / 哈希表",
@@ -1161,6 +1290,7 @@
     "oralOneLiner": "两数之和用哈希表保存补数，时间 O(n)。"
   },
   {
+    "no": 130,
     "id": "ios-algo-reverse-linked-list",
     "category": "iOS",
     "topic": "算法 / 链表",
@@ -1170,6 +1300,7 @@
     "oralOneLiner": "反转链表记住 prev、cur、next 三指针。"
   },
   {
+    "no": 131,
     "id": "ios-algo-merge-two-lists",
     "category": "iOS",
     "topic": "算法 / 链表",
@@ -1179,6 +1310,7 @@
     "oralOneLiner": "合并有序链表用 dummy 节点减少边界判断。"
   },
   {
+    "no": 132,
     "id": "ios-algo-valid-parentheses",
     "category": "iOS",
     "topic": "算法 / 栈",
@@ -1188,6 +1320,7 @@
     "oralOneLiner": "括号匹配就是右括号必须匹配当前栈顶。"
   },
   {
+    "no": 133,
     "id": "ios-algo-longest-substring",
     "category": "iOS",
     "topic": "算法 / 滑动窗口",
@@ -1197,6 +1330,7 @@
     "oralOneLiner": "最长无重复子串是右边扩、重复时左边跳。"
   },
   {
+    "no": 134,
     "id": "ios-algo-binary-tree-level-order",
     "category": "iOS",
     "topic": "算法 / 二叉树",
@@ -1206,6 +1340,7 @@
     "oralOneLiner": "层序遍历就是队列 BFS，一次处理一层。"
   },
   {
+    "no": 135,
     "id": "ios-algo-binary-tree-max-depth",
     "category": "iOS",
     "topic": "算法 / 二叉树",
@@ -1215,6 +1350,7 @@
     "oralOneLiner": "最大深度 = 左右子树最大深度 + 1。"
   },
   {
+    "no": 136,
     "id": "ios-algo-binary-search",
     "category": "iOS",
     "topic": "算法 / 二分查找",
@@ -1224,6 +1360,7 @@
     "oralOneLiner": "二分查找最重要的是区间定义始终一致。"
   },
   {
+    "no": 137,
     "id": "ios-algo-quick-sort",
     "category": "iOS",
     "topic": "算法 / 排序",
@@ -1233,6 +1370,7 @@
     "oralOneLiner": "快排核心是分区，性能关键是 pivot 选择。"
   },
   {
+    "no": 138,
     "id": "ios-algo-lru-cache",
     "category": "iOS",
     "topic": "算法 / 缓存",
@@ -1242,6 +1380,7 @@
     "oralOneLiner": "LRU = 哈希表快速查找 + 双向链表维护新旧顺序。"
   },
   {
+    "no": 139,
     "id": "ios-observability-logging-system",
     "category": "iOS",
     "topic": "工程化 / 线上质量",
@@ -1251,6 +1390,7 @@
     "oralOneLiner": "日志系统记录 App 运行过程，重点是统一封装、分级、脱敏、控制日志量，并能辅助线上排查。"
   },
   {
+    "no": 140,
     "id": "ios-observability-error-reporting",
     "category": "iOS",
     "topic": "工程化 / 线上质量",
@@ -1260,6 +1400,7 @@
     "oralOneLiner": "错误上报记录非崩溃异常，比如接口失败、解析失败、数据库失败；关键是带上下文、去重限频和告警。"
   },
   {
+    "no": 141,
     "id": "ios-observability-crash-reporting",
     "category": "iOS",
     "topic": "工程化 / 线上质量",
@@ -1269,6 +1410,7 @@
     "oralOneLiner": "崩溃收集负责采集闪退堆栈和影响范围，关键是集成 SDK、上传 dSYM、符号化和结合日志定位。"
   },
   {
+    "no": 142,
     "id": "ios-xcode-debugger-breakpoint-types",
     "category": "iOS",
     "topic": "调试 / Xcode Debugger",
@@ -1278,6 +1420,7 @@
     "oralOneLiner": "Xcode 断点可以按问题类型来记：Exception 抓崩溃，Constraint 抓约束，Swift Error 抓 throw，Symbolic 抓函数，Runtime Issue 抓运行时问题，Test Failure 抓测试失败。"
   },
   {
+    "no": 143,
     "id": "ios-lldb-common-commands",
     "category": "iOS",
     "topic": "调试 / LLDB",
@@ -1287,6 +1430,7 @@
     "oralOneLiner": "LLDB 常用命令：po/p 看变量，expr 改状态或执行表达式，bt 看当前线程栈，thread backtrace all 看所有线程，continue/next/step/finish 控制执行。"
   },
   {
+    "no": 144,
     "id": "ios-xcode-view-debugger",
     "category": "iOS",
     "topic": "调试 / Xcode Debugger",
@@ -1296,6 +1440,7 @@
     "oralOneLiner": "View Debugger 是 Xcode 的 UI 层级调试工具，用来看 view 层级、frame、约束和遮挡，常用于排查不显示、点不到和布局错乱。"
   },
   {
+    "no": 145,
     "id": "ios-launch-optimization-detailed",
     "category": "iOS",
     "topic": "性能 / 启动优化",
@@ -1305,6 +1450,7 @@
     "oralOneLiner": "启动优化按冷启动拆 main 前和 main 后：main 前减动态库、+load 和静态初始化，main 后延迟 SDK、后台化重活、轻量首屏，并用 Instruments/MetricKit/埋点衡量。"
   },
   {
+    "no": 146,
     "id": "ios-performance-avoid-frame-drops",
     "category": "iOS",
     "topic": "性能 / 卡顿与渲染",
@@ -1314,6 +1460,7 @@
     "oralOneLiner": "避免卡帧的核心是减少每帧主线程和渲染工作：重活后台化、列表轻量、图片缓存解码、布局简化、局部刷新、避免主线程等待，并用 Time Profiler/Core Animation 验证。"
   },
   {
+    "no": 147,
     "id": "ios-list-scrolling-optimization-detailed",
     "category": "iOS",
     "topic": "性能 / 列表优化",
@@ -1323,6 +1470,7 @@
     "oralOneLiner": "列表优化核心是让 Cell 足够轻：复用正确、图片异步可取消、高度稳定、少 reloadData、布局渲染简单，并用 Time Profiler/Core Animation 验证。"
   },
   {
+    "no": 148,
     "id": "ios-image-decoding-cache-sdwebimage-detailed",
     "category": "iOS",
     "topic": "性能 / 图片优化",
@@ -1332,6 +1480,7 @@
     "oralOneLiner": "图片优化关注尺寸、下载、解码、缓存和复用取消；SDWebImage 负责异步下载、内存/磁盘缓存、后台解码和设置图片，但仍要注意大图、URL 版本、placeholder 和缓存策略。"
   },
   {
+    "no": 149,
     "id": "ios-gcd-detailed-overview",
     "category": "iOS",
     "topic": "并发 / GCD",
@@ -1341,6 +1490,7 @@
     "oralOneLiner": "GCD 是基于队列的任务调度 API；串行/并发管队列怎么执行，sync/async 管当前线程等不等，死锁本质是同步等待形成等待环。"
   },
   {
+    "no": 150,
     "id": "ios-operationqueue-detailed-overview",
     "category": "iOS",
     "topic": "并发 / OperationQueue",
@@ -1350,6 +1500,7 @@
     "oralOneLiner": "OperationQueue 用 Operation 对象管理任务，比 GCD 更适合依赖、取消、优先级、并发限制和状态观察；常见坑是 cancel 不强停、主线程 wait 卡死、依赖环和异步 Operation 提前完成。"
   },
   {
+    "no": 151,
     "id": "ios-runloop-detailed-overview",
     "category": "iOS",
     "topic": "并发 / RunLoop",
@@ -1359,6 +1510,7 @@
     "oralOneLiner": "RunLoop 是线程的事件循环；主线程默认开启来处理 UI、Timer 和事件，Timer 滚动暂停多半是 Mode 不匹配，主线程卡顿本质是 RunLoop 被耗时任务阻塞。"
   },
   {
+    "no": 152,
     "id": "ios-timer-detailed-overview",
     "category": "iOS",
     "topic": "并发 / Timer",
@@ -1368,6 +1520,7 @@
     "oralOneLiner": "Timer 是依赖 RunLoop 的定时器；注意 default/common mode、触发精度、weak self 防循环引用，以及不需要时 invalidate。"
   },
   {
+    "no": 153,
     "id": "ios-retain-cycle-common-scenarios-detailed",
     "category": "iOS",
     "topic": "内存 / ARC",

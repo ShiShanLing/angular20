@@ -1,5 +1,6 @@
 [
   {
+    "no": 1,
     "id": "agent-obj-001-tf-loop",
     "sourceQuestionId": "agent-core-loop",
     "category": "Agent",
@@ -15,6 +16,7 @@
     "difficulty": "Easy"
   },
   {
+    "no": 2,
     "id": "agent-obj-002-single-loop",
     "sourceQuestionId": "agent-core-loop",
     "category": "Agent",
@@ -32,6 +34,7 @@
     "difficulty": "Easy"
   },
   {
+    "no": 3,
     "id": "agent-obj-003-multi-tools",
     "sourceQuestionId": "agent-builtin-tools",
     "category": "Agent",
@@ -50,6 +53,7 @@
     "difficulty": "Easy"
   },
   {
+    "no": 4,
     "id": "agent-obj-004-tf-hitl-todo",
     "sourceQuestionId": "agent-hitl-todo",
     "category": "Agent",
@@ -65,6 +69,7 @@
     "difficulty": "Easy"
   },
   {
+    "no": 5,
     "id": "agent-obj-005-single-offload",
     "sourceQuestionId": "agent-tool-offload",
     "category": "Agent",
@@ -82,6 +87,7 @@
     "difficulty": "Medium"
   },
   {
+    "no": 6,
     "id": "agent-obj-006-tf-offload-table",
     "sourceQuestionId": "agent-tool-offload",
     "category": "Agent",
@@ -97,6 +103,7 @@
     "difficulty": "Easy"
   },
   {
+    "no": 7,
     "id": "agent-obj-007-single-routing",
     "sourceQuestionId": "agent-model-routing",
     "category": "Agent",
@@ -114,6 +121,7 @@
     "difficulty": "Easy"
   },
   {
+    "no": 8,
     "id": "agent-obj-008-multi-memory",
     "sourceQuestionId": "agent-long-term-memory",
     "category": "Agent",
@@ -131,6 +139,7 @@
     "difficulty": "Medium"
   },
   {
+    "no": 9,
     "id": "agent-obj-009-single-openapi",
     "sourceQuestionId": "agent-openapi-ssrf",
     "category": "Agent",
@@ -148,6 +157,7 @@
     "difficulty": "Medium"
   },
   {
+    "no": 10,
     "id": "agent-obj-010-tf-openapi-confirm",
     "sourceQuestionId": "agent-openapi-ssrf",
     "category": "Agent",
@@ -163,6 +173,7 @@
     "difficulty": "Easy"
   },
   {
+    "no": 11,
     "id": "agent-obj-011-multi-collaboration",
     "sourceQuestionId": "agent-multi-agent",
     "category": "Agent",
@@ -181,6 +192,7 @@
     "difficulty": "Medium"
   },
   {
+    "no": 12,
     "id": "agent-obj-012-single-collab-sse",
     "sourceQuestionId": "agent-collab-checkpoint",
     "category": "Agent",
@@ -198,6 +210,7 @@
     "difficulty": "Hard"
   },
   {
+    "no": 13,
     "id": "agent-obj-013-tf-collab-route",
     "sourceQuestionId": "agent-collab-routing",
     "category": "Agent",
@@ -213,6 +226,7 @@
     "difficulty": "Medium"
   },
   {
+    "no": 14,
     "id": "agent-obj-014-single-rag",
     "sourceQuestionId": "agent-rag",
     "category": "Agent",
@@ -230,6 +244,7 @@
     "difficulty": "Medium"
   },
   {
+    "no": 15,
     "id": "agent-obj-015-multi-rag-stack",
     "sourceQuestionId": "agent-rag",
     "category": "Agent",
@@ -247,6 +262,7 @@
     "difficulty": "Medium"
   },
   {
+    "no": 16,
     "id": "agent-obj-016-single-attach",
     "sourceQuestionId": "agent-chat-attachment",
     "category": "Agent",
@@ -264,6 +280,7 @@
     "difficulty": "Medium"
   },
   {
+    "no": 17,
     "id": "agent-obj-017-tf-ocr",
     "sourceQuestionId": "agent-chat-attachment",
     "category": "Agent",
@@ -279,6 +296,7 @@
     "difficulty": "Easy"
   },
   {
+    "no": 18,
     "id": "agent-obj-018-multi-mcp",
     "sourceQuestionId": "agent-mcp",
     "category": "Agent",
@@ -296,6 +314,7 @@
     "difficulty": "Medium"
   },
   {
+    "no": 19,
     "id": "agent-obj-019-single-frontends",
     "sourceQuestionId": "agent-three-frontends",
     "category": "Agent",
@@ -313,6 +332,7 @@
     "difficulty": "Medium"
   },
   {
+    "no": 20,
     "id": "agent-obj-020-tf-rsync",
     "sourceQuestionId": "agent-publish-redline",
     "category": "Agent",
@@ -328,6 +348,7 @@
     "difficulty": "Easy"
   },
   {
+    "no": 21,
     "id": "agent-obj-021-multi-runtime",
     "sourceQuestionId": "agent-runtime-data",
     "category": "Agent",
@@ -345,6 +366,7 @@
     "difficulty": "Easy"
   },
   {
+    "no": 22,
     "id": "agent-obj-022-single-stack",
     "sourceQuestionId": "agent-tech-stack",
     "category": "Agent",
@@ -362,6 +384,7 @@
     "difficulty": "Easy"
   },
   {
+    "no": 23,
     "id": "agent-obj-023-tf-cookie",
     "sourceQuestionId": "agent-auth",
     "category": "Agent",
@@ -377,6 +400,7 @@
     "difficulty": "Easy"
   },
   {
+    "no": 24,
     "id": "agent-obj-024-single-admin-mfa",
     "sourceQuestionId": "agent-auth",
     "category": "Agent",
@@ -394,6 +418,7 @@
     "difficulty": "Easy"
   },
   {
+    "no": 25,
     "id": "agent-obj-025-single-sse",
     "sourceQuestionId": "agent-sse-chat",
     "category": "Agent",
@@ -411,6 +436,7 @@
     "difficulty": "Medium"
   },
   {
+    "no": 26,
     "id": "agent-obj-026-tf-sse-restart",
     "sourceQuestionId": "agent-sse-restart",
     "category": "Agent",
@@ -426,6 +452,7 @@
     "difficulty": "Hard"
   },
   {
+    "no": 27,
     "id": "agent-obj-027-single-session",
     "sourceQuestionId": "agent-session-context",
     "category": "Agent",
@@ -443,6 +470,7 @@
     "difficulty": "Medium"
   },
   {
+    "no": 28,
     "id": "agent-obj-028-tf-apikey",
     "sourceQuestionId": "agent-secrets",
     "category": "Agent",
@@ -458,6 +486,7 @@
     "difficulty": "Easy"
   },
   {
+    "no": 29,
     "id": "agent-obj-029-multi-publish",
     "sourceQuestionId": "agent-publish-flow",
     "category": "Agent",
@@ -475,6 +504,7 @@
     "difficulty": "Medium"
   },
   {
+    "no": 30,
     "id": "agent-obj-030-single-nginx",
     "sourceQuestionId": "agent-nginx",
     "category": "Agent",
@@ -492,6 +522,7 @@
     "difficulty": "Easy"
   },
   {
+    "no": 31,
     "id": "agent-obj-031-tf-scheduler",
     "sourceQuestionId": "agent-todo-brief",
     "category": "Agent",
@@ -507,6 +538,7 @@
     "difficulty": "Easy"
   },
   {
+    "no": 32,
     "id": "agent-obj-032-single-skills",
     "sourceQuestionId": "agent-skills",
     "category": "Agent",
@@ -524,6 +556,7 @@
     "difficulty": "Easy"
   },
   {
+    "no": 33,
     "id": "agent-obj-033-multi-eval",
     "sourceQuestionId": "agent-eval",
     "category": "Agent",
@@ -541,6 +574,7 @@
     "difficulty": "Medium"
   },
   {
+    "no": 34,
     "id": "agent-obj-034-single-plan-hitl",
     "sourceQuestionId": "agent-plan-card",
     "category": "Agent",
@@ -558,6 +592,7 @@
     "difficulty": "Medium"
   },
   {
+    "no": 35,
     "id": "agent-obj-035-tf-base-href",
     "sourceQuestionId": "agent-frontend-base",
     "category": "Agent",
@@ -573,6 +608,7 @@
     "difficulty": "Medium"
   },
   {
+    "no": 36,
     "id": "agent-obj-036-single-principle",
     "sourceQuestionId": "agent-engineering-principle",
     "category": "Agent",

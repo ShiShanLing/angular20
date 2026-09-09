@@ -1,5 +1,6 @@
 [
   {
+    "no": 1,
     "id": "agent-memory-how",
     "category": "Agent",
     "topic": "长期记忆",
@@ -9,6 +10,7 @@
     "oralOneLiner": "记忆按用户存 SQLite，工具写入加规则抽取，回答前检索相关条目注入；它不是聊天记录，也不是知识库。"
   },
   {
+    "no": 2,
     "id": "agent-skill-how",
     "category": "Agent",
     "topic": "Skills",
@@ -18,6 +20,7 @@
     "oralOneLiner": "系统提示只放 Skill 目录；任务匹配时再 load_skill 拉全文，避免说明书把上下文撑爆。"
   },
   {
+    "no": 3,
     "id": "agent-mcp-how",
     "category": "Agent",
     "topic": "MCP",
@@ -27,6 +30,7 @@
     "oralOneLiner": "MCP Server 提供工具，Client 转成模型 function；调用时按名字路由到天气或知识库进程，而不是 Agent 里写死函数。"
   },
   {
+    "no": 4,
     "id": "agent-memory-inject",
     "category": "Agent",
     "topic": "长期记忆",
@@ -36,6 +40,7 @@
     "oralOneLiner": "按当前问题给记忆打分，约束加权，最多注入约 8 条到本轮上下文，不写进聊天气泡。"
   },
   {
+    "no": 5,
     "id": "agent-mcp-registry",
     "category": "Agent",
     "topic": "MCP",
@@ -45,6 +50,7 @@
     "oralOneLiner": "Registry 合并本地 STDIO 和远程 SSE/HTTP；按工具名路由，远程要防 SSRF，坏掉的 Server 要隔离。"
   },
   {
+    "no": 6,
     "id": "agent-offload-how",
     "category": "Agent",
     "topic": "工具结果 Offload",
@@ -54,6 +60,7 @@
     "oralOneLiner": "超长结果进 SQLite，上下文只留摘要和 ref，需要时再 fetch_tool_result 取全文。"
   },
   {
+    "no": 7,
     "id": "agent-openapi-how",
     "category": "Agent",
     "topic": "OpenAPI 工具",
@@ -63,6 +70,7 @@
     "oralOneLiner": "解析 OpenAPI → 注册成 function → 按账号保存；内网拒绝，写操作要确认。"
   },
   {
+    "no": 8,
     "id": "agent-collab-how",
     "category": "Agent",
     "topic": "多 Agent 协作",
@@ -72,6 +80,7 @@
     "oralOneLiner": "规划后落检查点并断开 SSE，确认后再续跑执行和审核；不能在一条长连接里干等用户。"
   },
   {
+    "no": 9,
     "id": "agent-rag-how",
     "category": "Agent",
     "topic": "知识检索",
@@ -81,6 +90,7 @@
     "oralOneLiner": "先混合检索本地知识，命中带上来源片段；没有再联网兜底；临时片段不进聊天历史。"
   },
   {
+    "no": 10,
     "id": "agent-routing-how",
     "category": "Agent",
     "topic": "多模型路由",
@@ -90,6 +100,7 @@
     "oralOneLiner": "简单或辅助走 cheap，复杂对话和规划走 strong，失败再按 fallback 降级。"
   },
   {
+    "no": 11,
     "id": "agent-loop-how",
     "category": "Agent",
     "topic": "Agent 循环",
@@ -99,6 +110,7 @@
     "oralOneLiner": "模型选工具和参数，Python 执行并回灌结果，再让模型组织回答；聊天里长期只留问答，不堆完整工具日志。"
   },
   {
+    "no": 12,
     "id": "agent-attachment-ocr-how",
     "category": "Agent",
     "topic": "聊天附件",

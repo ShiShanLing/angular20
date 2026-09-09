@@ -7,6 +7,7 @@ import agentObjectiveSeedJson from './seeds/agent/agent-objective.seed.json';
 import agentJobSeedJson from './seeds/agent/agent-job.seed.json';
 
 export interface IosSeedRow {
+  no?: number;
   id: string;
   category: string;
   topic: string;
@@ -18,6 +19,7 @@ export interface IosSeedRow {
 }
 
 export interface ObjectiveSeedRow {
+  no?: number;
   id: string;
   sourceQuestionId: string;
   category: string;
@@ -65,6 +67,7 @@ function objectiveRowsToPracticeItems(
 ): PracticeItem[] {
   return rows.map((row) => ({
     id: row.id,
+    no: row.no,
     category,
     question: row.question,
     answer: row.explanation,
@@ -107,6 +110,7 @@ function rowToPracticeItem(row: IosSeedRow, importedAt: number, category: Practi
   const tags = [row.topic, row.difficulty].filter(Boolean).join(' · ');
   const item: PracticeItem = {
     id: row.id,
+    no: row.no,
     category,
     question: row.question,
     answer: row.answer,
