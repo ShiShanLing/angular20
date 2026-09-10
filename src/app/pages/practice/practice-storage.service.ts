@@ -151,6 +151,18 @@ export class PracticeStorageService {
       added++;
     }
 
+    // 内置题库有学习顺序（例如 Codable 入门题要排在 CodingKeys 前面）。
+    // 新增题如果只追加在末尾，刷题页会看不到“上一题”。
+    const incomingIndex = new Map(incoming.map((item, index) => [item.id, index]));
+    existing.sort((a, b) => {
+      const ia = incomingIndex.get(a.id);
+      const ib = incomingIndex.get(b.id);
+      if (ia == null && ib == null) return 0;
+      if (ia == null) return 1;
+      if (ib == null) return -1;
+      return ia - ib;
+    });
+
     this.save(existing, scope);
     return { added, updated, skipped };
   }

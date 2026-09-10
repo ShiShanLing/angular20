@@ -81,6 +81,43 @@ describe('PracticeStorageService', () => {
     );
   });
 
+  it('inserts new seed items in curriculum order, not at the end', () => {
+    const older = {
+      id: 'ios-swift-access-control',
+      category: 'ios' as const,
+      question: 'access',
+      answer: 'old',
+      tags: 'Swift 基础 · Easy',
+      importedAt: 1,
+    };
+    const later = {
+      id: 'ios-swift-codable-key-mapping',
+      category: 'ios' as const,
+      question: 'mapping',
+      answer: 'old',
+      tags: 'Swift 基础 · Medium',
+      importedAt: 1,
+    };
+    service.save([older, later]);
+
+    const intro = {
+      id: 'ios-swift-codable-what-is',
+      category: 'ios' as const,
+      question: 'what is Codable',
+      answer: 'protocol',
+      tags: 'Swift 基础 · Easy',
+      importedAt: 2,
+    };
+    const result = service.mergeItems([older, intro, later]);
+
+    expect(result.added).toBe(1);
+    expect(service.load().map((item) => item.id)).toEqual([
+      'ios-swift-access-control',
+      'ios-swift-codable-what-is',
+      'ios-swift-codable-key-mapping',
+    ]);
+  });
+
   it('counts items by category', () => {
     service.importDrafts([
       { category: 'ios', question: 'q1', answer: '', tags: '', sourceRow: 2 },

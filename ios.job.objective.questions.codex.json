@@ -1244,6 +1244,128 @@
     "difficulty": "Easy"
   },
   {
+    "id": "ios-obj-042c-tf-swift-codable-what-is",
+    "sourceQuestionId": "ios-swift-codable-what-is",
+    "category": "iOS",
+    "topic": "Swift 基础",
+    "type": "trueFalse",
+    "question": "判断：`Codable` 是 `Encodable` 和 `Decodable` 的组合，用来让模型和 JSON 互相转换。",
+    "options": [
+      {
+        "id": "true",
+        "text": "正确"
+      },
+      {
+        "id": "false",
+        "text": "错误"
+      }
+    ],
+    "correctAnswers": [
+      "true"
+    ],
+    "explanation": "`Decodable` 是 JSON → 模型，`Encodable` 是模型 → JSON。`typealias Codable = Decodable & Encodable`。它解决的是“别再手写 Dictionary 取值和类型转换”。",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "ios-obj-042d-single-swift-codable-what-is",
+    "sourceQuestionId": "ios-swift-codable-what-is",
+    "category": "iOS",
+    "topic": "Swift 基础",
+    "type": "single",
+    "question": "单选：Swift 里的 `Codable` 主要解决什么问题？",
+    "options": [
+      {
+        "id": "A",
+        "text": "让模型能和 JSON 等外部数据互相转换，少写手工解析"
+      },
+      {
+        "id": "B",
+        "text": "专门用来打破闭包循环引用"
+      },
+      {
+        "id": "C",
+        "text": "用来把同步函数标记成异步"
+      },
+      {
+        "id": "D",
+        "text": "用来控制属性的访问级别，比如 private 和 public"
+      }
+    ],
+    "correctAnswers": [
+      "A"
+    ],
+    "explanation": "`Codable` 是编解码协议，不是内存管理、不是 async、也不是访问控制。日常就是 `JSONDecoder` / `JSONEncoder` 和 Model 互转。",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "ios-obj-042e-single-swift-codable-basic-usage",
+    "sourceQuestionId": "ios-swift-codable-basic-usage",
+    "category": "iOS",
+    "topic": "Swift 基础",
+    "type": "single",
+    "question": "单选：属性名和类型都与 JSON 一致时，最简单的解析方式是什么？",
+    "options": [
+      {
+        "id": "A",
+        "text": "模型遵守 `Codable`，然后 `JSONDecoder().decode(User.self, from: data)`"
+      },
+      {
+        "id": "B",
+        "text": "必须先手写全部 `CodingKeys`，否则无法解码"
+      },
+      {
+        "id": "C",
+        "text": "先转成 `Dictionary`，再对每个 key 做 `as?` 强转"
+      },
+      {
+        "id": "D",
+        "text": "给模型加上 `@escaping`，编译器会自动解析 JSON"
+      }
+    ],
+    "correctAnswers": [
+      "A"
+    ],
+    "explanation": "对得上的字段编译器会自动合成编解码，不必先写 `CodingKeys`。`CodingKeys` 是名字对不上时才需要。`@escaping` 和 JSON 无关。",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "ios-obj-042f-multi-swift-codable-basic-usage",
+    "sourceQuestionId": "ios-swift-codable-basic-usage",
+    "category": "iOS",
+    "topic": "Swift 基础",
+    "type": "multiple",
+    "question": "多选：关于最基本的 `Codable` 用法，下列哪些说法是正确的？",
+    "options": [
+      {
+        "id": "A",
+        "text": "模型要遵守 `Codable`，属性类型本身通常也要能编解码"
+      },
+      {
+        "id": "B",
+        "text": "解码用 `JSONDecoder().decode`，编码用 `JSONEncoder().encode`"
+      },
+      {
+        "id": "C",
+        "text": "属性名和类型都对得上时，编译器可以自动生成 `init(from:)` 和 `encode(to:)`"
+      },
+      {
+        "id": "D",
+        "text": "只要写了 `Codable`，字段名对不上、类型不稳定也一定能自动解析成功"
+      },
+      {
+        "id": "E",
+        "text": "`Codable` 只能用在 `class` 上，`struct` 不能遵守"
+      }
+    ],
+    "correctAnswers": [
+      "A",
+      "B",
+      "C"
+    ],
+    "explanation": "`struct` 和 `class` 都能遵守 `Codable`。自动合成只覆盖“对得上”的情况；名字、可选、日期、脏类型还是要靠 `CodingKeys` 或自定义解码。",
+    "difficulty": "Easy"
+  },
+  {
     "id": "ios-obj-043-multi-swift-codable-key-mapping",
     "sourceQuestionId": "ios-swift-codable-key-mapping",
     "category": "iOS",

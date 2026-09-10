@@ -126,6 +126,24 @@
     "oralOneLiner": "访问控制从小到大是 private、fileprivate、internal、public、open。"
   },
   {
+    "id": "ios-swift-codable-what-is",
+    "category": "iOS",
+    "topic": "Swift 基础",
+    "question": "Swift 里的 `Codable` 是什么？它解决了什么问题？",
+    "answer": "Codable 是 Swift 标准库里的协议，用来把模型（struct / class）和外部数据互相转换。最常见场景就是把接口返回的 JSON 解成 Model，或把 Model 再编回 JSON。\n\n它其实是两个协议的组合：Decodable 负责解码（JSON → 模型），Encodable 负责编码（模型 → JSON）。写成 Codable，就表示两个方向都能做。\n\n以前常见写法是先把 JSON 转成 Dictionary，再一个个 key 取值、再 as? 成具体类型，又长又容易写错。Codable 让编译器按属性自动生成编解码代码，类型对不上会在编译期或解码时暴露出来。\n\n日常工具是 JSONDecoder.decode 和 JSONEncoder.encode。可以先记一句话：Codable 就是模型和 JSON 之间的翻译协议。",
+    "difficulty": "Easy",
+    "oralOneLiner": "Codable = Decodable + Encodable，用来让模型和 JSON 互相转换。"
+  },
+  {
+    "id": "ios-swift-codable-basic-usage",
+    "category": "iOS",
+    "topic": "Swift 基础",
+    "question": "模型怎样遵守 `Codable`？最简单的 JSON 解析怎么写？",
+    "answer": "先让模型遵守 Codable，并且每个属性的类型本身也能编解码，比如 String、Int、Bool，或另一个 Codable 模型。\n\n属性名、类型都和 JSON 对得上时，编译器会自动生成 init(from:) 和 encode(to:)，你不用手写解析：\n\n```swift\nstruct User: Codable {\n  let id: Int\n  let name: String\n}\n\nlet user = try JSONDecoder().decode(User.self, from: jsonData)\nlet encoded = try JSONEncoder().encode(user)\n```\n\n这是最顺的路径。只有字段名对不上、字段可缺、日期格式奇怪、类型不稳定时，才需要下一题里的 CodingKeys 或自定义 init(from:)。",
+    "difficulty": "Easy",
+    "oralOneLiner": "模型写 Codable，属性和 JSON 对得上时编译器自动生成编解码；用 JSONDecoder / JSONEncoder 做转换。"
+  },
+  {
     "id": "ios-swift-codable-key-mapping",
     "category": "iOS",
     "topic": "Swift 基础",

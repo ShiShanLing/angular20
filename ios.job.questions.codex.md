@@ -1,7 +1,7 @@
 # iOS 题库
 
 > 来源：`ios.job.questions.codex.json`
-> 题目数量：153 题
+> 题目数量：155 题
 >
 # 需要背的单词 some,none,guard,Comparable,existential,Codable,Present,Signature,unrecognized,Associated,Extension,Swizzling,descriptor,prepare,reuse,Gesture,Recognizer,keychain,Operation,Concurrency,isolation,reentrancy,drain,fliter,Commands,Segment,Section,
 
@@ -233,7 +233,47 @@ Copy-on-Write 是写时复制。Array、Dictionary、String 表面是值类型�
 
 private 限当前声明作用域和同文件扩展，fileprivate 限同文件，internal 是模块内默认可见，public 模块外可见但不能被外部继承或重写，open 模块外可见且允许继承和重写。库设计里 public 暴露使用能力，open 暴露扩展能力。
 
-### 14. `Codable` 如何处理 JSON 字段名和 Model 属性名不一致？如何处理可选字段？
+### 14. Swift 里的 `Codable` 是什么？它解决了什么问题？
+
+- 难度：Easy
+- ID：`ios-swift-codable-what-is`
+- 口述一句话：Codable = Decodable + Encodable，用来让模型和 JSON 互相转换。
+
+**参考答案：**
+
+Codable 是 Swift 标准库里的协议，用来把模型（struct / class）和外部数据互相转换。最常见场景就是把接口返回的 JSON 解成 Model，或把 Model 再编回 JSON。
+
+它其实是两个协议的组合：Decodable 负责解码（JSON → 模型），Encodable 负责编码（模型 → JSON）。写成 Codable，就表示两个方向都能做。
+
+以前常见写法是先把 JSON 转成 Dictionary，再一个个 key 取值、再 as? 成具体类型，又长又容易写错。Codable 让编译器按属性自动生成编解码代码，类型对不上会在编译期或解码时暴露出来。
+
+日常工具是 JSONDecoder.decode 和 JSONEncoder.encode。可以先记一句话：Codable 就是模型和 JSON 之间的翻译协议。
+
+### 15. 模型怎样遵守 `Codable`？最简单的 JSON 解析怎么写？
+
+- 难度：Easy
+- ID：`ios-swift-codable-basic-usage`
+- 口述一句话：模型写 Codable，属性和 JSON 对得上时编译器自动生成编解码；用 JSONDecoder / JSONEncoder 做转换。
+
+**参考答案：**
+
+先让模型遵守 Codable，并且每个属性的类型本身也能编解码，比如 String、Int、Bool，或另一个 Codable 模型。
+
+属性名、类型都和 JSON 对得上时，编译器会自动生成 init(from:) 和 encode(to:)，你不用手写解析：
+
+```swift
+struct User: Codable {
+  let id: Int
+  let name: String
+}
+
+let user = try JSONDecoder().decode(User.self, from: jsonData)
+let encoded = try JSONEncoder().encode(user)
+```
+
+这是最顺的路径。只有字段名对不上、字段可缺、日期格式奇怪、类型不稳定时，才需要下一题里的 CodingKeys 或自定义 init(from:)。
+
+### 16. `Codable` 如何处理 JSON 字段名和 Model 属性名不一致？如何处理可选字段？
 
 - 难度：Medium
 - ID：`ios-swift-codable-key-mapping`
@@ -243,7 +283,7 @@ private 限当前声明作用域和同文件扩展，fileprivate 限同文件，
 
 字段名不一致用 CodingKeys 映射。可选字段声明成 Optional，缺失时 decodeIfPresent 返回 nil；必填字段缺失会抛错。复杂转换可以自定义 init(from:) 和 encode(to:)。真实项目还要处理日期格式、嵌套结构和后端类型不稳定。
 
-### 15. `Result`、`throws`、Optional 分别适合表达什么类型的失败？
+### 17. `Result`、`throws`、Optional 分别适合表达什么类型的失败？
 
 - 难度：Medium
 - ID：`ios-swift-result-error-handling`
@@ -255,7 +295,7 @@ Optional 适合只关心有无值、不关心失败原因；throws 适合同步�
 
 ## Swift 基础 / 值类型与引用类型
 
-### 16. Struct 相比 Class 在性能上有什么优势？为什么不能简单说 Struct 一定在栈上？
+### 18. Struct 相比 Class 在性能上有什么优势？为什么不能简单说 Struct 一定在栈上？
 
 - 难度：Medium
 - ID：`ios-swift-struct-class-performance-stack-heap`
@@ -271,7 +311,7 @@ Class 是引用类型，实例通常分配在堆上，由 ARC 管理生命周期
 
 ## Objective-C / Runtime
 
-### 17. Objective-C 的消息发送流程是什么？`objc_msgSend` 大致做了什么？
+### 19. Objective-C 的消息发送流程是什么？`objc_msgSend` 大致做了什么？
 
 - 难度：Hard
 - ID：`ios-objc-msgsend-flow`
@@ -285,7 +325,7 @@ Objective-C 调方法本质是发消息。objc_msgSend 会根据对象的 isa �
 
 如果这三步都没有处理，最后才会触发 doesNotRecognizeSelector，也就是常见的 unrecognized selector 崩溃。
 
-### 18. Class 和 Meta Class 的关系是什么？实例方法和类方法分别存在哪里？
+### 20. Class 和 Meta Class 的关系是什么？实例方法和类方法分别存在哪里？
 
 - 难度：Hard
 - ID：`ios-objc-class-metaclass`
@@ -295,7 +335,7 @@ Objective-C 调方法本质是发消息。objc_msgSend 会根据对象的 isa �
 
 实例对象的 isa 指向 Class，Class 保存实例方法、属性和协议等信息；Class 的 isa 指向 Meta Class，Meta Class 保存类方法。Meta Class 最终也有继承链，根元类的 isa 指向自己。实例方法发给对象，类方法本质上发给类对象。
 
-### 19. `isa` 指针有什么作用？对象、类、元类之间如何通过 isa 串起来？
+### 21. `isa` 指针有什么作用？对象、类、元类之间如何通过 isa 串起来？
 
 - 难度：Hard
 - ID：`ios-objc-isa-pointer`
@@ -305,7 +345,7 @@ Objective-C 调方法本质是发消息。objc_msgSend 会根据对象的 isa �
 
 isa 用来从对象找到它所属的类，从类找到元类，是 Runtime 查找方法和识别类型的入口。实例对象 isa 指向类，类对象 isa 指向元类，元类继续指向根元类。现代 isa 可能是优化过的 non-pointer isa，里面还编码了引用计数等信息。
 
-### 20. Category 能不能添加属性？为什么？Associated Object 是如何补充存储能力的？
+### 22. Category 能不能添加属性？为什么？Associated Object 是如何补充存储能力的？
 
 - 难度：Medium
 - ID：`ios-objc-category-property`
@@ -315,7 +355,7 @@ isa 用来从对象找到它所属的类，从类找到元类，是 Runtime 查�
 
 Category 可以声明属性，但不会自动生成实例变量。因为类的内存布局在编译期基本确定，Category 在运行期附加方法，不能直接扩展对象存储。要给 Category 属性保存值，通常用 Associated Object，以对象地址和 key 建立关联表。
 
-### 21. Category 和 Extension 有什么区别？它们分别在编译期和运行期有什么特点？
+### 23. Category 和 Extension 有什么区别？它们分别在编译期和运行期有什么特点？
 
 - 难度：Medium
 - ID：`ios-objc-category-extension`
@@ -325,7 +365,7 @@ Category 可以声明属性，但不会自动生成实例变量。因为类的�
 
 Extension 是类扩展，通常写在主实现文件里，编译期参与类定义，可以声明私有属性和方法；Category 是运行期把方法列表附加到已有类上，常用于拆分功能或给系统类加方法。Extension 更像匿名私有接口，Category 更像后期扩展。
 
-### 22. KVO 的实现原理是什么？为什么说它依赖 Runtime 动态子类？
+### 24. KVO 的实现原理是什么？为什么说它依赖 Runtime 动态子类？
 
 - 难度：Hard
 - ID：`ios-objc-kvo-principle`
@@ -337,7 +377,7 @@ KVO 通过 Runtime 动态创建被观察类的子类，把对象的 isa 指向�
 
 OC 老式 KVO 要手动 add/remove，生命周期处理不好容易崩。Swift block KVO 用 NSKeyValueObservation token 管理观察关系，相对安全，但本质仍然是 Runtime KVO。
 
-### 23. KVC 的查找顺序是什么？访问不存在的 key 会发生什么？
+### 25. KVC 的查找顺序是什么？访问不存在的 key 会发生什么？
 
 - 难度：Medium
 - ID：`ios-objc-kvc-search-order`
@@ -347,7 +387,7 @@ OC 老式 KVO 要手动 add/remove，生命周期处理不好容易崩。Swift b
 
 KVC 取值通常先找 get<Key>、<key>、is<Key>、_<key> 等 getter，再按规则访问 ivar；找不到会调用 valueForUndefinedKey。赋值类似先找 setter，再找 ivar，找不到调用 setValue:forUndefinedKey。它绕过编译期检查，灵活但不够安全。
 
-### 24. Method Swizzling 的原理是什么？在业务中使用它有哪些风险？
+### 26. Method Swizzling 的原理是什么？在业务中使用它有哪些风险？
 
 - 难度：Hard
 - ID：`ios-objc-method-swizzling-risk`
@@ -357,7 +397,7 @@ KVC 取值通常先找 get<Key>、<key>、is<Key>、_<key> 等 getter，再按�
 
 Swizzling 通过 Runtime 交换两个 Method 的 IMP，让原调用走到新实现。风险是影响全局行为、调用顺序不确定、和其他库冲突、递归调用、难调试。使用时应在 +load 或明确初始化中只交换一次，并保留原实现调用路径。
 
-### 25. Objective-C Block 有哪些类型？为什么 Block 通常需要 copy？
+### 27. Objective-C Block 有哪些类型？为什么 Block 通常需要 copy？
 
 - 难度：Medium
 - ID：`ios-objc-block-types`
@@ -369,7 +409,7 @@ Block 常见有全局 Block、栈 Block、堆 Block。没有捕获外部自动�
 
 保存 Block 或异步执行 Block 时通常需要 copy，因为函数返回后栈空间会失效，copy 到堆上才能保证 Block 之后仍然可用。ARC 下很多场景编译器会自动 copy，但 Block 属性仍推荐声明为 copy，这是 Objective-C 的标准写法。
 
-### 26. Objective-C Block 捕获变量、`__block` 和 `__weak` 分别怎么理解？
+### 28. Objective-C Block 捕获变量、`__block` 和 `__weak` 分别怎么理解？
 
 - 难度：Hard
 - ID：`ios-objc-block-capture-rules`
@@ -381,7 +421,7 @@ Block 会捕获它内部使用到的外部变量。普通局部变量默认不�
 
 可以这样记：__block 解决“能不能在 Block 内修改外部局部变量”的问题；__weak 解决“Block 会不会强持有 self 导致循环引用”的问题。
 
-### 27. Block 属性为什么通常用 copy，而不是 strong？
+### 29. Block 属性为什么通常用 copy，而不是 strong？
 
 - 难度：Medium
 - ID：`ios-objc-block-property-copy`
@@ -399,7 +439,7 @@ ARC 下很多赋值场景编译器会自动帮忙 copy，但属性写 copy 仍�
 @property (nonatomic, copy) void (^completion)(void);
 ```
 
-### 28. Objective-C Block 底层结构大概是什么？为什么说 Block 也是对象？
+### 30. Objective-C Block 底层结构大概是什么？为什么说 Block 也是对象？
 
 - 难度：Hard
 - ID：`ios-objc-block-under-the-hood`
@@ -413,7 +453,7 @@ Block 在底层可以理解成一个 Objective-C 对象。它通常包含 isa、
 
 所以 Block 既能像函数一样调用，又能像对象一样 copy、release，并参与 ARC 内存管理。不用死背结构体字段，重点记：Block = 代码 + 捕获上下文 + 对象语义。
 
-### 29. ARC 是编译期机制还是运行期机制？它和 Runtime 如何配合管理引用计数？
+### 31. ARC 是编译期机制还是运行期机制？它和 Runtime 如何配合管理引用计数？
 
 - 难度：Hard
 - ID：`ios-objc-arc-compile-runtime`
@@ -425,7 +465,7 @@ ARC 主要是编译器自动插入 retain、release、autorelease 等内存管�
 
 ## UIKit / App 生命周期
 
-### 30. App 从点击图标到首屏展示大致经历了哪些阶段？
+### 32. App 从点击图标到首屏展示大致经历了哪些阶段？
 
 - 难度：Medium
 - ID：`ios-uikit-app-launch-basic`
@@ -435,7 +475,7 @@ ARC 主要是编译器自动插入 retain、release、autorelease 等内存管�
 
 App 启动大致经历：系统创建进程，dyld 加载可执行文件和动态库，Runtime 初始化类和分类，进入 main，UIApplicationMain 创建应用对象，建立 AppDelegate/SceneDelegate、window、rootViewController，然后加载 view、布局并提交首帧。优化时按 main 前和 main 后拆。
 
-### 31. `AppDelegate` 和 `SceneDelegate` 分别负责什么？多 Scene 场景下生命周期有什么变化？
+### 33. `AppDelegate` 和 `SceneDelegate` 分别负责什么？多 Scene 场景下生命周期有什么变化？
 
 - 难度：Medium
 - ID：`ios-uikit-appdelegate-scenedelegate`
@@ -445,7 +485,7 @@ App 启动大致经历：系统创建进程，dyld 加载可执行文件和动�
 
 AppDelegate 负责应用级事件，比如启动、推送、后台任务和全局配置；SceneDelegate 负责一个 UI 场景的生命周期，比如创建 window、连接和断开 scene。iOS 13 后一个 App 可以有多个 Scene，所以 UI 生命周期从 AppDelegate 拆到了 SceneDelegate。
 
-### 32. ViewController 生命周期方法的调用顺序是什么？每个方法适合做什么？
+### 34. ViewController 生命周期方法的调用顺序是什么？每个方法适合做什么？
 
 - 难度：Easy
 - ID：`ios-uikit-vc-lifecycle`
@@ -455,7 +495,7 @@ AppDelegate 负责应用级事件，比如启动、推送、后台任务和全�
 
 常见顺序是 init、loadView、viewDidLoad、viewWillAppear、viewWillLayoutSubviews、viewDidLayoutSubviews、viewDidAppear；离开时 viewWillDisappear、viewDidDisappear。viewDidLoad 适合一次性初始化，viewWillAppear 适合刷新即将展示的数据，布局相关放 layout 回调。
 
-### 33. `loadView`、`viewDidLoad`、`viewWillAppear`、`viewDidAppear` 有什么区别？
+### 35. `loadView`、`viewDidLoad`、`viewWillAppear`、`viewDidAppear` 有什么区别？
 
 - 难度：Medium
 - ID：`ios-uikit-loadview-viewdidload`
@@ -467,7 +507,7 @@ loadView 负责创建 self.view，纯代码自定义根 view 时可重写；view
 
 ## UIKit / 布局
 
-### 34. Auto Layout 的基本原理是什么？约束冲突通常如何排查？
+### 36. Auto Layout 的基本原理是什么？约束冲突通常如何排查？
 
 - 难度：Medium
 - ID：`ios-uikit-autolayout-principle`
@@ -479,7 +519,7 @@ Auto Layout 用一组线性约束描述视图位置和大小，系统通过约�
 
 ## UIKit / 列表
 
-### 35. TableView Cell 复用机制是什么？如何避免复用导致的数据错乱？
+### 37. TableView Cell 复用机制是什么？如何避免复用导致的数据错乱？
 
 - 难度：Easy
 - ID：`ios-uikit-tableview-reuse`
@@ -489,7 +529,7 @@ Auto Layout 用一组线性约束描述视图位置和大小，系统通过约�
 
 TableView 复用 Cell 是为了避免频繁创建视图。滚出屏幕的 Cell 会进入复用池，新数据出现时取出重新配置。必须在配置方法里覆盖所有 UI 状态，在 prepareForReuse 中重置临时状态、取消图片请求，否则会出现错图、状态残留。
 
-### 36. CollectionView 和 TableView 的核心区别是什么？自定义 Layout 适合解决什么问题？
+### 38. CollectionView 和 TableView 的核心区别是什么？自定义 Layout 适合解决什么问题？
 
 - 难度：Medium
 - ID：`ios-uikit-collectionview-layout`
@@ -501,7 +541,7 @@ TableView 主要是一维列表，CollectionView 更通用，支持网格、瀑�
 
 ## UIKit / 性能
 
-### 37. 如何优化 TableView 或 CollectionView 的滚动性能？
+### 39. 如何优化 TableView 或 CollectionView 的滚动性能？
 
 - 难度：Medium
 - ID：`ios-uikit-list-scroll-performance`
@@ -517,7 +557,7 @@ TableView 主要是一维列表，CollectionView 更通用，支持网格、瀑�
 
 ## UIKit / 渲染
 
-### 38. `UIView` 和 `CALayer` 有什么关系？为什么 UIView 负责事件而 CALayer 负责显示？
+### 40. `UIView` 和 `CALayer` 有什么关系？为什么 UIView 负责事件而 CALayer 负责显示？
 
 - 难度：Medium
 - ID：`ios-uikit-uiview-calayer`
@@ -527,7 +567,7 @@ TableView 主要是一维列表，CollectionView 更通用，支持网格、瀑�
 
 UIView 是 UIResponder 子类，负责事件响应、手势、布局和管理视图层级；CALayer 负责内容显示、动画和合成。每个 UIView 默认有一个 backing layer，最终渲染由 Core Animation 处理。很多视觉属性本质设置在 layer 上。
 
-### 39. 什么是离屏渲染？它出现在屏幕渲染流程的哪一步？如何优化？
+### 41. 什么是离屏渲染？它出现在屏幕渲染流程的哪一步？如何优化？
 
 - 难度：Hard
 - ID：`ios-uikit-offscreen-rendering`
@@ -551,7 +591,7 @@ UIView 是 UIResponder 子类，负责事件响应、手势、布局和管理视
 
 ## UIKit / 事件响应
 
-### 40. 响应链是什么？事件找不到处理者时会如何向上传递？
+### 42. 响应链是什么？事件找不到处理者时会如何向上传递？
 
 - 难度：Medium
 - ID：`ios-uikit-responder-chain`
@@ -561,7 +601,7 @@ UIView 是 UIResponder 子类，负责事件响应、手势、布局和管理视
 
 响应链是事件处理对象的传递链。触摸事件先通过 hit-test 找到目标 view，如果它不处理，就沿 superview、viewController、window、application 向上传递。它让事件可以从具体视图逐级交给更高层处理。
 
-### 41. `hitTest(_:with:)` 和 `point(inside:with:)` 的作用是什么？如何扩大按钮点击区域？
+### 43. `hitTest(_:with:)` 和 `point(inside:with:)` 的作用是什么？如何扩大按钮点击区域？
 
 - 难度：Medium
 - ID：`ios-uikit-hit-test`
@@ -571,7 +611,7 @@ UIView 是 UIResponder 子类，负责事件响应、手势、布局和管理视
 
 point(inside:with:) 判断触点是否在当前 view 内；hitTest(_:with:) 从当前 view 递归查找真正接收事件的最深子视图。扩大按钮点击区域可以重写 point(inside:) 扩大判断区域，或在父视图 hitTest 中转发。
 
-### 42. 手势和按钮点击冲突怎么处理？多个 Gesture Recognizer 如何协调？
+### 44. 手势和按钮点击冲突怎么处理？多个 Gesture Recognizer 如何协调？
 
 - 难度：Medium
 - ID：`ios-uikit-gesture-conflict`
@@ -583,7 +623,7 @@ point(inside:with:) 判断触点是否在当前 view 内；hitTest(_:with:) 从�
 
 ## 网络 / 安全
 
-### 43. HTTP 和 HTTPS 有什么区别？HTTPS 相比 HTTP 多了哪些安全能力？
+### 45. HTTP 和 HTTPS 有什么区别？HTTPS 相比 HTTP 多了哪些安全能力？
 
 - 难度：Easy
 - ID：`ios-http-vs-https`
@@ -646,7 +686,7 @@ HTTPS 相比 HTTP 多了三类安全能力：第一，加密，防止内容被�
 
 总结：HTTP 建立 TCP 连接后直接明文传输请求和响应；HTTPS 是 HTTP 加 TLS，TCP 三次握手后还会进行 TLS 握手，客户端通过证书链验证服务器身份，双方协商会话密钥，之后 HTTP 数据加密传输。HTTPS 提供加密、防篡改和服务器身份认证，但只保护传输链路，不代表业务绝对安全。
 
-### 44. HTTPS 相比 HTTP 多了什么？TLS 握手大致解决什么问题？
+### 46. HTTPS 相比 HTTP 多了什么？TLS 握手大致解决什么问题？
 
 - 难度：Medium
 - ID：`ios-https-tls-basics`
@@ -656,7 +696,7 @@ HTTPS 相比 HTTP 多了三类安全能力：第一，加密，防止内容被�
 
 HTTPS 比 HTTP 多了 TLS 层。TLS 握手主要解决三件事：确认服务器身份，协商加密算法，安全地产生后续通信使用的会话密钥。之后 HTTP 内容会用会话密钥加密传输，避免明文被窃听或篡改。
 
-### 45. HTTPS 一定安全吗？还可能存在哪些安全风险？
+### 47. HTTPS 一定安全吗？还可能存在哪些安全风险？
 
 - 难度：Medium
 - ID：`ios-https-is-always-safe`
@@ -668,7 +708,7 @@ HTTPS 不等于绝对安全。它保护传输过程，但如果用户安装了�
 
 ## 网络 / TCP
 
-### 46. TCP 三次握手和四次挥手分别解决什么问题？
+### 48. TCP 三次握手和四次挥手分别解决什么问题？
 
 - 难度：Medium
 - ID：`ios-tcp-handshake-wave`
@@ -680,7 +720,7 @@ HTTPS 不等于绝对安全。它保护传输过程，但如果用户安装了�
 
 ## 网络 / HTTP
 
-### 47. GET 和 POST 有什么区别？幂等性、安全性、缓存方面如何理解？
+### 49. GET 和 POST 有什么区别？幂等性、安全性、缓存方面如何理解？
 
 - 难度：Easy
 - ID：`ios-http-get-post`
@@ -692,7 +732,7 @@ GET 通常用于获取资源，参数常在 URL，适合缓存和幂等请求；
 
 ## 网络 / 鉴权
 
-### 48. Cookie 和 Token 有什么区别？移动端登录态通常如何设计？
+### 50. Cookie 和 Token 有什么区别？移动端登录态通常如何设计？
 
 - 难度：Medium
 - ID：`ios-cookie-vs-token`
@@ -702,7 +742,7 @@ GET 通常用于获取资源，参数常在 URL，适合缓存和幂等请求；
 
 Cookie 通常由浏览器自动携带，偏 Web 会话；Token 是客户端主动放在请求头里，移动端更常见。移动端一般登录后保存 access token 和 refresh token，access token 用于接口鉴权，过期后用 refresh token 换新。敏感 token 应存 Keychain。
 
-### 49. Token 过期如何刷新？如何避免多个请求同时触发重复刷新？
+### 51. Token 过期如何刷新？如何避免多个请求同时触发重复刷新？
 
 - 难度：Hard
 - ID：`ios-token-refresh`
@@ -714,7 +754,7 @@ Token 过期后，客户端用 refresh token 请求新 access token，然后重�
 
 ## 网络 / URLSession
 
-### 50. `URLSession` 请求如何取消、重试和设置超时？
+### 52. `URLSession` 请求如何取消、重试和设置超时？
 
 - 难度：Medium
 - ID：`ios-urlsession-cancel-retry`
@@ -726,7 +766,7 @@ URLSessionTask 可以调用 cancel 取消；超时可在 URLRequest 或 URLSessi
 
 ## 网络 / 架构
 
-### 51. 如何设计一个可测试、可扩展的网络层？需要包含哪些模块？
+### 53. 如何设计一个可测试、可扩展的网络层？需要包含哪些模块？
 
 - 难度：Hard
 - ID：`ios-network-layer-design`
@@ -738,7 +778,7 @@ URLSessionTask 可以调用 cancel 取消；超时可在 URLRequest 或 URLSessi
 
 ## 网络 / 缓存
 
-### 52. 图片缓存如何设计？内存缓存、磁盘缓存、下载取消、解码分别如何处理？
+### 54. 图片缓存如何设计？内存缓存、磁盘缓存、下载取消、解码分别如何处理？
 
 - 难度：Hard
 - ID：`ios-image-cache-design`
@@ -750,7 +790,7 @@ URLSessionTask 可以调用 cancel 取消；超时可在 URLRequest 或 URLSessi
 
 ## 数据存储
 
-### 53. UserDefaults、Keychain、文件、SQLite/Core Data 分别适合存什么？
+### 55. UserDefaults、Keychain、文件、SQLite/Core Data 分别适合存什么？
 
 - 难度：Medium
 - ID：`ios-storage-userdefaults-keychain-file-db`
@@ -762,7 +802,7 @@ UserDefaults 适合少量非敏感配置；Keychain 适合 token、账号凭证�
 
 ## 数据存储 / 安全
 
-### 54. 为什么 Token、密码类敏感信息不应该放在 UserDefaults？Keychain 的适用场景是什么？
+### 56. 为什么 Token、密码类敏感信息不应该放在 UserDefaults？Keychain 的适用场景是什么？
 
 - 难度：Medium
 - ID：`ios-keychain-sensitive-data`
@@ -774,7 +814,7 @@ UserDefaults 本质是偏好配置文件，不适合保存 token、密码等敏�
 
 ## 数据存储 / Core Data
 
-### 55. Core Data 的核心对象有哪些？Context、Model、Persistent Store Coordinator 分别负责什么？
+### 57. Core Data 的核心对象有哪些？Context、Model、Persistent Store Coordinator 分别负责什么？
 
 - 难度：Medium
 - ID：`ios-coredata-core-objects`
@@ -786,7 +826,7 @@ Core Data 核心包括 Managed Object Model、Managed Object Context、Persisten
 
 ## 数据存储 / 迁移
 
-### 56. App 本地数据库结构升级时如何做数据迁移？如何降低迁移失败风险？
+### 58. App 本地数据库结构升级时如何做数据迁移？如何降低迁移失败风险？
 
 - 难度：Hard
 - ID：`ios-database-migration`
@@ -798,7 +838,7 @@ Core Data 核心包括 Managed Object Model、Managed Object Context、Persisten
 
 ## 并发 / 线程
 
-### 57. 进程和线程的区别是什么？iOS App 中主线程承担哪些职责？
+### 59. 进程和线程的区别是什么？iOS App 中主线程承担哪些职责？
 
 - 难度：Easy
 - ID：`ios-thread-process`
@@ -808,7 +848,7 @@ Core Data 核心包括 Managed Object Model、Managed Object Context、Persisten
 
 进程是系统分配资源的单位，线程是 CPU 调度执行的单位。一个 App 至少有主线程，主线程负责 UI、事件响应和主 RunLoop。多个线程共享进程内存，所以访问共享数据时需要同步。
 
-### 58. 为什么主线程不能做耗时任务？哪些操作容易造成主线程卡顿？
+### 60. 为什么主线程不能做耗时任务？哪些操作容易造成主线程卡顿？
 
 - 难度：Easy
 - ID：`ios-main-thread-blocking`
@@ -820,7 +860,7 @@ Core Data 核心包括 Managed Object Model、Managed Object Context、Persisten
 
 ## 并发 / GCD
 
-### 59. GCD 中 `sync` 和 `async` 的区别是什么？它们和是否开新线程是一回事吗？
+### 61. GCD 中 `sync` 和 `async` 的区别是什么？它们和是否开新线程是一回事吗？
 
 - 难度：Medium
 - ID：`ios-gcd-sync-async`
@@ -830,7 +870,7 @@ Core Data 核心包括 Managed Object Model、Managed Object Context、Persisten
 
 sync 会把任务提交到队列并等待执行完成后再返回；async 提交后立即返回。是否开新线程取决于队列和系统调度，不由 sync/async 直接决定。sync 主要影响等待关系，async 主要用于异步执行。
 
-### 60. 串行队列和并发队列有什么区别？队列和线程之间是什么关系？
+### 62. 串行队列和并发队列有什么区别？队列和线程之间是什么关系？
 
 - 难度：Medium
 - ID：`ios-gcd-serial-concurrent`
@@ -840,7 +880,7 @@ sync 会把任务提交到队列并等待执行完成后再返回；async 提交
 
 串行队列一次只执行一个任务，保证任务顺序；并发队列可以同时执行多个任务，但开始顺序和完成顺序不一定一致。队列是任务调度抽象，线程是实际执行资源，GCD 会管理线程池。
 
-### 61. `dispatch_sync` 到主队列为什么可能死锁？请用执行流程解释。
+### 63. `dispatch_sync` 到主队列为什么可能死锁？请用执行流程解释。
 
 - 难度：Medium
 - ID：`ios-gcd-main-sync-deadlock`
@@ -850,7 +890,7 @@ sync 会把任务提交到队列并等待执行完成后再返回；async 提交
 
 如果当前就在主线程，再 dispatch_sync 到主队列，当前代码会等待主队列里的新任务执行完成；但主队列必须等当前任务结束才能执行新任务，于是互相等待造成死锁。本质是同一个串行队列同步等待自己。
 
-### 62. 如何用 DispatchGroup 等待多个异步任务全部完成？适合什么场景？
+### 64. 如何用 DispatchGroup 等待多个异步任务全部完成？适合什么场景？
 
 - 难度：Easy
 - ID：`ios-gcd-dispatchgroup`
@@ -860,7 +900,7 @@ sync 会把任务提交到队列并等待执行完成后再返回；async 提交
 
 DispatchGroup 用来等待多个异步任务完成。可以 group.enter/leave 包裹异步回调，或 group.async 提交任务，最后 notify 在所有任务结束后回调。适合多个接口并行请求后合并结果。
 
-### 63. Semaphore 可以解决什么问题？用它控制并发数时要注意什么？
+### 65. Semaphore 可以解决什么问题？用它控制并发数时要注意什么？
 
 - 难度：Medium
 - ID：`ios-gcd-semaphore`
@@ -870,7 +910,7 @@ DispatchGroup 用来等待多个异步任务完成。可以 group.enter/leave �
 
 Semaphore 是计数信号量，可以限制并发数或做线程同步。控制并发时先 wait，任务完成后 signal。要注意 wait/signal 成对出现，不要在主线程长时间 wait，否则容易卡顿或死锁。
 
-### 64. iOS GCD 是什么？sync/async、串行/并发队列、常用 API 和死锁条件分别怎么理解？
+### 66. iOS GCD 是什么？sync/async、串行/并发队列、常用 API 和死锁条件分别怎么理解？
 
 - 难度：Hard
 - ID：`ios-gcd-detailed-overview`
@@ -938,7 +978,7 @@ GCD 和 Swift Concurrency 的关系：GCD 更偏底层任务派发，关注把�
 
 ## 并发 / OperationQueue
 
-### 65. OperationQueue 相比 GCD 有什么优势？依赖、取消、优先级如何体现？
+### 67. OperationQueue 相比 GCD 有什么优势？依赖、取消、优先级如何体现？
 
 - 难度：Medium
 - ID：`ios-operationqueue-vs-gcd`
@@ -948,7 +988,7 @@ GCD 和 Swift Concurrency 的关系：GCD 更偏底层任务派发，关注把�
 
 OperationQueue 比 GCD 更面向任务对象，支持依赖关系、取消、优先级、最大并发数和状态观察。复杂任务编排、可取消任务适合 OperationQueue；简单派发、轻量异步适合 GCD。
 
-### 66. iOS OperationQueue 是什么？相比 GCD 有什么特点？依赖、取消、优先级和常见坑怎么理解？
+### 68. iOS OperationQueue 是什么？相比 GCD 有什么特点？依赖、取消、优先级和常见坑怎么理解？
 
 - 难度：Hard
 - ID：`ios-operationqueue-detailed-overview`
@@ -1038,7 +1078,7 @@ OperationQueue 和 GCD 的选择可以这样记：简单异步派发、回主线
 
 ## 并发 / RunLoop
 
-### 67. RunLoop 是什么？它和线程是什么关系？
+### 69. RunLoop 是什么？它和线程是什么关系？
 
 - 难度：Hard
 - ID：`ios-runloop-basics`
@@ -1048,7 +1088,7 @@ OperationQueue 和 GCD 的选择可以这样记：简单异步派发、回主线
 
 RunLoop 是线程的事件循环，让线程有事件时处理、没事件时休眠。主线程默认启动 RunLoop，子线程默认没有。Source、Timer、Observer 都注册到 RunLoop 上，RunLoop 和线程是一一对应但懒创建的关系。
 
-### 68. Timer 为什么有时不准？RunLoop Mode 对 Timer 有什么影响？
+### 70. Timer 为什么有时不准？RunLoop Mode 对 Timer 有什么影响？
 
 - 难度：Hard
 - ID：`ios-runloop-timer-accuracy`
@@ -1058,7 +1098,7 @@ RunLoop 是线程的事件循环，让线程有事件时处理、没事件时休
 
 Timer 依赖 RunLoop 触发，不是实时系统。主线程忙、RunLoop 没跑到对应 mode、或者系统调度延迟都会导致 Timer 不准。比如滚动时 RunLoop 进入 tracking mode，默认 mode 的 Timer 可能暂停；可加入 common modes 缓解。
 
-### 69. 如何实现一个常驻线程？为什么需要给线程启动 RunLoop？
+### 71. 如何实现一个常驻线程？为什么需要给线程启动 RunLoop？
 
 - 难度：Hard
 - ID：`ios-runloop-persistent-thread`
@@ -1068,7 +1108,7 @@ Timer 依赖 RunLoop 触发，不是实时系统。主线程忙、RunLoop 没跑
 
 常驻线程需要创建子线程后启动 RunLoop，并添加一个 Source、Port 或 Timer 保持 RunLoop 不退出。否则线程执行完入口函数就结束。常驻线程适合需要长期串行处理任务的场景，但现在很多情况可用队列或 actor 替代。
 
-### 70. iOS RunLoop 是什么？它和线程、Timer、Mode、主线程卡顿有什么关系？
+### 72. iOS RunLoop 是什么？它和线程、Timer、Mode、主线程卡顿有什么关系？
 
 - 难度：Hard
 - ID：`ios-runloop-detailed-overview`
@@ -1166,7 +1206,7 @@ Thread.sleep(forTimeInterval: 3)
 
 ## Swift Concurrency
 
-### 71. `async/await` 和 GCD 如何选择？它们解决的问题有什么不同？
+### 73. `async/await` 和 GCD 如何选择？它们解决的问题有什么不同？
 
 - 难度：Medium
 - ID：`ios-concurrency-async-await-vs-gcd`
@@ -1176,7 +1216,7 @@ Thread.sleep(forTimeInterval: 3)
 
 GCD 是底层任务调度工具，关注把闭包派发到队列；async/await 是语言级异步模型，关注把异步流程写得像同步代码，并和错误、取消、结构化并发集成。简单线程切换可用 GCD；现代异步业务流程、并发请求和可取消任务优先 async/await。
 
-### 72. `async/await` 相比回调有什么优势？错误处理和取消如何表达？
+### 74. `async/await` 相比回调有什么优势？错误处理和取消如何表达？
 
 - 难度：Medium
 - ID：`ios-concurrency-async-await-advantage`
@@ -1186,7 +1226,7 @@ GCD 是底层任务调度工具，关注把闭包派发到队列；async/await �
 
 async/await 最大优势是消除回调嵌套，让异步代码按顺序书写；错误可用 throws 统一处理，取消可通过 Task 协作检查。它还配合结构化并发管理子任务生命周期，比散落回调更可读、更可维护。
 
-### 73. `Task` 是什么？什么时候需要用 `Task {}` 创建异步上下文？
+### 75. `Task` 是什么？什么时候需要用 `Task {}` 创建异步上下文？
 
 - 难度：Medium
 - ID：`ios-concurrency-task-basics`
@@ -1196,7 +1236,7 @@ async/await 最大优势是消除回调嵌套，让异步代码按顺序书写�
 
 Task 是 Swift Concurrency 中异步任务的执行单元。同步上下文里不能直接 await async 方法，所以常用 Task { await work() } 创建异步上下文。Task 也用于启动非结构化任务，但要注意生命周期、取消和对 self 的捕获。
 
-### 74. Structured Concurrency 和 Unstructured Task 有什么区别？为什么结构化并发更容易管理生命周期？
+### 76. Structured Concurrency 和 Unstructured Task 有什么区别？为什么结构化并发更容易管理生命周期？
 
 - 难度：Hard
 - ID：`ios-concurrency-structured-unstructured`
@@ -1206,7 +1246,7 @@ Task 是 Swift Concurrency 中异步任务的执行单元。同步上下文里�
 
 结构化并发中子任务有明确父子关系，父任务会等待、取消和传播错误，比如 async let、TaskGroup。Unstructured Task 用 Task {} 创建，生命周期更独立，不自动受当前作用域管理。优先结构化并发，只有跨作用域任务才考虑非结构化。
 
-### 75. `async let` 和 `TaskGroup` 分别适合什么场景？如何选择？
+### 77. `async let` 和 `TaskGroup` 分别适合什么场景？如何选择？
 
 - 难度：Medium
 - ID：`ios-concurrency-asynclet-taskgroup`
@@ -1216,7 +1256,7 @@ Task 是 Swift Concurrency 中异步任务的执行单元。同步上下文里�
 
 async let 适合数量固定、写法简单的并发任务，比如同时请求用户和配置；TaskGroup 适合数量动态、循环创建、需要收集多个结果的任务。二者都是结构化并发，父作用域会等待子任务完成。
 
-### 76. `actor` 解决了什么问题？它和用锁保护共享状态有什么区别？
+### 78. `actor` 解决了什么问题？它和用锁保护共享状态有什么区别？
 
 - 难度：Medium
 - ID：`ios-concurrency-actor-basics`
@@ -1226,7 +1266,7 @@ async let 适合数量固定、写法简单的并发任务，比如同时请求�
 
 actor 是并发安全的引用类型，用 actor isolation 保护内部可变状态，外部访问隔离方法或属性通常需要 await。它能替代一部分锁和串行队列，让共享状态的访问串行化。actor 保护的是内部状态，不代表所有传入对象都自动线程安全。
 
-### 77. `MainActor` 的作用是什么？为什么 UI 更新通常需要放在 MainActor 上？
+### 79. `MainActor` 的作用是什么？为什么 UI 更新通常需要放在 MainActor 上？
 
 - 难度：Medium
 - ID：`ios-concurrency-mainactor`
@@ -1236,7 +1276,7 @@ actor 是并发安全的引用类型，用 actor isolation 保护内部可变状
 
 @MainActor 可以标记 UI 相关代码，让它们固定在主线程相关的执行上下文中执行。跨并发环境调用时用 await，Swift 会帮你切回主线程，并检查不安全的 UI 访问。
 
-### 78. `Sendable` 是什么？它能保证线程安全吗？什么时候需要 `@unchecked Sendable`？
+### 80. `Sendable` 是什么？它能保证线程安全吗？什么时候需要 `@unchecked Sendable`？
 
 - 难度：Hard
 - ID：`ios-concurrency-sendable`
@@ -1246,7 +1286,7 @@ actor 是并发安全的引用类型，用 actor isolation 保护内部可变状
 
 Sendable 表示一个类型的值可以安全跨并发边界传递。值类型且成员都 Sendable 通常自动满足；含可变共享状态的 class 默认不安全。Sendable 本身不加锁、不保证逻辑线程安全；@unchecked Sendable 是开发者向编译器承诺自己保证安全。
 
-### 79. `@Sendable` 闭包和普通闭包有什么区别？为什么捕获非线程安全对象可能报警？
+### 81. `@Sendable` 闭包和普通闭包有什么区别？为什么捕获非线程安全对象可能报警？
 
 - 难度：Hard
 - ID：`ios-concurrency-sendable-closure`
@@ -1256,7 +1296,7 @@ Sendable 表示一个类型的值可以安全跨并发边界传递。值类型�
 
 @Sendable 表示闭包可能跨并发域执行，编译器会限制它捕获非 Sendable 或可变共享状态。普通闭包没有这种并发安全约束。它能帮你发现潜在数据竞争，但不能自动让捕获对象线程安全，真正安全仍要靠 actor、锁或不可变数据。
 
-### 80. Task 取消是强制取消还是协作式取消？业务代码如何正确响应取消？
+### 82. Task 取消是强制取消还是协作式取消？业务代码如何正确响应取消？
 
 - 难度：Medium
 - ID：`ios-concurrency-task-cancellation`
@@ -1266,7 +1306,7 @@ Sendable 表示一个类型的值可以安全跨并发边界传递。值类型�
 
 Task 取消是协作式的，不会强制杀掉正在执行的代码。调用 cancel 只是设置取消标记，任务内部需要检查 Task.isCancelled、try Task.checkCancellation()，或调用支持取消的 async API。业务要在取消时停止后续工作并释放资源。
 
-### 81. Actor Isolation 是什么？为什么外部访问 actor 隔离状态通常需要 `await`？
+### 83. Actor Isolation 是什么？为什么外部访问 actor 隔离状态通常需要 `await`？
 
 - 难度：Hard
 - ID：`ios-concurrency-actor-isolation`
@@ -1276,7 +1316,7 @@ Task 取消是协作式的，不会强制杀掉正在执行的代码。调用 ca
 
 Actor Isolation 是 actor 对自身状态的隔离规则：actor 内部可以直接访问自己的隔离状态，外部必须通过 await 排队进入 actor 执行。这样保证同一时间只有一个任务操作隔离状态，避免数据竞争。nonisolated 成员不受隔离保护。
 
-### 82. actor 方法中使用 await 为什么可能有问题？如何避免 reentrancy 带来的状态错误？
+### 84. actor 方法中使用 await 为什么可能有问题？如何避免 reentrancy 带来的状态错误？
 
 - 难度：Hard
 - ID：`ios-concurrency-actor-reentrancy-await`
@@ -1308,7 +1348,7 @@ actor 能保证同一时间只有一个任务执行它的隔离代码，但这�
 
 ## 内存管理
 
-### 83. ARC 的基本原理是什么？引用计数在对象生命周期中如何变化？
+### 85. ARC 的基本原理是什么？引用计数在对象生命周期中如何变化？
 
 - 难度：Medium
 - ID：`ios-memory-arc-principle`
@@ -1318,7 +1358,7 @@ actor 能保证同一时间只有一个任务执行它的隔离代码，但这�
 
 ARC 通过引用计数管理对象生命周期。强引用增加计数，引用释放时计数减少，计数为 0 时对象 deinit。ARC 会在编译期插入 retain/release 等调用，运行时配合维护引用计数和 weak 表。循环引用会让计数无法归零。
 
-### 84. `strong`、`weak`、`assign`、`copy` 的区别是什么？分别适合什么属性？
+### 86. `strong`、`weak`、`assign`、`copy` 的区别是什么？分别适合什么属性？
 
 - 难度：Easy
 - ID：`ios-memory-property-semantics`
@@ -1328,7 +1368,7 @@ ARC 通过引用计数管理对象生命周期。强引用增加计数，引用�
 
 strong 持有对象，引用计数加一；weak 不持有对象，对象释放后自动置 nil；assign 用于基本类型或不管理生命周期的引用，容易悬垂；copy 会复制对象，常用于 NSString、NSArray 和闭包，保证不可变语义或把栈 Block 拷到堆。
 
-### 85. `weak` 为什么能在对象释放后自动置 nil？大致依赖什么机制？
+### 87. `weak` 为什么能在对象释放后自动置 nil？大致依赖什么机制？
 
 - 难度：Hard
 - ID：`ios-memory-weak-nil`
@@ -1338,7 +1378,7 @@ strong 持有对象，引用计数加一；weak 不持有对象，对象释放�
 
 weak 引用不会增加对象引用计数。Runtime 维护 weak 表，记录哪些 weak 指针指向某个对象；对象释放时，Runtime 会遍历对应 weak 指针并置 nil。因此 weak 能避免悬垂指针，但只能用于 class 类型。
 
-### 86. 什么情况下会发生循环引用？ViewController 中最常见的循环引用有哪些？
+### 88. 什么情况下会发生循环引用？ViewController 中最常见的循环引用有哪些？
 
 - 难度：Easy
 - ID：`ios-memory-retain-cycle`
@@ -1348,7 +1388,7 @@ weak 引用不会增加对象引用计数。Runtime 维护 weak 表，记录哪�
 
 循环引用是两个或多个对象互相强持有，导致引用计数无法归零。常见场景有 VC 强持有闭包，闭包强捕获 self；Timer 强持有 target；delegate 用 strong；对象之间互相 strong。解决方式是 weak/unowned、invalidate、解除观察或重新设计所有权。
 
-### 87. 闭包如何避免循环引用？`weak self` 和 `unowned self` 如何选择？
+### 89. 闭包如何避免循环引用？`weak self` 和 `unowned self` 如何选择？
 
 - 难度：Medium
 - ID：`ios-memory-closure-retain-cycle`
@@ -1358,7 +1398,7 @@ weak 引用不会增加对象引用计数。Runtime 维护 weak 表，记录哪�
 
 闭包被对象持有，同时闭包内部强捕获 self，就会循环引用。通常用 [weak self] 避免，适合 self 可能先释放的异步场景；unowned 不增加引用但对象释放后再访问会崩溃，只适合生命周期明确长于闭包的场景。
 
-### 88. Delegate 为什么通常用 weak？什么时候 delegate 不能用 weak？
+### 90. Delegate 为什么通常用 weak？什么时候 delegate 不能用 weak？
 
 - 难度：Medium
 - ID：`ios-memory-delegate-weak`
@@ -1368,7 +1408,7 @@ weak 引用不会增加对象引用计数。Runtime 维护 weak 表，记录哪�
 
 delegate 通常用 weak，因为 delegate 一般只是回调通知对象，不应该拥有外部对象。否则 owner 强持有 child，child 的 delegate 又 strong 持有 owner，就会形成循环引用。不能用 weak 的情况包括协议未限制 AnyObject、代理是值类型，或确实需要强持有的 delegate-like 对象，此时要明确所有权。
 
-### 89. Timer 为什么容易造成循环引用？如何修复 Timer 持有 target 的问题？
+### 91. Timer 为什么容易造成循环引用？如何修复 Timer 持有 target 的问题？
 
 - 难度：Medium
 - ID：`ios-memory-timer-cycle`
@@ -1378,7 +1418,7 @@ delegate 通常用 weak，因为 delegate 一般只是回调通知对象，不�
 
 Timer 会被 RunLoop 持有，Timer 又强持有 target，如果 target 也强持有 Timer，就形成循环。修复方式包括 invalidate、使用 block timer 并 weak self、代理对象转发、或用 GCD timer/Task 并管理取消。
 
-### 90. Autorelease Pool 的作用是什么？在循环创建大量临时对象时为什么要手动加 autoreleasepool？
+### 92. Autorelease Pool 的作用是什么？在循环创建大量临时对象时为什么要手动加 autoreleasepool？
 
 - 难度：Hard
 - ID：`ios-memory-autoreleasepool`
@@ -1390,7 +1430,7 @@ Autorelease Pool 保存延迟释放对象，池子 drain 时统一发送 release
 
 ## 内存管理 / 调试
 
-### 91. 如何定位内存泄漏？Memory Graph、Leaks、Allocations 分别能看什么？
+### 93. 如何定位内存泄漏？Memory Graph、Leaks、Allocations 分别能看什么？
 
 - 难度：Medium
 - ID：`ios-memory-leak-debug`
@@ -1402,7 +1442,7 @@ Autorelease Pool 保存延迟释放对象，池子 drain 时统一发送 release
 
 ## 架构 / MVC
 
-### 92. MVC 在 iOS 项目里常见的问题是什么？为什么容易变成 Massive View Controller？
+### 94. MVC 在 iOS 项目里常见的问题是什么？为什么容易变成 Massive View Controller？
 
 - 难度：Easy
 - ID：`ios-architecture-mvc-problem`
@@ -1414,7 +1454,7 @@ MVC 的问题不是模式本身，而是 iOS 里 ViewController 很容易同时�
 
 ## 架构 / MVVM
 
-### 93. MVVM 解决了什么问题？ViewModel 应该承担哪些职责？
+### 95. MVVM 解决了什么问题？ViewModel 应该承担哪些职责？
 
 - 难度：Medium
 - ID：`ios-architecture-mvvm-purpose`
@@ -1424,7 +1464,7 @@ MVC 的问题不是模式本身，而是 iOS 里 ViewController 很容易同时�
 
 MVVM 把页面展示状态和业务转换放到 ViewModel，View/VC 只负责展示和用户事件。它让业务逻辑脱离 UIKit，便于单元测试，也能减少 VC 代码。关键是 ViewModel 输入输出清晰，不直接操作具体 View。
 
-### 94. ViewModel 应该做什么，不应该做什么？如何避免 ViewModel 变胖？
+### 96. ViewModel 应该做什么，不应该做什么？如何避免 ViewModel 变胖？
 
 - 难度：Medium
 - ID：`ios-architecture-viewmodel-boundary`
@@ -1436,7 +1476,7 @@ ViewModel 应该处理展示状态、用户动作到业务调用的转换、错�
 
 ## 架构 / Coordinator
 
-### 95. Coordinator 的作用是什么？它如何降低 ViewController 之间的跳转耦合？
+### 97. Coordinator 的作用是什么？它如何降低 ViewController 之间的跳转耦合？
 
 - 难度：Medium
 - ID：`ios-architecture-coordinator`
@@ -1448,7 +1488,7 @@ Coordinator 负责页面创建、依赖组装和导航流程，把 push、presen
 
 ## 架构 / 依赖注入
 
-### 96. 依赖注入解决什么问题？构造器注入、属性注入、服务定位器有什么区别？
+### 98. 依赖注入解决什么问题？构造器注入、属性注入、服务定位器有什么区别？
 
 - 难度：Medium
 - ID：`ios-architecture-dependency-injection`
@@ -1460,7 +1500,7 @@ Coordinator 负责页面创建、依赖组装和导航流程，把 push、presen
 
 ## 架构 / 可测试性
 
-### 97. 如何设计一个可测试的网络层？Mock、Stub、Protocol 抽象如何使用？
+### 99. 如何设计一个可测试的网络层？Mock、Stub、Protocol 抽象如何使用？
 
 - 难度：Hard
 - ID：`ios-architecture-testable-network`
@@ -1472,7 +1512,7 @@ Coordinator 负责页面创建、依赖组装和导航流程，把 push、presen
 
 ## 架构 / 模块化
 
-### 98. iOS 项目如何做模块化？模块之间依赖方向应该如何设计？
+### 100. iOS 项目如何做模块化？模块之间依赖方向应该如何设计？
 
 - 难度：Hard
 - ID：`ios-architecture-modularization`
@@ -1482,7 +1522,7 @@ Coordinator 负责页面创建、依赖组装和导航流程，把 push、presen
 
 模块化要先划边界：基础能力、业务模块、公共接口和宿主 App。依赖方向通常是业务依赖基础，不允许业务互相乱依赖。跨模块调用可通过协议、路由或事件。目标是降低耦合、提升编译效率和团队协作效率。
 
-### 99. 组件化和模块化有什么区别？它们分别解决什么工程问题？
+### 101. 组件化和模块化有什么区别？它们分别解决什么工程问题？
 
 - 难度：Medium
 - ID：`ios-architecture-component-vs-module`
@@ -1492,7 +1532,7 @@ Coordinator 负责页面创建、依赖组装和导航流程，把 push、presen
 
 模块化更强调按边界拆分代码和依赖，组件化更强调可复用、可独立交付的功能单元。实际项目里二者会结合：基础组件提供能力，业务模块组合能力。核心都是控制依赖和提升复用。
 
-### 100. 如何避免模块之间循环依赖？路由、协议下沉、依赖倒置可以怎么用？
+### 102. 如何避免模块之间循环依赖？路由、协议下沉、依赖倒置可以怎么用？
 
 - 难度：Hard
 - ID：`ios-architecture-circular-dependency`
@@ -1504,7 +1544,7 @@ Coordinator 负责页面创建、依赖组装和导航流程，把 push、presen
 
 ## 工程化 / 配置
 
-### 101. iOS 项目如何做 Dev、Staging、Production 多环境配置？
+### 103. iOS 项目如何做 Dev、Staging、Production 多环境配置？
 
 - 难度：Medium
 - ID：`ios-architecture-multi-env`
@@ -1516,7 +1556,7 @@ Coordinator 负责页面创建、依赖组装和导航流程，把 push、presen
 
 ## 工程化 / CI/CD
 
-### 102. iOS 项目的 CI/CD 通常包含哪些步骤？证书、打包、测试、分发如何处理？
+### 104. iOS 项目的 CI/CD 通常包含哪些步骤？证书、打包、测试、分发如何处理？
 
 - 难度：Hard
 - ID：`ios-architecture-cicd`
@@ -1528,7 +1568,7 @@ iOS CI/CD 通常包括拉代码、安装依赖、lint、跑测试、管理证书
 
 ## 工程化 / 测试
 
-### 103. 单元测试应该测什么？哪些逻辑不适合直接放在 UI 层里测试？
+### 105. 单元测试应该测什么？哪些逻辑不适合直接放在 UI 层里测试？
 
 - 难度：Medium
 - ID：`ios-architecture-unit-test-scope`
@@ -1540,7 +1580,7 @@ iOS CI/CD 通常包括拉代码、安装依赖、lint、跑测试、管理证书
 
 ## 性能 / 启动优化
 
-### 104. App 启动分为哪些阶段？冷启动和热启动有什么区别？
+### 106. App 启动分为哪些阶段？冷启动和热启动有什么区别？
 
 - 难度：Medium
 - ID：`ios-performance-launch-stages`
@@ -1558,7 +1598,7 @@ App 启动可以先按场景分为冷启动和热启动。冷启动是 App 进�
 
 所以这里可以说：main 前看 Mach-O、动态库、dyld、Runtime、+load；main 后先看 UIKit 生命周期调度；真正进入 AppDelegate/SceneDelegate 方法内部后，才是业务初始化和首屏渲染。
 
-### 105. 启动优化可以从哪些方向做？如何区分 main 前和 main 后耗时？
+### 107. 启动优化可以从哪些方向做？如何区分 main 前和 main 后耗时？
 
 - 难度：Hard
 - ID：`ios-performance-launch-optimization`
@@ -1572,7 +1612,7 @@ main 后主要是 App 自己的初始化和首屏链路，优化方向包括延�
 
 区分方式上，可以用系统启动日志、Instruments、MetricKit 或埋点记录 main、AppDelegate/SceneDelegate、首屏展示等时间点。原则是先测量，再针对具体阶段优化。
 
-### 106. 如何统计启动耗时？埋点、MetricKit、Instruments 各有什么作用？
+### 108. 如何统计启动耗时？埋点、MetricKit、Instruments 各有什么作用？
 
 - 难度：Medium
 - ID：`ios-performance-launch-measure`
@@ -1582,7 +1622,7 @@ main 后主要是 App 自己的初始化和首屏链路，优化方向包括延�
 
 启动耗时可以用埋点记录进程启动、main、首屏展示等节点，也可以用 Instruments 和 MetricKit 看系统统计。关键是统一口径，比如冷启动到首帧或首屏可交互，并做多次采样取稳定数据。
 
-### 107. iOS 启动优化应该怎么做？冷启动、main 前、main 后分别要关注什么？
+### 109. iOS 启动优化应该怎么做？冷启动、main 前、main 后分别要关注什么？
 
 - 难度：Hard
 - ID：`ios-launch-optimization-detailed`
@@ -1624,7 +1664,7 @@ main 后主要是业务代码阶段，包括 UIApplicationMain、AppDelegate、S
 
 ## 性能 / 卡顿优化
 
-### 108. 如何监控卡顿？RunLoop 监控、FPS、主线程堆栈采样分别有什么思路？
+### 110. 如何监控卡顿？RunLoop 监控、FPS、主线程堆栈采样分别有什么思路？
 
 - 难度：Hard
 - ID：`ios-performance-lag-monitor`
@@ -1636,7 +1676,7 @@ main 后主要是业务代码阶段，包括 UIApplicationMain、AppDelegate、S
 
 ## 性能 / 列表优化
 
-### 109. 列表滚动卡顿怎么排查？布局、图片解码、主线程任务、离屏渲染如何分析？
+### 111. 列表滚动卡顿怎么排查？布局、图片解码、主线程任务、离屏渲染如何分析？
 
 - 难度：Hard
 - ID：`ios-performance-list-lag-debug`
@@ -1646,7 +1686,7 @@ main 后主要是业务代码阶段，包括 UIApplicationMain、AppDelegate、S
 
 列表卡顿先用 Time Profiler 看主线程耗时，再查布局、图片解码、同步 IO、锁等待、复杂绘制和离屏渲染。解决方式包括缓存高度、预计算、异步解码、取消无效请求、减少透明混合和圆角阴影开销。
 
-### 110. iOS 列表滚动优化怎么做？UITableView/UICollectionView 可能遇到哪些问题？
+### 112. iOS 列表滚动优化怎么做？UITableView/UICollectionView 可能遇到哪些问题？
 
 - 难度：Hard
 - ID：`ios-list-scrolling-optimization-detailed`
@@ -1717,7 +1757,7 @@ override func prepareForReuse() {
 
 ## 性能 / 图片优化
 
-### 111. 图片加载为什么会卡？图片解码应该放在哪个线程？
+### 113. 图片加载为什么会卡？图片解码应该放在哪个线程？
 
 - 难度：Medium
 - ID：`ios-performance-image-decode`
@@ -1727,7 +1767,7 @@ override func prepareForReuse() {
 
 图片从压缩格式变成位图需要解码，若在主线程首次显示时解码，会造成卡顿。优化是按展示尺寸缩放，在后台提前解码，使用合适缓存策略，并避免加载远大于显示尺寸的大图。
 
-### 112. iOS 图片解码与缓存怎么理解？使用 SDWebImage 时要注意哪些问题？
+### 114. iOS 图片解码与缓存怎么理解？使用 SDWebImage 时要注意哪些问题？
 
 - 难度：Hard
 - ID：`ios-image-decoding-cache-sdwebimage-detailed`
@@ -1800,7 +1840,7 @@ SDWebImage 适合网络图片、头像、商品图、Feed 流、聊天图片等�
 
 ## 性能 / 内存优化
 
-### 113. 如何降低内存峰值？大图、大数组、缓存、临时对象分别如何处理？
+### 115. 如何降低内存峰值？大图、大数组、缓存、临时对象分别如何处理？
 
 - 难度：Hard
 - ID：`ios-performance-memory-peak`
@@ -1810,7 +1850,7 @@ SDWebImage 适合网络图片、头像、商品图、Feed 流、聊天图片等�
 
 降低内存峰值要控制大对象生命周期：大图按需缩放，数组分批处理，缓存设置容量和清理策略，循环临时对象用 autoreleasepool，页面消失释放不必要资源。优化前后要用 Allocations 或内存曲线验证。
 
-### 114. OOM 怎么排查？它和普通 crash 的定位方式有什么不同？
+### 116. OOM 怎么排查？它和普通 crash 的定位方式有什么不同？
 
 - 难度：Hard
 - ID：`ios-performance-oom-debug`
@@ -1822,7 +1862,7 @@ OOM 是系统因内存压力杀掉进程，通常没有普通 crash 堆栈。排
 
 ## 性能 / 包体积
 
-### 115. App 包体积怎么优化？资源、架构切片、无用代码、Link Map 分析如何使用？
+### 117. App 包体积怎么优化？资源、架构切片、无用代码、Link Map 分析如何使用？
 
 - 难度：Medium
 - ID：`ios-performance-binary-size`
@@ -1834,7 +1874,7 @@ OOM 是系统因内存压力杀掉进程，通常没有普通 crash 堆栈。排
 
 ## 性能 / 网络优化
 
-### 116. 网络请求慢怎么排查？DNS、连接、TLS、服务端、弱网、缓存分别如何分析？
+### 118. 网络请求慢怎么排查？DNS、连接、TLS、服务端、弱网、缓存分别如何分析？
 
 - 难度：Hard
 - ID：`ios-performance-network-slow`
@@ -1846,7 +1886,7 @@ OOM 是系统因内存压力杀掉进程，通常没有普通 crash 堆栈。排
 
 ## 性能 / Instruments
 
-### 117. Instruments 常用哪些工具？Time Profiler、Allocations、Leaks、Core Animation 分别看什么？
+### 119. Instruments 常用哪些工具？Time Profiler、Allocations、Leaks、Core Animation 分别看什么？
 
 - 难度：Medium
 - ID：`ios-instruments-common-tools`
@@ -1858,7 +1898,7 @@ Time Profiler 看 CPU 热点，Allocations 看对象分配和增长，Leaks 看�
 
 ## Mach-O / dyld
 
-### 118. Mach-O 是什么？它大致由 Header、Load Commands、Segment、Section 哪些部分组成？
+### 120. Mach-O 是什么？它大致由 Header、Load Commands、Segment、Section 哪些部分组成？
 
 - 难度：Hard
 - ID：`ios-mach-o-basics`
@@ -1868,7 +1908,7 @@ Time Profiler 看 CPU 热点，Allocations 看对象分配和增长，Leaks 看�
 
 Mach-O 是 Apple 平台的可执行文件、动态库和目标文件格式。Header 描述文件类型和架构，Load Commands 告诉系统如何加载，Segment 是运行时内存映射区域，Section 是更细的数据或代码区，比如 __text、__data。
 
-### 119. 静态库和动态库有什么区别？它们对包体积、启动速度、链接方式有什么影响？
+### 121. 静态库和动态库有什么区别？它们对包体积、启动速度、链接方式有什么影响？
 
 - 难度：Hard
 - ID：`ios-mach-o-static-dynamic-lib`
@@ -1878,7 +1918,7 @@ Mach-O 是 Apple 平台的可执行文件、动态库和目标文件格式。Hea
 
 静态库在链接期被拷贝进最终二进制，运行时不需要单独加载；动态库在运行时由 dyld 加载和链接。静态库可能增大主包但启动少一次动态加载，动态库利于共享和模块边界，但数量过多会增加启动成本。
 
-### 120. Framework 是什么？Static Framework 和 Dynamic Framework 有什么区别？
+### 122. Framework 是什么？Static Framework 和 Dynamic Framework 有什么区别？
 
 - 难度：Medium
 - ID：`ios-mach-o-framework`
@@ -1888,7 +1928,7 @@ Mach-O 是 Apple 平台的可执行文件、动态库和目标文件格式。Hea
 
 Framework 是一种打包形式，可以包含二进制、头文件、资源和模块信息。Static Framework 内部是静态库，链接进主二进制；Dynamic Framework 是动态库，运行时加载。不要把 Framework 简单等同于动态库。
 
-### 121. dyld 在 App 启动时做了什么？加载动态库、符号绑定、Runtime 初始化分别在哪个阶段？
+### 123. dyld 在 App 启动时做了什么？加载动态库、符号绑定、Runtime 初始化分别在哪个阶段？
 
 - 难度：Hard
 - ID：`ios-dyld-launch-flow`
@@ -1898,7 +1938,7 @@ Framework 是一种打包形式，可以包含二进制、头文件、资源和�
 
 dyld 负责加载主程序和依赖动态库，完成地址重定位 rebase、符号绑定 bind，执行初始化函数，触发 Objective-C Runtime 注册类和分类，然后进入 main。动态库数量、符号数量和初始化工作都会影响 main 前启动时间。
 
-### 122. Rebase 和 Bind 是什么？它们为什么会影响启动耗时？
+### 124. Rebase 和 Bind 是什么？它们为什么会影响启动耗时？
 
 - 难度：Hard
 - ID：`ios-dyld-rebase-bind`
@@ -1908,7 +1948,7 @@ dyld 负责加载主程序和依赖动态库，完成地址重定位 rebase、�
 
 Rebase 是因为 ASLR 导致加载地址变化，需要修正内部指针地址；Bind 是把外部符号引用绑定到实际动态库地址。二者都发生在启动加载阶段，指针和符号越多，处理成本越高，可能影响启动。
 
-### 123. 为什么动态库过多会影响启动？大型项目如何控制动态库数量？
+### 125. 为什么动态库过多会影响启动？大型项目如何控制动态库数量？
 
 - 难度：Hard
 - ID：`ios-dyld-too-many-dylibs`
@@ -1920,7 +1960,7 @@ Rebase 是因为 ASLR 导致加载地址变化，需要修正内部指针地址�
 
 ## Mach-O / Runtime 初始化
 
-### 124. `+load` 和 `+initialize` 有什么区别？它们对启动性能有什么影响？
+### 126. `+load` 和 `+initialize` 有什么区别？它们对启动性能有什么影响？
 
 - 难度：Hard
 - ID：`ios-objc-load-initialize`
@@ -1932,7 +1972,7 @@ Rebase 是因为 ASLR 导致加载地址变化，需要修正内部指针地址�
 
 ## Mach-O / 包体积
 
-### 125. Link Map 能看什么？如何用它分析二进制体积和大符号？
+### 127. Link Map 能看什么？如何用它分析二进制体积和大符号？
 
 - 难度：Medium
 - ID：`ios-linkmap-usage`
@@ -1944,7 +1984,7 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 ## 项目表达
 
-### 126. 请用 3 分钟介绍一个你最熟悉的 iOS 项目：背景、职责、技术栈、难点、结果。
+### 128. 请用 3 分钟介绍一个你最熟悉的 iOS 项目：背景、职责、技术栈、难点、结果。
 
 - 难度：Medium
 - ID：`ios-project-three-minute-intro`
@@ -1964,7 +2004,7 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 ## 项目表达 / 架构
 
-### 127. 你负责的项目架构是如何设计的？模块划分、依赖方向、数据流分别是什么？
+### 129. 你负责的项目架构是如何设计的？模块划分、依赖方向、数据流分别是什么？
 
 - 难度：Hard
 - ID：`ios-project-architecture-design`
@@ -1984,7 +2024,7 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 ## 项目表达 / Bug 定位
 
-### 128. 讲一个你定位过的复杂线上 Bug：现象、复现、定位过程、根因、修复和预防。
+### 130. 讲一个你定位过的复杂线上 Bug：现象、复现、定位过程、根因、修复和预防。
 
 - 难度：Hard
 - ID：`ios-project-hardest-bug`
@@ -2006,7 +2046,7 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 ## 项目表达 / 性能
 
-### 129. 讲一个你做过的性能优化案例：指标、工具、瓶颈、方案、优化结果。
+### 131. 讲一个你做过的性能优化案例：指标、工具、瓶颈、方案、优化结果。
 
 - 难度：Hard
 - ID：`ios-project-performance-case`
@@ -2026,7 +2066,7 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 ## 项目表达 / 网络层
 
-### 130. 你项目中的网络层是怎么设计的？鉴权、错误处理、重试、取消和测试如何支持？
+### 132. 你项目中的网络层是怎么设计的？鉴权、错误处理、重试、取消和测试如何支持？
 
 - 难度：Hard
 - ID：`ios-project-network-layer-case`
@@ -2038,7 +2078,7 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 ## 项目表达 / 缓存
 
-### 131. 讲一个缓存设计案例：缓存对象、过期策略、一致性、内存和磁盘如何平衡？
+### 133. 讲一个缓存设计案例：缓存对象、过期策略、一致性、内存和磁盘如何平衡？
 
 - 难度：Hard
 - ID：`ios-project-cache-case`
@@ -2050,7 +2090,7 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 ## 项目表达 / 重构
 
-### 132. 讲一个架构重构案例：为什么重构、怎么分阶段推进、如何验证没有引入回归？
+### 134. 讲一个架构重构案例：为什么重构、怎么分阶段推进、如何验证没有引入回归？
 
 - 难度：Hard
 - ID：`ios-project-refactor-case`
@@ -2062,7 +2102,7 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 ## 项目表达 / 技术取舍
 
-### 133. 讲一次技术选型或方案取舍：候选方案、约束条件、最终选择和代价是什么？
+### 135. 讲一次技术选型或方案取舍：候选方案、约束条件、最终选择和代价是什么？
 
 - 难度：Hard
 - ID：`ios-project-tradeoff`
@@ -2074,7 +2114,7 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 ## 项目表达 / 扩展性
 
-### 134. 如果你的项目用户量或数据量扩大 10 倍，当前架构有哪些风险？你会怎么改？
+### 136. 如果你的项目用户量或数据量扩大 10 倍，当前架构有哪些风险？你会怎么改？
 
 - 难度：Hard
 - ID：`ios-project-scale-ten-times`
@@ -2086,7 +2126,7 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 ## 算法 / 哈希表
 
-### 135. 两数之和如何实现？为什么哈希表可以把时间复杂度降到 O(n)？
+### 137. 两数之和如何实现？为什么哈希表可以把时间复杂度降到 O(n)？
 
 - 难度：Easy
 - ID：`ios-algo-two-sum`
@@ -2098,7 +2138,7 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 ## 算法 / 链表
 
-### 136. 如何反转单链表？迭代和递归写法分别如何理解？
+### 138. 如何反转单链表？迭代和递归写法分别如何理解？
 
 - 难度：Easy
 - ID：`ios-algo-reverse-linked-list`
@@ -2108,7 +2148,7 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 迭代写法用 prev、cur、next 三个指针。每轮先保存 next，再把 cur.next 指向 prev，然后 prev 和 cur 向前移动。最后 prev 就是新头结点。时间 O(n)，空间 O(1)。
 
-### 137. 如何合并两个有序链表？时间复杂度和空间复杂度是多少？
+### 139. 如何合并两个有序链表？时间复杂度和空间复杂度是多少？
 
 - 难度：Easy
 - ID：`ios-algo-merge-two-lists`
@@ -2120,7 +2160,7 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 ## 算法 / 栈
 
-### 138. 有效括号如何判断？为什么栈适合解决这个问题？
+### 140. 有效括号如何判断？为什么栈适合解决这个问题？
 
 - 难度：Easy
 - ID：`ios-algo-valid-parentheses`
@@ -2132,7 +2172,7 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 ## 算法 / 滑动窗口
 
-### 139. 最长无重复子串如何用滑动窗口解决？窗口左右边界如何移动？
+### 141. 最长无重复子串如何用滑动窗口解决？窗口左右边界如何移动？
 
 - 难度：Medium
 - ID：`ios-algo-longest-substring`
@@ -2144,7 +2184,7 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 ## 算法 / 二叉树
 
-### 140. 二叉树层序遍历如何实现？为什么队列适合 BFS？
+### 142. 二叉树层序遍历如何实现？为什么队列适合 BFS？
 
 - 难度：Medium
 - ID：`ios-algo-binary-tree-level-order`
@@ -2154,7 +2194,7 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 层序遍历用队列。先把根节点入队，每轮记录当前队列数量作为这一层大小，依次弹出节点并加入左右孩子。每轮收集一个数组，最终得到按层结果。时间 O(n)。
 
-### 141. 二叉树最大深度如何计算？递归和迭代分别怎么写？
+### 143. 二叉树最大深度如何计算？递归和迭代分别怎么写？
 
 - 难度：Easy
 - ID：`ios-algo-binary-tree-max-depth`
@@ -2166,7 +2206,7 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 ## 算法 / 二分查找
 
-### 142. 二分查找如何避免死循环和边界错误？左闭右闭、左闭右开写法有什么区别？
+### 144. 二分查找如何避免死循环和边界错误？左闭右闭、左闭右开写法有什么区别？
 
 - 难度：Medium
 - ID：`ios-algo-binary-search`
@@ -2178,7 +2218,7 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 ## 算法 / 排序
 
-### 143. 快速排序的核心思想是什么？平均和最坏时间复杂度分别是多少？
+### 145. 快速排序的核心思想是什么？平均和最坏时间复杂度分别是多少？
 
 - 难度：Medium
 - ID：`ios-algo-quick-sort`
@@ -2190,7 +2230,7 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 ## 算法 / 缓存
 
-### 144. LRU Cache 如何设计？为什么通常用哈希表加双向链表？
+### 146. LRU Cache 如何设计？为什么通常用哈希表加双向链表？
 
 - 难度：Hard
 - ID：`ios-algo-lru-cache`
@@ -2202,7 +2242,7 @@ LRU 要 O(1) get 和 put，通常用哈希表加双向链表。哈希表按 key 
 
 ## 工程化 / 线上质量
 
-### 145. iOS 项目中的日志系统是做什么的？实际项目中应该如何设计？
+### 147. iOS 项目中的日志系统是做什么的？实际项目中应该如何设计？
 
 - 难度：Medium
 - ID：`ios-observability-logging-system`
@@ -2232,7 +2272,7 @@ Logger.error("登录失败 error=timeout", module: "Login")
 
 总结：日志系统负责记录过程，帮助还原现场；设计重点是统一入口、分级、脱敏、按环境控制和必要时上传本地日志。
 
-### 146. iOS 项目中的错误上报是什么？它和日志、崩溃收集有什么区别？
+### 148. iOS 项目中的错误上报是什么？它和日志、崩溃收集有什么区别？
 
 - 难度：Medium
 - ID：`ios-observability-error-reporting`
@@ -2271,7 +2311,7 @@ do {
 
 总结：错误上报记录没崩但失败的问题，核心价值是发现业务异常；它要带上下文、能聚合统计、能告警，并且要控制噪音。
 
-### 147. iOS 崩溃收集是做什么的？常用第三方工具有哪些？
+### 149. iOS 崩溃收集是做什么的？常用第三方工具有哪些？
 
 - 难度：Medium
 - ID：`ios-observability-crash-reporting`
@@ -2307,7 +2347,7 @@ CrashReporter.leaveBreadcrumb("进入订单详情页")
 
 ## 调试 / Xcode Debugger
 
-### 148. Xcode Debugger 中常见断点类型有哪些？Swift Error、Exception、Symbolic、Runtime Issue、Constraint Error、Test Failure 分别用来做什么？
+### 150. Xcode Debugger 中常见断点类型有哪些？Swift Error、Exception、Symbolic、Runtime Issue、Constraint Error、Test Failure 分别用来做什么？
 
 - 难度：Medium
 - ID：`ios-xcode-debugger-breakpoint-types`
@@ -2333,7 +2373,7 @@ Xcode 的断点不只是普通行断点，还可以按错误类型、异常类�
 
 总结：Exception 抓常见崩溃和 NSException，Constraint 抓 Auto Layout 冲突，Swift Error 抓 Swift throw，Symbolic 抓指定函数调用，Runtime Issue 抓运行时检查问题，Test Failure 抓测试断言失败。
 
-### 149. Xcode View Debugger 是什么？适合排查哪些 UI 问题？
+### 151. Xcode View Debugger 是什么？适合排查哪些 UI 问题？
 
 - 难度：Medium
 - ID：`ios-xcode-view-debugger`
@@ -2369,7 +2409,7 @@ View Debugger 能看到的信息包括：UIView 层级、UIViewController 结构
 
 ## 调试 / LLDB
 
-### 150. LLDB 常用命令有哪些？po、p、expr、bt、thread backtrace all、continue、next、step、finish 分别怎么用？
+### 152. LLDB 常用命令有哪些？po、p、expr、bt、thread backtrace all、continue、next、step、finish 分别怎么用？
 
 - 难度：Medium
 - ID：`ios-lldb-common-commands`
@@ -2412,7 +2452,7 @@ expr self.reloadData()
 
 ## 性能 / 卡顿与渲染
 
-### 151. iOS 中如何避免卡帧和掉帧？FPS、主线程、列表、图片和渲染分别要注意什么？
+### 153. iOS 中如何避免卡帧和掉帧？FPS、主线程、列表、图片和渲染分别要注意什么？
 
 - 难度：Hard
 - ID：`ios-performance-avoid-frame-drops`
@@ -2463,7 +2503,7 @@ Task.detached {
 
 ## 并发 / Timer
 
-### 152. iOS Timer 是什么？它和 RunLoop 有什么关系？使用时要注意哪些坑？
+### 154. iOS Timer 是什么？它和 RunLoop 有什么关系？使用时要注意哪些坑？
 
 - 难度：Medium
 - ID：`ios-timer-detailed-overview`
@@ -2593,7 +2633,7 @@ Task {
 
 ## 内存 / ARC
 
-### 153. iOS 中常见的循环引用有哪些？分别应该如何避免和排查？
+### 155. iOS 中常见的循环引用有哪些？分别应该如何避免和排查？
 
 - 难度：Hard
 - ID：`ios-retain-cycle-common-scenarios-detailed`
