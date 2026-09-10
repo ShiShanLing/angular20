@@ -36,7 +36,7 @@ curl --fail --location --retry 3 --connect-timeout 15 \
 
 cd "$work/source"
 npm ci --no-audit --no-fund
-npm run build -- --base-href /angular20/
+npm run build -- --base-href /workshop/
 test -f dist/angular20/browser/index.html
 
 npm --prefix server ci --no-audit --no-fund
