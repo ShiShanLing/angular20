@@ -48,7 +48,7 @@ export class ToolsAnhuiPensionComponent implements OnInit, OnDestroy {
   // MARK: 初始化
   // 组件初始化：同步移动端断点、订阅视口变化与路由事件
   ngOnInit(): void {
-
+    
     this.form = this.fb.group({
       personalAccountTotal: [null, [Validators.required, Validators.min(0)]],
       basicPension: [200, [Validators.required, Validators.min(0)]]
@@ -81,7 +81,7 @@ export class ToolsAnhuiPensionComponent implements OnInit, OnDestroy {
       this.result.set(null);
       return;
     }
-    //
+    
     const v = this.form.getRawValue();
     const personalAccountTotal = Number(v.personalAccountTotal);
     const basicPension = Number(v.basicPension);
@@ -90,20 +90,19 @@ export class ToolsAnhuiPensionComponent implements OnInit, OnDestroy {
     const monthlyPension = accountPart + basicPension;
     const paybackMonths = monthlyPension > 0 ? personalAccountTotal / monthlyPension : 0;
     const paybackYears = paybackMonths / 12;
-
+    
     this.result.set({ monthlyPension, accountPart, paybackMonths, paybackYears });
   }
-  // 
-  // === 持久化 === 
   
-  // MARK: 加载
+  // === 持久化 === 
+  // MARK: 加载 
   private loadFromLocalStorage(): void {
     try {
       const saved = localStorage.getItem(LS_KEY);
       if (saved) this.form.patchValue(JSON.parse(saved), { emitEvent: false });
     } catch {}
   }
-  
+  //
   // MARK: 保存
   private saveToLocalStorage(): void {
     localStorage.setItem(LS_KEY, JSON.stringify(this.form.getRawValue()));
@@ -124,6 +123,7 @@ export class ToolsAnhuiPensionComponent implements OnInit, OnDestroy {
     });
   }
   
+
 
   // MARK: 保存
   private saveToApi(): void {
