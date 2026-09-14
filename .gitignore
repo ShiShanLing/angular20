@@ -1,10 +1,15 @@
 # See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
 # Compiled output
-/dist
 /tmp
 /out-tsc
 /bazel-out
+
+# 生产前端产物纳入版本库，便于按提交/标签回滚后重新发布
+/dist/*
+!/dist/angular20/
+/dist/angular20/*
+!/dist/angular20/browser/
 
 # Node
 /node_modules

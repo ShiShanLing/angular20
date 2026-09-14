@@ -11,7 +11,7 @@ alwaysApply: true
 
 正式发布用 `./deploy/publish.sh publish --targets ...`（不要 `--dry-run` 当正式发布）。脚本在打包成功后必须：
 
-1. 工作区若有未提交改动，先提交
+1. 工作区若有未提交改动，先提交；前端 `dist/angular20/browser` 也要进这次提交，方便以后按提交或标签回滚再发布
 2. `git push` 当前分支到 `origin`（GitHub）
 3. 再用该提交做服务器发布
 

@@ -94,10 +94,14 @@ commit_and_push_after_package() {
   origin_url="$(git remote get-url origin 2>/dev/null || true)"
   [ -n "$origin_url" ] || fail "origin remote is missing; cannot push after packaging"
 
+  if $want_frontend; then
+    git add -A -- dist/angular20/browser
+  fi
+
   if [ -n "$(git status --porcelain)" ]; then
-    log "committing local changes after packaging"
+    log "committing local changes and packaged dist after packaging"
     git add -A
-    git commit -m "打包发布后自动提交 $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+    git commit -m "打包发布后自动提交（含前端 dist，便于回滚） $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
   else
     log "working tree is clean; skipping commit"
   fi

@@ -43,7 +43,7 @@ Host baidu-bcc
 ./deploy/publish.sh publish --targets frontend,backend
 ```
 
-正式发布在打包成功后会自动提交未保存的本地改动，并推送到当前分支的 GitHub 远程。`--allow-dirty` 仅作兼容保留；只做构建和连接检查可加 `--dry-run`（dry-run 不提交、不推送）。
+正式发布在打包成功后会把前端 `dist/angular20/browser` 和未保存的本地改动一并提交，并推送到当前分支的 GitHub 远程，便于按提交或标签回滚后再发布。`--allow-dirty` 仅作兼容保留；只做构建和连接检查可加 `--dry-run`（dry-run 不提交、不推送）。
 
 服务器端固定边界：
 
