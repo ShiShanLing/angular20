@@ -96,11 +96,11 @@ function hashString(s: string): number {
   }
   return h >>> 0;
 }
-
 /**
  * 知识刷题页：本地题库、分类与搜索、每日练习、语音播报与答案自检。
  * 状态以 signal/computed 为主；持久化委托 {@link PracticeStorageService}。
  */
+
 @Component({
   selector: 'app-practice',
   imports: [FormsModule, NzButtonModule, NzIconModule, NzModalModule, MarkdPipe],
@@ -108,6 +108,8 @@ function hashString(s: string): number {
   styleUrls: ['./practice.component.scss', './practice-full-quiz.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
+
+
 export class PracticeComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly storage = inject(PracticeStorageService);
@@ -239,7 +241,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
     const remembered = this.rememberedTodayIds();
     return this.dailyItems().filter((item) => !remembered.has(item.id));
   });
-
+  
   /** 页面上一题/下一题实际导航的列表：搜索优先，其次每日待练，最后分类全量。 */
   readonly listForNav = computed(() => {
     if (this.searchQuery().trim()) return this.searchResults();
@@ -254,7 +256,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
     if (!list.length || idx < 0 || idx >= list.length) return null;
     return list[idx];
   });
-
+  
   /** 唱题模式当前正在播放的题目。 */
   readonly chantItem = computed(() => {
     const list = this.listenList();
@@ -262,7 +264,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
     if (!list.length || idx < 0 || idx >= list.length) return null;
     return list[idx];
   });
-
+  
   /** 全库题目数量。 */
   readonly statsTotal = computed(() => this.items().length);
 

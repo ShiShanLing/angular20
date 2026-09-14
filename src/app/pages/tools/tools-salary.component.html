@@ -53,7 +53,15 @@
               <nz-form-item>
                 <nz-form-label>年终奖 (月数)</nz-form-label>
                 <nz-form-control>
-                  <nz-input-number formControlName="bonusMonths" [nzMin]="0" [nzMax]="24" [nzStep]="1" [style]="{ width: '100%' }"></nz-input-number>
+                  <nz-input-number
+                    formControlName="bonusMonths"
+                    [nzMin]="0"
+                    [nzMax]="24"
+                    [nzStep]="0.5"
+                    [nzPrecision]="1"
+                    [style]="{ width: '100%' }"
+                  ></nz-input-number>
+                  <div class="hint-text">按月薪折算，2 表示两个月工资；不计入「年薪」的 12 个月。</div>
                 </nz-form-control>
               </nz-form-item>
             </nz-col>
@@ -116,11 +124,25 @@
           <nz-divider nzText="年度预估"></nz-divider>
           <nz-row [nzGutter]="[16, 16]">
             <nz-col [nzSpan]="12">
-              <nz-statistic nzTitle="年薪总额 (税前)" [nzValue]="(result.annualGross | number:'1.2-2')!"></nz-statistic>
+              <nz-statistic nzTitle="年薪 (税前，月薪×12)" [nzValue]="(result.annualWageGross | number:'1.2-2')!"></nz-statistic>
             </nz-col>
             <nz-col [nzSpan]="12">
-              <nz-statistic nzTitle="年到手收入 (税后)" [nzValue]="(result.annualNetPay | number:'1.2-2')!" [nzValueStyle]="{ color: 'var(--success-color)' }"></nz-statistic>
+              <nz-statistic nzTitle="年到手工资 (税后×12)" [nzValue]="(result.annualWageNet | number:'1.2-2')!" [nzValueStyle]="{ color: 'var(--success-color)' }"></nz-statistic>
             </nz-col>
+            @if (result.bonusMonths > 0) {
+              <nz-col [nzSpan]="12">
+                <nz-statistic nzTitle="年终奖 (税前，月薪×月数)" [nzValue]="(result.annualBonusGross | number:'1.2-2')!"></nz-statistic>
+              </nz-col>
+              <nz-col [nzSpan]="12">
+                <nz-statistic nzTitle="年终奖到手 (单独计税)" [nzValue]="(result.annualBonusNet | number:'1.2-2')!" [nzValueStyle]="{ color: 'var(--success-color)' }"></nz-statistic>
+              </nz-col>
+              <nz-col [nzSpan]="12">
+                <nz-statistic nzTitle="税前合计 (年薪+年终奖)" [nzValue]="(result.annualGross | number:'1.2-2')!"></nz-statistic>
+              </nz-col>
+              <nz-col [nzSpan]="12">
+                <nz-statistic nzTitle="税后合计" [nzValue]="(result.annualNetPay | number:'1.2-2')!" [nzValueStyle]="{ color: 'var(--success-color)' }"></nz-statistic>
+              </nz-col>
+            }
             <nz-col [nzSpan]="12">
               <nz-statistic nzTitle="年固定支出总计" [nzValue]="(result.annualExpenses | number:'1.2-2')!" [nzValueStyle]="{ color: 'var(--error-color)' }"></nz-statistic>
             </nz-col>
@@ -130,7 +152,7 @@
           </nz-row>
 
           <div [style]="{ 'margin-top': '24px' }">
-            <p class="hint-text">注：个税采用简易单月预扣预缴公式计算，实际情况可能因累计预扣预缴等政策存在细微差异。</p>
+            <p class="hint-text">注：年薪 = 税前月薪 × 12，不含年终奖。个税采用简易单月预扣预缴；年终奖按全年一次性奖金单独计税（奖金÷12 找税率档），未并入综合所得。</p>
           </div>
         </nz-card>
       }

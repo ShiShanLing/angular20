@@ -26,6 +26,10 @@ Usage:
 Targets:
   frontend   Build and publish /var/www/projects/angular20
   backend    Build and publish /opt/angular20-server, then restart nest-server.service
+
+GitHub:
+  After a successful package, uncommitted files are committed and the current
+  branch is pushed to origin. --allow-dirty is kept for compatibility.
 EOF
 }
 
@@ -79,9 +83,28 @@ $want_backend && targets+=(backend)
 targets_csv="$(IFS=,; printf '%s' "${targets[*]}")"
 
 cd "$ROOT"
-if [ "$ALLOW_DIRTY" != true ] && [ -n "$(git status --porcelain)" ]; then
-  fail "working tree is dirty; commit the reviewed changes or explicitly use --allow-dirty"
+if [ "$ALLOW_DIRTY" = true ]; then
+  log "--allow-dirty is accepted; leftover files will be committed after packaging"
 fi
+
+commit_and_push_after_package() {
+  branch="$(git rev-parse --abbrev-ref HEAD)"
+  [ "$branch" != HEAD ] || fail "detached HEAD cannot be committed or pushed"
+
+  origin_url="$(git remote get-url origin 2>/dev/null || true)"
+  [ -n "$origin_url" ] || fail "origin remote is missing; cannot push after packaging"
+
+  if [ -n "$(git status --porcelain)" ]; then
+    log "committing local changes after packaging"
+    git add -A
+    git commit -m "chore: auto-commit after package $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+  else
+    log "working tree is clean; skipping commit"
+  fi
+
+  log "pushing $branch@$(git rev-parse --short HEAD) to origin"
+  git push -u origin "$branch"
+}
 
 if [ -s "$ROOT/.nvmrc" ] && [ -s "${NVM_DIR:-$HOME/.nvm}/nvm.sh" ]; then
   # shellcheck disable=SC1090
@@ -93,11 +116,7 @@ required_node="$(tr -dc '0-9' < "$ROOT/.nvmrc")"
 actual_node="$(node -p 'process.versions.node.split(".")[0]')"
 [ "$actual_node" = "$required_node" ] || fail "Node $required_node is required; current major version is $actual_node"
 
-git_sha="$(git rev-parse HEAD)"
-release_id="$(date -u '+%Y%m%d-%H%M%S')-${git_sha:0:12}"
-stage="$STAGING_ROOT/$release_id"
-
-log "release=$release_id targets=$targets_csv host=$HOST"
+log "targets=$targets_csv host=$HOST"
 log "checking SSH and server runtime"
 ssh -o BatchMode=yes -o ConnectTimeout=10 "$HOST" \
   "test \"\$(id -un)\" = deploy && command -v node npm rsync >/dev/null && test -d '$STAGING_ROOT'"
@@ -125,9 +144,15 @@ if $want_backend; then
 fi
 
 if [ "$DRY_RUN" = true ]; then
-  log "dry-run completed; production was not changed"
+  log "dry-run completed; production was not changed, and GitHub was not updated"
   exit 0
 fi
+
+commit_and_push_after_package
+git_sha="$(git rev-parse HEAD)"
+release_id="$(date -u '+%Y%m%d-%H%M%S')-${git_sha:0:12}"
+stage="$STAGING_ROOT/$release_id"
+log "release=$release_id"
 
 log "creating isolated remote staging directory"
 ssh "$HOST" "install -d -m 0755 '$stage'"

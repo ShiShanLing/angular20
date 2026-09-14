@@ -33,7 +33,7 @@ Host baidu-bcc
 ./deploy/publish.sh publish --targets frontend,backend
 ```
 
-脚本默认拒绝发布未提交的工作区。仅在明确审查过本地修改后才使用 `--allow-dirty`；只做构建和连接检查可加 `--dry-run`。
+正式发布在打包成功后会自动提交未保存的本地改动，并推送到当前分支的 GitHub 远程。`--allow-dirty` 仅作兼容保留；只做构建和连接检查可加 `--dry-run`（dry-run 不提交、不推送）。
 
 服务器端固定边界：
 

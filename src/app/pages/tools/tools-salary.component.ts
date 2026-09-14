@@ -21,6 +21,68 @@ import { RecordService } from '../../services/record.service';
 const RECORD_TYPE = 'salary';
 const LS_KEY = 'tools_salary_template';
 
+interface SalaryResult {
+  gross: number;
+  pension: number;
+  medical: number;
+  unemployment: number;
+  housing: number;
+  deductions: number;
+  taxable: number;
+  tax: number;
+  netPay: number;
+  bonusMonths: number;
+  annualWageGross: number;
+  annualBonusGross: number;
+  annualGross: number;
+  annualWageNet: number;
+  annualBonusTax: number;
+  annualBonusNet: number;
+  annualNetPay: number;
+  annualExpenses: number;
+  annualSavings: number;
+}
+
+/** 工资薪金月度预扣率表，也用于年终奖单独计税（奖金 ÷ 12 找档）。 */
+export function monthlyWithholdingTax(taxable: number): number {
+  if (taxable <= 0) return 0;
+  if (taxable <= 3000) return taxable * 0.03;
+  if (taxable <= 12000) return taxable * 0.1 - 210;
+  if (taxable <= 25000) return taxable * 0.2 - 1410;
+  if (taxable <= 35000) return taxable * 0.25 - 2660;
+  if (taxable <= 55000) return taxable * 0.3 - 4410;
+  if (taxable <= 80000) return taxable * 0.35 - 7160;
+  return taxable * 0.45 - 15160;
+}
+
+/** 全年一次性奖金按单独计税：奖金÷12 对照月度税率表。 */
+export function annualBonusTax(bonusGross: number): number {
+  if (bonusGross <= 0) return 0;
+  const rateSlice = bonusGross / 12;
+  let rate = 0.03;
+  let deduction = 0;
+  if (rateSlice > 80000) {
+    rate = 0.45;
+    deduction = 15160;
+  } else if (rateSlice > 55000) {
+    rate = 0.35;
+    deduction = 7160;
+  } else if (rateSlice > 35000) {
+    rate = 0.3;
+    deduction = 4410;
+  } else if (rateSlice > 25000) {
+    rate = 0.25;
+    deduction = 2660;
+  } else if (rateSlice > 12000) {
+    rate = 0.2;
+    deduction = 1410;
+  } else if (rateSlice > 3000) {
+    rate = 0.1;
+    deduction = 210;
+  }
+  return Math.max(0, bonusGross * rate - deduction);
+}
+
 /** 工资个税试算：五险一金扣除与税率阶梯表格。 */
 @Component({
   selector: 'app-tools-salary',
@@ -40,7 +102,7 @@ export class ToolsSalaryComponent implements OnInit, OnDestroy {
   private readonly recordService = inject(RecordService);
 
   form!: FormGroup;
-  readonly result = signal<any>(null);
+  readonly result = signal<SalaryResult | null>(null);
   readonly isModalVisible = signal(false);
   readonly monthlyProjection = signal<any[]>([]);
 
@@ -106,26 +168,27 @@ export class ToolsSalaryComponent implements OnInit, OnDestroy {
     let taxable = gross - deductions - val.threshold - (val.specialDeduction || 0);
     if (taxable < 0) taxable = 0;
 
-    let tax = 0;
-    if (taxable <= 3000) tax = taxable * 0.03;
-    else if (taxable <= 12000) tax = taxable * 0.1 - 210;
-    else if (taxable <= 25000) tax = taxable * 0.2 - 1410;
-    else if (taxable <= 35000) tax = taxable * 0.25 - 2660;
-    else if (taxable <= 55000) tax = taxable * 0.3 - 4410;
-    else if (taxable <= 80000) tax = taxable * 0.35 - 7160;
-    else tax = taxable * 0.45 - 15160;
-
+    const tax = monthlyWithholdingTax(taxable);
     const netPay = gross - deductions - tax;
-    const bonusMonths = val.bonusMonths || 0;
+    const bonusMonths = Number(val.bonusMonths) || 0;
     const monthlyExpense = val.monthlyExpense || 0;
-    const annualGross = gross * (12 + bonusMonths);
-    const annualNetPay = netPay * (12 + bonusMonths);
+    // 年薪只按 12 个月工资；年终奖按「月薪 × 月数」另计，不能并进年薪。
+    const annualWageGross = gross * 12;
+    const annualBonusGross = gross * bonusMonths;
+    const annualGross = annualWageGross + annualBonusGross;
+    const annualWageNet = netPay * 12;
+    const bonusTax = annualBonusTax(annualBonusGross);
+    const annualBonusNet = annualBonusGross - bonusTax;
+    const annualNetPay = annualWageNet + annualBonusNet;
     const annualExpenses = monthlyExpense * 12;
     const annualSavings = annualNetPay - annualExpenses;
 
     this.result.set({
       gross, pension, medical, unemployment, housing, deductions,
-      taxable, tax, netPay, annualGross, annualNetPay, annualExpenses, annualSavings
+      taxable, tax, netPay, bonusMonths,
+      annualWageGross, annualBonusGross, annualGross,
+      annualWageNet, annualBonusTax: bonusTax, annualBonusNet,
+      annualNetPay, annualExpenses, annualSavings
     });
     this.updateMonthlyProjection();
   }
