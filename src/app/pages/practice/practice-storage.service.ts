@@ -3,6 +3,8 @@ import type { PracticeCategory, PracticeFilterCategory, PracticeItem, PracticeIt
 
 const STORAGE_KEY = 'angular20_practice_v1';
 const DAILY_STATE_KEY = 'angular20_practice_daily_state_v1';
+const SESSION_HISTORY_KEY = 'angular20_practice_session_history_v1';
+const SESSION_HISTORY_MAX = 80;
 export type PracticeStorageScope =
   | 'practice'
   | 'ios-learning'
@@ -12,7 +14,37 @@ export type PracticeStorageScope =
   | 'angular-learning'
   | 'angular-objective-learning'
   | 'ts-learning'
-  | 'ts-objective-learning';
+  | 'ts-objective-learning'
+  | 'agent-learning'
+  | 'agent-objective-learning';
+export type PracticeHistoryTrack = 'ios' | 'android' | 'angular' | 'ts' | 'agent' | 'practice';
+
+export const PRACTICE_HISTORY_TRACK_SCOPES: Record<PracticeHistoryTrack, PracticeStorageScope[]> = {
+  ios: ['ios-learning', 'ios-objective-learning'],
+  android: ['android-learning', 'android-objective-learning'],
+  angular: ['angular-learning', 'angular-objective-learning'],
+  ts: ['ts-learning', 'ts-objective-learning'],
+  agent: ['agent-learning', 'agent-objective-learning'],
+  practice: ['practice'],
+};
+
+export const PRACTICE_HISTORY_TRACK_LABELS: Record<PracticeHistoryTrack, string> = {
+  ios: 'iOS',
+  android: 'Android',
+  angular: 'Angular',
+  ts: 'TypeScript',
+  agent: 'Agent',
+  practice: '知识刷题',
+};
+
+export function isObjectiveStorageScope(scope: PracticeStorageScope): boolean {
+  return scope.includes('objective');
+}
+
+/** 背题只走简答库，不纳入判断 / 选择。 */
+export function reciteScopesForTrack(track: PracticeHistoryTrack): PracticeStorageScope[] {
+  return PRACTICE_HISTORY_TRACK_SCOPES[track].filter((scope) => !isObjectiveStorageScope(scope));
+}
 
 /** E2E / 调试：设为 `1` 时不自动注入内置题库（见 PracticeComponent） */
 export const PRACTICE_SKIP_BUILTIN_SEED_KEY = 'angular20_practice_skip_builtin_seed_v1';
@@ -32,6 +64,24 @@ export interface PracticeDailyState {
   records: Record<string, PracticeDayRecord>;
 }
 
+export type PracticeSessionKind = 'daily' | 'review';
+export type PracticeQuestionMode = 'objective' | 'subjective';
+
+export interface PracticeSessionRecord {
+  id: string;
+  kind: PracticeSessionKind;
+  at: number;
+  score: number;
+  total: number;
+  percent: number;
+  questionMode: PracticeQuestionMode;
+  wrongCount: number;
+}
+
+export interface PracticeSessionHistory {
+  records: PracticeSessionRecord[];
+}
+
 const VALID_CATEGORIES: PracticeCategory[] = [
   'ios',
   'angular',
@@ -39,6 +89,7 @@ const VALID_CATEGORIES: PracticeCategory[] = [
   'angular-ts',
   'angular-js',
   'angular-css',
+  'agent',
 ];
 
 // MARK: 判断
@@ -123,7 +174,8 @@ export class PracticeStorageService {
           JSON.stringify(old.options ?? []) !== JSON.stringify(item.options ?? []) ||
           JSON.stringify(old.correctAnswers ?? []) !== JSON.stringify(item.correctAnswers ?? []) ||
           old.explanation !== item.explanation ||
-          old.sourceQuestionId !== item.sourceQuestionId
+          old.sourceQuestionId !== item.sourceQuestionId ||
+          old.no !== item.no
         ) {
           old.category = item.category;
           old.question = item.question;
@@ -136,6 +188,7 @@ export class PracticeStorageService {
           old.correctAnswers = item.correctAnswers;
           old.explanation = item.explanation;
           old.sourceQuestionId = item.sourceQuestionId;
+          old.no = item.no;
           updated++;
         }
         continue;
@@ -266,6 +319,58 @@ export class PracticeStorageService {
       /* quota / 隐私模式 */
     }
   }
+
+  // MARK: 读取
+  // 读取本科目学习 / 复习成绩历史。
+  readSessionHistory(scope: PracticeStorageScope = 'practice'): PracticeSessionHistory {
+    try {
+      const raw = localStorage.getItem(scopedKey(SESSION_HISTORY_KEY, scope));
+      if (!raw) return { records: [] };
+      const parsed = JSON.parse(raw) as unknown;
+      if (!parsed || typeof parsed !== 'object') return { records: [] };
+      const records = (parsed as Record<string, unknown>)['records'];
+      if (!Array.isArray(records)) return { records: [] };
+      const out: PracticeSessionRecord[] = [];
+      for (const value of records) {
+        const record = this.parseSessionRecord(value);
+        if (record) out.push(record);
+      }
+      return { records: out };
+    } catch {
+      return { records: [] };
+    }
+  }
+
+  // MARK: 保存
+  // 追加一条成绩记录，最新的在前。
+  appendSessionRecord(
+    record: Omit<PracticeSessionRecord, 'id'>,
+    scope: PracticeStorageScope = 'practice'
+  ): PracticeSessionHistory {
+    const current = this.readSessionHistory(scope);
+    const next: PracticeSessionHistory = {
+      records: [{ ...record, id: newId() }, ...current.records].slice(0, SESSION_HISTORY_MAX),
+    };
+    this.saveSessionHistory(next, scope);
+    return next;
+  }
+
+  // MARK: 保存
+  saveSessionHistory(state: PracticeSessionHistory, scope: PracticeStorageScope = 'practice'): void {
+    localStorage.setItem(scopedKey(SESSION_HISTORY_KEY, scope), JSON.stringify(state));
+  }
+
+  // MARK: 读取
+  // 合并一个科目下各题型 scope 的成绩，按时间从早到晚。
+  readSessionHistoryForTrack(track: PracticeHistoryTrack): PracticeSessionRecord[] {
+    const byId = new Map<string, PracticeSessionRecord>();
+    for (const scope of PRACTICE_HISTORY_TRACK_SCOPES[track]) {
+      for (const record of this.readSessionHistory(scope).records) {
+        byId.set(record.id, record);
+      }
+    }
+    return [...byId.values()].sort((a, b) => a.at - b.at);
+  }
   
   // MARK: 解析
   // 将 localStorage 中的未知 JSON 解析为 {@link PracticeItem}；字段不全则丢弃。
@@ -359,6 +464,32 @@ export class PracticeStorageService {
     return record;
   }
 
+  // MARK: 解析
+  private parseSessionRecord(x: unknown): PracticeSessionRecord | null {
+    if (!x || typeof x !== 'object') return null;
+    const o = x as Record<string, unknown>;
+    if (typeof o['id'] !== 'string' || !o['id']) return null;
+    if (o['kind'] !== 'daily' && o['kind'] !== 'review') return null;
+    if (o['questionMode'] !== 'objective' && o['questionMode'] !== 'subjective') return null;
+    if (typeof o['at'] !== 'number' || !Number.isFinite(o['at'])) return null;
+    if (typeof o['score'] !== 'number' || !Number.isFinite(o['score'])) return null;
+    if (typeof o['total'] !== 'number' || !Number.isFinite(o['total'])) return null;
+    if (typeof o['percent'] !== 'number' || !Number.isFinite(o['percent'])) return null;
+    const wrongCount = typeof o['wrongCount'] === 'number' && Number.isFinite(o['wrongCount'])
+      ? Math.max(0, Math.floor(o['wrongCount']))
+      : 0;
+    return {
+      id: o['id'],
+      kind: o['kind'],
+      at: o['at'],
+      score: o['score'],
+      total: Math.max(0, o['total']),
+      percent: Math.max(0, Math.min(100, Math.round(o['percent']))),
+      questionMode: o['questionMode'],
+      wrongCount,
+    };
+  }
+
   // MARK: 计数
   // 统计各分类题目数量（用于 UI 徽章）。
   countByCategory(items: PracticeItem[]): Record<PracticeCategory, number> {
@@ -369,6 +500,7 @@ export class PracticeStorageService {
       'angular-ts': 0,
       'angular-js': 0,
       'angular-css': 0,
+      agent: 0,
     };
     for (const i of items) {
       if (i.category in base) base[i.category]++;

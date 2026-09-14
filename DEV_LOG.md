@@ -81,7 +81,7 @@
 ## 关键架构设计
 
 ### 认证流程
-1. 登录页「使用统一账号登录」跳转到 `/agent/?next=/angular20/#...`，在 Hello Agent 登录或注册
+1. 登录页「使用统一账号登录」跳转到 `/agent/?next=/workshop/...`，在 Hello Agent 登录或注册
 2. Agent 写入 Cookie `hello_agent_login`（`path=/`），登录成功后按 `next` 回到工坊
 3. 前端 `authInterceptor` 对 `/api` 请求带 `credentials: include`，不再附加 JWT
 4. 后端 `AuthGuard` 读取 Cookie，请求 Agent `/auth/me`；通过后按邮箱/`agentUserId` 建立或更新本地用户
@@ -420,7 +420,7 @@
 - 工坊不再维护独立用户名/密码；登录、注册都跳到 Agent
 - 后端用 Cookie `hello_agent_login` 调用 Agent `/auth/me` 识别用户，并在本地 `users` 表按 `agentUserId`/邮箱映射
 - 前端拦截器改为 `withCredentials`，去掉 JWT；登录页改为「使用统一账号登录」+ 游客访问
-- Agent 登录成功后可通过 `?next=/angular20/` 安全跳回工坊
+- Agent 登录成功后可通过 `?next=/workshop/` 安全跳回工坊
 - Agent 管理员在工坊获得完整菜单权限；旧 JWT 登录/邀请码注册接口返回 410
 - 涉及文件：`src/app/core/auth.service.ts`、`src/app/pages/login/`、`src/app/services/auth.interceptor.ts`、`server/src/auth/`、`server/src/users/`
 

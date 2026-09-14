@@ -34,7 +34,7 @@ test.describe('练习题页面', () => {
       [STORAGE_KEY, SKIP_BUILTIN_KEY, FILTER_CATEGORY_KEY] as [string, string, string]
     );
 
-    await page.goto('/#/practice');
+    await page.goto('/practice');
     await page.waitForSelector('.practice-app', { timeout: 15_000 });
   });
   // ── AC-PRAC-001 ───────────────────────────────────────────────────────────

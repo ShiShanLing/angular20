@@ -5,6 +5,7 @@ import { ToolsAnhuiPensionComponent } from './tools-anhui-pension.component';
 describe('ToolsAnhuiPensionComponent', () => {
   let component: ToolsAnhuiPensionComponent;
 
+  
   beforeEach(() => {
     localStorage.clear();
     component = new ToolsAnhuiPensionComponent(new FormBuilder());

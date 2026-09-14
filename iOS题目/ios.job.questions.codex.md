@@ -101,7 +101,9 @@ Optional 本质是一个枚举，大致可以理解为 some(Wrapped) 或 none。
 
 **参考答案：**
 
-if let 适合在一个局部代码块里使用解包后的值；guard let 适合做前置校验，失败就提前 return/throw/break，成功后解包变量在后续作用域都可用。一般业务代码里，参数校验和失败早返回更推荐 guard let，可以减少嵌套。
+if let 适合在一个局部代码块里使用解包后的值，解包成功后这个值只在 if 的大括号里可用。
+
+guard let 适合做前置校验，失败就提前 return/throw/break，成功后解包变量在后续作用域都可用。一般业务代码里，参数校验和失败早返回更推荐 guard let，可以减少嵌套。
 
 ### 3. Struct 和 Class 有什么区别？为什么 Swift 推荐优先使用值类型？
 
@@ -111,11 +113,9 @@ if let 适合在一个局部代码块里使用解包后的值；guard let 适合
 
 **参考答案：**
 
-Struct 是值类型，赋值和传参更像复制一份值，修改副本通常不影响原值；Class 是引用类型，多个变量可能指向同一个实例，修改对象状态会互相影响。
+Struct 是值类型，赋值和传参更像复制一份值，修改副本通常不影响原值。Swift 推荐优先使用 Struct，主要是因为值语义更安全、更容易推理，能减少共享可变状态带来的副作用，也更适合并发场景。性能上，Struct 在普通局部变量、临时值这类常见场景下通常在栈上或作为其他对象的一部分内联存储，能减少堆分配和 ARC 引用计数开销，所以可能更轻量。注意不要绝对说 Struct 一定在栈上，实际存储位置由编译器和使用场景决定。
 
-Swift 推荐优先使用 Struct，主要是因为值语义更安全、更容易推理，能减少共享可变状态带来的副作用，也更适合并发场景。性能上，Struct 在普通局部变量、临时值这类常见场景下通常在栈上或内联存储，能减少堆分配和 ARC 引用计数开销，所以可能更轻量。
-
-如果需要继承、身份比较、deinit、共享状态，或者需要和 Objective-C 深度交互，再选择 Class。注意不要绝对说 Struct 一定在栈上，实际存储位置由编译器和使用场景决定。
+Class 是引用类型，多个变量可能指向同一个实例，修改对象状态会互相影响。如果需要继承、身份比较、deinit、共享状态，或者需要和 Objective-C 深度交互，再选择 Class。
 
 ### 4. 值类型和引用类型在赋值、传参、内存管理上的差异是什么？
 
@@ -125,11 +125,9 @@ Swift 推荐优先使用 Struct，主要是因为值语义更安全、更容易�
 
 **参考答案：**
 
-值类型赋值和传参时，更像复制一份独立的值，修改副本通常不影响原值；引用类型赋值和传参时，复制的是对象引用，多个变量可能指向同一个对象，修改对象内部状态会互相影响。
+值类型赋值和传参时，更像复制一份独立的值，修改副本通常不影响原值。在普通局部变量、临时值这类常见场景下，值类型通常在栈上或内联存储。但不要绝对说值类型一定在栈上，实际存储位置由编译器和使用场景决定。值类型重点是值语义和独立性。
 
-内存上可以这样理解：值类型在普通局部变量、临时值这类常见场景下通常在栈上或内联存储；Class 实例通常在堆上，由 ARC 管理生命周期。
-
-但不要绝对说值类型一定在栈上。实际存储位置由编译器和使用场景决定。收口可以说：值类型重点是值语义和独立性，引用类型重点是引用语义和共享对象。
+引用类型赋值和传参时，复制的是对象引用，多个变量可能指向同一个对象，修改对象内部状态会互相影响。Class 实例通常在堆上，由 ARC 管理生命周期。引用类型重点是引用语义和共享对象。
 
 ### 5. 什么是 Copy-on-Write？Swift 的 Array、Dictionary 为什么可以既像值类型又避免频繁拷贝？
 
@@ -139,7 +137,7 @@ Swift 推荐优先使用 Struct，主要是因为值语义更安全、更容易�
 
 **参考答案：**
 
-Copy-on-Write 是写时复制。Array、Dictionary、String 表面是值类型，但底层共享存储；只有当某个副本发生修改且存储不唯一时，才真正复制一份。这样既保留值语义，又避免每次赋值都拷贝大块内存。自定义 COW 通常用 isKnownUniquelyReferenced 判断存储是否唯一。
+Copy-on-Write 是写时复制。Array、Dictionary、String 表面是值类型，但底层可以先共享同一块存储，只有当某个副本发生修改、并且这块存储不再唯一时，才真正复制一份。这样既保留值语义，又避免每次赋值都拷贝大块内存。自定义 COW 通常用 isKnownUniquelyReferenced 判断存储是否唯一。
 
 ### 6. Swift Enum 的关联值和原始值有什么区别？适合用在哪些业务建模场景？
 
@@ -149,7 +147,9 @@ Copy-on-Write 是写时复制。Array、Dictionary、String 表面是值类型�
 
 **参考答案：**
 
-原始值是每个 case 绑定一个固定字面量，比如 Int 或 String；关联值是每次创建 enum case 时携带不同数据。原始值适合状态码、类型映射；关联值适合表达带数据的状态，比如 success(User)、failure(Error)。它能让业务状态建模更完整。
+原始值是每个 case 绑定一个固定字面量，比如 Int 或 String。它适合状态码、类型映射这类固定对应关系。
+
+关联值是每次创建 enum case 时携带不同数据。它适合表达带数据的状态，比如 success(User)、failure(Error)，能让业务状态建模更完整。
 
 ### 7. Protocol 和 Class 继承有什么区别？为什么 Swift 强调面向协议编程？
 
@@ -159,7 +159,9 @@ Copy-on-Write 是写时复制。Array、Dictionary、String 表面是值类型�
 
 **参考答案：**
 
-继承表达“是什么”，协议表达“能做什么”。Class 继承只能单继承，协议可以多遵循；继承复用实现但耦合更强，协议更适合抽象能力、依赖倒置和测试替换。Swift 面向协议编程的重点是用协议定义边界，用扩展提供默认实现。
+Class 继承表达“是什么”，只能单继承，适合复用实现，但耦合更强。
+
+协议表达“能做什么”，可以多遵循，更适合抽象能力、依赖倒置和测试替换。Swift 面向协议编程的重点是用协议定义边界，用扩展提供默认实现。
 
 ### 8. Protocol Extension 中的方法什么时候是静态派发，什么时候会动态派发？
 
@@ -171,9 +173,9 @@ Copy-on-Write 是写时复制。Array、Dictionary、String 表面是值类型�
 
 协议要求的方法，也就是写在 protocol 声明里的 requirement，通过协议类型调用时通常走 witness table 动态派发，所以能调用到具体类型的实现。
 
-如果方法只是写在 protocol extension 里的额外方法，不是 requirement，那么它更偏静态派发，调用哪个实现取决于变量的静态类型，容易调用到扩展默认实现。
+协议扩展里的额外方法如果不是 requirement，更偏静态派发。调用哪个实现取决于变量的静态类型，容易调用到扩展默认实现。
 
-可以这样收口：协议要求的方法，通过协议类型调用通常走动态派发；协议扩展里的非要求方法，更偏静态派发，容易调用到扩展默认实现。
+可以这样收口：协议要求的方法，通过协议类型调用通常走动态派发；协议扩展里的非要求方法，更偏静态派发。
 
 ### 9. Swift 泛型解决了什么问题？和协议作为类型使用有什么区别？
 
@@ -183,7 +185,9 @@ Copy-on-Write 是写时复制。Array、Dictionary、String 表面是值类型�
 
 **参考答案：**
 
-泛型让一套代码适配多种具体类型，同时保留静态类型信息，比如 Array<Element>。协议作为类型更强调运行时抽象和能力约束，可能带来 existential 开销。泛型适合类型在编译期确定、追求类型安全和性能；协议类型适合异构集合和运行时替换。
+泛型让一套代码适配多种具体类型，同时保留静态类型信息，比如 Array<Element>。泛型适合类型在编译期确定、追求类型安全和性能。
+
+协议作为类型更强调运行时抽象和能力约束，可能带来 existential 开销。协议类型适合异构集合和运行时替换。
 
 ### 10. Swift 闭包捕获变量的规则是什么？捕获值类型和引用类型有什么差异？
 
@@ -193,15 +197,11 @@ Copy-on-Write 是写时复制。Array、Dictionary、String 表面是值类型�
 
 **参考答案：**
 
-闭包捕获变量可以先记三点：
+闭包捕获变量可以先记三点：闭包默认会捕获它用到的外部变量；引用类型要小心强引用，常用 [weak self] 打破循环引用；值类型如果想固定创建闭包那一刻的值，用 [x] 捕获快照。
 
-1. 闭包默认会捕获它用到的外部变量。
-2. 引用类型要小心强引用，常用 [weak self] 打破循环引用。
-3. 值类型如果想固定创建闭包那一刻的值，用 [x] 捕获快照。
+引用类型通常捕获的是对象引用。所以闭包里使用 self 时，如果 self 又持有这个闭包，就容易形成循环引用。常见解决方式是 [weak self]，让闭包不要强持有 self。如果能保证 self 一定比闭包活得久，也可以用 [unowned self]，但 self 已释放后再访问会崩溃。
 
-引用类型通常捕获的是对象引用，所以闭包里使用 self 时，如果 self 又持有这个闭包，就容易形成循环引用。常见解决方式是使用 [weak self]，让闭包不要强持有 self；如果能保证 self 一定比闭包活得久，也可以用 [unowned self]，但 self 已释放后再访问会崩溃。
-
-值类型默认捕获外部变量时，闭包执行时可能看到变量后续的新值；如果写成 [x]，表示在创建闭包那一刻把 x 的值保存一份快照，后面外部变量再修改，也不会影响闭包内部的 x。
+值类型默认捕获外部变量时，闭包执行时可能看到变量后续的新值。如果写成 [x]，表示在创建闭包那一刻把 x 的值保存一份快照，后面外部变量再修改，也不会影响闭包内部的 x。
 
 ### 11. `@escaping` 是什么？为什么异步回调通常需要标记为 escaping？
 
@@ -211,7 +211,9 @@ Copy-on-Write 是写时复制。Array、Dictionary、String 表面是值类型�
 
 **参考答案：**
 
-@escaping 表示闭包可能在函数返回后才执行，比如异步网络回调、DispatchQueue.async、保存到属性。非 escaping 闭包默认只在函数调用期间执行完。escaping 闭包需要显式写 self，是为了提醒可能延长对象生命周期并产生循环引用。
+@escaping 表示闭包可能在函数返回后才执行，比如异步网络回调、DispatchQueue.async、保存到属性。escaping 闭包需要显式写 self，是为了提醒可能延长对象生命周期并产生循环引用。
+
+非 escaping 闭包默认只在函数调用期间执行完，函数返回后就不会再被调用。异步回调通常要标 escaping，就是因为它会逃出当前函数的生命周期。
 
 ### 12. `@autoclosure` 是什么？它解决了什么可读性或延迟执行问题？
 
@@ -231,7 +233,15 @@ Copy-on-Write 是写时复制。Array、Dictionary、String 表面是值类型�
 
 **参考答案：**
 
-private 限当前声明作用域和同文件扩展，fileprivate 限同文件，internal 是模块内默认可见，public 模块外可见但不能被外部继承或重写，open 模块外可见且允许继承和重写。库设计里 public 暴露使用能力，open 暴露扩展能力。
+private 限当前声明作用域和同文件扩展。
+
+fileprivate 限同一个源文件。
+
+internal 是模块内默认可见。
+
+public 模块外可见，但不能被外部继承或重写。
+
+open 模块外可见，并且允许继承和重写。库设计里 public 暴露使用能力，open 暴露扩展能力。
 
 ### 14. Swift 里的 `Codable` 是什么？它解决了什么问题？
 
@@ -281,7 +291,11 @@ let encoded = try JSONEncoder().encode(user)
 
 **参考答案：**
 
-字段名不一致用 CodingKeys 映射。可选字段声明成 Optional，缺失时 decodeIfPresent 返回 nil；必填字段缺失会抛错。复杂转换可以自定义 init(from:) 和 encode(to:)。真实项目还要处理日期格式、嵌套结构和后端类型不稳定。
+字段名和 Model 属性名不一致时，用 CodingKeys 做映射。
+
+可选字段声明成 Optional，缺失时 decodeIfPresent 返回 nil。必填字段缺失会抛错。
+
+复杂转换可以自定义 init(from:) 和 encode(to:)。真实项目还要处理日期格式、嵌套结构和后端类型不稳定。
 
 ### 17. `Result`、`throws`、Optional 分别适合表达什么类型的失败？
 
@@ -291,7 +305,11 @@ let encoded = try JSONEncoder().encode(user)
 
 **参考答案：**
 
-Optional 适合只关心有无值、不关心失败原因；throws 适合同步或 async 流程中抛出详细错误；Result 适合把成功或失败作为一个值传递、保存或回调。现代 async API 常用 async throws，回调式 API 常见 Result。
+Optional 适合只关心有无值、不关心失败原因。
+
+throws 适合同步或 async 流程中抛出详细错误。现代 async API 常用 async throws。
+
+Result 适合把成功或失败作为一个值传递、保存或回调。回调式 API 常见 Result。
 
 ## Swift 基础 / 值类型与引用类型
 
@@ -321,7 +339,7 @@ Class 是引用类型，实例通常分配在堆上，由 ARC 管理生命周期
 
 Objective-C 调方法本质是发消息。objc_msgSend 会根据对象的 isa 找到类，先查方法缓存 cache，缓存没有再查当前类的方法列表，然后沿父类链继续查找。缓存命中是性能关键。
 
-如果一直找不到方法，不会马上崩溃，而是进入消息转发流程，有三次补救机会：第一步是动态方法解析，可以在 +resolveInstanceMethod: 或 +resolveClassMethod: 里动态添加方法；第二步是快速转发，可以在 -forwardingTargetForSelector: 里把消息转给另一个对象；第三步是完整消息转发，通过 -methodSignatureForSelector: 和 -forwardInvocation: 拿到 invocation 后手动处理或转发。
+如果一直找不到方法，不会马上崩溃，而是进入消息转发。第一步是动态方法解析，可以在 +resolveInstanceMethod: 或 +resolveClassMethod: 里动态添加方法。第二步是快速转发，可以在 -forwardingTargetForSelector: 里把消息转给另一个对象。第三步是完整消息转发，通过 -methodSignatureForSelector: 和 -forwardInvocation: 拿到 invocation 后手动处理或转发。
 
 如果这三步都没有处理，最后才会触发 doesNotRecognizeSelector，也就是常见的 unrecognized selector 崩溃。
 
@@ -333,7 +351,9 @@ Objective-C 调方法本质是发消息。objc_msgSend 会根据对象的 isa �
 
 **参考答案：**
 
-实例对象的 isa 指向 Class，Class 保存实例方法、属性和协议等信息；Class 的 isa 指向 Meta Class，Meta Class 保存类方法。Meta Class 最终也有继承链，根元类的 isa 指向自己。实例方法发给对象，类方法本质上发给类对象。
+实例对象的 isa 指向 Class。Class 保存实例方法、属性和协议等信息，所以发给对象的实例方法，是在 Class 里查找的。
+
+Class 的 isa 指向 Meta Class。Meta Class 保存类方法，所以发给类对象的类方法，是在元类里查找的。Meta Class 最终也有继承链，根元类的 isa 指向自己。
 
 ### 21. `isa` 指针有什么作用？对象、类、元类之间如何通过 isa 串起来？
 
@@ -353,7 +373,9 @@ isa 用来从对象找到它所属的类，从类找到元类，是 Runtime 查�
 
 **参考答案：**
 
-Category 可以声明属性，但不会自动生成实例变量。因为类的内存布局在编译期基本确定，Category 在运行期附加方法，不能直接扩展对象存储。要给 Category 属性保存值，通常用 Associated Object，以对象地址和 key 建立关联表。
+Category 可以声明属性，但不会自动生成实例变量。因为类的内存布局在编译期基本确定，Category 在运行期附加方法，不能直接扩展对象存储。
+
+要给 Category 属性保存值，通常用 Associated Object，以对象地址和 key 建立关联表。
 
 ### 23. Category 和 Extension 有什么区别？它们分别在编译期和运行期有什么特点？
 
@@ -363,7 +385,9 @@ Category 可以声明属性，但不会自动生成实例变量。因为类的�
 
 **参考答案：**
 
-Extension 是类扩展，通常写在主实现文件里，编译期参与类定义，可以声明私有属性和方法；Category 是运行期把方法列表附加到已有类上，常用于拆分功能或给系统类加方法。Extension 更像匿名私有接口，Category 更像后期扩展。
+Extension 是类扩展，通常写在主实现文件里。它在编译期参与类定义，可以声明私有属性和方法，更像匿名私有接口。
+
+Category 是运行期把方法列表附加到已有类上，常用于拆分功能或给系统类加方法，更像后期扩展。
 
 ### 24. KVO 的实现原理是什么？为什么说它依赖 Runtime 动态子类？
 
@@ -385,7 +409,9 @@ OC 老式 KVO 要手动 add/remove，生命周期处理不好容易崩。Swift b
 
 **参考答案：**
 
-KVC 取值通常先找 get<Key>、<key>、is<Key>、_<key> 等 getter，再按规则访问 ivar；找不到会调用 valueForUndefinedKey。赋值类似先找 setter，再找 ivar，找不到调用 setValue:forUndefinedKey。它绕过编译期检查，灵活但不够安全。
+KVC 取值通常先找 get<Key>、<key>、is<Key>、_<key> 等 getter，再按规则访问 ivar；找不到会调用 valueForUndefinedKey。
+
+赋值类似先找 setter，再找 ivar，找不到调用 setValue:forUndefinedKey。它绕过编译期检查，灵活但不够安全。
 
 ### 26. Method Swizzling 的原理是什么？在业务中使用它有哪些风险？
 
@@ -395,7 +421,9 @@ KVC 取值通常先找 get<Key>、<key>、is<Key>、_<key> 等 getter，再按�
 
 **参考答案：**
 
-Swizzling 通过 Runtime 交换两个 Method 的 IMP，让原调用走到新实现。风险是影响全局行为、调用顺序不确定、和其他库冲突、递归调用、难调试。使用时应在 +load 或明确初始化中只交换一次，并保留原实现调用路径。
+Swizzling 通过 Runtime 交换两个 Method 的 IMP，让原调用走到新实现。使用时应在 +load 或明确初始化中只交换一次，并保留原实现调用路径。
+
+风险是影响全局行为、调用顺序不确定、和其他库冲突、递归调用、难调试。它强大，但全局生效，顺序和冲突风险高。
 
 ### 27. Objective-C Block 有哪些类型？为什么 Block 通常需要 copy？
 
@@ -405,9 +433,9 @@ Swizzling 通过 Runtime 交换两个 Method 的 IMP，让原调用走到新实�
 
 **参考答案：**
 
-Block 常见有全局 Block、栈 Block、堆 Block。没有捕获外部自动变量的 Block 通常是全局 Block；捕获局部变量的 Block 初始可能在栈上；对栈 Block 执行 copy 后会移动到堆上，变成堆 Block。
+没有捕获外部自动变量的 Block 通常是全局 Block。捕获局部变量的 Block 初始可能在栈上。对栈 Block 执行 copy 后会移动到堆上，变成堆 Block。
 
-保存 Block 或异步执行 Block 时通常需要 copy，因为函数返回后栈空间会失效，copy 到堆上才能保证 Block 之后仍然可用。ARC 下很多场景编译器会自动 copy，但 Block 属性仍推荐声明为 copy，这是 Objective-C 的标准写法。
+保存 Block 或异步执行 Block 时通常需要 copy，因为函数返回后栈空间会失效，copy 到堆上才能保证 Block 之后仍然可用。ARC 下很多场景编译器会自动 copy，但 Block 属性仍推荐声明为 copy。
 
 ### 28. Objective-C Block 捕获变量、`__block` 和 `__weak` 分别怎么理解？
 
@@ -417,9 +445,11 @@ Block 常见有全局 Block、栈 Block、堆 Block。没有捕获外部自动�
 
 **参考答案：**
 
-Block 会捕获它内部使用到的外部变量。普通局部变量默认不能在 Block 内直接修改，如果要修改这个外部变量，需要用 __block；如果 Block 被 self 持有，同时 Block 内又使用 self，就要用 __weak 弱化 self，避免形成 self 和 Block 的循环引用。
+Block 会捕获它内部使用到的外部变量。
 
-可以这样记：__block 解决“能不能在 Block 内修改外部局部变量”的问题；__weak 解决“Block 会不会强持有 self 导致循环引用”的问题。
+__block 解决能不能在 Block 内修改外部局部变量。普通局部变量默认不能在 Block 内直接改，要改这个外部变量，需要用 __block。
+
+__weak 解决 Block 会不会强持有 self 导致循环引用。如果 Block 被 self 持有，同时 Block 内又使用 self，就要用 __weak 弱化 self。
 
 ### 29. Block 属性为什么通常用 copy，而不是 strong？
 
@@ -451,7 +481,7 @@ Block 在底层可以理解成一个 Objective-C 对象。它通常包含 isa、
 
 其中 invoke 指向 Block 真正要执行的函数实现，descriptor 保存 Block 大小、copy/dispose 辅助函数等元信息。如果 Block 捕获了变量，这些捕获内容也会作为 Block 结构的一部分保存。
 
-所以 Block 既能像函数一样调用，又能像对象一样 copy、release，并参与 ARC 内存管理。不用死背结构体字段，重点记：Block = 代码 + 捕获上下文 + 对象语义。
+所以 Block 既能像函数一样调用，又能像对象一样 copy、release，并参与 ARC 内存管理。
 
 ### 31. ARC 是编译期机制还是运行期机制？它和 Runtime 如何配合管理引用计数？
 
@@ -461,7 +491,9 @@ Block 在底层可以理解成一个 Objective-C 对象。它通常包含 isa、
 
 **参考答案：**
 
-ARC 主要是编译器自动插入 retain、release、autorelease 等内存管理调用，但运行时也参与弱引用表、引用计数、autorelease pool 等机制。它不是垃圾回收，释放时机仍由引用计数决定。循环引用 ARC 无法自动解决。
+ARC 主要是编译器自动插入 retain、release、autorelease 等内存管理调用。它不是垃圾回收，释放时机仍由引用计数决定，循环引用 ARC 无法自动解决。
+
+运行时也会配合：弱引用表、引用计数、autorelease pool 都由 Runtime 参与维护。
 
 ## UIKit / App 生命周期
 
@@ -483,7 +515,9 @@ App 启动大致经历：系统创建进程，dyld 加载可执行文件和动�
 
 **参考答案：**
 
-AppDelegate 负责应用级事件，比如启动、推送、后台任务和全局配置；SceneDelegate 负责一个 UI 场景的生命周期，比如创建 window、连接和断开 scene。iOS 13 后一个 App 可以有多个 Scene，所以 UI 生命周期从 AppDelegate 拆到了 SceneDelegate。
+AppDelegate 负责应用级事件，比如启动、推送、后台任务和全局配置。
+
+SceneDelegate 负责一个 UI 场景的生命周期，比如创建 window、连接和断开 scene。iOS 13 后一个 App 可以有多个 Scene，所以 UI 生命周期从 AppDelegate 拆到了 SceneDelegate。
 
 ### 34. ViewController 生命周期方法的调用顺序是什么？每个方法适合做什么？
 
@@ -493,7 +527,9 @@ AppDelegate 负责应用级事件，比如启动、推送、后台任务和全�
 
 **参考答案：**
 
-常见顺序是 init、loadView、viewDidLoad、viewWillAppear、viewWillLayoutSubviews、viewDidLayoutSubviews、viewDidAppear；离开时 viewWillDisappear、viewDidDisappear。viewDidLoad 适合一次性初始化，viewWillAppear 适合刷新即将展示的数据，布局相关放 layout 回调。
+常见顺序是 init、loadView、viewDidLoad、viewWillAppear、viewWillLayoutSubviews、viewDidLayoutSubviews、viewDidAppear；离开时 viewWillDisappear、viewDidDisappear。
+
+viewDidLoad 适合一次性初始化。viewWillAppear 适合刷新即将展示的数据。布局相关放 layout 回调。
 
 ### 35. `loadView`、`viewDidLoad`、`viewWillAppear`、`viewDidAppear` 有什么区别？
 
@@ -503,7 +539,13 @@ AppDelegate 负责应用级事件，比如启动、推送、后台任务和全�
 
 **参考答案：**
 
-loadView 负责创建 self.view，纯代码自定义根 view 时可重写；viewDidLoad 在 view 加载完成后调用一次，适合初始化子视图和绑定；viewWillAppear 每次即将显示都会调用，适合刷新数据或导航栏状态；viewDidAppear 表示已显示，适合开始动画或曝光。
+loadView 负责创建 self.view，纯代码自定义根 view 时可重写。
+
+viewDidLoad 在 view 加载完成后调用一次，适合初始化子视图和绑定。
+
+viewWillAppear 每次即将显示都会调用，适合刷新数据或导航栏状态。
+
+viewDidAppear 表示已显示，适合开始动画或曝光。
 
 ## UIKit / 布局
 
@@ -515,7 +557,9 @@ loadView 负责创建 self.view，纯代码自定义根 view 时可重写；view
 
 **参考答案：**
 
-Auto Layout 用一组线性约束描述视图位置和大小，系统通过约束求解得到 frame。排查冲突看控制台日志、约束标识、优先级、缺失或重复约束，以及 translatesAutoresizingMaskIntoConstraints 是否关闭。复杂页面要减少约束数量和频繁更新。
+Auto Layout 用一组线性约束描述视图位置和大小，系统通过约束求解得到 frame。
+
+排查冲突看控制台日志、约束标识、优先级、缺失或重复约束，以及 translatesAutoresizingMaskIntoConstraints 是否关闭。复杂页面要减少约束数量和频繁更新。
 
 ## UIKit / 列表
 
@@ -527,7 +571,9 @@ Auto Layout 用一组线性约束描述视图位置和大小，系统通过约�
 
 **参考答案：**
 
-TableView 复用 Cell 是为了避免频繁创建视图。滚出屏幕的 Cell 会进入复用池，新数据出现时取出重新配置。必须在配置方法里覆盖所有 UI 状态，在 prepareForReuse 中重置临时状态、取消图片请求，否则会出现错图、状态残留。
+TableView 复用 Cell 是为了避免频繁创建视图。滚出屏幕的 Cell 会进入复用池，新数据出现时取出重新配置。
+
+必须在配置方法里覆盖所有 UI 状态，在 prepareForReuse 中重置临时状态、取消图片请求，否则会出现错图、状态残留。
 
 ### 38. CollectionView 和 TableView 的核心区别是什么？自定义 Layout 适合解决什么问题？
 
@@ -537,7 +583,9 @@ TableView 复用 Cell 是为了避免频繁创建视图。滚出屏幕的 Cell �
 
 **参考答案：**
 
-TableView 主要是一维列表，CollectionView 更通用，支持网格、瀑布流和复杂布局。自定义 Layout 适合 item 位置、大小、吸附、装饰视图等不规则场景。现代 iOS 也可以用 Compositional Layout 快速组合复杂布局。
+TableView 主要是一维列表。
+
+CollectionView 更通用，支持网格、瀑布流和复杂布局。自定义 Layout 适合 item 位置、大小、吸附、装饰视图等不规则场景。现代 iOS 也可以用 Compositional Layout 快速组合复杂布局。
 
 ## UIKit / 性能
 
@@ -565,7 +613,9 @@ TableView 主要是一维列表，CollectionView 更通用，支持网格、瀑�
 
 **参考答案：**
 
-UIView 是 UIResponder 子类，负责事件响应、手势、布局和管理视图层级；CALayer 负责内容显示、动画和合成。每个 UIView 默认有一个 backing layer，最终渲染由 Core Animation 处理。很多视觉属性本质设置在 layer 上。
+UIView 是 UIResponder 子类，负责事件响应、手势、布局和管理视图层级。
+
+CALayer 负责内容显示、动画和合成。每个 UIView 默认有一个 backing layer，最终渲染由 Core Animation 处理。很多视觉属性本质设置在 layer 上。
 
 ### 41. 什么是离屏渲染？它出现在屏幕渲染流程的哪一步？如何优化？
 
@@ -609,7 +659,9 @@ UIView 是 UIResponder 子类，负责事件响应、手势、布局和管理视
 
 **参考答案：**
 
-point(inside:with:) 判断触点是否在当前 view 内；hitTest(_:with:) 从当前 view 递归查找真正接收事件的最深子视图。扩大按钮点击区域可以重写 point(inside:) 扩大判断区域，或在父视图 hitTest 中转发。
+point(inside:with:) 判断触点是否在当前 view 内。扩大按钮点击区域，最常见就是重写它，把判断区域做得比视觉 bounds 更大。
+
+hitTest(_:with:) 从当前 view 递归查找真正接收事件的最深子视图。也可以在父视图 hitTest 中把事件转发给指定子视图。
 
 ### 44. 手势和按钮点击冲突怎么处理？多个 Gesture Recognizer 如何协调？
 
@@ -619,7 +671,9 @@ point(inside:with:) 判断触点是否在当前 view 内；hitTest(_:with:) 从�
 
 **参考答案：**
 
-手势冲突可以通过 UIGestureRecognizerDelegate 控制是否同时识别、是否接收 touch、或者设置 require(toFail:) 让一个手势失败后另一个再识别。按钮和手势冲突时，要判断事件归属，避免父视图手势吞掉子控件点击。
+多个 Gesture Recognizer 可以通过 UIGestureRecognizerDelegate 控制是否同时识别、是否接收 touch，或者设置 require(toFail:) 让一个手势失败后另一个再识别。
+
+按钮和手势冲突时，要判断事件归属，避免父视图手势吞掉子控件点击。
 
 ## 网络 / 安全
 
@@ -694,7 +748,9 @@ HTTPS 相比 HTTP 多了三类安全能力：第一，加密，防止内容被�
 
 **参考答案：**
 
-HTTPS 比 HTTP 多了 TLS 层。TLS 握手主要解决三件事：确认服务器身份，协商加密算法，安全地产生后续通信使用的会话密钥。之后 HTTP 内容会用会话密钥加密传输，避免明文被窃听或篡改。
+HTTPS 比 HTTP 多了 TLS 层。之后 HTTP 内容会用会话密钥加密传输，避免明文被窃听或篡改。
+
+TLS 握手主要解决三件事：确认服务器身份，协商加密算法，安全地产生后续通信使用的会话密钥。
 
 ### 47. HTTPS 一定安全吗？还可能存在哪些安全风险？
 
@@ -716,7 +772,9 @@ HTTPS 不等于绝对安全。它保护传输过程，但如果用户安装了�
 
 **参考答案：**
 
-三次握手用于建立可靠连接，确认双方发送和接收能力正常，并同步初始序列号。四次挥手用于分别关闭两个方向的数据通道，因为 TCP 是全双工连接。重点是：握手建连接，挥手释放连接，序列号和确认号保证可靠有序。
+三次握手用于建立可靠连接，确认双方发送和接收能力正常，并同步初始序列号。
+
+四次挥手用于分别关闭两个方向的数据通道，因为 TCP 是全双工连接。重点是：握手建连接，挥手释放连接，序列号和确认号保证可靠有序。
 
 ## 网络 / HTTP
 
@@ -728,7 +786,9 @@ HTTPS 不等于绝对安全。它保护传输过程，但如果用户安装了�
 
 **参考答案：**
 
-GET 通常用于获取资源，参数常在 URL，适合缓存和幂等请求；POST 通常用于提交数据，参数在 body，常用于创建或修改资源。GET/POST 本身不决定安全，安全要靠 HTTPS、鉴权和服务端校验。
+GET 通常用于获取资源，参数常在 URL，适合缓存和幂等请求。
+
+POST 通常用于提交数据，参数在 body，常用于创建或修改资源。GET/POST 本身不决定安全，安全要靠 HTTPS、鉴权和服务端校验。
 
 ## 网络 / 鉴权
 
@@ -740,7 +800,9 @@ GET 通常用于获取资源，参数常在 URL，适合缓存和幂等请求；
 
 **参考答案：**
 
-Cookie 通常由浏览器自动携带，偏 Web 会话；Token 是客户端主动放在请求头里，移动端更常见。移动端一般登录后保存 access token 和 refresh token，access token 用于接口鉴权，过期后用 refresh token 换新。敏感 token 应存 Keychain。
+Cookie 通常由浏览器自动携带，偏 Web 会话。
+
+Token 是客户端主动放在请求头里，移动端更常见。移动端一般登录后保存 access token 和 refresh token，access token 用于接口鉴权，过期后用 refresh token 换新。敏感 token 应存 Keychain。
 
 ### 51. Token 过期如何刷新？如何避免多个请求同时触发重复刷新？
 
@@ -762,7 +824,11 @@ Token 过期后，客户端用 refresh token 请求新 access token，然后重�
 
 **参考答案：**
 
-URLSessionTask 可以调用 cancel 取消；超时可在 URLRequest 或 URLSessionConfiguration 设置；重试要判断错误类型、状态码、幂等性和重试次数。常见策略是指数退避，且不要盲目重试非幂等写操作。
+取消：URLSessionTask 可以调用 cancel。
+
+超时：可在 URLRequest 或 URLSessionConfiguration 设置。
+
+重试：要判断错误类型、状态码、幂等性和重试次数。常见策略是指数退避，且不要盲目重试非幂等写操作。
 
 ## 网络 / 架构
 
@@ -786,7 +852,11 @@ URLSessionTask 可以调用 cancel 取消；超时可在 URLRequest 或 URLSessi
 
 **参考答案：**
 
-图片缓存通常分内存和磁盘两级。内存用 NSCache 控容量，磁盘用 URL/key 映射文件并设置过期清理。还要支持下载去重、取消请求、后台解码、按目标尺寸缩放，避免复用错图和大图造成内存峰值。
+内存缓存用 NSCache 控容量，适合当前页面和列表来回滑动时快速命中。
+
+磁盘缓存用 URL/key 映射文件并设置过期清理，适合下次启动或再次进入时减少下载。
+
+还要支持下载去重、取消请求、后台解码、按目标尺寸缩放，避免复用错图和大图造成内存峰值。
 
 ## 数据存储
 
@@ -798,7 +868,13 @@ URLSessionTask 可以调用 cancel 取消；超时可在 URLRequest 或 URLSessi
 
 **参考答案：**
 
-UserDefaults 适合少量非敏感配置；Keychain 适合 token、账号凭证等敏感数据；FileManager 适合图片、日志、离线文件；SQLite/Core Data/SwiftData 适合结构化数据、查询和关系管理。选择依据是敏感性、数据量、结构化程度和查询复杂度。
+UserDefaults 适合少量非敏感配置。
+
+Keychain 适合 token、账号凭证等敏感数据。
+
+FileManager 适合图片、日志、离线文件。
+
+SQLite/Core Data/SwiftData 适合结构化数据、查询和关系管理。选择依据是敏感性、数据量、结构化程度和查询复杂度。
 
 ## 数据存储 / 安全
 
@@ -822,7 +898,13 @@ UserDefaults 本质是偏好配置文件，不适合保存 token、密码等敏�
 
 **参考答案：**
 
-Core Data 核心包括 Managed Object Model、Managed Object Context、Persistent Store Coordinator 和 Persistent Store。Model 描述数据结构，Context 管理对象和变更，Coordinator 连接模型与底层存储，Store 是 SQLite 等实际持久化介质。
+Managed Object Model 描述数据结构。
+
+Managed Object Context 管理对象和变更。
+
+Persistent Store Coordinator 连接模型与底层存储。
+
+Persistent Store 是 SQLite 等实际持久化介质。
 
 ## 数据存储 / 迁移
 
@@ -846,7 +928,9 @@ Core Data 核心包括 Managed Object Model、Managed Object Context、Persisten
 
 **参考答案：**
 
-进程是系统分配资源的单位，线程是 CPU 调度执行的单位。一个 App 至少有主线程，主线程负责 UI、事件响应和主 RunLoop。多个线程共享进程内存，所以访问共享数据时需要同步。
+进程是系统分配资源的单位。
+
+线程是 CPU 调度执行的单位。一个 App 至少有主线程，主线程负责 UI、事件响应和主 RunLoop。多个线程共享进程内存，所以访问共享数据时需要同步。
 
 ### 60. 为什么主线程不能做耗时任务？哪些操作容易造成主线程卡顿？
 
@@ -868,7 +952,9 @@ Core Data 核心包括 Managed Object Model、Managed Object Context、Persisten
 
 **参考答案：**
 
-sync 会把任务提交到队列并等待执行完成后再返回；async 提交后立即返回。是否开新线程取决于队列和系统调度，不由 sync/async 直接决定。sync 主要影响等待关系，async 主要用于异步执行。
+sync 会把任务提交到队列，并等待执行完成后再返回。它主要影响等待关系。
+
+async 提交后立即返回，主要用于异步执行。是否开新线程取决于队列和系统调度，不由 sync/async 直接决定。
 
 ### 62. 串行队列和并发队列有什么区别？队列和线程之间是什么关系？
 
@@ -878,7 +964,9 @@ sync 会把任务提交到队列并等待执行完成后再返回；async 提交
 
 **参考答案：**
 
-串行队列一次只执行一个任务，保证任务顺序；并发队列可以同时执行多个任务，但开始顺序和完成顺序不一定一致。队列是任务调度抽象，线程是实际执行资源，GCD 会管理线程池。
+串行队列一次只执行一个任务，保证任务顺序。
+
+并发队列可以同时执行多个任务，但开始顺序和完成顺序不一定一致。队列是任务调度抽象，线程是实际执行资源，GCD 会管理线程池。
 
 ### 63. `dispatch_sync` 到主队列为什么可能死锁？请用执行流程解释。
 
@@ -986,7 +1074,9 @@ GCD 和 Swift Concurrency 的关系：GCD 更偏底层任务派发，关注把�
 
 **参考答案：**
 
-OperationQueue 比 GCD 更面向任务对象，支持依赖关系、取消、优先级、最大并发数和状态观察。复杂任务编排、可取消任务适合 OperationQueue；简单派发、轻量异步适合 GCD。
+OperationQueue 更面向任务对象，支持依赖关系、取消、优先级、最大并发数和状态观察。复杂任务编排、可取消任务适合 OperationQueue。
+
+GCD 更轻量，适合简单派发和异步执行。
 
 ### 68. iOS OperationQueue 是什么？相比 GCD 有什么特点？依赖、取消、优先级和常见坑怎么理解？
 
@@ -1086,7 +1176,9 @@ OperationQueue 和 GCD 的选择可以这样记：简单异步派发、回主线
 
 **参考答案：**
 
-RunLoop 是线程的事件循环，让线程有事件时处理、没事件时休眠。主线程默认启动 RunLoop，子线程默认没有。Source、Timer、Observer 都注册到 RunLoop 上，RunLoop 和线程是一一对应但懒创建的关系。
+RunLoop 是线程的事件循环，让线程有事件时处理、没事件时休眠。Source、Timer、Observer 都注册到 RunLoop 上。
+
+主线程默认启动 RunLoop。子线程默认没有。RunLoop 和线程是一一对应但懒创建的关系。
 
 ### 70. Timer 为什么有时不准？RunLoop Mode 对 Timer 有什么影响？
 
@@ -1214,7 +1306,9 @@ Thread.sleep(forTimeInterval: 3)
 
 **参考答案：**
 
-GCD 是底层任务调度工具，关注把闭包派发到队列；async/await 是语言级异步模型，关注把异步流程写得像同步代码，并和错误、取消、结构化并发集成。简单线程切换可用 GCD；现代异步业务流程、并发请求和可取消任务优先 async/await。
+GCD 是底层任务调度工具，关注把闭包派发到队列。简单线程切换可用 GCD。
+
+async/await 是语言级异步模型，关注把异步流程写得像同步代码，并和错误、取消、结构化并发集成。现代异步业务流程、并发请求和可取消任务优先 async/await。
 
 ### 74. `async/await` 相比回调有什么优势？错误处理和取消如何表达？
 
@@ -1224,7 +1318,9 @@ GCD 是底层任务调度工具，关注把闭包派发到队列；async/await �
 
 **参考答案：**
 
-async/await 最大优势是消除回调嵌套，让异步代码按顺序书写；错误可用 throws 统一处理，取消可通过 Task 协作检查。它还配合结构化并发管理子任务生命周期，比散落回调更可读、更可维护。
+async/await 最大优势是消除回调嵌套，让异步代码按顺序书写。
+
+错误可用 throws 统一处理。取消可通过 Task 协作检查。它还配合结构化并发管理子任务生命周期，比散落回调更可读、更可维护。
 
 ### 75. `Task` 是什么？什么时候需要用 `Task {}` 创建异步上下文？
 
@@ -1244,7 +1340,9 @@ Task 是 Swift Concurrency 中异步任务的执行单元。同步上下文里�
 
 **参考答案：**
 
-结构化并发中子任务有明确父子关系，父任务会等待、取消和传播错误，比如 async let、TaskGroup。Unstructured Task 用 Task {} 创建，生命周期更独立，不自动受当前作用域管理。优先结构化并发，只有跨作用域任务才考虑非结构化。
+结构化并发中子任务有明确父子关系，父任务会等待、取消和传播错误，比如 async let、TaskGroup。优先用结构化并发。
+
+Unstructured Task 用 Task {} 创建，生命周期更独立，不自动受当前作用域管理。只有跨作用域任务才考虑非结构化。
 
 ### 77. `async let` 和 `TaskGroup` 分别适合什么场景？如何选择？
 
@@ -1254,7 +1352,9 @@ Task 是 Swift Concurrency 中异步任务的执行单元。同步上下文里�
 
 **参考答案：**
 
-async let 适合数量固定、写法简单的并发任务，比如同时请求用户和配置；TaskGroup 适合数量动态、循环创建、需要收集多个结果的任务。二者都是结构化并发，父作用域会等待子任务完成。
+async let 适合数量固定、写法简单的并发任务，比如同时请求用户和配置。
+
+TaskGroup 适合数量动态、循环创建、需要收集多个结果的任务。二者都是结构化并发，父作用域会等待子任务完成。
 
 ### 78. `actor` 解决了什么问题？它和用锁保护共享状态有什么区别？
 
@@ -1264,7 +1364,9 @@ async let 适合数量固定、写法简单的并发任务，比如同时请求�
 
 **参考答案：**
 
-actor 是并发安全的引用类型，用 actor isolation 保护内部可变状态，外部访问隔离方法或属性通常需要 await。它能替代一部分锁和串行队列，让共享状态的访问串行化。actor 保护的是内部状态，不代表所有传入对象都自动线程安全。
+actor 是并发安全的引用类型，用 actor isolation 保护内部可变状态，外部访问隔离方法或属性通常需要 await。它能替代一部分锁和串行队列，让共享状态的访问串行化。
+
+锁是开发者自己串行化临界区。actor 保护的是内部状态，不代表所有传入对象都自动线程安全。
 
 ### 79. `MainActor` 的作用是什么？为什么 UI 更新通常需要放在 MainActor 上？
 
@@ -1294,7 +1396,9 @@ Sendable 表示一个类型的值可以安全跨并发边界传递。值类型�
 
 **参考答案：**
 
-@Sendable 表示闭包可能跨并发域执行，编译器会限制它捕获非 Sendable 或可变共享状态。普通闭包没有这种并发安全约束。它能帮你发现潜在数据竞争，但不能自动让捕获对象线程安全，真正安全仍要靠 actor、锁或不可变数据。
+普通闭包没有跨并发域的捕获安全约束。
+
+@Sendable 表示闭包可能跨并发域执行，编译器会限制它捕获非 Sendable 或可变共享状态。它能帮你发现潜在数据竞争，但不能自动让捕获对象线程安全，真正安全仍要靠 actor、锁或不可变数据。
 
 ### 82. Task 取消是强制取消还是协作式取消？业务代码如何正确响应取消？
 
@@ -1366,7 +1470,13 @@ ARC 通过引用计数管理对象生命周期。强引用增加计数，引用�
 
 **参考答案：**
 
-strong 持有对象，引用计数加一；weak 不持有对象，对象释放后自动置 nil；assign 用于基本类型或不管理生命周期的引用，容易悬垂；copy 会复制对象，常用于 NSString、NSArray 和闭包，保证不可变语义或把栈 Block 拷到堆。
+strong 持有对象，引用计数加一，是对象属性的默认语义。
+
+weak 不持有对象，对象释放后自动置 nil，适合代理和打破循环引用。
+
+assign 用于基本类型，或不管理生命周期的引用，容易悬垂。
+
+copy 会复制对象，常用于 NSString、NSArray 和闭包，保证不可变语义或把栈 Block 拷到堆。
 
 ### 87. `weak` 为什么能在对象释放后自动置 nil？大致依赖什么机制？
 
@@ -1396,7 +1506,11 @@ weak 引用不会增加对象引用计数。Runtime 维护 weak 表，记录哪�
 
 **参考答案：**
 
-闭包被对象持有，同时闭包内部强捕获 self，就会循环引用。通常用 [weak self] 避免，适合 self 可能先释放的异步场景；unowned 不增加引用但对象释放后再访问会崩溃，只适合生命周期明确长于闭包的场景。
+闭包被对象持有，同时闭包内部强捕获 self，就会循环引用。
+
+[weak self] 适合 self 可能先释放的异步场景，对象释放后变成 nil，更安全。
+
+unowned 不增加引用，但对象释放后再访问会崩溃，只适合生命周期明确长于闭包的场景。
 
 ### 90. Delegate 为什么通常用 weak？什么时候 delegate 不能用 weak？
 
@@ -1438,7 +1552,13 @@ Autorelease Pool 保存延迟释放对象，池子 drain 时统一发送 release
 
 **参考答案：**
 
-先确认对象是否执行 deinit，再用 Xcode Memory Graph 查看强引用链，用 Instruments Leaks 找泄漏对象，用 Allocations 看对象数量是否持续增长。定位后修复循环引用、未移除观察、Timer 未释放等问题，并重复进出页面验证对象回落。
+先确认对象是否执行 deinit。
+
+Xcode Memory Graph 查看强引用链。
+
+Instruments Leaks 找泄漏对象。
+
+Allocations 看对象数量是否持续增长。定位后修复循环引用、未移除观察、Timer 未释放等问题，并重复进出页面验证对象回落。
 
 ## 架构 / MVC
 
@@ -1496,7 +1616,13 @@ Coordinator 负责页面创建、依赖组装和导航流程，把 push、presen
 
 **参考答案：**
 
-依赖注入是把对象需要的依赖从外部传入，而不是内部 new 或直接用单例。构造器注入最明确，属性注入更灵活但可能不完整，服务定位器使用方便但依赖隐藏。DI 的核心价值是可替换、可测试、低耦合。
+依赖注入是把对象需要的依赖从外部传入，而不是内部 new 或直接用单例。核心价值是可替换、可测试、低耦合。
+
+构造器注入最明确，创建时依赖就齐全。
+
+属性注入更灵活，但可能用到时还不完整。
+
+服务定位器使用方便，但依赖隐藏，测试和追踪更难。
 
 ## 架构 / 可测试性
 
@@ -1620,7 +1746,11 @@ main 后主要是 App 自己的初始化和首屏链路，优化方向包括延�
 
 **参考答案：**
 
-启动耗时可以用埋点记录进程启动、main、首屏展示等节点，也可以用 Instruments 和 MetricKit 看系统统计。关键是统一口径，比如冷启动到首帧或首屏可交互，并做多次采样取稳定数据。
+埋点可以记录进程启动、main、首屏展示等节点，口径要统一。
+
+Instruments 适合本地复现和看启动链路细节。
+
+MetricKit 适合看系统统计和线上聚合。并做多次采样取稳定数据。
 
 ### 109. iOS 启动优化应该怎么做？冷启动、main 前、main 后分别要关注什么？
 
@@ -1672,7 +1802,11 @@ main 后主要是业务代码阶段，包括 UIApplicationMain、AppDelegate、S
 
 **参考答案：**
 
-卡顿监控常见三种：FPS 监控看帧率，RunLoop 监控看主线程是否长时间停在某状态，主线程堆栈采样记录卡顿时调用栈。线上监控要控制开销，并结合阈值、场景和设备信息分析。
+FPS 监控看帧率。
+
+RunLoop 监控看主线程是否长时间停在某状态。
+
+主线程堆栈采样记录卡顿时调用栈。线上监控要控制开销，并结合阈值、场景和设备信息分析。
 
 ## 性能 / 列表优化
 
@@ -1684,7 +1818,9 @@ main 后主要是业务代码阶段，包括 UIApplicationMain、AppDelegate、S
 
 **参考答案：**
 
-列表卡顿先用 Time Profiler 看主线程耗时，再查布局、图片解码、同步 IO、锁等待、复杂绘制和离屏渲染。解决方式包括缓存高度、预计算、异步解码、取消无效请求、减少透明混合和圆角阴影开销。
+列表卡顿先用 Time Profiler 看主线程耗时。
+
+再分别查布局计算、图片解码、同步 IO、锁等待、复杂绘制和离屏渲染。解决方式包括缓存高度、预计算、异步解码、取消无效请求、减少透明混合和圆角阴影开销。
 
 ### 112. iOS 列表滚动优化怎么做？UITableView/UICollectionView 可能遇到哪些问题？
 
@@ -1848,7 +1984,13 @@ SDWebImage 适合网络图片、头像、商品图、Feed 流、聊天图片等�
 
 **参考答案：**
 
-降低内存峰值要控制大对象生命周期：大图按需缩放，数组分批处理，缓存设置容量和清理策略，循环临时对象用 autoreleasepool，页面消失释放不必要资源。优化前后要用 Allocations 或内存曲线验证。
+大图按需缩放，不要把远大于显示尺寸的图直接解码。
+
+大数组分批处理。
+
+缓存设置容量和清理策略。
+
+循环临时对象用 autoreleasepool。页面消失释放不必要资源。优化前后要用 Allocations 或内存曲线验证。
 
 ### 116. OOM 怎么排查？它和普通 crash 的定位方式有什么不同？
 
@@ -1858,7 +2000,9 @@ SDWebImage 适合网络图片、头像、商品图、Feed 流、聊天图片等�
 
 **参考答案：**
 
-OOM 是系统因内存压力杀掉进程，通常没有普通 crash 堆栈。排查要结合内存曲线、场景日志、MetricKit、Jetsam 日志、最近页面和大对象操作。重点看内存峰值、缓存失控、大图和循环增长。
+普通 crash 通常有堆栈。OOM 是系统因内存压力杀掉进程，通常没有普通 crash 堆栈。
+
+排查要结合内存曲线、场景日志、MetricKit、Jetsam 日志、最近页面和大对象操作。重点看内存峰值、缓存失控、大图和循环增长。
 
 ## 性能 / 包体积
 
@@ -1870,7 +2014,9 @@ OOM 是系统因内存压力杀掉进程，通常没有普通 crash 堆栈。排
 
 **参考答案：**
 
-包体积优化分资源和二进制。资源侧压缩图片、删除无用资源、按需下载；二进制侧移除无用代码和依赖、控制架构切片、减少重复库、用 Link Map 找大符号。优化要避免影响启动和功能完整性。
+资源侧压缩图片、删除无用资源、按需下载。
+
+二进制侧移除无用代码和依赖、控制架构切片、减少重复库、用 Link Map 找大符号。优化要避免影响启动和功能完整性。
 
 ## 性能 / 网络优化
 
@@ -1882,7 +2028,11 @@ OOM 是系统因内存压力杀掉进程，通常没有普通 crash 堆栈。排
 
 **参考答案：**
 
-网络慢要分段看：DNS、TCP 连接、TLS 握手、请求排队、服务端耗时、响应体大小、弱网丢包和缓存命中。优化方式包括连接复用、缓存、压缩、分页、超时重试、降级和接口合并。
+DNS 解析慢会拖住建连。
+
+TCP 连接和 TLS 握手会增加首包等待。
+
+之后再看请求排队、服务端耗时、响应体大小、弱网丢包和缓存命中。优化方式包括连接复用、缓存、压缩、分页、超时重试、降级和接口合并。
 
 ## 性能 / Instruments
 
@@ -1894,7 +2044,13 @@ OOM 是系统因内存压力杀掉进程，通常没有普通 crash 堆栈。排
 
 **参考答案：**
 
-Time Profiler 看 CPU 热点，Allocations 看对象分配和增长，Leaks 看内存泄漏，Core Animation 看 FPS 和渲染问题，Network 看请求，Energy Log 看耗电。使用时要有复现场景、指标和优化前后对比。
+Time Profiler 看 CPU 热点。
+
+Allocations 看对象分配和增长。
+
+Leaks 看内存泄漏。
+
+Core Animation 看 FPS 和渲染问题。Network 看请求，Energy Log 看耗电。使用时要有复现场景、指标和优化前后对比。
 
 ## Mach-O / dyld
 
@@ -1916,7 +2072,9 @@ Mach-O 是 Apple 平台的可执行文件、动态库和目标文件格式。Hea
 
 **参考答案：**
 
-静态库在链接期被拷贝进最终二进制，运行时不需要单独加载；动态库在运行时由 dyld 加载和链接。静态库可能增大主包但启动少一次动态加载，动态库利于共享和模块边界，但数量过多会增加启动成本。
+静态库在链接期被拷贝进最终二进制，运行时不需要单独加载。它可能增大主包，但启动少一次动态加载。
+
+动态库在运行时由 dyld 加载和链接。它利于共享和模块边界，但数量过多会增加启动成本。
 
 ### 122. Framework 是什么？Static Framework 和 Dynamic Framework 有什么区别？
 
@@ -1926,7 +2084,11 @@ Mach-O 是 Apple 平台的可执行文件、动态库和目标文件格式。Hea
 
 **参考答案：**
 
-Framework 是一种打包形式，可以包含二进制、头文件、资源和模块信息。Static Framework 内部是静态库，链接进主二进制；Dynamic Framework 是动态库，运行时加载。不要把 Framework 简单等同于动态库。
+Framework 是一种打包形式，可以包含二进制、头文件、资源和模块信息。不要把 Framework 简单等同于动态库。
+
+Static Framework 内部是静态库，链接进主二进制。
+
+Dynamic Framework 是动态库，运行时加载。
 
 ### 123. dyld 在 App 启动时做了什么？加载动态库、符号绑定、Runtime 初始化分别在哪个阶段？
 
@@ -1936,7 +2098,11 @@ Framework 是一种打包形式，可以包含二进制、头文件、资源和�
 
 **参考答案：**
 
-dyld 负责加载主程序和依赖动态库，完成地址重定位 rebase、符号绑定 bind，执行初始化函数，触发 Objective-C Runtime 注册类和分类，然后进入 main。动态库数量、符号数量和初始化工作都会影响 main 前启动时间。
+dyld 先加载主程序和依赖动态库。
+
+然后完成地址重定位 rebase、符号绑定 bind。
+
+再执行初始化函数，触发 Objective-C Runtime 注册类和分类，然后进入 main。动态库数量、符号数量和初始化工作都会影响 main 前启动时间。
 
 ### 124. Rebase 和 Bind 是什么？它们为什么会影响启动耗时？
 
@@ -1946,7 +2112,9 @@ dyld 负责加载主程序和依赖动态库，完成地址重定位 rebase、�
 
 **参考答案：**
 
-Rebase 是因为 ASLR 导致加载地址变化，需要修正内部指针地址；Bind 是把外部符号引用绑定到实际动态库地址。二者都发生在启动加载阶段，指针和符号越多，处理成本越高，可能影响启动。
+Rebase 是因为 ASLR 导致加载地址变化，需要修正内部指针地址。
+
+Bind 是把外部符号引用绑定到实际动态库地址。二者都发生在启动加载阶段，指针和符号越多，处理成本越高。
 
 ### 125. 为什么动态库过多会影响启动？大型项目如何控制动态库数量？
 
@@ -1968,7 +2136,9 @@ Rebase 是因为 ASLR 导致加载地址变化，需要修正内部指针地址�
 
 **参考答案：**
 
-+load 在类或分类被加载到 Runtime 时调用，早于 main，且每个类和分类都会调用，容易拖慢启动。+initialize 在类第一次收到消息前懒执行，只调用一次。启动优化中应尽量避免在 +load 做重活。
++load 在类或分类被加载到 Runtime 时调用，早于 main，且每个类和分类都会调用，容易拖慢启动。启动优化中应尽量避免在 +load 做重活。
+
++initialize 在类第一次收到消息前懒执行，只调用一次。
 
 ## Mach-O / 包体积
 
@@ -2148,6 +2318,8 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 迭代写法用 prev、cur、next 三个指针。每轮先保存 next，再把 cur.next 指向 prev，然后 prev 和 cur 向前移动。最后 prev 就是新头结点。时间 O(n)，空间 O(1)。
 
+递归写法先递归到链表尾，再在回溯时把后一个节点的 next 指回当前节点，并断开当前 next。时间同样 O(n)，空间 O(n)，因为调用栈深度等于链表长度。
+
 ### 139. 如何合并两个有序链表？时间复杂度和空间复杂度是多少？
 
 - 难度：Easy
@@ -2202,7 +2374,9 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 **参考答案：**
 
-递归写法：空节点深度为 0，非空节点深度等于 max(左深度, 右深度) + 1。也可以用 BFS 层序遍历，每处理完一层深度加一。时间 O(n)，递归空间取决于树高。
+递归写法：空节点深度为 0，非空节点深度等于 max(左深度, 右深度) + 1。时间 O(n)，递归空间取决于树高。
+
+迭代可以用 BFS 层序遍历，每处理完一层深度加一。时间同样 O(n)。
 
 ## 算法 / 二分查找
 
@@ -2214,7 +2388,11 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 **参考答案：**
 
-二分查找关键是区间定义一致。左闭右闭用 while left <= right，目标小于 mid 时 right = mid - 1；左闭右开用 while left < right，right = mid。mid 用 left + (right-left)/2 避免溢出。
+二分查找关键是区间定义一致。
+
+左闭右闭用 while left <= right，目标小于 mid 时 right = mid - 1。
+
+左闭右开用 while left < right，right = mid。mid 用 left + (right-left)/2 避免溢出。
 
 ## 算法 / 排序
 
@@ -2226,7 +2404,9 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 **参考答案：**
 
-快速排序选一个 pivot，把数组分成小于 pivot 和大于 pivot 的两部分，再递归排序左右区间。平均时间 O(n log n)，最坏 O(n^2)，空间通常 O(log n)。随机 pivot 或三数取中可以降低退化概率。
+快速排序选一个 pivot，把数组分成小于 pivot 和大于 pivot 的两部分，再递归排序左右区间。随机 pivot 或三数取中可以降低退化概率。
+
+平均时间 O(n log n)。最坏 O(n^2)，空间通常 O(log n)。
 
 ## 算法 / 缓存
 
@@ -2238,7 +2418,9 @@ Link Map 记录最终二进制里的目标文件、代码段、数据段和符�
 
 **参考答案：**
 
-LRU 要 O(1) get 和 put，通常用哈希表加双向链表。哈希表按 key 找节点，双向链表维护最近使用顺序；访问或更新节点移到头部，容量超限淘汰尾部节点。
+哈希表按 key 找节点，保证 get/put 平均 O(1)。
+
+双向链表维护最近使用顺序：访问或更新节点移到头部，容量超限淘汰尾部节点。LRU 通常就是这两块配合。
 
 ## 工程化 / 线上质量
 

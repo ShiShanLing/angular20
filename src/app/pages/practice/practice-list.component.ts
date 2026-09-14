@@ -1,6 +1,9 @@
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
+  Injector,
   OnInit,
   inject,
   signal,
@@ -25,21 +28,19 @@ import {
   type PracticeItem,
 } from './practice.types';
 import {
+  PRACTICE_HISTORY_TRACK_LABELS,
   PracticeStorageService,
+  reciteScopesForTrack,
+  type PracticeHistoryTrack,
   type PracticeStorageScope,
 } from './practice-storage.service';
-import {
-  angularJobSeedToPracticeItems,
-  iosJobObjectiveSeedToPracticeItems,
-  iosJobSeedToPracticeItems,
-  iosSeedToPracticeItems,
-} from './ios-seed';
+import { builtinSeedForScope } from './practice-builtin-seed';
 import { MarkdPipe } from './markd.pipe';
 
 type FilterValue = PracticeFilterCategory;
 
 /**
- * 列表刷题页：所有题目纵向平铺，答案默认隐藏，点击展开，支持手写答案记忆。
+ * 列表刷题 / 科目背题：题目纵向平铺，点击展开答案（手风琴）。
  */
 @Component({
   selector: 'app-practice-list',
@@ -56,46 +57,51 @@ type FilterValue = PracticeFilterCategory;
   ],
   template: `
     <div class="practice-list-page">
-      <!-- 顶部工具栏 -->
-      <div class="toolbar">
-        <h3 class="title">{{ pageTitle }}</h3>
-        <div class="toolbar-right">
-          <!-- 分类筛选 -->
-          <div class="category-tabs">
-            @for (cat of filterCategories; track cat) {
-              <button
-                nz-button
-                [nzType]="currentFilter() === cat ? 'primary' : 'default'"
-                nzSize="small"
-                (click)="setFilter(cat)"
-              >
-                {{ getCategoryLabel(cat) }}
-              </button>
+      <div class="list-head" [class.list-head-sticky]="reciteMode">
+        <!-- 顶部工具栏 -->
+        <div class="toolbar">
+          <h3 class="title">{{ pageTitle() }}</h3>
+          <div class="toolbar-right">
+            @if (!reciteMode && showCategoryTabs()) {
+              <div class="category-tabs">
+                @for (cat of filterCategories; track cat) {
+                  <button
+                    nz-button
+                    [nzType]="currentFilter() === cat ? 'primary' : 'default'"
+                    nzSize="small"
+                    (click)="setFilter(cat)"
+                  >
+                    {{ getCategoryLabel(cat) }}
+                  </button>
+                }
+              </div>
             }
+            <!-- 搜索框 -->
+            <nz-input-wrapper nzSize="small" class="search-box">
+              <span nzInputPrefix><span nz-icon nzType="search"></span></span>
+              <input
+                nz-input
+                placeholder="搜索题目或编号..."
+                [ngModel]="searchText()"
+                (ngModelChange)="searchText.set($event)"
+              />
+            </nz-input-wrapper>
           </div>
-          <!-- 搜索框 -->
-          <nz-input-wrapper nzSize="small" class="search-box">
-            <span nzInputPrefix><span nz-icon nzType="search"></span></span>
-            <input
-              nz-input
-              placeholder="搜索题目..."
-              [ngModel]="searchText()"
-              (ngModelChange)="searchText.set($event)"
-            />
-          </nz-input-wrapper>
         </div>
-      </div>
 
-      <!-- 统计 -->
-      <div class="stats-bar">
-        <span>共 <strong>{{ filteredItems().length }}</strong> 题</span>
-        <span class="spacer"></span>
-        <button nz-button nzType="link" nzSize="small" (click)="toggleAllAnswers()">
-          {{ allExpanded() ? '全部隐藏答案' : '全部显示答案' }}
-        </button>
-        <button nz-button nzType="link" nzSize="small" (click)="collapseAll()">
-          全部折叠
-        </button>
+        <!-- 统计 -->
+        <div class="stats-bar">
+          <span>共 <strong>{{ filteredItems().length }}</strong> 题@if (reciteMode && searchText().trim()) {（全库 {{ allItems().length }}）}</span>
+          <span class="spacer"></span>
+          @if (!reciteMode) {
+            <button nz-button nzType="link" nzSize="small" (click)="toggleAllAnswers()">
+              {{ allExpanded() ? '全部隐藏答案' : '全部显示答案' }}
+            </button>
+            <button nz-button nzType="link" nzSize="small" (click)="collapseAll()">
+              全部折叠
+            </button>
+          }
+        </div>
       </div>
 
       <!-- 题目列表 -->
@@ -105,14 +111,18 @@ type FilterValue = PracticeFilterCategory;
         }
 
         @for (item of filteredItems(); track item.id; let i = $index) {
-          <div class="question-card" [class.expanded]="expandedIds().has(item.id)">
+          <div
+            class="question-card"
+            [class.expanded]="expandedIds().has(item.id)"
+            [attr.data-question-id]="item.id"
+          >
             <!-- 题目头部 -->
             <div class="question-header" (click)="toggleExpand(item.id)">
-              <span class="question-index">{{ i + 1 }}</span>
+              <span class="question-index">{{ item.no ?? i + 1 }}</span>
               <nz-tag [nzColor]="getCategoryColor(item.category)" class="cat-tag">
                 {{ getCategoryLabel(item.category) }}
               </nz-tag>
-              <span class="question-text" [innerHTML]="item.question | markd"></span>
+              <span class="question-text">{{ item.question }}</span>
               <span class="expand-icon">
                 <span nz-icon [nzType]="expandedIds().has(item.id) ? 'up' : 'down'"></span>
               </span>
@@ -121,17 +131,27 @@ type FilterValue = PracticeFilterCategory;
             <!-- 展开区域：答案 + 手写框 -->
             @if (expandedIds().has(item.id)) {
               <div class="question-body">
-                <!-- 答案区域 -->
                 <div class="answer-section">
                   <div class="answer-label">
                     <span nz-icon nzType="bulb" nzTheme="outline"></span>
                     参考答案
-                    <button nz-button nzType="link" nzSize="small" (click)="toggleAnswer(item.id); $event.stopPropagation()">
-                      {{ revealedIds().has(item.id) ? '隐藏' : '显示' }}
-                    </button>
+                    @if (!reciteMode) {
+                      <button nz-button nzType="link" nzSize="small" (click)="toggleAnswer(item.id); $event.stopPropagation()">
+                        {{ revealedIds().has(item.id) ? '隐藏' : '显示' }}
+                      </button>
+                    }
                   </div>
                   @if (revealedIds().has(item.id)) {
-                    <div class="answer-content" [innerHTML]="item.answer | markd"></div>
+                    @if (item.options?.length) {
+                      <ul class="option-list">
+                        @for (opt of item.options; track opt.id) {
+                          <li [class.is-correct]="isCorrectOption(item, opt.id)">
+                            {{ opt.id }}. {{ opt.text }}
+                          </li>
+                        }
+                      </ul>
+                    }
+                    <div class="answer-content" [innerHTML]="(item.explanation || item.answer) | markd"></div>
                   } @else {
                     <div class="answer-hidden" (click)="toggleAnswer(item.id); $event.stopPropagation()">
                       点击显示答案
@@ -139,26 +159,27 @@ type FilterValue = PracticeFilterCategory;
                   }
                 </div>
 
-                <!-- 手写记忆框 -->
-                <div class="memo-section">
-                  <div class="memo-label">
-                    <span nz-icon nzType="edit" nzTheme="outline"></span>
-                    手写记忆（填写答案或抄写一遍）
+                @if (!reciteMode) {
+                  <div class="memo-section">
+                    <div class="memo-label">
+                      <span nz-icon nzType="edit" nzTheme="outline"></span>
+                      手写记忆（填写答案或抄写一遍）
+                    </div>
+                    <textarea
+                      nz-input
+                      cdkTextareaAutosize [cdkAutosizeMinRows]="2" [cdkAutosizeMaxRows]="8"
+                      placeholder="在这里默写答案，加深记忆..."
+                      [ngModel]="memoInputs()[item.id]"
+                      (ngModelChange)="setMemo(item.id, $event)"
+                      (blur)="onMemoBlur(item.id)"
+                    ></textarea>
+                    @if (memoInputs()[item.id] && revealedIds().has(item.id)) {
+                      <button nz-button nzType="link" nzSize="small" (click)="compareAnswer(item)">
+                        对比答案
+                      </button>
+                    }
                   </div>
-                  <textarea
-                    nz-input
-                    cdkTextareaAutosize [cdkAutosizeMinRows]="2" [cdkAutosizeMaxRows]="8"
-                    placeholder="在这里默写答案，加深记忆..."
-                    [ngModel]="memoInputs()[item.id]"
-                    (ngModelChange)="setMemo(item.id, $event)"
-                    (blur)="onMemoBlur(item.id)"
-                  ></textarea>
-                  @if (memoInputs()[item.id] && revealedIds().has(item.id)) {
-                    <button nz-button nzType="link" nzSize="small" (click)="compareAnswer(item)">
-                      对比答案
-                    </button>
-                  }
-                </div>
+                }
               </div>
             }
           </div>
@@ -204,6 +225,18 @@ type FilterValue = PracticeFilterCategory;
 
     .search-box {
       width: 180px;
+    }
+
+    .list-head-sticky {
+      position: sticky;
+      top: 0;
+      z-index: 6;
+      background: var(--bg-primary, #f5f5f5);
+      padding-bottom: 8px;
+    }
+
+    .list-head-sticky .stats-bar {
+      margin-bottom: 0;
     }
 
     .stats-bar {
@@ -252,10 +285,11 @@ type FilterValue = PracticeFilterCategory;
 
     .question-index {
       flex-shrink: 0;
-      width: 28px;
+      min-width: 32px;
       height: 28px;
+      padding: 0 6px;
       background: var(--bg-tertiary, #f0f5ff);
-      border-radius: 50%;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -347,6 +381,19 @@ type FilterValue = PracticeFilterCategory;
       color: var(--accent-color, #1890ff);
     }
 
+    .option-list {
+      margin: 0 0 10px;
+      padding-left: 18px;
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--text-primary, #262626);
+    }
+
+    .option-list .is-correct {
+      color: #389e0d;
+      font-weight: 600;
+    }
+
     .memo-section {
       margin-top: 16px;
     }
@@ -368,11 +415,26 @@ type FilterValue = PracticeFilterCategory;
 export class PracticeListComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly storage = inject(PracticeStorageService);
-
-  readonly pageName = '列表刷题';
+  private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly injector = inject(Injector);
+  private readonly reciteTrack = this.readReciteTrack();
+  private readonly scopedBank = this.readPracticeScope();
+  readonly reciteMode = this.reciteTrack !== null || this.scopedBank !== null;
 
   /** 题库原始数据 */
   allItems = signal<PracticeItem[]>([]);
+
+  readonly pageTitle = computed(() => {
+    if (this.reciteTrack) return `${PRACTICE_HISTORY_TRACK_LABELS[this.reciteTrack]} 背题`;
+    if (this.scopedBank === 'agent-objective-learning') return 'Agent 选择判断背题';
+    if (this.scopedBank === 'agent-learning') return 'Agent 简答题背题';
+    return '列表刷题';
+  });
+
+  readonly showCategoryTabs = computed(() => {
+    const cats = new Set(this.allItems().map((item) => item.category));
+    return cats.size > 1;
+  });
 
   /** 当前分类筛选 */
   currentFilter = signal<FilterValue>('all');
@@ -392,21 +454,18 @@ export class PracticeListComponent implements OnInit {
   /** 分类筛选选项 */
   readonly filterCategories: FilterValue[] = ['all', ...PRACTICE_CATEGORY_LIST];
 
-  /** storage scope（与 practice/ios-learning/angular-learning 对应）
-   *  已废弃：现在合并加载所有题库，保留字段仅为类型兼容 */
-  private scope: PracticeStorageScope = 'practice';
-
-  /** 筛选后的题目列表 */
+  /** 筛选后的题目列表。背题一次列出该科目全库，只允许搜索，不按分类裁切。 */
   readonly filteredItems = computed(() => {
     let items = this.allItems();
     const filter = this.currentFilter();
-    if (filter !== 'all') {
+    if (!this.reciteMode && filter !== 'all') {
       items = items.filter(i => i.category === filter);
     }
     const searchText = this.searchText();
     if (searchText.trim()) {
       const kw = searchText.trim().toLowerCase();
       items = items.filter(i =>
+        (i.no != null && String(i.no) === kw) ||
         i.question.toLowerCase().includes(kw) ||
         i.answer.toLowerCase().includes(kw) ||
         i.tags.toLowerCase().includes(kw)
@@ -425,47 +484,94 @@ export class PracticeListComponent implements OnInit {
   // MARK: 初始化
   // 组件初始化：同步移动端断点、订阅视口变化与路由事件
   ngOnInit() {
-    // 先确保所有内置题库已注入 localStorage
-    this.ensureAllSeeds();
-
-    // 合并所有题库（practice + ios-learning + ios-objective-learning + angular-learning）
-    const allScopes: PracticeStorageScope[] = ['practice', 'ios-learning', 'ios-objective-learning', 'angular-learning'];
-    const merged: PracticeItem[] = [];
-    const seenIds = new Set<string>();
-    for (const scope of allScopes) {
-      const items = this.storage.load(scope);
-      for (const item of items) {
-        if (!seenIds.has(item.id)) {
-          seenIds.add(item.id);
-          merged.push(item);
-        }
-      }
-    }
-    this.allItems.set(merged);
+    const scopes = this.scopesToLoad();
+    this.ensureSeeds(scopes);
+    this.allItems.set(this.loadItems(scopes));
   }
 
-  // MARK: 确保
-  // 确保所有内置题库已注入（首次访问时自动初始化）
-  private ensureAllSeeds(): void {
-    const now = Date.now();
-    const scopes: Array<{ scope: PracticeStorageScope; seed: (t: number) => PracticeItem[] }> = [
-      { scope: 'practice', seed: iosSeedToPracticeItems },
-      { scope: 'ios-learning', seed: iosJobSeedToPracticeItems },
-      { scope: 'ios-objective-learning', seed: iosJobObjectiveSeedToPracticeItems },
-      { scope: 'angular-learning', seed: angularJobSeedToPracticeItems },
+  private scopesToLoad(): PracticeStorageScope[] {
+    if (this.reciteTrack) return reciteScopesForTrack(this.reciteTrack);
+    if (this.scopedBank) return [this.scopedBank];
+    return [
+      'practice',
+      'ios-learning',
+      'ios-objective-learning',
+      'android-learning',
+      'android-objective-learning',
+      'angular-learning',
+      'angular-objective-learning',
+      'ts-learning',
+      'ts-objective-learning',
+      'agent-objective-learning',
+      'agent-learning',
     ];
-    for (const { scope, seed } of scopes) {
+  }
+
+  private ensureSeeds(scopes: PracticeStorageScope[]): void {
+    const now = Date.now();
+    for (const scope of scopes) {
+      const seeded = builtinSeedForScope(scope, now);
+      if (!seeded.length) continue;
       const existing = this.storage.load(scope);
       if (existing.length === 0) {
-        this.storage.save(seed(now), scope);
+        this.storage.save(seeded, scope);
       } else {
-        this.storage.mergeItems(seed(now), scope);
+        this.storage.mergeItems(seeded, scope);
       }
     }
   }
 
-  get pageTitle(): string {
-    return '列表刷题';
+  private loadItems(scopes: PracticeStorageScope[]): PracticeItem[] {
+    const merged: PracticeItem[] = [];
+    const seenIds = new Set<string>();
+    const seenQuestions = new Set<string>();
+    const pushUnique = (item: PracticeItem) => {
+      if (this.reciteMode && this.isChoiceQuestion(item)) return;
+      const questionKey = `${item.category}::${item.question.trim()}`;
+      if (seenIds.has(item.id) || seenQuestions.has(questionKey)) return;
+      seenIds.add(item.id);
+      seenQuestions.add(questionKey);
+      merged.push(item);
+    };
+
+    if (this.reciteMode) {
+      const now = Date.now();
+      for (const scope of scopes) {
+        for (const item of builtinSeedForScope(scope, now)) {
+          pushUnique(item);
+        }
+        for (const item of this.storage.load(scope)) {
+          pushUnique(item);
+        }
+      }
+      return merged;
+    }
+
+    for (const scope of scopes) {
+      for (const item of this.storage.load(scope)) {
+        pushUnique(item);
+      }
+    }
+    return merged;
+  }
+
+  private readReciteTrack(): PracticeHistoryTrack | null {
+    const track = this.route.snapshot.data['reciteTrack'];
+    if (track === 'ios' || track === 'android' || track === 'angular' || track === 'ts' || track === 'agent') {
+      return track;
+    }
+    return null;
+  }
+
+  private readPracticeScope(): PracticeStorageScope | null {
+    const scope = this.route.snapshot.data['practiceScope'];
+    if (
+      scope === 'agent-learning' ||
+      scope === 'agent-objective-learning'
+    ) {
+      return scope;
+    }
+    return null;
   }
 
   // MARK: 获取
@@ -483,6 +589,7 @@ export class PracticeListComponent implements OnInit {
       'angular-ts': 'orange',
       'angular-js': 'cyan',
       'angular-css': 'purple',
+      agent: 'geekblue',
     };
     return colors[cat] || 'default';
   }
@@ -494,16 +601,66 @@ export class PracticeListComponent implements OnInit {
 
   // MARK: 切换
   toggleExpand(id: string) {
-    const set = this.expandedIds();
-    if (set.has(id)) {
-      // 点击已展开的，关闭它
+    if (this.expandedIds().has(id)) {
       this.expandedIds.set(new Set());
       this.revealedIds.set(new Set());
-    } else {
-      // 手风琴模式：只展开当前这个，关闭其他
-      this.expandedIds.set(new Set([id]));
-      this.revealedIds.set(new Set());
+      return;
     }
+    this.expandedIds.set(new Set([id]));
+    this.revealedIds.set(this.reciteMode ? new Set([id]) : new Set());
+    if (this.reciteMode) {
+      afterNextRender(
+        () => requestAnimationFrame(() => this.scrollExpandedCardToTop(id)),
+        { injector: this.injector },
+      );
+    }
+  }
+
+  private scrollExpandedCardToTop(id: string): void {
+    const root = this.host.nativeElement as HTMLElement;
+    const card = root.querySelector(`[data-question-id="${this.cssEscape(id)}"]`) as HTMLElement | null;
+    if (!card) return;
+    const sticky = root.querySelector('.list-head-sticky') as HTMLElement | null;
+    const scroller = this.findScrollParent(card);
+    const frameGap = 8;
+    const targetTop =
+      (sticky?.getBoundingClientRect().bottom ??
+        (scroller === window ? 0 : (scroller as HTMLElement).getBoundingClientRect().top)) + frameGap;
+    const delta = card.getBoundingClientRect().top - targetTop;
+    if (Math.abs(delta) < 1) return;
+    if (scroller === window) {
+      window.scrollBy({ top: delta, behavior: 'auto' });
+      return;
+    }
+    (scroller as HTMLElement).scrollBy({ top: delta, behavior: 'auto' });
+  }
+
+  private findScrollParent(el: HTMLElement): HTMLElement | Window {
+    let current = el.parentElement;
+    while (current) {
+      const style = getComputedStyle(current);
+      const overflowY = style.overflowY;
+      if ((overflowY === 'auto' || overflowY === 'scroll') && current.scrollHeight > current.clientHeight + 1) {
+        return current;
+      }
+      current = current.parentElement;
+    }
+    return window;
+  }
+
+  private cssEscape(value: string): string {
+    if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
+      return CSS.escape(value);
+    }
+    return value.replace(/["\\]/g, '\\$&');
+  }
+
+  private isChoiceQuestion(item: PracticeItem): boolean {
+    return item.questionType === 'trueFalse' || item.questionType === 'single' || item.questionType === 'multiple';
+  }
+
+  isCorrectOption(item: PracticeItem, optionId: string): boolean {
+    return (item.correctAnswers ?? []).includes(optionId);
   }
 
   // MARK: 切换

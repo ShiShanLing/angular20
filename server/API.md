@@ -1,6 +1,6 @@
 # 工坊 后端 API 文档
 
-> 基础地址：`https://<服务器IP>/angular20/api`（本地为 `http://localhost:3000/api`）  
+> 基础地址：`https://<服务器IP>/workshop/api`（本地为 `http://localhost:3000/api`）  
 > 认证方式：浏览器自动携带 Agent 登录 Cookie `hello_agent_login`（`credentials: include`）。后端校验该 Cookie，不再使用 JWT。
 
 ---

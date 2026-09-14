@@ -29,7 +29,7 @@ export class LoginComponent {
       void this.router.navigateByUrl(returnUrl);
     }
   }
-
+  
   onAgentLogin(): void {
     const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/';
     this.authService.goToAgentLogin(returnUrl);
@@ -41,7 +41,7 @@ export class LoginComponent {
     const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/';
     void this.router.navigateByUrl(returnUrl);
   }
-
+  
   onLocalDevLogin(): void {
     const ok = this.authService.enterAsLocalDev();
     if (!ok) {

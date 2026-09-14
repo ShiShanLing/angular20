@@ -18,6 +18,7 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
       { path: '/tools/calendar', label: '万年历', permission: 'tools.calendar' },
       { path: '/tools/text', label: '文本处理', permission: 'tools.text' },
       { path: '/tools/qrcode', label: '二维码', permission: 'tools.qrcode' },
+      { path: '/tools/draw', label: '画图' },
       { path: '/tools/notes', label: '记事本', permission: 'tools.notes' },
       { path: '/tools/dev', label: '开发助手', permission: 'tools.dev' },
     ]
@@ -32,6 +33,8 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
         children: [
           { path: '/ios-learning', label: '每日学习', permission: 'practice.view' },
           { path: '/ios-learning/review', label: '复习', permission: 'practice.view' },
+          { path: '/ios-learning/recite', label: '背题', permission: 'practice.view' },
+          { path: '/ios-learning/history', label: '成绩走势', permission: 'practice.view' },
         ]
       },
       {
@@ -40,6 +43,8 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
         children: [
           { path: '/android-learning', label: '每日学习', permission: 'practice.view' },
           { path: '/android-learning/review', label: '复习', permission: 'practice.view' },
+          { path: '/android-learning/recite', label: '背题', permission: 'practice.view' },
+          { path: '/android-learning/history', label: '成绩走势', permission: 'practice.view' },
         ]
       },
       {
@@ -48,6 +53,8 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
         children: [
           { path: '/angular-learning', label: '每日学习', permission: 'practice.view' },
           { path: '/angular-learning/review', label: '复习', permission: 'practice.view' },
+          { path: '/angular-learning/recite', label: '背题', permission: 'practice.view' },
+          { path: '/angular-learning/history', label: '成绩走势', permission: 'practice.view' },
         ]
       },
       {
@@ -56,9 +63,24 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
         children: [
           { path: '/ts-learning', label: '每日学习', permission: 'practice.view' },
           { path: '/ts-learning/review', label: '复习', permission: 'practice.view' },
+          { path: '/ts-learning/recite', label: '背题', permission: 'practice.view' },
+          { path: '/ts-learning/history', label: '成绩走势', permission: 'practice.view' },
+        ]
+      },
+      {
+        label: 'Agent',
+        icon: 'deployment-unit',
+        children: [
+          { path: '/agent-objective-learning', label: '选择判断', permission: 'practice.view' },
+          { path: '/agent-objective-learning/review', label: '选择判断复习', permission: 'practice.view' },
+          { path: '/agent-learning', label: '简答题', permission: 'practice.view' },
+          { path: '/agent-learning/review', label: '简答题复习', permission: 'practice.view' },
+          { path: '/agent-learning/recite', label: '背题', permission: 'practice.view' },
+          { path: '/agent-learning/history', label: '成绩走势', permission: 'practice.view' },
         ]
       },
       { path: '/practice', label: '知识刷题', permission: 'practice.view' },
+      { path: '/practice/history', label: '刷题成绩', permission: 'practice.view' },
       { path: '/practice-list', label: '列表刷题', permission: 'practice.view' },
     ]
   },

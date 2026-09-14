@@ -19,6 +19,7 @@ interface HtmlSample {
   templateUrl: './html-preview.component.html',
   styleUrl: './html-preview.component.scss',
 })
+
 export class HtmlPreviewComponent {
   private readonly http = inject(HttpClient);
   private readonly sanitizer = inject(DomSanitizer);

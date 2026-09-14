@@ -67,11 +67,19 @@ export class FormsComponent {
   //
   /** 模板中 `f.xxx` 访问各 `AbstractControl`。 */
   get f() { return this.form.controls; }
-
+  
   // MARK: 格式化
   // 滑块右侧百分比展示。
   formatter(value: number): string {
     return `${value}%`;
+  }
+  submitToServer(form: FormGroup){
+    if (form.invalid){
+      Object.values(form.controls).forEach(c => {
+        //这是获取form的数据.
+        
+      });
+    }
   }
 
   // MARK: 添加 

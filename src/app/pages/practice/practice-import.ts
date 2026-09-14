@@ -38,6 +38,10 @@ function isHeaderRow(cells: string[]): boolean {
 
 const CATEGORY_ALIASES: { category: PracticeCategory; patterns: RegExp[] }[] = [
   {
+    category: 'agent',
+    patterns: [/^agent$/i, /^hello[\s\-_]*agent$/i, /^ai[\s\-_]*agent$/i],
+  },
+  {
     category: 'ios',
     patterns: [/^ios$/i, /^apple$/i, /^objc$/i, /^swift$/i, /^苹果$/],
   },

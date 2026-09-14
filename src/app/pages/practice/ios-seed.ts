@@ -1,10 +1,13 @@
 import type { PracticeItem } from './practice.types';
-import iosSeedJson from './ios.seed.json';
-import iosJobSeedJson from './ios-job.seed.json';
-import iosJobObjectiveSeedJson from './ios-job-objective.seed.json';
-import angularJobSeedJson from './angular-job.seed.json';
+import iosSeedJson from './seeds/ios/ios.seed.json';
+import iosJobSeedJson from './seeds/ios/ios-job.seed.json';
+import iosJobObjectiveSeedJson from './seeds/ios/ios-job-objective.seed.json';
+import angularJobSeedJson from './seeds/angular/angular-job.seed.json';
+import agentObjectiveSeedJson from './seeds/agent/agent-objective.seed.json';
+import agentJobSeedJson from './seeds/agent/agent-job.seed.json';
 
 export interface IosSeedRow {
+  no?: number;
   id: string;
   category: string;
   topic: string;
@@ -16,6 +19,7 @@ export interface IosSeedRow {
 }
 
 export interface ObjectiveSeedRow {
+  no?: number;
   id: string;
   sourceQuestionId: string;
   category: string;
@@ -42,10 +46,29 @@ export function iosJobSeedToPracticeItems(importedAt: number): PracticeItem[] {
 
 /** 将 iOS 客观题 JSON 转为本应用 PracticeItem。 */
 export function iosJobObjectiveSeedToPracticeItems(importedAt: number): PracticeItem[] {
-  const rows = iosJobObjectiveSeedJson as ObjectiveSeedRow[];
+  return objectiveRowsToPracticeItems(iosJobObjectiveSeedJson as ObjectiveSeedRow[], importedAt, 'ios');
+}
+
+/** 将 Agent 客观题 JSON 转为本应用 PracticeItem。 */
+export function agentObjectiveSeedToPracticeItems(importedAt: number): PracticeItem[] {
+  return objectiveRowsToPracticeItems(agentObjectiveSeedJson as ObjectiveSeedRow[], importedAt, 'agent');
+}
+
+/** 将 Agent 简答题 JSON 转为本应用 PracticeItem。 */
+export function agentJobSeedToPracticeItems(importedAt: number): PracticeItem[] {
+  const rows = agentJobSeedJson as IosSeedRow[];
+  return rowsToPracticeItems(rows, importedAt, 'agent');
+}
+
+function objectiveRowsToPracticeItems(
+  rows: ObjectiveSeedRow[],
+  importedAt: number,
+  category: PracticeItem['category'],
+): PracticeItem[] {
   return rows.map((row) => ({
     id: row.id,
-    category: 'ios',
+    no: row.no,
+    category,
     question: row.question,
     answer: row.explanation,
     tags: [row.topic, row.difficulty, objectiveTypeLabel(row.type)].filter(Boolean).join(' · '),
@@ -87,6 +110,7 @@ function rowToPracticeItem(row: IosSeedRow, importedAt: number, category: Practi
   const tags = [row.topic, row.difficulty].filter(Boolean).join(' · ');
   const item: PracticeItem = {
     id: row.id,
+    no: row.no,
     category,
     question: row.question,
     answer: row.answer,

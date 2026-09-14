@@ -74,14 +74,13 @@ This document provides a detailed functional overview of the "Angular 19 Tools &
 ### D. 休闲游戏 (Casual Games)
 
 _Note: These should have a "Arcade" layout on mobile (Play in Portrait/Landscape)._
-
+    
 1.  **贪吃蛇 (Snake)**:
     - **Logic**: Discrete grid-based movement, speed increases, score tracking.
     - **Input**: Virtual D-pad or swipe gestures.
 2.  **俄罗斯方块 (Tetris)**:
     - **Logic**: Rotation, line clearing, scoring, "Next Piece" preview.
     - **Input**: Virtual buttons for Rotate, Left, Right, Soft Drop, Hard Drop.
-
 
 ---
 

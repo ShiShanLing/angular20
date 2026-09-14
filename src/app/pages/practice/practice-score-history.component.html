@@ -1,0 +1,12 @@
+<div class="score-history">
+  <header class="score-history__head">
+    <h1 class="score-history__title">{{ pageTitle }}</h1>
+    <p class="score-history__desc">每日学习和复习提交后的正确率会记在这里，按时间看走势。</p>
+  </header>
+
+  @if (!records().length) {
+    <p class="score-history__empty">还没有成绩。先完成一次每日学习，或在复习页提交一次。</p>
+  } @else {
+    <div echarts [options]="chartOption()" class="score-history__chart"></div>
+  }
+</div>

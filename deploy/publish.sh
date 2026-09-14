@@ -24,7 +24,7 @@ Usage:
   ./deploy/publish.sh publish --targets frontend[,backend] [--allow-dirty] [--dry-run]
 
 Targets:
-  frontend   Build and publish /var/www/projects/angular20
+  frontend   Build and publish /var/www/projects/workshop
   backend    Build and publish /opt/angular20-server, then restart nest-server.service
 
 GitHub:

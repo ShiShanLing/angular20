@@ -96,7 +96,7 @@ export class ToolsWeatherComponent {
     }
     return result;
   });
-
+  
   // MARK: 构造注入
   // 加载历史城市并按上次城市搜索
   constructor() {
@@ -114,7 +114,6 @@ export class ToolsWeatherComponent {
     this.loading.set(true);
     this.showGeocodePicker.set(false);
     this.geocodeResults.set([]);
-    
     const geoUrl = `/api/weather/geocode?name=${encodeURIComponent(cityName)}`;
     this.http.get(geoUrl).subscribe({
       next: (geoRes: any) => {
@@ -130,7 +129,7 @@ export class ToolsWeatherComponent {
           this.loading.set(false);
           return;
         }
-
+        
         this.fetchWeather(geoRes.results[0]);
       },
       error: () => {
@@ -284,6 +283,7 @@ export class ToolsWeatherComponent {
     const temps = hourly.map((h) => h.temp);
     
     this.chartOptions.set({
+      //设置样式.
       grid: { left: '3%', right: '4%', bottom: '3%', top: '15%', containLabel: true },
       tooltip: { trigger: 'axis', formatter: '{b}<br/>温度: {c}°C' },
       xAxis: { type: 'category', data: times, axisLabel: { interval: 3 } },

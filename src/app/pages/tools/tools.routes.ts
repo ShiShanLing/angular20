@@ -73,6 +73,10 @@ export const TOOLS_ROUTES: Routes = [
     loadComponent: () => import('./tools-qrcode.component').then(m => m.ToolsQrcodeComponent)
   },
   {
+    path: 'draw',
+    loadComponent: () => import('./tools-draw.component').then(m => m.ToolsDrawComponent)
+  },
+  {
     path: 'notes',
     loadComponent: () => import('./tools-notes.component').then(m => m.ToolsNotesComponent)
   },

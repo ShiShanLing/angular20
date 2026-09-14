@@ -4,7 +4,8 @@ export type PracticeCategory =
   | 'android'
   | 'angular-ts'
   | 'angular-js'
-  | 'angular-css';
+  | 'angular-css'
+  | 'agent';
 
 export const PRACTICE_CATEGORY_LABELS: Record<PracticeCategory, string> = {
   ios: 'iOS',
@@ -13,6 +14,7 @@ export const PRACTICE_CATEGORY_LABELS: Record<PracticeCategory, string> = {
   'angular-ts': 'Angular · TypeScript',
   'angular-js': 'Angular · JavaScript',
   'angular-css': 'Angular · CSS',
+  agent: 'Agent',
 };
 
 export const PRACTICE_CATEGORY_LIST: PracticeCategory[] = [
@@ -22,6 +24,7 @@ export const PRACTICE_CATEGORY_LIST: PracticeCategory[] = [
   'angular-ts',
   'angular-js',
   'angular-css',
+  'agent',
 ];
 //NSTimer 被 RunLoop 持有，Timer 又会强持有 target；如果 target 再强持有 Timer，就形成循环引用。解决方式是 invalidate、block 中 weak self、弱代理，或改用 DispatchSourceTimer 并注意弱捕获。
 
@@ -33,6 +36,8 @@ export const PRACTICE_CATEGORY_LIST: PracticeCategory[] = [
 export type PracticeFilterCategory = PracticeCategory | 'all';
 export interface PracticeItem {
   id: string;
+  /** 题库 JSON 中的稳定编号，背题页展示并便于按数字检索 */
+  no?: number;
   category: PracticeCategory;
   /** 问题 / 题干 */
   question: string;

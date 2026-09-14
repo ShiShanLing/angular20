@@ -81,7 +81,7 @@ export class ToolsAnhuiPensionComponent implements OnInit, OnDestroy {
       this.result.set(null);
       return;
     }
-    //
+    
     const v = this.form.getRawValue();
     const personalAccountTotal = Number(v.personalAccountTotal);
     const basicPension = Number(v.basicPension);
@@ -93,16 +93,15 @@ export class ToolsAnhuiPensionComponent implements OnInit, OnDestroy {
     
     this.result.set({ monthlyPension, accountPart, paybackMonths, paybackYears });
   }
-  
-  // === 持久化 === 
-  
+
+  // === 持久化 ===
   // MARK: 加载
   private loadFromLocalStorage(): void {
     try {
       const saved = localStorage.getItem(LS_KEY);
       if (saved) this.form.patchValue(JSON.parse(saved), { emitEvent: false });
     } catch {}
-  }  
+  }
 
   // MARK: 保存
   private saveToLocalStorage(): void {
@@ -124,6 +123,7 @@ export class ToolsAnhuiPensionComponent implements OnInit, OnDestroy {
     });
   }
   
+
 
   // MARK: 保存
   private saveToApi(): void {

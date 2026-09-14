@@ -5,7 +5,7 @@
     "changeOrigin": true,
     "logLevel": "debug"
   },
-  "/agent": {
+  "/agent/": {
     "target": "http://106.13.175.227",
     "secure": false,
     "changeOrigin": true,

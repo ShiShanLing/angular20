@@ -109,7 +109,7 @@ export class ChartShowcaseComponent implements OnInit {
   // MARK: 加载地图数据
   // 从本地 public/geo 加载国界 GeoJSON（避免跨域 DataV OPTIONS 403）；失败时仅展示占位文案
   private loadChinaGeoAndFlightLines(): void {
-    // 相对 base-href，部署在 /angular20/ 时为 /angular20/geo/...
+    // 相对 base-href，部署在 /workshop/ 时为 /workshop/geo/...
     const url = 'geo/china_100000_full.json';
     this.http.get<unknown>(url).subscribe({
       next: (geo) => {

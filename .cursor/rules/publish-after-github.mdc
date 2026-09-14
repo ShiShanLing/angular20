@@ -1,0 +1,14 @@
+---
+description: Commit and push to GitHub as part of production publish
+alwaysApply: true
+---
+
+# Publish commits and pushes after packaging
+
+After a successful production package (`./deploy/publish.sh`, not `--dry-run`):
+
+1. Commit any remaining local changes if the working tree is dirty.
+2. `git push` the current branch to GitHub (`origin`).
+3. Continue the server release using that commit.
+
+`--allow-dirty` is accepted for compatibility; leftover files are still committed after packaging. `--dry-run` must not commit or push.

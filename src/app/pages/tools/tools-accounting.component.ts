@@ -101,7 +101,7 @@ export class ToolsAccountingComponent implements OnInit {
         remarks: val.remarks,
         date: val.date.toISOString()
       };
-
+      
       this.recordService.create('accounting', data, dateStr).subscribe({
         next: (res) => {
           const newRecord: AccountingRecord = { id: res.id, ...data };
@@ -171,7 +171,7 @@ export class ToolsAccountingComponent implements OnInit {
     });
 
     const pieData = Object.keys(categorySum).map(k => ({ name: k, value: Number(categorySum[k].toFixed(2)) })).sort((a,b) => b.value - a.value);
-
+    
     this.chartOption.set({
       tooltip: {
         trigger: 'item',
@@ -191,7 +191,9 @@ export class ToolsAccountingComponent implements OnInit {
       ]
     });
   }
-
+  
+  //
+  //导出数据.
   // MARK: 导出
   exportCSV(): void {
     if (!this.records().length) {

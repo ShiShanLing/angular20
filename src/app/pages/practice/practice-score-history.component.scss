@@ -1,0 +1,41 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
+.score-history {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px 16px 32px;
+}
+
+.score-history__head {
+  margin-bottom: 16px;
+}
+
+.score-history__title {
+  margin: 0 0 6px;
+  font-size: 1.25em;
+  font-weight: 650;
+}
+
+.score-history__desc,
+.score-history__empty {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+:host-context([data-theme="dark"]) .score-history__desc,
+:host-context([data-theme="dark"]) .score-history__empty {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.score-history__empty {
+  padding: 24px 0;
+}
+
+.score-history__chart {
+  width: 100%;
+  height: min(420px, 70vh);
+}

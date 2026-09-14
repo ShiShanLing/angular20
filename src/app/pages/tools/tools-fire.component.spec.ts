@@ -4,13 +4,13 @@ import { ToolsFireComponent } from './tools-fire.component';
 
 describe('ToolsFireComponent', () => {
   let component: ToolsFireComponent;
-
+  
   beforeEach(() => {
     localStorage.clear();
     component = new ToolsFireComponent(new FormBuilder());
     component.ngOnInit();
   });
-
+  
   it('creates component and initializes summary', () => {
     expect(component).toBeTruthy();
     expect(component.summary).toBeTruthy();

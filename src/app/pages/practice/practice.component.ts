@@ -29,10 +29,13 @@ import {
   type PracticeStorageScope,
   type PracticeDailyState,
   type PracticeDayRecord,
+  type PracticeSessionRecord,
   PRACTICE_SKIP_BUILTIN_SEED_KEY,
 } from './practice-storage.service';
 import {
   angularJobSeedToPracticeItems,
+  agentObjectiveSeedToPracticeItems,
+  agentJobSeedToPracticeItems,
   iosJobObjectiveSeedToPracticeItems,
   iosJobSeedToPracticeItems,
   iosSeedToPracticeItems,
@@ -48,7 +51,7 @@ import {
 type FilterValue = PracticeFilterCategory;
 type ChantPhase = 'idle' | 'question' | 'answer';
 type PracticeQuestionMode = 'objective' | 'subjective';
-type LearningTrack = 'ios' | 'android' | 'angular' | 'ts' | 'general';
+type LearningTrack = 'ios' | 'android' | 'angular' | 'ts' | 'agent' | 'general';
 type PracticeFlowMode = 'daily' | 'full';
 
 const FONT_SCALE_KEY = 'angular20_practice_font_scale_v1';
@@ -125,8 +128,11 @@ export class PracticeComponent implements OnInit, OnDestroy {
   readonly categoryList = PRACTICE_CATEGORY_LIST;
   readonly isIosLearning = this.routeScope === 'ios-learning';
   readonly isAngularLearning = this.routeScope === 'angular-learning';
+  readonly isAgentObjectiveLearning = this.routeScope === 'agent-objective-learning';
+  readonly isAgentLearning =
+    this.routeScope === 'agent-learning' || this.isAgentObjectiveLearning;
   readonly isLearningPage = this.learningTrack !== 'general';
-  readonly questionMode = signal<PracticeQuestionMode>(this.isIosLearning ? 'objective' : 'subjective');
+  readonly questionMode = signal<PracticeQuestionMode>(this.readInitialQuestionMode());
   readonly practiceFlowMode = signal<PracticeFlowMode>('daily');
   readonly activeStorageScope = computed<PracticeStorageScope>(() =>
     this.objectiveScopeForCurrentTrack() ?? this.routeScope
@@ -138,6 +144,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     if (this.learningTrack === 'android') return 'Android 学习';
     if (this.isAngularLearning) return 'Angular 学习';
     if (this.learningTrack === 'ts') return 'TypeScript 学习';
+    if (this.isAgentObjectiveLearning) return 'Agent 选择判断';
+    if (this.isAgentLearning) return 'Agent 简答题';
     return '知识刷题';
   }
 
@@ -147,6 +155,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     if (this.learningTrack === 'android') return 'Android 学习题库';
     if (this.learningTrack === 'ts') return 'TypeScript 学习题库';
     if (this.isAngularLearning) return 'Angular 学习题库';
+    if (this.isAgentLearning && this.questionMode() === 'objective') return 'Agent 客观题题库';
+    if (this.isAgentLearning) return 'Agent 简答题题库';
     return '内置 iOS 题库';
   }
 
@@ -156,6 +166,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     if (this.learningTrack === 'android') return '加载 Android 学习题库';
     if (this.learningTrack === 'ts') return '加载 TypeScript 学习题库';
     if (this.isAngularLearning) return '加载 Angular 学习题库';
+    if (this.isAgentLearning && this.questionMode() === 'objective') return '加载 Agent 客观题';
+    if (this.isAgentLearning) return '加载 Agent 简答题';
     return '加载内置 iOS 题库';
   }
 
@@ -165,6 +177,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     if (this.learningTrack === 'android') return 'Android题库';
     if (this.learningTrack === 'ts') return 'TS题库';
     if (this.isAngularLearning) return 'Angular题库';
+    if (this.isAgentLearning && this.questionMode() === 'objective') return 'Agent客观题';
+    if (this.isAgentLearning) return 'Agent简答题';
     return '内置 iOS';
   }
   
@@ -529,6 +543,13 @@ export class PracticeComponent implements OnInit, OnDestroy {
     }
     this.fullQuizSubmitted.set(true);
     this.fullQuizWrongOnly.set(false);
+    this.recordPracticeSession({
+      kind: 'review',
+      score: this.fullQuizCorrectCount(),
+      total: this.fullQuizItems().length,
+      percent: this.fullQuizPercent(),
+      wrongCount: this.fullQuizWrongItems().length,
+    });
     this.msg.success(`本次得分 ${this.fullQuizScoreText()}，正确率 ${this.fullQuizPercent()}%。`);
   }
 
@@ -836,6 +857,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
   markRemembered(): void {
     const item = this.currentItem();
     if (!item || !this.currentItemInDaily()) return;
+    const alreadyCompleted = !!this.todayRecord()?.completedAt;
     this.updateTodayRecord((record) => {
       const remembered = new Set(record.rememberedIds);
       remembered.add(item.id);
@@ -852,6 +874,15 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.advanceAfterDailyAction();
     if (this.dailyCompleted()) {
       const n = this.dailyTotal();
+      if (!alreadyCompleted) {
+        this.recordPracticeSession({
+          kind: 'daily',
+          score: this.dailyRememberedCount(),
+          total: n,
+          percent: n ? Math.round((this.dailyRememberedCount() / n) * 100) : 0,
+          wrongCount: 0,
+        });
+      }
       this.msg.success(`今天 ${n} 题已全部记住了。`);
     }
   }
@@ -1314,6 +1345,20 @@ export class PracticeComponent implements OnInit, OnDestroy {
     this.setFilter(this.storage.readSavedFilterCategory(this.activeStorageScope()));
   }
 
+  private recordPracticeSession(
+    record: Omit<PracticeSessionRecord, 'id' | 'at' | 'questionMode'>
+  ): void {
+    if (record.total <= 0) return;
+    this.storage.appendSessionRecord(
+      {
+        ...record,
+        at: Date.now(),
+        questionMode: this.questionMode(),
+      },
+      this.activeStorageScope()
+    );
+  }
+
   // MARK: 日期
   // 确保今天有一组每日练习题，并清理已失效的题目 id。
   private ensureTodayPractice(): void {
@@ -1413,6 +1458,10 @@ export class PracticeComponent implements OnInit, OnDestroy {
     if (this.learningTrack === 'android') return [];
     if (this.learningTrack === 'ts') return angularJobSeedToPracticeItems(importedAt, 'ts');
     if (this.isAngularLearning) return angularJobSeedToPracticeItems(importedAt, 'angular');
+    if (this.isAgentLearning && this.questionMode() === 'objective') {
+      return agentObjectiveSeedToPracticeItems(importedAt);
+    }
+    if (this.isAgentLearning) return agentJobSeedToPracticeItems(importedAt);
     return iosSeedToPracticeItems(importedAt);
   }
 
@@ -1422,6 +1471,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
     if (this.learningTrack === 'android') return 'android-objective-learning';
     if (this.learningTrack === 'angular') return 'angular-objective-learning';
     if (this.learningTrack === 'ts') return 'ts-objective-learning';
+    if (this.learningTrack === 'agent') return 'agent-objective-learning';
     return null;
   }
 
@@ -1432,7 +1482,9 @@ export class PracticeComponent implements OnInit, OnDestroy {
       scope === 'ios-learning' ||
       scope === 'android-learning' ||
       scope === 'angular-learning' ||
-      scope === 'ts-learning'
+      scope === 'ts-learning' ||
+      scope === 'agent-learning' ||
+      scope === 'agent-objective-learning'
     ) {
       return scope;
     }
@@ -1443,11 +1495,21 @@ export class PracticeComponent implements OnInit, OnDestroy {
     return this.route.snapshot.data['practiceFlow'] === 'full' ? 'full' : 'daily';
   }
 
+  private readInitialQuestionMode(): PracticeQuestionMode {
+    if (this.routeScope === 'agent-objective-learning') return 'objective';
+    if (this.routeScope === 'agent-learning') return 'subjective';
+    if (this.isIosLearning) return 'objective';
+    return 'subjective';
+  }
+
   private readLearningTrack(): LearningTrack {
     if (this.routeScope === 'ios-learning') return 'ios';
     if (this.routeScope === 'android-learning') return 'android';
     if (this.routeScope === 'angular-learning') return 'angular';
     if (this.routeScope === 'ts-learning') return 'ts';
+    if (this.routeScope === 'agent-learning' || this.routeScope === 'agent-objective-learning') {
+      return 'agent';
+    }
     return 'general';
   }
 }

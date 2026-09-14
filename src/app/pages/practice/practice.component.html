@@ -98,7 +98,7 @@
       </div>
       @if (!fullQuizMode()) {
       <div class="practice-search" role="search">
-        @if (!isLearningPage && isIosLearning) {
+        @if (isIosLearning) {
           <div class="practice-mode-tabs" aria-label="iOS 题型">
             <button
               type="button"

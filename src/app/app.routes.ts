@@ -33,6 +33,12 @@ export const routes: Routes = [
         data: { practiceScope: 'practice' }
       },
       {
+        path: 'practice/history',
+        loadComponent: () =>
+          import('./pages/practice/practice-score-history.component').then(m => m.PracticeScoreHistoryComponent),
+        data: { practiceHistoryTrack: 'practice' }
+      },
+      {
         path: 'ios-learning',
         loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
         data: { practiceScope: 'ios-learning' }
@@ -41,6 +47,17 @@ export const routes: Routes = [
         path: 'ios-learning/review',
         loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
         data: { practiceScope: 'ios-learning', practiceFlow: 'full' }
+      },
+      {
+        path: 'ios-learning/recite',
+        loadComponent: () => import('./pages/practice/practice-list.component').then(m => m.PracticeListComponent),
+        data: { reciteTrack: 'ios' }
+      },
+      {
+        path: 'ios-learning/history',
+        loadComponent: () =>
+          import('./pages/practice/practice-score-history.component').then(m => m.PracticeScoreHistoryComponent),
+        data: { practiceHistoryTrack: 'ios' }
       },
       {
         path: 'android-learning',
@@ -53,6 +70,17 @@ export const routes: Routes = [
         data: { practiceScope: 'android-learning', practiceFlow: 'full' }
       },
       {
+        path: 'android-learning/recite',
+        loadComponent: () => import('./pages/practice/practice-list.component').then(m => m.PracticeListComponent),
+        data: { reciteTrack: 'android' }
+      },
+      {
+        path: 'android-learning/history',
+        loadComponent: () =>
+          import('./pages/practice/practice-score-history.component').then(m => m.PracticeScoreHistoryComponent),
+        data: { practiceHistoryTrack: 'android' }
+      },
+      {
         path: 'angular-learning',
         loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
         data: { practiceScope: 'angular-learning' }
@@ -63,6 +91,17 @@ export const routes: Routes = [
         data: { practiceScope: 'angular-learning', practiceFlow: 'full' }
       },
       {
+        path: 'angular-learning/recite',
+        loadComponent: () => import('./pages/practice/practice-list.component').then(m => m.PracticeListComponent),
+        data: { reciteTrack: 'angular' }
+      },
+      {
+        path: 'angular-learning/history',
+        loadComponent: () =>
+          import('./pages/practice/practice-score-history.component').then(m => m.PracticeScoreHistoryComponent),
+        data: { practiceHistoryTrack: 'angular' }
+      },
+      {
         path: 'ts-learning',
         loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
         data: { practiceScope: 'ts-learning' }
@@ -71,6 +110,53 @@ export const routes: Routes = [
         path: 'ts-learning/review',
         loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
         data: { practiceScope: 'ts-learning', practiceFlow: 'full' }
+      },
+      {
+        path: 'ts-learning/recite',
+        loadComponent: () => import('./pages/practice/practice-list.component').then(m => m.PracticeListComponent),
+        data: { reciteTrack: 'ts' }
+      },
+      {
+        path: 'ts-learning/history',
+        loadComponent: () =>
+          import('./pages/practice/practice-score-history.component').then(m => m.PracticeScoreHistoryComponent),
+        data: { practiceHistoryTrack: 'ts' }
+      },
+      {
+        path: 'agent-objective-learning',
+        loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
+        data: { practiceScope: 'agent-objective-learning' }
+      },
+      {
+        path: 'agent-objective-learning/review',
+        loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
+        data: { practiceScope: 'agent-objective-learning', practiceFlow: 'full' }
+      },
+      {
+        path: 'agent-objective-learning/recite',
+        redirectTo: '/agent-learning/recite',
+        pathMatch: 'full',
+      },
+      {
+        path: 'agent-learning',
+        loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
+        data: { practiceScope: 'agent-learning' }
+      },
+      {
+        path: 'agent-learning/review',
+        loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
+        data: { practiceScope: 'agent-learning', practiceFlow: 'full' }
+      },
+      {
+        path: 'agent-learning/recite',
+        loadComponent: () => import('./pages/practice/practice-list.component').then(m => m.PracticeListComponent),
+        data: { reciteTrack: 'agent' }
+      },
+      {
+        path: 'agent-learning/history',
+        loadComponent: () =>
+          import('./pages/practice/practice-score-history.component').then(m => m.PracticeScoreHistoryComponent),
+        data: { practiceHistoryTrack: 'agent' }
       },
       {
         path: 'practice-list',
