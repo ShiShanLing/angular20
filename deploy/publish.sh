@@ -97,7 +97,7 @@ commit_and_push_after_package() {
   if [ -n "$(git status --porcelain)" ]; then
     log "committing local changes after packaging"
     git add -A
-    git commit -m "chore: auto-commit after package $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+    git commit -m "打包发布后自动提交 $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
   else
     log "working tree is clean; skipping commit"
   fi

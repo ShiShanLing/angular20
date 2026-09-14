@@ -1,14 +1,30 @@
 ---
-description: Commit and push to GitHub as part of production publish
+description: Packaging must push GitHub; commit messages must be Chinese
 alwaysApply: true
 ---
 
-# Publish commits and pushes after packaging
+# 打包必须推 GitHub，说明用中文
 
-After a successful production package (`./deploy/publish.sh`, not `--dry-run`):
+这个项目**不会**靠别的系统自动推送。打包发布后若没把当前分支推到 GitHub，再一换分支，线上就会缺功能。
 
-1. Commit any remaining local changes if the working tree is dirty.
-2. `git push` the current branch to GitHub (`origin`).
-3. Continue the server release using that commit.
+## 打包 / 发布
 
-`--allow-dirty` is accepted for compatibility; leftover files are still committed after packaging. `--dry-run` must not commit or push.
+正式发布用 `./deploy/publish.sh publish --targets ...`（不要 `--dry-run` 当正式发布）。脚本在打包成功后必须：
+
+1. 工作区若有未提交改动，先提交
+2. `git push` 当前分支到 `origin`（GitHub）
+3. 再用该提交做服务器发布
+
+Agent 自己做发布时，也必须完成上述推送，不能只构建或只发布服务器。`--dry-run` 不提交、不推送。
+
+## 推送到 GitHub 的改动说明
+
+凡是会推到 GitHub 的提交说明（`git commit` 信息、发布脚本自动提交）**必须用中文**，写清为什么改，不要用英文 `chore:` / `feat:` 当主说明。
+
+```text
+# 正确
+工资试算把年薪和年终奖分开计算，打包成功后自动推送到 GitHub。
+
+# 错误
+chore: auto-commit after package
+```

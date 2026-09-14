@@ -1,0 +1,15 @@
+---
+description: Never switch git branches unless the user agrees first
+alwaysApply: true
+---
+
+# 切换分支必须先问
+
+本仓库开发对话里，**不要自动切换 git 分支**。擅自 `checkout` / `switch` 会丢掉未提交改动，或把后续提交打到错误分支，线上会缺功能。
+
+- 禁止在未询问并得到明确同意时执行：`git checkout`、`git switch`、`git checkout -b`，以及会改变当前工作分支的 `reset` / `rebase` 到其他分支。
+- 禁止未询问就调用会把会话绑到另一分支的分支切换工具。
+- 需要看另一分支时：用 `git show 分支:路径`、`git log 分支`、`git diff 分支`，留在当前分支。
+- 只有用户明确说出要切到某分支（例如「切到 dev」）后才能切换；合并、对比、推送都默认留在当前分支。
+
+如果任务看起来必须换分支，先停下来问用户切不切、切到哪一条。
