@@ -170,7 +170,7 @@ export class AuthService {
   private persistProfile(profile: ProfileResponse): void {
     this.guest.set(false);
     this.localDev.set(false);
-    const perms = profile.permissions || [];
+    const perms = this.normalizePermissions(profile.permissions || []);
     const user: UserInfo = {
       id: profile.id,
       username: profile.username,
