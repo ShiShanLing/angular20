@@ -70,4 +70,14 @@ describe('builtinSeedForScope', () => {
     expect(items.map((item) => item.no)).toEqual(items.map((_, index) => index + 1));
     expect(builtinSeedForScope('ios-objective-learning', 1)[0].no).toBe(1);
   });
+
+  it('places Codable intro questions before CodingKeys mapping', () => {
+    const ids = builtinSeedForScope('ios-learning', 1).map((item) => item.id);
+    const what = ids.indexOf('ios-swift-codable-what-is');
+    const usage = ids.indexOf('ios-swift-codable-basic-usage');
+    const mapping = ids.indexOf('ios-swift-codable-key-mapping');
+    expect(what).toBeGreaterThan(-1);
+    expect(usage).toBeGreaterThan(what);
+    expect(mapping).toBeGreaterThan(usage);
+  });
 });
