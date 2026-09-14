@@ -305,7 +305,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
     const d = this.calendarMonth();
     return `${d.getFullYear()} 年 ${d.getMonth() + 1} 月`;
   });
-
+  
   /** 当前日历月份展示的 6 周日期格。 */
   readonly calendarDays = computed<PracticeCalendarDay[]>(() => {
     const month = this.calendarMonth();
@@ -332,7 +332,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
         done: total > 0 && remembered >= total,
       });
     }
-
+    
     return days;
   });
   
@@ -343,7 +343,6 @@ export class PracticeComponent implements OnInit, OnDestroy {
   ];
   /** 添加分类*/
   readonly addCategory = signal<PracticeCategory | null>(null);
-  /**以我现在的能力,能照顾好自己就成,不要考虑怎么多,130万左右基本就可以了.给老爹开个账户,买点纳指和红利*/
   
   /** 导航按钮是否禁用。*/
   readonly navDisabled = computed(() => !this.listForNav().length);
