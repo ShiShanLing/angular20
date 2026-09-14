@@ -353,12 +353,16 @@
 }
 
 .app-content {
-  padding: 24px;
+  --app-content-pad: 24px;
+  padding: 0;
   overflow-y: auto;
   background: var(--bg-primary, transparent);
   transition: background-color 0.3s ease;
 
-  .content-inner { min-height: 100%; }
+  .content-inner {
+    min-height: 100%;
+    padding: var(--app-content-pad);
+  }
 }
 
 .app-footer {
@@ -492,7 +496,7 @@
     }
   }
 
-  .app-content { padding: 12px; }    // 内容区减小内边距，扩大可用面积
+  .app-content { --app-content-pad: 12px; }    // 内容区减小内边距，扩大可用面积
 
   .app-footer {
     gap: 4px;

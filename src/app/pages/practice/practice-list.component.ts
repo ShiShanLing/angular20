@@ -189,7 +189,8 @@ type FilterValue = PracticeFilterCategory;
   `,
   styles: [`
     .practice-list-page {
-      padding: 16px;
+      --page-pad: 16px;
+      padding: var(--page-pad);
       max-width: 900px;
       margin: 0 auto;
     }
@@ -228,11 +229,15 @@ type FilterValue = PracticeFilterCategory;
     }
 
     .list-head-sticky {
+      // 抵消内容区内边距，让背题栏贴住站点头部，题目不能从空隙透出
+      --head-shift: calc(var(--app-content-pad, 24px) + var(--page-pad));
       position: sticky;
       top: 0;
-      z-index: 6;
-      background: var(--bg-primary, #f5f5f5);
+      z-index: 8;
+      margin-top: calc(-1 * var(--head-shift));
+      padding-top: var(--head-shift);
       padding-bottom: 8px;
+      background: var(--bg-primary, #f5f5f5);
     }
 
     .list-head-sticky .stats-bar {
@@ -403,7 +408,7 @@ type FilterValue = PracticeFilterCategory;
     }
 
     @media (max-width: 768px) {
-      .practice-list-page { padding: 12px; }
+      .practice-list-page { --page-pad: 12px; }
       .toolbar { flex-direction: column; align-items: flex-start; }
       .toolbar-right { width: 100%; }
       .search-box { width: 100%; }
