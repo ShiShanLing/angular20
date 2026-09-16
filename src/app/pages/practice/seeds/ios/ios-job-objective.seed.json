@@ -2707,7 +2707,7 @@
     "category": "iOS",
     "topic": "Objective-C / Runtime",
     "type": "trueFalse",
-    "question": "判断：ARC 是编译器插入内存管理调用，Runtime 配合维护引用计数和 weak。",
+    "question": "判断：ARC 主体是编译期插调用；引用计数、weak、autorelease pool 由 Runtime 落地。",
     "options": [
       {
         "id": "true",
