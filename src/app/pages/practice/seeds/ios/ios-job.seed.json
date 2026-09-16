@@ -265,9 +265,9 @@
     "category": "iOS",
     "topic": "Objective-C / Runtime",
     "question": "Objective-C Block 有哪些类型？为什么 Block 通常需要 copy？",
-    "answer": "没有捕获外部自动变量的 Block 通常是全局 Block。捕获局部变量的 Block 初始可能在栈上。对栈 Block 执行 copy 后会移动到堆上，变成堆 Block。\n\n保存 Block，或把它交给异步任务稍后执行时，通常需要 copy。栈 Block 跟着当前函数的栈帧走，函数一返回，栈上这块内存就失效了。copy 到堆上，是为了让这份 Block 对象在函数返回之后仍然可以被调用，不是“Block 执行完以后别的东西还在”。ARC 下很多赋值场景编译器会自动 copy，但 Block 属性仍推荐声明为 copy。",
+    "answer": "没有捕获外部自动变量的 Block 通常是全局 Block。捕获局部变量的 Block 初始可能在栈上。对栈 Block 执行 copy 后会移动到堆上，变成堆 Block。\n\n保存或异步执行 Block 时通常需要 copy。函数返回后栈空间会失效，copy 到堆上才能保证这份 Block 在函数返回后仍可调用。ARC 下很多场景编译器会自动 copy，但 Block 属性仍推荐声明为 copy。",
     "difficulty": "Medium",
-    "oralOneLiner": "Block 有全局、栈、堆三类；要留到函数返回后再调用，就把栈 Block copy 到堆上。"
+    "oralOneLiner": "Block 有全局、栈、堆三类；保存或异步使用时 copy 到堆上更安全。"
   },
   {
     "no": 28,
