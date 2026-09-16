@@ -83,7 +83,7 @@ type FilterValue = PracticeFilterCategory;
                 nz-input
                 placeholder="搜索题目或编号..."
                 [ngModel]="searchText()"
-                (ngModelChange)="searchText.set($event)"
+                (ngModelChange)="onSearchChange($event)"
               />
             </nz-input-wrapper>
           </div>
@@ -91,7 +91,11 @@ type FilterValue = PracticeFilterCategory;
 
         <!-- 统计 -->
         <div class="stats-bar">
-          <span>共 <strong>{{ filteredItems().length }}</strong> 题@if (reciteMode && searchText().trim()) {（全库 {{ allItems().length }}）}</span>
+          @if (reciteMode && searchText().trim()) {
+            <span>命中 <strong>{{ searchResults().length }}</strong> 题（全库 {{ filteredItems().length }}）</span>
+          } @else {
+            <span>共 <strong>{{ filteredItems().length }}</strong> 题</span>
+          }
           <span class="spacer"></span>
           @if (!reciteMode) {
             <button nz-button nzType="link" nzSize="small" (click)="toggleAllAnswers()">
@@ -466,18 +470,14 @@ export class PracticeListComponent implements OnInit {
     if (!this.reciteMode && filter !== 'all') {
       items = items.filter(i => i.category === filter);
     }
-    const searchText = this.searchText();
-    if (searchText.trim()) {
-      const kw = searchText.trim().toLowerCase();
-      items = items.filter(i =>
-        (i.no != null && String(i.no) === kw) ||
-        i.question.toLowerCase().includes(kw) ||
-        i.answer.toLowerCase().includes(kw) ||
-        i.tags.toLowerCase().includes(kw)
-      );
+    if (!this.reciteMode) {
+      items = this.filterItemsBySearch(items, this.searchText());
     }
     return items;
   });
+
+  /** 背题模式下的搜索命中列表，只用于定位跳转，不改变列表本身。 */
+  readonly searchResults = computed(() => this.filterItemsBySearch(this.filteredItems(), this.searchText()));
 
   /** 是否全部展开 */
   readonly allExpanded = computed(() => {
@@ -602,6 +602,17 @@ export class PracticeListComponent implements OnInit {
   // MARK: 设置
   setFilter(cat: FilterValue) {
     this.currentFilter.set(cat);
+    if (this.reciteMode) {
+      this.jumpToFirstMatchedQuestion();
+    }
+  }
+
+  // MARK: 搜索
+  onSearchChange(value: string): void {
+    this.searchText.set(value);
+    if (this.reciteMode) {
+      this.jumpToFirstMatchedQuestion();
+    }
   }
 
   // MARK: 切换
@@ -611,6 +622,10 @@ export class PracticeListComponent implements OnInit {
       this.revealedIds.set(new Set());
       return;
     }
+    this.expandQuestion(id);
+  }
+
+  private expandQuestion(id: string): void {
     this.expandedIds.set(new Set([id]));
     this.revealedIds.set(this.reciteMode ? new Set([id]) : new Set());
     if (this.reciteMode) {
@@ -662,6 +677,25 @@ export class PracticeListComponent implements OnInit {
 
   private isChoiceQuestion(item: PracticeItem): boolean {
     return item.questionType === 'trueFalse' || item.questionType === 'single' || item.questionType === 'multiple';
+  }
+
+  private filterItemsBySearch(items: PracticeItem[], rawSearchText: string): PracticeItem[] {
+    const kw = rawSearchText.trim().toLowerCase();
+    if (!kw) return items;
+    return items.filter(i =>
+      (i.no != null && String(i.no) === kw) ||
+      i.question.toLowerCase().includes(kw) ||
+      i.answer.toLowerCase().includes(kw) ||
+      i.tags.toLowerCase().includes(kw)
+    );
+  }
+
+  private jumpToFirstMatchedQuestion(): void {
+    const query = this.searchText().trim();
+    if (!query) return;
+    const first = this.searchResults()[0];
+    if (!first) return;
+    this.expandQuestion(first.id);
   }
 
   isCorrectOption(item: PracticeItem, optionId: string): boolean {

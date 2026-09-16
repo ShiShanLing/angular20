@@ -56,6 +56,33 @@ describe('PracticeListComponent recite mode', () => {
     expect(component.allItems().length).toBe(builtinSeedForScope('agent-learning', 1).length);
     expect(component.allItems().some((item) => item.questionType === 'trueFalse' || item.questionType === 'single' || item.questionType === 'multiple')).toBeFalse();
   });
+
+  it('keeps the full recite list and jumps to the first matched question when searching', () => {
+    const storage = new PracticeStorageService();
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [PracticeListComponent],
+      providers: [
+        { provide: PracticeStorageService, useValue: storage },
+        { provide: ActivatedRoute, useValue: { snapshot: { data: { reciteTrack: 'ios' } } } },
+      ],
+    });
+    const fixture = TestBed.createComponent(PracticeListComponent);
+    const component = fixture.componentInstance;
+    component.ngOnInit();
+
+    const total = component.filteredItems().length;
+    const first = component.allItems().find((item) => item.question.includes('ARC'));
+    expect(first).toBeTruthy();
+
+    component.onSearchChange('ARC');
+
+    expect(component.filteredItems().length).toBe(total);
+    expect(component.searchResults().length).toBeGreaterThan(0);
+    expect(component.searchResults()[0].id).toBe(first!.id);
+    expect(component.expandedIds().has(first!.id)).toBeTrue();
+    expect(component.revealedIds().has(first!.id)).toBeTrue();
+  });
 });
 
 describe('builtinSeedForScope', () => {
