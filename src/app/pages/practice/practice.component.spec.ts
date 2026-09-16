@@ -81,6 +81,39 @@ describe('PracticeComponent', () => {
     expect(component.listForNav().every(i => i.category === 'ios')).toBeTrue();
   });
 
+  it('search jumps to the first matching item instead of shrinking nav list', () => {
+    const items = [
+      makeItem({ id: 'q1', question: 'RunLoop 是什么？' }),
+      makeItem({ id: 'q2', question: 'Block 为什么通常用 copy？' }),
+      makeItem({ id: 'q3', question: 'ARC 和 Runtime 如何配合？' }),
+    ];
+    component.items.set(items);
+    component.filterCategory.set('all');
+    component.currentIndex.set(0);
+
+    component.onSearchInput('copy');
+
+    expect(component.searchResults().map((item) => item.id)).toEqual(['q2']);
+    expect(component.listForNav().map((item) => item.id)).toEqual(['q1', 'q2', 'q3']);
+    expect(component.currentItem()?.id).toBe('q2');
+  });
+
+  it('search jumps to the first match when multiple items match', () => {
+    const items = [
+      makeItem({ id: 'q1', question: 'Block copy 规则一' }),
+      makeItem({ id: 'q2', question: 'Runtime 原理' }),
+      makeItem({ id: 'q3', question: 'Block copy 规则二' }),
+    ];
+    component.items.set(items);
+    component.filterCategory.set('all');
+    component.currentIndex.set(1);
+
+    component.onSearchInput('block copy');
+
+    expect(component.searchResults().map((item) => item.id)).toEqual(['q1', 'q3']);
+    expect(component.currentItem()?.id).toBe('q1');
+  });
+
   it('currentItem returns item at currentIndex', () => {
     const items = [makeItem({ question: 'q1' }), makeItem({ question: 'q2' })];
     component.items.set(items);

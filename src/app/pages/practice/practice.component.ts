@@ -225,16 +225,19 @@ export class PracticeComponent implements OnInit, OnDestroy {
     return all.filter((i) => i.category === f);
   });
   /**/
-  /** 在当前分类内应用关键词搜索后的结果。 */
-  readonly searchResults = computed(() =>
-    applyPracticeSearchFilter(this.categoryFiltered(), this.searchQuery())
-  );
-
-  /** 语音播放使用的列表；唱题模式不使用每日待复习列表，避免影响学习统计。 */
-  readonly listenList = computed(() => {
-    if (this.searchQuery().trim()) return this.searchResults();
+  /** 当前基础导航列表：不受搜索影响，只由每日练习和分类筛选决定。 */
+  readonly baseNavList = computed(() => {
+    if (this.todayRecord() && this.dailyItems().length) return this.pendingDailyItems();
     return this.categoryFiltered();
   });
+
+  /** 在当前导航范围内应用关键词搜索后的命中结果，仅用于跳转。 */
+  readonly searchResults = computed(() =>
+    applyPracticeSearchFilter(this.baseNavList(), this.searchQuery())
+  );
+
+  /** 语音播放使用的列表；唱题模式不使用搜索结果，避免把播放范围缩成命中项。 */
+  readonly listenList = computed(() => this.baseNavList());
 
   /** 今天的练习记录；不存在时返回 null。 */
   readonly todayRecord = computed(() => this.dailyState().records[this.todayKey()] ?? null);
@@ -256,12 +259,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     return this.dailyItems().filter((item) => !remembered.has(item.id));
   });
   
-  /** 页面上一题/下一题实际导航的列表：搜索优先，其次每日待练，最后分类全量。 */
-  readonly listForNav = computed(() => {
-    if (this.searchQuery().trim()) return this.searchResults();
-    if (this.todayRecord() && this.dailyItems().length) return this.pendingDailyItems();
-    return this.categoryFiltered();
-  });
+  /** 页面上一题/下一题实际导航的列表：只受每日待练和分类筛选影响。 */
+  readonly listForNav = computed(() => this.baseNavList());
 
   /** 当前正在展示的题目。 */
   readonly currentItem = computed(() => {
@@ -465,6 +464,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
       this.msg.warning('先选一个答案再提交。');
       return;
     }
+    
     this.objectiveSubmitted.set(true);
     if (this.objectiveAnswerCorrect(item)) {
       this.msg.success('答对了，可以标记为记住。');
@@ -771,7 +771,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
   onSearchInput(value: string): void {
     this.exitFullQuiz();
     this.searchQuery.set(value);
-    this.clampIndex();
+    this.jumpToFirstSearchResult();
     this.resetQuestionUi();
   }
 
@@ -921,7 +921,9 @@ export class PracticeComponent implements OnInit, OnDestroy {
 
   // MARK: 选择
   // 从搜索结果下拉中跳转到指定题目。
-  pickSearchResult(index: number): void {
+  pickSearchResult(itemId: string): void {
+    const index = this.listForNav().findIndex((item) => item.id === itemId);
+    if (index < 0) return;
     this.currentIndex.set(index);
     this.resetQuestionUi();
   }
@@ -1435,6 +1437,20 @@ export class PracticeComponent implements OnInit, OnDestroy {
     if (this.currentIndex() < 0) {
       this.currentIndex.set(0);
     }
+  }
+
+  // MARK: 搜索
+  // 搜索时只定位到当前范围内的第一条命中题目，不改变导航列表本身。
+  private jumpToFirstSearchResult(): void {
+    const query = this.searchQuery().trim();
+    if (!query) {
+      this.clampIndex();
+      return;
+    }
+    const first = this.searchResults()[0];
+    if (!first) return;
+    const index = this.listForNav().findIndex((item) => item.id === first.id);
+    if (index >= 0) this.currentIndex.set(index);
   }
 
   // MARK: 重置

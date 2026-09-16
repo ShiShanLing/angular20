@@ -140,23 +140,27 @@
       <!-- 搜索下拉放在 topbar 内，确保 sticky 后下拉不随内容滚走 -->
       @if (!fullQuizMode()) {
       <div class="practice-search-dropdown">
-        @if (searchQuery().trim() && listForNav().length) {
+        @if (searchQuery().trim()) {
           <div class="search-results-host">
-            <div class="search-results__head">当前筛选下命中 {{ listForNav().length }} 题，点击跳转</div>
-            <ul class="search-results" role="listbox" aria-label="搜索结果">
-              @for (it of listForNav(); track it.id; let idx = $index) {
-                <li>
-                  <button
-                    type="button"
-                    class="search-results__item"
-                    [class.is-active]="idx === currentIndex()"
-                    (click)="pickSearchResult(idx)">
-                    <div class="search-results__preview">{{ it.question }}</div>
-                    <div class="search-results__meta">{{ categoryLabel(it.category) }} · {{ it.tags || '—' }}</div>
-                  </button>
-                </li>
-              }
-            </ul>
+            @if (searchResults().length) {
+              <div class="search-results__head">当前范围命中 {{ searchResults().length }} 题，点击跳转</div>
+              <ul class="search-results" role="listbox" aria-label="搜索结果">
+                @for (it of searchResults(); track it.id) {
+                  <li>
+                    <button
+                      type="button"
+                      class="search-results__item"
+                      [class.is-active]="currentItem()?.id === it.id"
+                      (click)="pickSearchResult(it.id)">
+                      <div class="search-results__preview">{{ it.question }}</div>
+                      <div class="search-results__meta">{{ categoryLabel(it.category) }} · {{ it.tags || '—' }}</div>
+                    </button>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <div class="search-results__head">当前范围未命中题目</div>
+            }
           </div>
         }
       </div>
