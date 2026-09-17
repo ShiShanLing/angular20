@@ -23,6 +23,7 @@ import {
   BulbOutline, EditOutline, UpOutline, DownOutline, SunOutline, MoonOutline,
   StockOutline, ArrowLeftOutline,
   ExpandOutline, CompressOutline,
+  StarOutline, StarFill,
 } from '@ant-design/icons-angular/icons';
 import { registerLocaleData } from '@angular/common';
 import zh from '@angular/common/locales/zh';
@@ -46,6 +47,7 @@ const icons = [
   BulbOutline, EditOutline, UpOutline, DownOutline, SunOutline, MoonOutline,
   StockOutline, ArrowLeftOutline,
   ExpandOutline, CompressOutline,
+  StarOutline, StarFill,
 ];
 
 

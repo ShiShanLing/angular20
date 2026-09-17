@@ -83,6 +83,42 @@ describe('PracticeListComponent recite mode', () => {
     expect(component.expandedIds().has(first!.id)).toBeTrue();
     expect(component.revealedIds().has(first!.id)).toBeTrue();
   });
+
+  it('stars a question and filters the recite list to starred items only', () => {
+    localStorage.clear();
+    const storage = new PracticeStorageService();
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [PracticeListComponent],
+      providers: [
+        { provide: PracticeStorageService, useValue: storage },
+        { provide: ActivatedRoute, useValue: { snapshot: { data: { reciteTrack: 'ios' } } } },
+      ],
+    });
+    const fixture = TestBed.createComponent(PracticeListComponent);
+    const component = fixture.componentInstance;
+    component.ngOnInit();
+
+    const total = component.filteredItems().length;
+    const firstId = component.allItems()[0].id;
+    const secondId = component.allItems()[1].id;
+
+    component.toggleStar(firstId, new Event('click'));
+    expect(component.isStarred(firstId)).toBeTrue();
+    expect(storage.readStarredIds('ios')).toEqual([firstId]);
+    expect(component.filteredItems().length).toBe(total);
+
+    component.toggleStarredOnly();
+    expect(component.starredOnly()).toBeTrue();
+    expect(component.filteredItems().map((item) => item.id)).toEqual([firstId]);
+
+    component.toggleStar(secondId, new Event('click'));
+    expect(component.filteredItems().map((item) => item.id)).toEqual([firstId, secondId]);
+
+    component.toggleStarredOnly();
+    expect(component.starredOnly()).toBeFalse();
+    expect(component.filteredItems().length).toBe(total);
+  });
 });
 
 describe('builtinSeedForScope', () => {

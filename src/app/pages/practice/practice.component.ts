@@ -355,18 +355,14 @@ export class PracticeComponent implements OnInit, OnDestroy {
     return n > 0 && this.currentIndex() < n - 1;
   });
   /*
+  
 
-ARC是编译机制还是运行机制,他和Runtime如何配合管理引用计数.
+  App启动大致经历:
+  
 
-两边都有,但主题是编译期机制,编译器分析对象生命周期,.自动插入retain,release,aoturelease;他不是垃圾回收,释放时机仍由引用计数决定,循环引用 ARC 无法自己解决.
-
-
-ARC两边都有,主题是编译期机制,编译期分析对象生命周期,自动插入retain,release,autorelease;但是循环引用无法自己解决.
-
-和Runtime配合的是,编译器只负责决定哪里插入这些调用,真正加减引用计数,维护弱引用表,运行autorelease pool,都由Runtime执行,
+  App 启动大致经历：系统创建进程，dyld 加载可执行文件和动态库，Runtime 初始化类和分类，进入 main，UIApplicationMain 创建应用对象，建立 AppDelegate/SceneDelegate、window、rootViewController，然后加载 view、布局并提交首帧。优化时按 main 前和 main 后拆。
 
 
-编译器只负责插入retain release这些调用,真正加减引用计数,维护弱引用表,运行autorelease pool,都由Runtime执行.
 
   */
 

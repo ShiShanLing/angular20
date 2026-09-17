@@ -207,4 +207,13 @@ describe('PracticeStorageService', () => {
     localStorage.setItem(PRACTICE_FILTER_CATEGORY_KEY, 'not-a-category');
     expect(service.readSavedFilterCategory()).toBe('all');
   });
+
+  it('toggles and persists starred ids per track', () => {
+    expect(service.readStarredIds('ios')).toEqual([]);
+    expect(service.toggleStarred('ios', 'q1')).toEqual(['q1']);
+    expect(service.readStarredIds('ios')).toEqual(['q1']);
+    expect(service.toggleStarred('ios', 'q2').sort()).toEqual(['q1', 'q2']);
+    expect(service.toggleStarred('ios', 'q1')).toEqual(['q2']);
+    expect(service.readStarredIds('android')).toEqual([]);
+  });
 });

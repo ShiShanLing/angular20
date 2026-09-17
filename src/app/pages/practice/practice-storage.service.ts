@@ -52,6 +52,9 @@ export const PRACTICE_SKIP_BUILTIN_SEED_KEY = 'angular20_practice_skip_builtin_s
 /** 刷题页记住的分类筛选（与题库数据分开存） */
 export const PRACTICE_FILTER_CATEGORY_KEY = 'angular20_practice_filter_category_v1';
 
+/** 背题页按科目 track 保存的标星题目 id（与题库 seed 分开存） */
+export const PRACTICE_STARRED_KEY = 'angular20_practice_starred_v1';
+
 export interface PracticeDayRecord {
   date: string;
   itemIds: string[];
@@ -371,7 +374,50 @@ export class PracticeStorageService {
     }
     return [...byId.values()].sort((a, b) => a.at - b.at);
   }
-  
+
+  // MARK: 读取
+  // 读取某科目背题标星 id 列表。
+  readStarredIds(track: PracticeHistoryTrack): string[] {
+    try {
+      const raw = localStorage.getItem(this.starredKey(track));
+      if (!raw) return [];
+      const parsed = JSON.parse(raw) as unknown;
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter((id): id is string => typeof id === 'string' && !!id);
+    } catch {
+      return [];
+    }
+  }
+
+  // MARK: 保存
+  // 持久化某科目背题标星 id 列表。
+  saveStarredIds(track: PracticeHistoryTrack, ids: string[]): void {
+    try {
+      const unique = [...new Set(ids.filter((id) => typeof id === 'string' && !!id))];
+      localStorage.setItem(this.starredKey(track), JSON.stringify(unique));
+    } catch {
+      /* quota / 隐私模式 */
+    }
+  }
+
+  // MARK: 切换
+  // 切换某题标星状态，返回最新 id 列表。
+  toggleStarred(track: PracticeHistoryTrack, id: string): string[] {
+    const current = new Set(this.readStarredIds(track));
+    if (current.has(id)) {
+      current.delete(id);
+    } else {
+      current.add(id);
+    }
+    const next = [...current];
+    this.saveStarredIds(track, next);
+    return next;
+  }
+
+  private starredKey(track: PracticeHistoryTrack): string {
+    return `${PRACTICE_STARRED_KEY}_${track}`;
+  }
+
   // MARK: 解析
   // 将 localStorage 中的未知 JSON 解析为 {@link PracticeItem}；字段不全则丢弃。
   private parseItem(x: unknown): PracticeItem | null {

@@ -86,12 +86,27 @@ type FilterValue = PracticeFilterCategory;
                 (ngModelChange)="onSearchChange($event)"
               />
             </nz-input-wrapper>
+            @if (reciteMode) {
+              <button
+                nz-button
+                nzSize="small"
+                [nzType]="starredOnly() ? 'primary' : 'default'"
+                [disabled]="!starredCount() && !starredOnly()"
+                (click)="toggleStarredOnly()"
+                title="只看已标星的易忘题"
+              >
+                <span nz-icon nzType="star" [nzTheme]="starredOnly() ? 'fill' : 'outline'"></span>
+                仅看标星{{ starredCount() ? ' ' + starredCount() : '' }}
+              </button>
+            }
           </div>
         </div>
 
         <!-- 统计 -->
         <div class="stats-bar">
-          @if (reciteMode && searchText().trim()) {
+          @if (reciteMode && starredOnly()) {
+            <span>共 <strong>{{ filteredItems().length }}</strong> 题（标星筛选）</span>
+          } @else if (reciteMode && searchText().trim()) {
             <span>命中 <strong>{{ searchResults().length }}</strong> 题（全库 {{ filteredItems().length }}）</span>
           } @else {
             <span>共 <strong>{{ filteredItems().length }}</strong> 题</span>
@@ -111,7 +126,9 @@ type FilterValue = PracticeFilterCategory;
       <!-- 题目列表 -->
       <div class="question-list">
         @if (filteredItems().length === 0) {
-          <nz-empty nzNotFoundContent="暂无题目"></nz-empty>
+          <nz-empty
+            [nzNotFoundContent]="reciteMode && starredOnly() ? '还没有标星题' : '暂无题目'"
+          ></nz-empty>
         }
 
         @for (item of filteredItems(); track item.id; let i = $index) {
@@ -123,6 +140,18 @@ type FilterValue = PracticeFilterCategory;
             <!-- 题目头部 -->
             <div class="question-header" (click)="toggleExpand(item.id)">
               <span class="question-index">{{ item.no ?? i + 1 }}</span>
+              @if (reciteMode) {
+                <button
+                  type="button"
+                  class="star-btn"
+                  [class.is-starred]="isStarred(item.id)"
+                  [attr.aria-label]="isStarred(item.id) ? '取消标星' : '标星'"
+                  [attr.title]="isStarred(item.id) ? '取消标星' : '标为易忘题'"
+                  (click)="toggleStar(item.id, $event)"
+                >
+                  <span nz-icon nzType="star" [nzTheme]="isStarred(item.id) ? 'fill' : 'outline'"></span>
+                </button>
+              }
               <nz-tag [nzColor]="getCategoryColor(item.category)" class="cat-tag">
                 {{ getCategoryLabel(item.category) }}
               </nz-tag>
@@ -307,6 +336,32 @@ type FilterValue = PracticeFilterCategory;
       color: var(--accent-color, #1890ff);
     }
 
+    .star-btn {
+      flex-shrink: 0;
+      margin-top: 2px;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--text-tertiary, #bfbfbf);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .star-btn:hover {
+      color: #faad14;
+      background: rgba(250, 173, 20, 0.08);
+    }
+
+    .star-btn.is-starred {
+      color: #faad14;
+    }
+
     .cat-tag {
       flex-shrink: 0;
       margin-top: 4px;
@@ -451,6 +506,12 @@ export class PracticeListComponent implements OnInit {
   /** 搜索文本 */
   searchText = signal('');
 
+  /** 背题标星 id */
+  starredIds = signal<Set<string>>(new Set());
+
+  /** 仅看标星 */
+  starredOnly = signal(false);
+
   /** 展开的题目 ID 集合 */
   expandedIds = signal<Set<string>>(new Set());
 
@@ -463,12 +524,21 @@ export class PracticeListComponent implements OnInit {
   /** 分类筛选选项 */
   readonly filterCategories: FilterValue[] = ['all', ...PRACTICE_CATEGORY_LIST];
 
+  readonly starredCount = computed(() => {
+    const ids = this.starredIds();
+    return this.allItems().filter((item) => ids.has(item.id)).length;
+  });
+
   /** 筛选后的题目列表。背题一次列出该科目全库，只允许搜索，不按分类裁切。 */
   readonly filteredItems = computed(() => {
     let items = this.allItems();
     const filter = this.currentFilter();
     if (!this.reciteMode && filter !== 'all') {
       items = items.filter(i => i.category === filter);
+    }
+    if (this.reciteMode && this.starredOnly()) {
+      const starred = this.starredIds();
+      items = items.filter((i) => starred.has(i.id));
     }
     if (!this.reciteMode) {
       items = this.filterItemsBySearch(items, this.searchText());
@@ -492,6 +562,10 @@ export class PracticeListComponent implements OnInit {
     const scopes = this.scopesToLoad();
     this.ensureSeeds(scopes);
     this.allItems.set(this.loadItems(scopes));
+    const track = this.starredTrack();
+    if (track) {
+      this.starredIds.set(new Set(this.storage.readStarredIds(track)));
+    }
   }
 
   private scopesToLoad(): PracticeStorageScope[] {
@@ -613,6 +687,38 @@ export class PracticeListComponent implements OnInit {
     if (this.reciteMode) {
       this.jumpToFirstMatchedQuestion();
     }
+  }
+
+  // MARK: 标星
+  isStarred(id: string): boolean {
+    return this.starredIds().has(id);
+  }
+
+  toggleStar(id: string, ev: Event): void {
+    ev.stopPropagation();
+    const track = this.starredTrack();
+    if (!track) return;
+    const next = this.storage.toggleStarred(track, id);
+    this.starredIds.set(new Set(next));
+    if (this.starredOnly() && !next.includes(id) && this.expandedIds().has(id)) {
+      this.expandedIds.set(new Set());
+      this.revealedIds.set(new Set());
+    }
+  }
+
+  toggleStarredOnly(): void {
+    if (!this.starredCount() && !this.starredOnly()) return;
+    this.starredOnly.update((v) => !v);
+    this.expandedIds.set(new Set());
+    this.revealedIds.set(new Set());
+  }
+
+  private starredTrack(): PracticeHistoryTrack | null {
+    if (this.reciteTrack) return this.reciteTrack;
+    if (this.scopedBank === 'agent-learning' || this.scopedBank === 'agent-objective-learning') {
+      return 'agent';
+    }
+    return null;
   }
 
   // MARK: 切换
