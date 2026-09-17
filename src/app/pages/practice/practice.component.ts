@@ -366,6 +366,14 @@ export class PracticeComponent implements OnInit, OnDestroy {
       this.questionMode() === 'objective' ? this.isObjectiveQuestion(item) : !this.isObjectiveQuestion(item)
     )
   );
+  /*
+  可以按「进程 → 装货 → 进门 → 开店亮屏」记：
+  进程:系统创建进程。
+  装货：dyld 加载可执行文件和动态库，Runtime 初始化类和分类（main 前）。
+  进门：进入 main，再由 UIApplicationMain 创建应用对象（main 是入口，UIApplicationMain 才是 UIKit 接管）。
+  开店亮屏：建立 AppDelegate/SceneDelegate、window、rootViewController，加载 view、布局并提交首帧（main 后）。
+  优化启动耗时时，按 main 前和 main 后拆开看。
+  */
 
   /** 一次性练习锁定的题目，避免作答中搜索或筛选变化影响评分。 */
   readonly fullQuizItems = computed(() => {
