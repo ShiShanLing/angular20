@@ -305,9 +305,9 @@
     "category": "iOS",
     "topic": "Objective-C / Runtime",
     "question": "ARC 是编译期机制还是运行期机制？它和 Runtime 如何配合管理引用计数？",
-    "answer": "两边都有，但主体是编译期机制。编译器分析对象生命周期，自动插入 retain、release、autorelease；它不是垃圾回收，释放时机仍由引用计数决定，循环引用 ARC 无法自动解决。\n\n和 Runtime 的配合是：编译器只负责决定在哪里插入这些调用，真正加减引用计数、维护弱引用表、运行 autorelease pool，都由 Runtime 执行。可以记成：编译器定时机，Runtime 落地计数。",
+    "answer": "ARC 两边都有：编译期负责插入调用，运行期负责真正改计数。\n\n编译期：编译器分析对象生命周期，自动插入 retain、release、autorelease。\n运行期：Runtime 执行这些调用，加减引用计数，并维护弱引用表和 autorelease pool。\n\n它不是垃圾回收，释放时机仍由引用计数决定，循环引用 ARC 无法自动解决。",
     "difficulty": "Hard",
-    "oralOneLiner": "ARC 主体是编译期插调用；引用计数、weak、autorelease pool 由 Runtime 落地。"
+    "oralOneLiner": "编译期插 retain/release；运行期由 Runtime 改计数、管 weak 和 pool。"
   },
   {
     "no": 32,

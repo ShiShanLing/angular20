@@ -354,6 +354,21 @@ export class PracticeComponent implements OnInit, OnDestroy {
     const n = this.listForNav().length;
     return n > 0 && this.currentIndex() < n - 1;
   });
+  /*
+
+ARC是编译机制还是运行机制,他和Runtime如何配合管理引用计数.
+
+两边都有,但主题是编译期机制,编译器分析对象生命周期,.自动插入retain,release,aoturelease;他不是垃圾回收,释放时机仍由引用计数决定,循环引用 ARC 无法自己解决.
+
+
+ARC两边都有,主题是编译期机制,编译期分析对象生命周期,自动插入retain,release,autorelease;但是循环引用无法自己解决.
+
+和Runtime配合的是,编译器只负责决定哪里插入这些调用,真正加减引用计数,维护弱引用表,运行autorelease pool,都由Runtime执行,
+
+
+编译器只负责插入retain release这些调用,真正加减引用计数,维护弱引用表,运行autorelease pool,都由Runtime执行.
+
+  */
 
   /** 当前浏览器是否支持 Web Speech 语音播报。 */
   readonly speechAvailable = computed(() => this.canUseSpeech());
@@ -409,19 +424,19 @@ export class PracticeComponent implements OnInit, OnDestroy {
     if (!total) return 0;
     return Math.round((this.fullQuizCorrectCount() / total) * 100);
   });
-
+  
   readonly fullQuizVisibleItems = computed(() =>
     this.fullQuizWrongOnly() && this.fullQuizSubmitted()
       ? this.fullQuizWrongItems().map((entry) => entry.item)
       : this.fullQuizItems()
   );
-
+  
   /** 右侧分类悬浮按钮展示的短标签。 */
   readonly categoryFabLabel = computed(() => {
     const f = this.filterCategory();
     return f === 'all' ? '类型' : PRACTICE_CATEGORY_LABELS[f];
   });
-
+  
   // MARK: 标签
   // 将分类枚举转成界面展示文案。
   categoryLabel(cat: PracticeCategory): string {
@@ -456,7 +471,6 @@ export class PracticeComponent implements OnInit, OnDestroy {
     }
     this.selectedObjectiveAnswers.set([optionId]);
   }
-
   submitObjectiveAnswer(): void {
     const item = this.currentItem();
     if (!item || !this.isObjectiveQuestion(item)) return;
@@ -464,7 +478,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
       this.msg.warning('先选一个答案再提交。');
       return;
     }
-    
+    //
     this.objectiveSubmitted.set(true);
     if (this.objectiveAnswerCorrect(item)) {
       this.msg.success('答对了，可以标记为记住。');
@@ -472,7 +486,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
       this.msg.warning('这题再看一下解析。');
     }
   }
-
+  
   objectiveAnswerCorrect(item: PracticeItem): boolean {
     const selected = [...this.selectedObjectiveAnswers()].sort();
     const correct = [...(item.correctAnswers ?? [])].sort();

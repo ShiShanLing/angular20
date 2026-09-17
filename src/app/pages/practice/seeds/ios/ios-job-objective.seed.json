@@ -2707,7 +2707,7 @@
     "category": "iOS",
     "topic": "Objective-C / Runtime",
     "type": "trueFalse",
-    "question": "判断：ARC 主体是编译期插调用；引用计数、weak、autorelease pool 由 Runtime 落地。",
+    "question": "判断：编译期插 retain/release；运行期由 Runtime 改计数、管 weak 和 pool。",
     "options": [
       {
         "id": "true",
