@@ -354,18 +354,6 @@ export class PracticeComponent implements OnInit, OnDestroy {
     const n = this.listForNav().length;
     return n > 0 && this.currentIndex() < n - 1;
   });
-  /*
-  
-
-  App启动大致经历:
-  
-
-  App 启动大致经历：系统创建进程，dyld 加载可执行文件和动态库，Runtime 初始化类和分类，进入 main，UIApplicationMain 创建应用对象，建立 AppDelegate/SceneDelegate、window、rootViewController，然后加载 view、布局并提交首帧。优化时按 main 前和 main 后拆。
-
-
-
-  */
-
   /** 当前浏览器是否支持 Web Speech 语音播报。 */
   readonly speechAvailable = computed(() => this.canUseSpeech());
 

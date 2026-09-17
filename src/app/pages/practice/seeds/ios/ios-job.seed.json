@@ -315,9 +315,9 @@
     "category": "iOS",
     "topic": "UIKit / App 生命周期",
     "question": "App 从点击图标到首屏展示大致经历了哪些阶段？",
-    "answer": "App 启动大致经历：系统创建进程，dyld 加载可执行文件和动态库，Runtime 初始化类和分类，进入 main，UIApplicationMain 创建应用对象，建立 AppDelegate/SceneDelegate、window、rootViewController，然后加载 view、布局并提交首帧。优化时按 main 前和 main 后拆。",
+    "answer": "可以按「进程 → 装货 → 进门 → 开店亮屏」记：\n\n1. 进程：系统创建进程。\n2. 装货：dyld 加载可执行文件和动态库，Runtime 初始化类和分类（main 前）。\n3. 进门：进入 main，再由 UIApplicationMain 创建应用对象（main 是入口，UIApplicationMain 才是 UIKit 接管）。\n4. 开店亮屏：建立 AppDelegate/SceneDelegate、window、rootViewController，加载 view、布局并提交首帧（main 后）。\n\n优化启动耗时时，按 main 前和 main 后拆开看。",
     "difficulty": "Medium",
-    "oralOneLiner": "启动链路是 dyld、Runtime、main、Application、Scene、首屏。"
+    "oralOneLiner": "进程 → 装货 → 进门 → 开店亮屏；优化按 main 前 / main 后拆。"
   },
   {
     "no": 33,

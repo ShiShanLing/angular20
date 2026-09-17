@@ -2795,7 +2795,7 @@
       "B",
       "C"
     ],
-    "explanation": "链路是：进程 → dyld → Runtime → main → Application/Scene → window/rootVC → 首帧。main 前是加载和初始化，main 后是应用对象和 UI。优化也按这刀切开，不要指望跳过 main 就画出首屏。",
+    "explanation": "可记成：进程 → 装货 → 进门 → 开店亮屏。装货是 dyld/Runtime（main 前）；进门是 main 再交 UIApplicationMain；开店亮屏是 Delegate、window、rootVC 到首帧（main 后）。优化也按 main 前后切开。",
     "difficulty": "Medium"
   },
   {
@@ -2804,7 +2804,7 @@
     "category": "iOS",
     "topic": "UIKit / App 生命周期",
     "type": "trueFalse",
-    "question": "判断：启动链路是 dyld、Runtime、main、Application、Scene、首屏。",
+    "question": "判断：启动可记成「进程 → 装货 → 进门 → 开店亮屏」；优化按 main 前 / main 后拆。",
     "options": [
       {
         "id": "true",
@@ -2818,10 +2818,9 @@
     "correctAnswers": [
       "true"
     ],
-    "explanation": "这是从点图标到看见第一帧的收口。前面是系统加载，过了 main 才是 UIKit 搭窗口和根控制器。",
+    "explanation": "进程是系统起进程；装货是 dyld/Runtime；进门是 main 再交 UIApplicationMain；开店亮屏是 Delegate 建窗到首帧。",
     "difficulty": "Medium"
-  },
-  {
+  },  {
     "id": "ios-obj-090-single-uikit-app-launch-basic",
     "sourceQuestionId": "ios-uikit-app-launch-basic",
     "category": "iOS",
