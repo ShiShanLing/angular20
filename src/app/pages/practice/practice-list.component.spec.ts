@@ -1,9 +1,16 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
+import { EMPTY } from 'rxjs';
 
 import { PracticeListComponent } from './practice-list.component';
 import { PracticeStorageService } from './practice-storage.service';
+import { PracticeStarredSyncService } from './practice-starred-sync.service';
 import { builtinSeedForScope } from './practice-builtin-seed';
+
+const silentStarSync = {
+  pull: () => EMPTY,
+  push: () => undefined,
+};
 
 describe('PracticeListComponent recite mode', () => {
   it('loads the iOS bank and expands one question like an accordion', () => {
@@ -12,6 +19,7 @@ describe('PracticeListComponent recite mode', () => {
       imports: [PracticeListComponent],
       providers: [
         { provide: PracticeStorageService, useValue: storage },
+        { provide: PracticeStarredSyncService, useValue: silentStarSync },
         { provide: ActivatedRoute, useValue: { snapshot: { data: { reciteTrack: 'ios' } } } },
       ],
     });
@@ -45,6 +53,7 @@ describe('PracticeListComponent recite mode', () => {
       imports: [PracticeListComponent],
       providers: [
         { provide: PracticeStorageService, useValue: storage },
+        { provide: PracticeStarredSyncService, useValue: silentStarSync },
         { provide: ActivatedRoute, useValue: { snapshot: { data: { reciteTrack: 'agent' } } } },
       ],
     });
@@ -64,6 +73,7 @@ describe('PracticeListComponent recite mode', () => {
       imports: [PracticeListComponent],
       providers: [
         { provide: PracticeStorageService, useValue: storage },
+        { provide: PracticeStarredSyncService, useValue: silentStarSync },
         { provide: ActivatedRoute, useValue: { snapshot: { data: { reciteTrack: 'ios' } } } },
       ],
     });
@@ -92,6 +102,7 @@ describe('PracticeListComponent recite mode', () => {
       imports: [PracticeListComponent],
       providers: [
         { provide: PracticeStorageService, useValue: storage },
+        { provide: PracticeStarredSyncService, useValue: silentStarSync },
         { provide: ActivatedRoute, useValue: { snapshot: { data: { reciteTrack: 'ios' } } } },
       ],
     });
@@ -118,6 +129,37 @@ describe('PracticeListComponent recite mode', () => {
     component.toggleStarredOnly();
     expect(component.starredOnly()).toBeFalse();
     expect(component.filteredItems().length).toBe(total);
+  });
+
+  it('builds a contacts-style index every 10 questions and jumps to that decade', () => {
+    const storage = new PracticeStorageService();
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [PracticeListComponent],
+      providers: [
+        { provide: PracticeStorageService, useValue: storage },
+        { provide: PracticeStarredSyncService, useValue: silentStarSync },
+        { provide: ActivatedRoute, useValue: { snapshot: { data: { reciteTrack: 'ios' } } } },
+      ],
+    });
+    const fixture = TestBed.createComponent(PracticeListComponent);
+    const component = fixture.componentInstance;
+    component.ngOnInit();
+
+    const lastNo = component.allItems().at(-1)?.no ?? component.allItems().length;
+    expect(component.indexTicks()[0]).toBe(0);
+    expect(component.indexTicks()).toContain(10);
+    expect(component.indexTicks()).toContain(20);
+    expect(component.indexTicks().at(-1)).toBe(Math.floor(lastNo / 10) * 10);
+
+    const tenth = component.allItems().find((item) => item.no === 10);
+    expect(tenth).toBeTruthy();
+    expect(component.indexTargetId(10)).toBe(tenth!.id);
+    expect(component.indexTargetId(0)).toBe(component.allItems()[0].id);
+
+    component.toggleStar(component.allItems()[0].id, new Event('click'));
+    component.toggleStarredOnly();
+    expect(component.indexTicks()).toEqual([0]);
   });
 });
 

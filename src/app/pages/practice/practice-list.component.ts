@@ -2,6 +2,7 @@ import {
   afterNextRender,
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   Injector,
   OnInit,
@@ -9,6 +10,7 @@ import {
   signal,
   computed,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 
@@ -36,6 +38,7 @@ import {
 } from './practice-storage.service';
 import { builtinSeedForScope } from './practice-builtin-seed';
 import { MarkdPipe } from './markd.pipe';
+import { PracticeStarredSyncService } from './practice-starred-sync.service';
 
 type FilterValue = PracticeFilterCategory;
 
@@ -116,6 +119,29 @@ type FilterValue = PracticeFilterCategory;
         }
       </div>
 
+      @if (reciteMode && indexTicks().length > 1) {
+        <nav
+          class="index-rail"
+          aria-label="题号快捷跳转"
+          (pointerdown)="onIndexPointerDown($event)"
+          (pointermove)="onIndexPointerMove($event)"
+          (pointerup)="onIndexPointerEnd()"
+          (pointercancel)="onIndexPointerEnd()"
+        >
+          @for (tick of indexTicks(); track tick) {
+            <button
+              type="button"
+              class="index-tick"
+              [class.is-active]="activeIndexTick() === tick"
+              [attr.aria-label]="'跳到第 ' + tick + ' 题附近'"
+              (click)="jumpToIndexTick(tick); $event.stopPropagation()"
+            >
+              {{ tick }}
+            </button>
+          }
+        </nav>
+      }
+
       <!-- 题目列表 -->
       <div class="question-list">
         @if (filteredItems().length === 0) {
@@ -128,25 +154,24 @@ type FilterValue = PracticeFilterCategory;
           <div
             class="question-card"
             [class.expanded]="expandedIds().has(item.id)"
+            [class.has-star]="reciteMode"
             [attr.data-question-id]="item.id"
           >
+            @if (reciteMode) {
+              <button
+                type="button"
+                class="star-btn"
+                [class.is-starred]="isStarred(item.id)"
+                [attr.aria-label]="isStarred(item.id) ? '取消标星' : '标星'"
+                [attr.title]="isStarred(item.id) ? '取消标星' : '标为易忘题'"
+                (click)="toggleStar(item.id, $event)"
+              >
+                <span nz-icon nzType="star" [nzTheme]="isStarred(item.id) ? 'fill' : 'outline'"></span>
+              </button>
+            }
             <!-- 题目头部 -->
             <div class="question-header" (click)="toggleExpand(item.id)">
-              <div class="question-meta">
-                <span class="question-index">{{ item.no ?? i + 1 }}</span>
-                @if (reciteMode) {
-                  <button
-                    type="button"
-                    class="star-btn"
-                    [class.is-starred]="isStarred(item.id)"
-                    [attr.aria-label]="isStarred(item.id) ? '取消标星' : '标星'"
-                    [attr.title]="isStarred(item.id) ? '取消标星' : '标为易忘题'"
-                    (click)="toggleStar(item.id, $event)"
-                  >
-                    <span nz-icon nzType="star" [nzTheme]="isStarred(item.id) ? 'fill' : 'outline'"></span>
-                  </button>
-                }
-              </div>
+              <span class="question-index">{{ item.no ?? i + 1 }}</span>
               @if (!reciteMode) {
                 <nz-tag [nzColor]="getCategoryColor(item.category)" class="cat-tag">
                   {{ getCategoryLabel(item.category) }}
@@ -220,9 +245,50 @@ type FilterValue = PracticeFilterCategory;
   styles: [`
     .practice-list-page {
       --page-pad: 16px;
+      --index-rail-width: 28px;
       padding: var(--page-pad);
       max-width: 900px;
       margin: 0 auto;
+    }
+
+    .practice-list-page:has(.index-rail) {
+      padding-right: calc(var(--page-pad) + var(--index-rail-width));
+    }
+
+    .index-rail {
+      position: fixed;
+      right: max(2px, env(safe-area-inset-right));
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      padding: 6px 0;
+      max-height: min(70vh, 520px);
+      overflow: hidden;
+      user-select: none;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .index-tick {
+      margin: 0;
+      padding: 0;
+      min-width: var(--index-rail-width);
+      border: none;
+      background: transparent;
+      color: var(--accent-color, #1890ff);
+      font-size: 10px;
+      line-height: 1.35;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .index-tick.is-active {
+      color: var(--text-primary, #262626);
     }
 
     .toolbar {
@@ -294,11 +360,16 @@ type FilterValue = PracticeFilterCategory;
     }
 
     .question-card {
+      position: relative;
       background: var(--card-bg, #fff);
       border: 1px solid var(--border-color, #e8e8e8);
       border-radius: 8px;
       overflow: hidden;
       transition: box-shadow 0.2s, border-color 0.2s;
+    }
+
+    .question-card.has-star .question-header {
+      padding-left: 36px;
     }
 
     .question-card:hover {
@@ -318,14 +389,6 @@ type FilterValue = PracticeFilterCategory;
       user-select: none;
     }
 
-    .question-meta {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      flex-shrink: 0;
-      gap: 2px;
-    }
-
     .question-index {
       flex-shrink: 0;
       min-width: 32px;
@@ -342,19 +405,23 @@ type FilterValue = PracticeFilterCategory;
     }
 
     .star-btn {
-      flex-shrink: 0;
-      margin-top: 0;
-      width: 28px;
-      height: 28px;
+      position: absolute !important;
+      top: 0;
+      left: 0;
+      z-index: 2;
+      width: 32px;
+      height: 32px;
       padding: 0;
       border: none;
-      border-radius: 50%;
-      background: transparent;
-      color: var(--text-tertiary, #bfbfbf);
+      border-radius: 0 0 8px 0;
+      background: rgba(250, 173, 20, 0.12);
+      color: #d4b106;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      font-size: 18px;
+      line-height: 1;
       transition: color 0.15s, background 0.15s;
     }
 
@@ -506,6 +573,7 @@ type FilterValue = PracticeFilterCategory;
       }
       .question-list { gap: 5px; }
       .question-body { padding-left: 16px; }
+      .index-tick { font-size: 9px; line-height: 1.25; }
     }
   `  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -513,6 +581,8 @@ type FilterValue = PracticeFilterCategory;
 export class PracticeListComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly storage = inject(PracticeStorageService);
+  private readonly starredSync = inject(PracticeStarredSyncService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly injector = inject(Injector);
   private readonly reciteTrack = this.readReciteTrack();
@@ -545,6 +615,11 @@ export class PracticeListComponent implements OnInit {
 
   /** 仅看标星 */
   starredOnly = signal(false);
+
+  /** 通讯录式题号跳转当前档 */
+  activeIndexTick = signal<number | null>(null);
+  private indexPointerActive = false;
+  private lastIndexPointerTick: number | null = null;
 
   /** 展开的题目 ID 集合 */
   expandedIds = signal<Set<string>>(new Set());
@@ -589,6 +664,16 @@ export class PracticeListComponent implements OnInit {
   /** 背题模式下的搜索命中列表，只用于定位跳转，不改变列表本身。 */
   readonly searchResults = computed(() => this.filterItemsBySearch(this.filteredItems(), this.searchText()));
 
+  /** 右侧快捷条：有题的十位，例如 0、10、20。 */
+  readonly indexTicks = computed(() => {
+    if (!this.reciteMode) return [] as number[];
+    const ticks = new Set<number>();
+    this.filteredItems().forEach((item, index) => {
+      ticks.add(Math.floor(this.questionNo(item, index) / 10) * 10);
+    });
+    return [...ticks].sort((a, b) => a - b);
+  });
+
   /** 是否全部展开 */
   readonly allExpanded = computed(() => {
     const items = this.filteredItems();
@@ -605,6 +690,10 @@ export class PracticeListComponent implements OnInit {
     const track = this.starredTrack();
     if (track) {
       this.starredIds.set(new Set(this.storage.readStarredIds(track)));
+      this.starredSync
+        .pull(track)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((ids) => this.starredIds.set(new Set(ids)));
     }
   }
 
@@ -740,6 +829,7 @@ export class PracticeListComponent implements OnInit {
     if (!track) return;
     const next = this.storage.toggleStarred(track, id);
     this.starredIds.set(new Set(next));
+    this.starredSync.push(track, next);
     if (this.starredOnly() && !next.includes(id) && this.expandedIds().has(id)) {
       this.expandedIds.set(new Set());
       this.revealedIds.set(new Set());
@@ -775,10 +865,7 @@ export class PracticeListComponent implements OnInit {
     this.expandedIds.set(new Set([id]));
     this.revealedIds.set(this.reciteMode ? new Set([id]) : new Set());
     if (this.reciteMode) {
-      afterNextRender(
-        () => requestAnimationFrame(() => this.scrollExpandedCardToTop(id)),
-        { injector: this.injector },
-      );
+      this.scrollCardIntoView(id);
     }
   }
 
@@ -842,6 +929,61 @@ export class PracticeListComponent implements OnInit {
     const first = this.searchResults()[0];
     if (!first) return;
     this.expandQuestion(first.id);
+  }
+
+  questionNo(item: PracticeItem, index: number): number {
+    return item.no ?? index + 1;
+  }
+
+  indexTargetId(tick: number): string | null {
+    const items = this.filteredItems();
+    const target = items.find((item, index) => this.questionNo(item, index) >= tick);
+    return target?.id ?? null;
+  }
+
+  jumpToIndexTick(tick: number): void {
+    const id = this.indexTargetId(tick);
+    if (!id) return;
+    this.activeIndexTick.set(tick);
+    this.scrollCardIntoView(id);
+  }
+
+  onIndexPointerDown(event: PointerEvent): void {
+    this.indexPointerActive = true;
+    this.lastIndexPointerTick = null;
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    this.jumpFromIndexPointer(event);
+  }
+
+  onIndexPointerMove(event: PointerEvent): void {
+    if (!this.indexPointerActive) return;
+    this.jumpFromIndexPointer(event);
+  }
+
+  onIndexPointerEnd(): void {
+    this.indexPointerActive = false;
+    this.lastIndexPointerTick = null;
+  }
+
+  private jumpFromIndexPointer(event: PointerEvent): void {
+    const ticks = this.indexTicks();
+    if (ticks.length === 0) return;
+    const rail = event.currentTarget as HTMLElement;
+    const rect = rail.getBoundingClientRect();
+    if (rect.height <= 0) return;
+    const ratio = (event.clientY - rect.top) / rect.height;
+    const index = Math.min(ticks.length - 1, Math.max(0, Math.floor(ratio * ticks.length)));
+    const tick = ticks[index];
+    if (tick === this.lastIndexPointerTick) return;
+    this.lastIndexPointerTick = tick;
+    this.jumpToIndexTick(tick);
+  }
+
+  private scrollCardIntoView(id: string): void {
+    afterNextRender(
+      () => requestAnimationFrame(() => this.scrollExpandedCardToTop(id)),
+      { injector: this.injector },
+    );
   }
 
   isCorrectOption(item: PracticeItem, optionId: string): boolean {
