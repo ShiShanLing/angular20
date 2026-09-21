@@ -128,6 +128,11 @@ type FilterValue = PracticeFilterCategory;
           (pointerup)="onIndexPointerEnd()"
           (pointercancel)="onIndexPointerEnd()"
         >
+          @if (indexHintTick() !== null) {
+            <div class="index-hint" [style.top.px]="indexHintTop()" aria-hidden="true">
+              {{ indexHintTick() }}
+            </div>
+          }
           @for (tick of indexTicks(); track tick) {
             <button
               type="button"
@@ -268,10 +273,29 @@ type FilterValue = PracticeFilterCategory;
       gap: 0;
       padding: 6px 0;
       max-height: min(70vh, 520px);
-      overflow: hidden;
+      overflow: visible;
       user-select: none;
       touch-action: none;
       -webkit-tap-highlight-color: transparent;
+    }
+
+    .index-hint {
+      position: absolute;
+      right: calc(100% + 10px);
+      transform: translateY(-50%);
+      min-width: 56px;
+      height: 56px;
+      padding: 0 8px;
+      border-radius: 12px;
+      background: #1a1a1a;
+      color: #fff;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 56px;
+      text-align: center;
+      pointer-events: none;
+      z-index: 2;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
     }
 
     .index-tick {
@@ -618,6 +642,9 @@ export class PracticeListComponent implements OnInit {
 
   /** 通讯录式题号跳转当前档 */
   activeIndexTick = signal<number | null>(null);
+  /** 按住滑动时，显示在手指左侧的放大题号 */
+  indexHintTick = signal<number | null>(null);
+  indexHintTop = signal(0);
   private indexPointerActive = false;
   private lastIndexPointerTick: number | null = null;
 
@@ -963,6 +990,7 @@ export class PracticeListComponent implements OnInit {
   onIndexPointerEnd(): void {
     this.indexPointerActive = false;
     this.lastIndexPointerTick = null;
+    this.indexHintTick.set(null);
   }
 
   private jumpFromIndexPointer(event: PointerEvent): void {
@@ -974,6 +1002,12 @@ export class PracticeListComponent implements OnInit {
     const ratio = (event.clientY - rect.top) / rect.height;
     const index = Math.min(ticks.length - 1, Math.max(0, Math.floor(ratio * ticks.length)));
     const tick = ticks[index];
+    const tickEl = rail.querySelectorAll('.index-tick')[index] as HTMLElement | undefined;
+    if (tickEl) {
+      const tickRect = tickEl.getBoundingClientRect();
+      this.indexHintTop.set(tickRect.top - rect.top + tickRect.height / 2);
+    }
+    this.indexHintTick.set(tick);
     if (tick === this.lastIndexPointerTick) return;
     this.lastIndexPointerTick = tick;
     this.jumpToIndexTick(tick);

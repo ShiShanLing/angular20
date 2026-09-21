@@ -244,12 +244,27 @@ html, body {
   }
   
   .ant-input,
+  .ant-input-affix-wrapper,
+  .ant-input-outlined,
   .ant-input-number,
   .ant-select-selector,
   .ant-picker {
     background: var(--bg-tertiary) !important;
     border-color: var(--border-color) !important;
     color: var(--text-primary) !important;
+  }
+
+  .ant-input-affix-wrapper .ant-input,
+  .ant-input-affix-wrapper .ant-input:focus,
+  .ant-input-affix-wrapper .ant-input:hover {
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .ant-input-prefix,
+  .ant-input-suffix {
+    color: var(--text-tertiary);
   }
 
   .ant-picker-input > input {
