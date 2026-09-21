@@ -81,7 +81,7 @@ type FilterValue = PracticeFilterCategory;
               <span nzInputPrefix><span nz-icon nzType="search"></span></span>
               <input
                 nz-input
-                placeholder="搜索题目或编号..."
+                [placeholder]="searchPlaceholder()"
                 [ngModel]="searchText()"
                 (ngModelChange)="onSearchChange($event)"
               />
@@ -96,31 +96,24 @@ type FilterValue = PracticeFilterCategory;
                 title="只看已标星的易忘题"
               >
                 <span nz-icon nzType="star" [nzTheme]="starredOnly() ? 'fill' : 'outline'"></span>
-                仅看标星{{ starredCount() ? ' ' + starredCount() : '' }}
+                <span class="star-filter-text">仅看标星</span>{{ starredCount() ? ' ' + starredCount() : '' }}
               </button>
             }
           </div>
         </div>
 
-        <!-- 统计 -->
-        <div class="stats-bar">
-          @if (reciteMode && starredOnly()) {
-            <span>共 <strong>{{ filteredItems().length }}</strong> 题（标星筛选）</span>
-          } @else if (reciteMode && searchText().trim()) {
-            <span>命中 <strong>{{ searchResults().length }}</strong> 题（全库 {{ filteredItems().length }}）</span>
-          } @else {
+        @if (!reciteMode) {
+          <div class="stats-bar">
             <span>共 <strong>{{ filteredItems().length }}</strong> 题</span>
-          }
-          <span class="spacer"></span>
-          @if (!reciteMode) {
+            <span class="spacer"></span>
             <button nz-button nzType="link" nzSize="small" (click)="toggleAllAnswers()">
               {{ allExpanded() ? '全部隐藏答案' : '全部显示答案' }}
             </button>
             <button nz-button nzType="link" nzSize="small" (click)="collapseAll()">
               全部折叠
             </button>
-          }
-        </div>
+          </div>
+        }
       </div>
 
       <!-- 题目列表 -->
@@ -139,22 +132,26 @@ type FilterValue = PracticeFilterCategory;
           >
             <!-- 题目头部 -->
             <div class="question-header" (click)="toggleExpand(item.id)">
-              <span class="question-index">{{ item.no ?? i + 1 }}</span>
-              @if (reciteMode) {
-                <button
-                  type="button"
-                  class="star-btn"
-                  [class.is-starred]="isStarred(item.id)"
-                  [attr.aria-label]="isStarred(item.id) ? '取消标星' : '标星'"
-                  [attr.title]="isStarred(item.id) ? '取消标星' : '标为易忘题'"
-                  (click)="toggleStar(item.id, $event)"
-                >
-                  <span nz-icon nzType="star" [nzTheme]="isStarred(item.id) ? 'fill' : 'outline'"></span>
-                </button>
+              <div class="question-meta">
+                <span class="question-index">{{ item.no ?? i + 1 }}</span>
+                @if (reciteMode) {
+                  <button
+                    type="button"
+                    class="star-btn"
+                    [class.is-starred]="isStarred(item.id)"
+                    [attr.aria-label]="isStarred(item.id) ? '取消标星' : '标星'"
+                    [attr.title]="isStarred(item.id) ? '取消标星' : '标为易忘题'"
+                    (click)="toggleStar(item.id, $event)"
+                  >
+                    <span nz-icon nzType="star" [nzTheme]="isStarred(item.id) ? 'fill' : 'outline'"></span>
+                  </button>
+                }
+              </div>
+              @if (!reciteMode) {
+                <nz-tag [nzColor]="getCategoryColor(item.category)" class="cat-tag">
+                  {{ getCategoryLabel(item.category) }}
+                </nz-tag>
               }
-              <nz-tag [nzColor]="getCategoryColor(item.category)" class="cat-tag">
-                {{ getCategoryLabel(item.category) }}
-              </nz-tag>
               <span class="question-text">{{ item.question }}</span>
               <span class="expand-icon">
                 <span nz-icon [nzType]="expandedIds().has(item.id) ? 'up' : 'down'"></span>
@@ -321,6 +318,14 @@ type FilterValue = PracticeFilterCategory;
       user-select: none;
     }
 
+    .question-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+      gap: 2px;
+    }
+
     .question-index {
       flex-shrink: 0;
       min-width: 32px;
@@ -338,7 +343,7 @@ type FilterValue = PracticeFilterCategory;
 
     .star-btn {
       flex-shrink: 0;
-      margin-top: 2px;
+      margin-top: 0;
       width: 28px;
       height: 28px;
       padding: 0;
@@ -467,10 +472,39 @@ type FilterValue = PracticeFilterCategory;
     }
 
     @media (max-width: 768px) {
-      .practice-list-page { --page-pad: 12px; }
-      .toolbar { flex-direction: column; align-items: flex-start; }
-      .toolbar-right { width: 100%; }
-      .search-box { width: 100%; }
+      .practice-list-page { --page-pad: 5px; }
+      .toolbar {
+        flex-wrap: nowrap;
+        gap: 6px;
+        margin-bottom: 0;
+      }
+      .title {
+        flex: 0 0 auto;
+        font-size: 15px;
+        white-space: nowrap;
+      }
+      .toolbar-right {
+        flex: 1;
+        min-width: 0;
+        flex-wrap: nowrap;
+        gap: 4px;
+      }
+      .search-box {
+        flex: 1;
+        min-width: 0;
+        width: auto;
+      }
+      .star-filter-text { display: none; }
+      .list-head-sticky {
+        padding-top: 5px;
+        padding-bottom: 5px;
+      }
+      .stats-bar {
+        padding: 5px 0;
+        margin-bottom: 5px;
+        font-size: 12px;
+      }
+      .question-list { gap: 5px; }
       .question-body { padding-left: 16px; }
     }
   `  ],
@@ -527,6 +561,12 @@ export class PracticeListComponent implements OnInit {
   readonly starredCount = computed(() => {
     const ids = this.starredIds();
     return this.allItems().filter((item) => ids.has(item.id)).length;
+  });
+
+  readonly searchPlaceholder = computed(() => {
+    if (!this.reciteMode) return '搜索题目或编号...';
+    const count = this.filteredItems().length;
+    return this.starredOnly() ? `共 ${count} 题（标星）` : `共 ${count} 题`;
   });
 
   /** 筛选后的题目列表。背题一次列出该科目全库，只允许搜索，不按分类裁切。 */

@@ -784,3 +784,25 @@ html, body {
     font-size: 18px;
   }
 }
+
+@media (max-width: 768px) {
+  .ant-layout-header.app-header {
+    height: 44px;
+    line-height: 44px;
+    padding-inline: 8px;
+  }
+
+  .ant-layout-footer.app-footer {
+    padding: 4px 8px;
+    padding-bottom: max(4px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .theme-toggle-btn {
+    width: 32px;
+    height: 32px;
+
+    .anticon {
+      font-size: 16px;
+    }
+  }
+}
