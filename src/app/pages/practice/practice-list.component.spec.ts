@@ -180,19 +180,20 @@ describe('builtinSeedForScope', () => {
     component.ngOnInit();
 
     expect(component.pageTitle()).toBe('前端 背题');
-    expect(component.filteredItems().length).toBe(652);
+    expect(component.filteredItems().length).toBe(426);
     expect(component.filteredItems()[0].question).toContain('Zone');
   });
 
   it('loads the merged frontend seed categories', () => {
     const items = builtinSeedForScope('frontend-learning', 1);
-    expect(items.length).toBe(652);
+    expect(items.length).toBe(426);
     expect(items[0].id).toBe('angular-0001');
     expect(items[0].no).toBe(1);
-    expect(items.at(-1)?.no).toBe(652);
+    expect(items.at(-1)?.no).toBe(426);
     expect(items.some((item) => item.id === 'ng-angular-injection-token')).toBeTrue();
+    expect(items.some((item) => item.id === 'javascript-0288')).toBeTrue();
     expect(new Set(items.map((item) => item.tags.split(' · ')[0]))).toEqual(
-      new Set(['Angular', 'JavaScript', 'TypeScript', 'RxJS']),
+      new Set(['Angular', 'JavaScript', 'TypeScript', 'RxJS', '浏览器与网络', 'HTML/CSS', '项目表达', '工程化']),
     );
   });
 

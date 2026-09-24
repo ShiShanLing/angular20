@@ -183,6 +183,18 @@ type FilterValue = PracticeFilterCategory;
                 </nz-tag>
               }
               <span class="question-text">{{ item.question }}</span>
+              @if (reciteMode) {
+                <button
+                  type="button"
+                  class="copy-btn"
+                  [class.is-copied]="copiedKey() === item.id + ':q'"
+                  aria-label="复制题目"
+                  [attr.title]="copiedKey() === item.id + ':q' ? '已复制题目' : '复制题目'"
+                  (click)="copyText(item.question, item.id + ':q', $event)"
+                >
+                  <span nz-icon [nzType]="copiedKey() === item.id + ':q' ? 'check-circle' : 'copy'" [nzTheme]="copiedKey() === item.id + ':q' ? 'fill' : 'outline'"></span>
+                </button>
+              }
               <span class="expand-icon">
                 <span nz-icon [nzType]="expandedIds().has(item.id) ? 'up' : 'down'"></span>
               </span>
@@ -195,6 +207,18 @@ type FilterValue = PracticeFilterCategory;
                   <div class="answer-label">
                     <span nz-icon nzType="bulb" nzTheme="outline"></span>
                     参考答案
+                    @if (reciteMode && revealedIds().has(item.id)) {
+                      <button
+                        type="button"
+                        class="copy-btn copy-btn-end"
+                        [class.is-copied]="copiedKey() === item.id + ':a'"
+                        aria-label="复制答案"
+                        [attr.title]="copiedKey() === item.id + ':a' ? '已复制答案' : '复制答案'"
+                        (click)="copyText(item.explanation || item.answer, item.id + ':a', $event)"
+                      >
+                        <span nz-icon [nzType]="copiedKey() === item.id + ':a' ? 'check-circle' : 'copy'" [nzTheme]="copiedKey() === item.id + ':a' ? 'fill' : 'outline'"></span>
+                      </button>
+                    }
                     @if (!reciteMode) {
                       <button nz-button nzType="link" nzSize="small" (click)="toggleAnswer(item.id); $event.stopPropagation()">
                         {{ revealedIds().has(item.id) ? '隐藏' : '显示' }}
@@ -481,6 +505,34 @@ type FilterValue = PracticeFilterCategory;
       padding-top: 4px;
     }
 
+    .copy-btn {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      margin-top: 2px;
+      padding: 0;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-tertiary, #8c8c8c);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+    }
+
+    .copy-btn:hover,
+    .copy-btn.is-copied {
+      color: var(--accent-color, #1677ff);
+      background: rgba(22, 119, 255, 0.08);
+    }
+
+    .copy-btn-end {
+      margin-left: auto;
+      margin-top: 0;
+    }
+
     .question-body {
       padding: 0 16px 16px 52px;
       border-top: 1px solid var(--border-light, #f5f5f5);
@@ -642,6 +694,9 @@ export class PracticeListComponent implements OnInit {
 
   /** 通讯录式题号跳转当前档 */
   activeIndexTick = signal<number | null>(null);
+  /** 刚复制成功的题目或答案 */
+  copiedKey = signal<string | null>(null);
+  private copyResetTimer = 0;
   /** 按住滑动时，显示在手指左侧的放大题号 */
   indexHintTick = signal<number | null>(null);
   indexHintTop = signal(0);
@@ -714,6 +769,7 @@ export class PracticeListComponent implements OnInit {
     const scopes = this.scopesToLoad();
     this.ensureSeeds(scopes);
     this.allItems.set(this.loadItems(scopes));
+    this.destroyRef.onDestroy(() => window.clearTimeout(this.copyResetTimer));
     const track = this.starredTrack();
     if (track) {
       this.starredIds.set(new Set(this.storage.readStarredIds(track)));
@@ -752,6 +808,14 @@ export class PracticeListComponent implements OnInit {
         this.storage.save(seeded, scope);
       } else {
         this.storage.mergeItems(seeded, scope);
+      }
+      if (scope === 'frontend-learning') {
+        const ids = new Set(seeded.map((item) => item.id));
+        const current = this.storage.load(scope);
+        const kept = current.filter((item) => ids.has(item.id));
+        if (kept.length !== current.length) {
+          this.storage.save(kept, scope);
+        }
       }
     }
   }
@@ -850,6 +914,37 @@ export class PracticeListComponent implements OnInit {
   // MARK: 标星
   isStarred(id: string): boolean {
     return this.starredIds().has(id);
+  }
+
+  copyText(text: string, key: string, ev: Event): void {
+    ev.stopPropagation();
+    const value = text.trim();
+    if (!value) return;
+    const done = () => {
+      this.copiedKey.set(key);
+      window.clearTimeout(this.copyResetTimer);
+      this.copyResetTimer = window.setTimeout(() => {
+        if (this.copiedKey() === key) this.copiedKey.set(null);
+      }, 1200);
+    };
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(value).then(done).catch(() => this.copyWithTextarea(value, done));
+      return;
+    }
+    this.copyWithTextarea(value, done);
+  }
+
+  private copyWithTextarea(value: string, done: () => void): void {
+    const area = document.createElement('textarea');
+    area.value = value;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.left = '-9999px';
+    document.body.appendChild(area);
+    area.select();
+    document.execCommand('copy');
+    area.remove();
+    done();
   }
 
   toggleStar(id: string, ev: Event): void {
