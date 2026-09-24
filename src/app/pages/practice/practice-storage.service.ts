@@ -16,8 +16,9 @@ export type PracticeStorageScope =
   | 'ts-learning'
   | 'ts-objective-learning'
   | 'agent-learning'
-  | 'agent-objective-learning';
-export type PracticeHistoryTrack = 'ios' | 'android' | 'angular' | 'ts' | 'agent' | 'practice';
+  | 'agent-objective-learning'
+  | 'frontend-learning';
+export type PracticeHistoryTrack = 'ios' | 'android' | 'angular' | 'ts' | 'agent' | 'frontend' | 'practice';
 
 export const PRACTICE_HISTORY_TRACK_SCOPES: Record<PracticeHistoryTrack, PracticeStorageScope[]> = {
   ios: ['ios-learning', 'ios-objective-learning'],
@@ -25,6 +26,7 @@ export const PRACTICE_HISTORY_TRACK_SCOPES: Record<PracticeHistoryTrack, Practic
   angular: ['angular-learning', 'angular-objective-learning'],
   ts: ['ts-learning', 'ts-objective-learning'],
   agent: ['agent-learning', 'agent-objective-learning'],
+  frontend: ['frontend-learning'],
   practice: ['practice'],
 };
 
@@ -34,6 +36,7 @@ export const PRACTICE_HISTORY_TRACK_LABELS: Record<PracticeHistoryTrack, string>
   angular: 'Angular',
   ts: 'TypeScript',
   agent: 'Agent',
+  frontend: '前端',
   practice: '知识刷题',
 };
 

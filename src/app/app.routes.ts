@@ -123,6 +123,11 @@ export const routes: Routes = [
         data: { practiceHistoryTrack: 'ts' }
       },
       {
+        path: 'frontend-learning/recite',
+        loadComponent: () => import('./pages/practice/practice-list.component').then(m => m.PracticeListComponent),
+        data: { reciteTrack: 'frontend' }
+      },
+      {
         path: 'agent-objective-learning',
         loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
         data: { practiceScope: 'agent-objective-learning' }

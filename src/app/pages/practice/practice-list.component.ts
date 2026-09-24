@@ -187,7 +187,7 @@ type FilterValue = PracticeFilterCategory;
                 <span nz-icon [nzType]="expandedIds().has(item.id) ? 'up' : 'down'"></span>
               </span>
             </div>
-
+              
             <!-- 展开区域：答案 + 手写框 -->
             @if (expandedIds().has(item.id)) {
               <div class="question-body">
@@ -762,7 +762,9 @@ export class PracticeListComponent implements OnInit {
     const seenQuestions = new Set<string>();
     const pushUnique = (item: PracticeItem) => {
       if (this.reciteMode && this.isChoiceQuestion(item)) return;
-      const questionKey = `${item.category}::${item.question.trim()}`;
+      const questionKey = this.reciteTrack === 'frontend'
+        ? item.id
+        : `${item.category}::${item.question.trim()}`;
       if (seenIds.has(item.id) || seenQuestions.has(questionKey)) return;
       seenIds.add(item.id);
       seenQuestions.add(questionKey);
@@ -792,7 +794,7 @@ export class PracticeListComponent implements OnInit {
 
   private readReciteTrack(): PracticeHistoryTrack | null {
     const track = this.route.snapshot.data['reciteTrack'];
-    if (track === 'ios' || track === 'android' || track === 'angular' || track === 'ts' || track === 'agent') {
+    if (track === 'ios' || track === 'android' || track === 'angular' || track === 'ts' || track === 'agent' || track === 'frontend') {
       return track;
     }
     return null;

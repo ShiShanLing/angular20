@@ -68,6 +68,13 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
         ]
       },
       {
+        label: '前端',
+        icon: 'global',
+        children: [
+          { path: '/frontend-learning/recite', label: '背题', permission: 'practice.view' },
+        ]
+      },
+      {
         label: 'Agent',
         icon: 'deployment-unit',
         children: [

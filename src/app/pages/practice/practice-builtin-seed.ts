@@ -1,5 +1,6 @@
 import type { PracticeItem } from './practice.types';
 import type { PracticeStorageScope } from './practice-storage.service';
+import { frontendJobSeedToPracticeItems } from './frontend-seed';
 import {
   agentJobSeedToPracticeItems,
   agentObjectiveSeedToPracticeItems,
@@ -22,6 +23,8 @@ export function builtinSeedForScope(
       return angularJobSeedToPracticeItems(importedAt, 'angular');
     case 'ts-learning':
       return angularJobSeedToPracticeItems(importedAt, 'ts');
+    case 'frontend-learning':
+      return frontendJobSeedToPracticeItems(importedAt);
     case 'agent-learning':
       return agentJobSeedToPracticeItems(importedAt);
     case 'agent-objective-learning':

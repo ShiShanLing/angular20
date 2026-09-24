@@ -164,6 +164,38 @@ describe('PracticeListComponent recite mode', () => {
 });
 
 describe('builtinSeedForScope', () => {
+  it('loads the merged frontend bank for recite', () => {
+    const storage = new PracticeStorageService();
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [PracticeListComponent],
+      providers: [
+        { provide: PracticeStorageService, useValue: storage },
+        { provide: PracticeStarredSyncService, useValue: silentStarSync },
+        { provide: ActivatedRoute, useValue: { snapshot: { data: { reciteTrack: 'frontend' } } } },
+      ],
+    });
+    const fixture = TestBed.createComponent(PracticeListComponent);
+    const component = fixture.componentInstance;
+    component.ngOnInit();
+
+    expect(component.pageTitle()).toBe('前端 背题');
+    expect(component.filteredItems().length).toBe(652);
+    expect(component.filteredItems()[0].question).toContain('Zone');
+  });
+
+  it('loads the merged frontend seed categories', () => {
+    const items = builtinSeedForScope('frontend-learning', 1);
+    expect(items.length).toBe(652);
+    expect(items[0].id).toBe('angular-0001');
+    expect(items[0].no).toBe(1);
+    expect(items.at(-1)?.no).toBe(652);
+    expect(items.some((item) => item.id === 'ng-angular-injection-token')).toBeTrue();
+    expect(new Set(items.map((item) => item.tags.split(' · ')[0]))).toEqual(
+      new Set(['Angular', 'JavaScript', 'TypeScript', 'RxJS']),
+    );
+  });
+
   it('returns iOS and Agent banks and empty Android seeds', () => {
     expect(builtinSeedForScope('ios-learning', 1).length).toBeGreaterThan(0);
     expect(builtinSeedForScope('agent-objective-learning', 1).length).toBeGreaterThan(0);
