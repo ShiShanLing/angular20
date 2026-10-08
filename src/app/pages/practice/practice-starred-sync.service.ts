@@ -1,86 +1,56 @@
 import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, switchMap, tap } from 'rxjs/operators';
 
-import { RecordService } from '../../services/record.service';
+import { AuthService } from '../../core/auth.service';
 import { PracticeStorageService, type PracticeHistoryTrack } from './practice-storage.service';
 
-export const PRACTICE_STARRED_RECORD_TYPE = 'practice-starred';
-
-interface StarredRecordRow {
-  id?: number;
-  data?: {
-    track?: string;
-    ids?: unknown;
-  };
+interface StarResponse {
+  ids?: unknown;
 }
 
 /**
- * 背题标星多端同步：本机 localStorage 立刻生效，登录账号再写入 records 表。
+ * 背题标星：本机立刻生效。登录后每个星是收藏表里的一行。
  */
 @Injectable({ providedIn: 'root' })
 export class PracticeStarredSyncService {
-  private readonly records = inject(RecordService);
+  private readonly http = inject(HttpClient);
+  private readonly auth = inject(AuthService);
   private readonly storage = inject(PracticeStorageService);
-  private readonly serverRowId = new Map<PracticeHistoryTrack, number>();
-  private pushTimer: ReturnType<typeof setTimeout> | null = null;
-  private pending: { track: PracticeHistoryTrack; ids: string[] } | null = null;
 
   pull(track: PracticeHistoryTrack): Observable<string[]> {
     const localIds = this.storage.readStarredIds(track);
-    return this.records.getAll(PRACTICE_STARRED_RECORD_TYPE).pipe(
-      map((rows) => this.mergeFromServer(track, localIds, Array.isArray(rows) ? rows : [])),
+    if (!this.auth.isLoggedIn()) return of(localIds);
+    return this.http.get<StarResponse>(`/api/practice-stars/${track}`).pipe(
+      switchMap((body) => {
+        const serverIds = this.cleanIds(body?.ids);
+        const merged = [...new Set([...serverIds, ...localIds])];
+        this.storage.saveStarredIds(track, merged);
+        const missing = merged.filter((id) => !serverIds.includes(id));
+        if (!missing.length) return of(merged);
+        return this.http.post<StarResponse>(`/api/practice-stars/${track}`, { ids: missing }).pipe(
+          map((saved) => {
+            const ids = this.cleanIds(saved?.ids);
+            return ids.length ? ids : merged;
+          }),
+          tap((ids) => this.storage.saveStarredIds(track, ids)),
+          catchError(() => of(merged)),
+        );
+      }),
       catchError(() => of(localIds)),
     );
   }
 
-  push(track: PracticeHistoryTrack, ids: string[]): void {
-    this.pending = { track, ids };
-    if (this.pushTimer) clearTimeout(this.pushTimer);
-    this.pushTimer = setTimeout(() => this.flush(), 250);
+  setStarred(track: PracticeHistoryTrack, questionId: string, starred: boolean): void {
+    if (!this.auth.isLoggedIn()) return;
+    const url = `/api/practice-stars/${track}/${encodeURIComponent(questionId)}`;
+    const request = starred ? this.http.put(url, {}) : this.http.delete(url);
+    request.pipe(catchError(() => of(null))).subscribe();
   }
 
-  private mergeFromServer(track: PracticeHistoryTrack, localIds: string[], rows: StarredRecordRow[]): string[] {
-    const row = rows.find((item) => item?.data?.track === track);
-    if (typeof row?.id === 'number' && row.id > 0) {
-      this.serverRowId.set(track, row.id);
-    }
-    const serverIds = Array.isArray(row?.data?.ids)
-      ? row.data.ids.filter((id): id is string => typeof id === 'string' && !!id)
-      : [];
-    const merged = [...new Set([...serverIds, ...localIds])];
-    this.storage.saveStarredIds(track, merged);
-    if (!this.sameIds(merged, serverIds)) {
-      this.push(track, merged);
-    }
-    return merged;
-  }
-
-  private flush(): void {
-    const job = this.pending;
-    this.pending = null;
-    this.pushTimer = null;
-    if (!job) return;
-
-    const data = { track: job.track, ids: job.ids };
-    const rowId = this.serverRowId.get(job.track);
-    const req$ =
-      rowId && rowId > 0
-        ? this.records.update(rowId, data)
-        : this.records.create(PRACTICE_STARRED_RECORD_TYPE, data);
-
-    req$.pipe(catchError(() => of(null))).subscribe((row) => {
-      const id = (row as StarredRecordRow | null)?.id;
-      if (typeof id === 'number' && id > 0) {
-        this.serverRowId.set(job.track, id);
-      }
-    });
-  }
-
-  private sameIds(a: string[], b: string[]): boolean {
-    if (a.length !== b.length) return false;
-    const left = [...a].sort();
-    const right = [...b].sort();
-    return left.every((id, index) => id === right[index]);
+  private cleanIds(ids: unknown): string[] {
+    if (!Array.isArray(ids)) return [];
+    return ids.filter((id): id is string => typeof id === 'string' && !!id);
   }
 }

@@ -1061,8 +1061,6 @@ export class PracticeListComponent implements OnInit {
         questionId: item.id,
         question,
         answer,
-        serverReady: this.serverBankReady,
-        rows: this.bankRows,
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((result) => {
@@ -1109,8 +1107,6 @@ export class PracticeListComponent implements OnInit {
         questionId: item.id,
         question: original.question,
         answer: original.answer,
-        serverReady: true,
-        rows: this.bankRows,
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((result) => {
@@ -1172,7 +1168,7 @@ export class PracticeListComponent implements OnInit {
     if (!track) return;
     const next = this.storage.toggleStarred(track, id);
     this.starredIds.set(new Set(next));
-    this.starredSync.push(track, next);
+    this.starredSync.setStarred(track, id, next.includes(id));
     if (this.starredOnly() && !next.includes(id) && this.expandedIds().has(id)) {
       this.expandedIds.set(new Set());
       this.revealedIds.set(new Set());

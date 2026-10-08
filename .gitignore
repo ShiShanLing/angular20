@@ -61,6 +61,7 @@ __pycache__/
 # Server (NestJS backend)
 server/node_modules/
 server/dist/
+server/src/practice-banks/practice-seeds.json
 server/.env
 /.angular20-release-*.json
 

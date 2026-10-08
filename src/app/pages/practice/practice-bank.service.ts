@@ -14,8 +14,7 @@ interface BankResponse {
 }
 
 /**
- * 线上题库：页面优先读服务器上的整份题目。
- * 服务器还没有这一科时，第一次保存会把当前底稿整份写上去。
+ * 线上题库按题存放。保存只提交这一道题。
  */
 @Injectable({ providedIn: 'root' })
 export class PracticeBankService {
@@ -24,7 +23,7 @@ export class PracticeBankService {
 
   load(track: PracticeHistoryTrack): Observable<PracticeBankRow[] | null> {
     return this.http.get<BankResponse>(`/api/practice-banks/${track}`).pipe(
-      map((body) => (Array.isArray(body?.questions) ? body.questions : null)),
+      map((body) => (Array.isArray(body?.questions) ? body.questions : [])),
       catchError(() => of(null)),
     );
   }
@@ -34,25 +33,16 @@ export class PracticeBankService {
     questionId: string;
     question: string;
     answer: string;
-    serverReady: boolean;
-    rows: PracticeBankRow[];
   }): Observable<PracticeBankSaveResult> {
     if (!this.auth.isLoggedIn()) return of('local-only');
-    const patch = { question: input.question, answer: input.answer };
-    if (input.serverReady) {
-      return this.http
-        .patch(`/api/practice-banks/${input.track}/questions/${encodeURIComponent(input.questionId)}`, patch)
-        .pipe(
-          map(() => 'server' as const),
-          catchError(() => of('failed' as const)),
-        );
-    }
-    const questions = input.rows.map((row) =>
-      String(row['id']) === input.questionId ? { ...row, ...patch } : row,
-    );
-    return this.http.put(`/api/practice-banks/${input.track}`, { questions }).pipe(
-      map(() => 'server' as const),
-      catchError(() => of('failed' as const)),
-    );
+    return this.http
+      .patch(`/api/practice-banks/${input.track}/questions/${encodeURIComponent(input.questionId)}`, {
+        question: input.question,
+        answer: input.answer,
+      })
+      .pipe(
+        map(() => 'server' as const),
+        catchError(() => of('failed' as const)),
+      );
   }
 }

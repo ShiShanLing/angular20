@@ -1,6 +1,6 @@
 import { Column, Entity, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 
-/** 线上背题题库。按科目整份保存，发布前端时不会覆盖这张表。 */
+/** 旧的整份题库。启动时拆进 practice_questions，之后不再往这里写。 */
 @Entity('practice_banks')
 export class PracticeBank {
   @PrimaryColumn({ type: 'varchar', length: 32 })

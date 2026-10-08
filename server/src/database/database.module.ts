@@ -10,6 +10,8 @@ import { NoteTag } from '../notes/entities/note-tag.entity';
 import { WeatherHistory } from '../weather/entities/weather-history.entity';
 import { MarketReport } from '../market-reports/entities/market-report.entity';
 import { PracticeBank } from '../practice-banks/practice-bank.entity';
+import { PracticeQuestion } from '../practice-banks/practice-question.entity';
+import { PracticeStar } from '../practice-banks/practice-star.entity';
 
 @Module({
   imports: [
@@ -19,7 +21,7 @@ import { PracticeBank } from '../practice-banks/practice-bank.entity';
       useFactory: (config: ConfigService) => ({
         type: 'better-sqlite3',
         database: config.get<string>('DB_PATH', '/var/lib/mydata/app.db'),
-        entities: [User, Record, GameScore, Notebook, Note, NoteTag, WeatherHistory, MarketReport, PracticeBank],
+        entities: [User, Record, GameScore, Notebook, Note, NoteTag, WeatherHistory, MarketReport, PracticeBank, PracticeQuestion, PracticeStar],
         synchronize: true, // 开发环境自动同步表结构
       }),
     }),

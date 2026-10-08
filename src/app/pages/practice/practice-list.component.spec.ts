@@ -10,7 +10,7 @@ import { builtinSeedForScope } from './practice-builtin-seed';
 
 const silentStarSync = {
   pull: () => EMPTY,
-  push: () => undefined,
+  setStarred: () => undefined,
 };
 
 const silentBank = {
