@@ -12,8 +12,10 @@ const GUEST_ALLOW = [
 
 let lastWarnAt = 0;
 
-function isAllowedForGuest(url: string): boolean {
-  return GUEST_ALLOW.some((p) => url.includes(p));
+function isAllowedForGuest(url: string, method: string): boolean {
+  if (GUEST_ALLOW.some((p) => url.includes(p))) return true;
+  const verb = method.toUpperCase();
+  return (verb === 'GET' || verb === 'HEAD') && url.includes('/api/practice-banks');
 }
 
 function guestEmptyBody(url: string, method: string): unknown {
@@ -52,12 +54,11 @@ export const guestApiInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
   const url = req.url;
+  const method = req.method.toUpperCase();
   const isApi = url.includes('/api/') || url.startsWith('/api');
-  if (!isApi || isAllowedForGuest(url)) {
+  if (!isApi || isAllowedForGuest(url, method)) {
     return next(req);
   }
-
-  const method = req.method.toUpperCase();
   const isWrite = method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS';
   if (isWrite) {
     const now = Date.now();

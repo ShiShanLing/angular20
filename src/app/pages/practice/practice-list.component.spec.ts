@@ -1,15 +1,21 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
-import { EMPTY } from 'rxjs';
+import { EMPTY, of } from 'rxjs';
 
 import { PracticeListComponent } from './practice-list.component';
 import { PracticeStorageService } from './practice-storage.service';
 import { PracticeStarredSyncService } from './practice-starred-sync.service';
+import { PracticeBankService } from './practice-bank.service';
 import { builtinSeedForScope } from './practice-builtin-seed';
 
 const silentStarSync = {
   pull: () => EMPTY,
   push: () => undefined,
+};
+
+const silentBank = {
+  load: () => of(null),
+  save: () => of('server' as const),
 };
 
 describe('PracticeListComponent recite mode', () => {
@@ -20,6 +26,7 @@ describe('PracticeListComponent recite mode', () => {
       providers: [
         { provide: PracticeStorageService, useValue: storage },
         { provide: PracticeStarredSyncService, useValue: silentStarSync },
+        { provide: PracticeBankService, useValue: silentBank },
         { provide: ActivatedRoute, useValue: { snapshot: { data: { reciteTrack: 'ios' } } } },
       ],
     });
@@ -46,6 +53,30 @@ describe('PracticeListComponent recite mode', () => {
     }
   });
 
+  it('saves an edited answer onto the open question', () => {
+    const storage = new PracticeStorageService();
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [PracticeListComponent],
+      providers: [
+        { provide: PracticeStorageService, useValue: storage },
+        { provide: PracticeStarredSyncService, useValue: silentStarSync },
+        { provide: PracticeBankService, useValue: silentBank },
+        { provide: ActivatedRoute, useValue: { snapshot: { data: { reciteTrack: 'ios' } } } },
+      ],
+    });
+    const fixture = TestBed.createComponent(PracticeListComponent);
+    const component = fixture.componentInstance;
+    component.ngOnInit();
+    const item = component.allItems()[0];
+    component.startAnswerEdit(item, new Event('click'));
+    component.editAnswerDraft.set('改成更好记的答案');
+    component.saveAnswerEdit(item);
+    expect(component.allItems()[0].answer).toBe('改成更好记的答案');
+    expect(component.answerStatus()).toContain('已写入服务器题库');
+    expect(component.editingAnswerId()).toBeNull();
+  });
+
   it('loads only Agent short-answer questions in the recite list', () => {
     const storage = new PracticeStorageService();
     TestBed.resetTestingModule();
@@ -54,6 +85,7 @@ describe('PracticeListComponent recite mode', () => {
       providers: [
         { provide: PracticeStorageService, useValue: storage },
         { provide: PracticeStarredSyncService, useValue: silentStarSync },
+        { provide: PracticeBankService, useValue: silentBank },
         { provide: ActivatedRoute, useValue: { snapshot: { data: { reciteTrack: 'agent' } } } },
       ],
     });
@@ -74,6 +106,7 @@ describe('PracticeListComponent recite mode', () => {
       providers: [
         { provide: PracticeStorageService, useValue: storage },
         { provide: PracticeStarredSyncService, useValue: silentStarSync },
+        { provide: PracticeBankService, useValue: silentBank },
         { provide: ActivatedRoute, useValue: { snapshot: { data: { reciteTrack: 'ios' } } } },
       ],
     });
@@ -103,6 +136,7 @@ describe('PracticeListComponent recite mode', () => {
       providers: [
         { provide: PracticeStorageService, useValue: storage },
         { provide: PracticeStarredSyncService, useValue: silentStarSync },
+        { provide: PracticeBankService, useValue: silentBank },
         { provide: ActivatedRoute, useValue: { snapshot: { data: { reciteTrack: 'ios' } } } },
       ],
     });
@@ -139,6 +173,7 @@ describe('PracticeListComponent recite mode', () => {
       providers: [
         { provide: PracticeStorageService, useValue: storage },
         { provide: PracticeStarredSyncService, useValue: silentStarSync },
+        { provide: PracticeBankService, useValue: silentBank },
         { provide: ActivatedRoute, useValue: { snapshot: { data: { reciteTrack: 'ios' } } } },
       ],
     });
@@ -172,6 +207,7 @@ describe('builtinSeedForScope', () => {
       providers: [
         { provide: PracticeStorageService, useValue: storage },
         { provide: PracticeStarredSyncService, useValue: silentStarSync },
+        { provide: PracticeBankService, useValue: silentBank },
         { provide: ActivatedRoute, useValue: { snapshot: { data: { reciteTrack: 'frontend' } } } },
       ],
     });

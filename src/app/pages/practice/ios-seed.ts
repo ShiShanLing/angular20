@@ -98,6 +98,25 @@ export function angularJobSeedToPracticeItems(
     .map(({ row, category }) => rowToPracticeItem(row, importedAt, category));
 }
 
+export function jobRowsToPracticeItems(
+  rows: IosSeedRow[],
+  importedAt: number,
+  category: PracticeItem['category'],
+): PracticeItem[] {
+  return rowsToPracticeItems(rows, importedAt, category);
+}
+
+export function angularRowsToPracticeItems(rows: IosSeedRow[], importedAt: number): PracticeItem[] {
+  return rows.map((row) => rowToPracticeItem(row, importedAt, angularRowCategory(row)));
+}
+
+export function bundledAngularRows(track: 'angular' | 'ts'): IosSeedRow[] {
+  return (angularJobSeedJson as IosSeedRow[]).filter((row) => {
+    const category = angularRowCategory(row);
+    return track === 'ts' ? category === 'angular-ts' : category !== 'angular-ts';
+  });
+}
+
 function rowsToPracticeItems(
   rows: IosSeedRow[],
   importedAt: number,

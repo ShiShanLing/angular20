@@ -1,7 +1,7 @@
 import type { PracticeItem } from './practice.types';
 import frontendJobSeedJson from './seeds/frontend/frontend-job.seed.json';
 
-interface FrontendSeedRow {
+export interface FrontendSeedRow {
   no: number;
   id: string;
   category: string;
@@ -12,8 +12,8 @@ interface FrontendSeedRow {
 }
 
 /** 将合并后的前端题库（Angular / TypeScript / JavaScript / RxJS）转为背题条目。 */
-export function frontendJobSeedToPracticeItems(importedAt: number): PracticeItem[] {
-  return (frontendJobSeedJson as FrontendSeedRow[]).map((row) => ({
+export function frontendRowsToPracticeItems(rows: FrontendSeedRow[], importedAt: number): PracticeItem[] {
+  return rows.map((row) => ({
     id: row.id,
     no: row.no,
     category: 'angular',
@@ -23,4 +23,8 @@ export function frontendJobSeedToPracticeItems(importedAt: number): PracticeItem
     importedAt,
     markD: true,
   }));
+}
+
+export function frontendJobSeedToPracticeItems(importedAt: number): PracticeItem[] {
+  return frontendRowsToPracticeItems(frontendJobSeedJson as FrontendSeedRow[], importedAt);
 }

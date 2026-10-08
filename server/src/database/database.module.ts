@@ -9,6 +9,7 @@ import { Note } from '../notes/entities/note.entity';
 import { NoteTag } from '../notes/entities/note-tag.entity';
 import { WeatherHistory } from '../weather/entities/weather-history.entity';
 import { MarketReport } from '../market-reports/entities/market-report.entity';
+import { PracticeBank } from '../practice-banks/practice-bank.entity';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { MarketReport } from '../market-reports/entities/market-report.entity';
       useFactory: (config: ConfigService) => ({
         type: 'better-sqlite3',
         database: config.get<string>('DB_PATH', '/var/lib/mydata/app.db'),
-        entities: [User, Record, GameScore, Notebook, Note, NoteTag, WeatherHistory, MarketReport],
+        entities: [User, Record, GameScore, Notebook, Note, NoteTag, WeatherHistory, MarketReport, PracticeBank],
         synchronize: true, // 开发环境自动同步表结构
       }),
     }),

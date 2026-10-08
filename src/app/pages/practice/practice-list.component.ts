@@ -39,6 +39,8 @@ import {
 import { builtinSeedForScope } from './practice-builtin-seed';
 import { MarkdPipe } from './markd.pipe';
 import { PracticeStarredSyncService } from './practice-starred-sync.service';
+import { PracticeBankService, type PracticeBankSaveResult } from './practice-bank.service';
+import { bundledBankRows, mergeBankRows, practiceItemsFromBank, type PracticeBankRow } from './practice-bank.map';
 
 type FilterValue = PracticeFilterCategory;
 
@@ -209,9 +211,19 @@ type FilterValue = PracticeFilterCategory;
                     <span nz-icon nzType="bulb" nzTheme="outline"></span>
                     参考答案
                     @if (reciteMode && revealedIds().has(item.id)) {
+                      <span class="answer-label-actions">
                       <button
                         type="button"
-                        class="copy-btn copy-btn-end"
+                        class="copy-btn"
+                        aria-label="编辑答案"
+                        title="编辑答案"
+                        (click)="startAnswerEdit(item, $event)"
+                      >
+                        <span nz-icon nzType="edit" nzTheme="outline"></span>
+                      </button>
+                      <button
+                        type="button"
+                        class="copy-btn"
                         [class.is-copied]="copiedKey() === item.id + ':a'"
                         aria-label="复制答案"
                         [attr.title]="copiedKey() === item.id + ':a' ? '已复制答案' : '复制答案'"
@@ -219,6 +231,7 @@ type FilterValue = PracticeFilterCategory;
                       >
                         <span nz-icon [nzType]="copiedKey() === item.id + ':a' ? 'check-circle' : 'copy'" [nzTheme]="copiedKey() === item.id + ':a' ? 'fill' : 'outline'"></span>
                       </button>
+                      </span>
                     }
                     @if (!reciteMode) {
                       <button nz-button nzType="link" nzSize="small" (click)="toggleAnswer(item.id); $event.stopPropagation()">
@@ -226,7 +239,33 @@ type FilterValue = PracticeFilterCategory;
                       </button>
                     }
                   </div>
-                  @if (revealedIds().has(item.id)) {
+                  @if (revealedIds().has(item.id) && editingAnswerId() === item.id) {
+                    <div class="answer-editor">
+                      <label class="answer-editor-label">
+                        题目
+                        <textarea
+                          nz-input
+                          [ngModel]="editQuestionDraft()"
+                          (ngModelChange)="editQuestionDraft.set($event)"
+                        ></textarea>
+                      </label>
+                      <label class="answer-editor-label">
+                        答案
+                        <textarea
+                          nz-input
+                          [ngModel]="editAnswerDraft()"
+                          (ngModelChange)="editAnswerDraft.set($event)"
+                        ></textarea>
+                      </label>
+                      <div class="answer-editor-actions">
+                        <button nz-button nzType="primary" nzSize="small" [disabled]="answerSaving()" (click)="saveAnswerEdit(item)">
+                          {{ answerSaving() ? '提交中' : '提交到服务器' }}
+                        </button>
+                        <button nz-button nzSize="small" (click)="cancelAnswerEdit()">取消</button>
+                        <button nz-button nzType="link" nzSize="small" (click)="restoreOriginalAnswer(item)">恢复原答案</button>
+                      </div>
+                    </div>
+                  } @else if (revealedIds().has(item.id)) {
                     @if (item.options?.length) {
                       <ul class="option-list">
                         @for (opt of item.options; track opt.id) {
@@ -237,6 +276,9 @@ type FilterValue = PracticeFilterCategory;
                       </ul>
                     }
                     <div class="answer-content" [innerHTML]="(item.explanation || item.answer) | markd"></div>
+                    @if (answerStatusId() === item.id && answerStatus()) {
+                      <div class="answer-editor-status">{{ answerStatus() }}</div>
+                    }
                   } @else {
                     <div class="answer-hidden" (click)="toggleAnswer(item.id); $event.stopPropagation()">
                       点击显示答案
@@ -529,6 +571,12 @@ type FilterValue = PracticeFilterCategory;
       background: rgba(22, 119, 255, 0.08);
     }
 
+    .answer-label-actions {
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+    }
+
     .copy-btn-end {
       margin-left: auto;
       margin-top: 0;
@@ -551,6 +599,40 @@ type FilterValue = PracticeFilterCategory;
       font-weight: 500;
       color: var(--text-secondary, #666);
       margin-bottom: 8px;
+    }
+
+    .answer-editor {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .answer-editor-label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-secondary, #666);
+    }
+
+    .answer-editor textarea {
+      width: 100%;
+      min-height: 120px;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .answer-editor-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .answer-editor-status {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--text-tertiary, #8c8c8c);
     }
 
     .answer-content {
@@ -659,6 +741,9 @@ export class PracticeListComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly storage = inject(PracticeStorageService);
   private readonly starredSync = inject(PracticeStarredSyncService);
+  private readonly practiceBank = inject(PracticeBankService);
+  private bankRows: PracticeBankRow[] = [];
+  private serverBankReady = false;
   private readonly destroyRef = inject(DestroyRef);
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly injector = inject(Injector);
@@ -697,6 +782,14 @@ export class PracticeListComponent implements OnInit {
   activeIndexTick = signal<number | null>(null);
   /** 刚复制成功的题目或答案 */
   copiedKey = signal<string | null>(null);
+  /** 正在编辑答案的题目 */
+  editingAnswerId = signal<string | null>(null);
+  editQuestionDraft = signal('');
+  editAnswerDraft = signal('');
+  answerSaving = signal(false);
+  answerStatus = signal('');
+  answerStatusId = signal<string | null>(null);
+  private readonly originalAnswers = new Map<string, { question: string; answer: string }>();
   private copyResetTimer = 0;
   /** 按住滑动时，显示在手指左侧的放大题号 */
   indexHintTick = signal<number | null>(null);
@@ -771,7 +864,9 @@ export class PracticeListComponent implements OnInit {
   ngOnInit() {
     const scopes = this.scopesToLoad();
     this.ensureSeeds(scopes);
-    this.allItems.set(this.loadItems(scopes));
+    const loaded = this.loadItems(scopes);
+    this.rememberOriginalAnswers(loaded);
+    this.allItems.set(loaded);
     this.destroyRef.onDestroy(() => {
       window.clearTimeout(this.copyResetTimer);
       this.unbindIndexScrollSpy();
@@ -786,6 +881,16 @@ export class PracticeListComponent implements OnInit {
         .pull(track)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe((ids) => this.starredIds.set(new Set(ids)));
+      this.bankRows = bundledBankRows(track);
+      this.practiceBank
+        .load(track)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((serverRows) => {
+          if (!serverRows) return;
+          this.serverBankReady = true;
+          this.bankRows = mergeBankRows(this.bankRows, serverRows);
+          this.allItems.set(practiceItemsFromBank(track, this.bankRows, Date.now()));
+        });
     }
   }
 
@@ -923,6 +1028,111 @@ export class PracticeListComponent implements OnInit {
   // MARK: 标星
   isStarred(id: string): boolean {
     return this.starredIds().has(id);
+  }
+
+  startAnswerEdit(item: PracticeItem, ev: Event): void {
+    ev.stopPropagation();
+    this.editingAnswerId.set(item.id);
+    this.editQuestionDraft.set(item.question);
+    this.editAnswerDraft.set(item.explanation || item.answer);
+    this.answerStatus.set('');
+    this.answerStatusId.set(item.id);
+  }
+
+  cancelAnswerEdit(): void {
+    this.editingAnswerId.set(null);
+    this.answerSaving.set(false);
+  }
+
+  saveAnswerEdit(item: PracticeItem): void {
+    const track = this.starredTrack();
+    if (!track || this.answerSaving()) return;
+    const answer = this.editAnswerDraft();
+    if (!answer.trim()) {
+      this.answerStatus.set('答案不能为空');
+      this.answerStatusId.set(item.id);
+      return;
+    }
+    const question = this.editQuestionDraft().trim() || item.question;
+    this.answerSaving.set(true);
+    this.practiceBank
+      .save({
+        track,
+        questionId: item.id,
+        question,
+        answer,
+        serverReady: this.serverBankReady,
+        rows: this.bankRows,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        this.answerSaving.set(false);
+        if (result === 'server') this.serverBankReady = true;
+        this.bankRows = this.bankRows.map((row) =>
+          String(row['id']) === item.id ? { ...row, question, answer } : row,
+        );
+        this.allItems.update((items) =>
+          items.map((row) => (row.id === item.id ? { ...row, answer, question } : row)),
+        );
+        this.editingAnswerId.set(null);
+        this.answerStatusId.set(item.id);
+        this.answerStatus.set(this.answerSaveStatus(result));
+      });
+  }
+
+  restoreOriginalAnswer(item: PracticeItem): void {
+    const track = this.starredTrack();
+    const original = this.originalAnswers.get(item.id);
+    if (!track || !original) return;
+    const applyOriginal = () => {
+      this.bankRows = this.bankRows.map((row) =>
+        String(row['id']) === item.id
+          ? { ...row, question: original.question, answer: original.answer }
+          : row,
+      );
+      this.allItems.update((items) =>
+        items.map((row) =>
+          row.id === item.id ? { ...row, question: original.question, answer: original.answer } : row,
+        ),
+      );
+      this.editingAnswerId.set(null);
+      this.answerStatusId.set(item.id);
+      this.answerStatus.set('已恢复这道题原来的题目和答案');
+    };
+    if (!this.serverBankReady) {
+      applyOriginal();
+      return;
+    }
+    this.practiceBank
+      .save({
+        track,
+        questionId: item.id,
+        question: original.question,
+        answer: original.answer,
+        serverReady: true,
+        rows: this.bankRows,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        applyOriginal();
+        if (result !== 'server') {
+          this.answerStatus.set('这台浏览器已恢复原文，服务器题库没写成功');
+        }
+      });
+  }
+
+  private answerSaveStatus(result: PracticeBankSaveResult): string {
+    if (result === 'server') return '已写入服务器题库，打开页面就会读到这版';
+    if (result === 'failed') return '这台浏览器已经改好，服务器题库没写成功';
+    return '已改在这台浏览器。登录后才会写入服务器题库';
+  }
+
+  private rememberOriginalAnswers(items: PracticeItem[]): void {
+    for (const item of items) {
+      if (!this.originalAnswers.has(item.id)) {
+        this.originalAnswers.set(item.id, { question: item.question, answer: item.answer });
+      }
+    }
   }
 
   copyText(text: string, key: string, ev: Event): void {
