@@ -16,6 +16,7 @@ export interface IosSeedRow {
   difficulty: string;
   oralOneLiner: string;
   markD?: boolean;
+  sort?: number;
 }
 
 export interface ObjectiveSeedRow {
@@ -136,6 +137,9 @@ function rowToPracticeItem(row: IosSeedRow, importedAt: number, category: Practi
     tags,
     importedAt,
   };
+  if (typeof row.sort === 'number' && Number.isFinite(row.sort)) {
+    item.sort = row.sort;
+  }
   if (row.markD !== false) {
     item.markD = true;
   }

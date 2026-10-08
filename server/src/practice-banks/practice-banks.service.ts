@@ -66,6 +66,76 @@ export class PracticeBanksService implements OnModuleInit {
     return { ...saved.data, id: saved.questionId };
   }
 
+  async createQuestion(
+    track: string,
+    input: { question: string; answer: string; sort: number },
+  ): Promise<Record<string, unknown>> {
+    this.assertTrack(track);
+    const question = input.question.trim();
+    const answer = input.answer.trim();
+    if (!question || question.length > 2000) throw new BadRequestException('题目不能为空');
+    if (!answer || answer.length > 20000) throw new BadRequestException('答案不能为空');
+    if (!Number.isFinite(input.sort)) throw new BadRequestException('排序值不对');
+    const id = this.newQuestionId();
+    const saved = await this.questions.save(
+      this.questions.create({
+        track,
+        questionId: id,
+        data: { id, question, answer, sort: input.sort, markD: true },
+      }),
+    );
+    return { ...saved.data, id: saved.questionId };
+  }
+
+  async importQuestions(
+    track: string,
+    rows: unknown[],
+  ): Promise<{ added: number; skipped: number }> {
+    this.assertTrack(track);
+    if (!Array.isArray(rows) || rows.length > 5000) throw new BadRequestException('题目文件不对');
+    const existingRows = await this.questions.find({ where: { track } });
+    const existingIds = new Set(existingRows.map((row) => row.questionId));
+    let nextSort = existingRows.reduce((max, row) => Math.max(max, this.sortOf(row.data)), 0);
+    const fresh: PracticeQuestion[] = [];
+    let skipped = 0;
+    for (const row of rows) {
+      if (!row || typeof row !== 'object' || Array.isArray(row)) {
+        skipped += 1;
+        continue;
+      }
+      const record = row as Record<string, unknown>;
+      const question = typeof record['question'] === 'string' ? record['question'].trim() : '';
+      const answer = typeof record['answer'] === 'string' ? record['answer'].trim() : '';
+      if (!question || !answer || question.length > 2000 || answer.length > 20000) {
+        skipped += 1;
+        continue;
+      }
+      const explicitId = typeof record['id'] === 'string' ? record['id'].trim() : '';
+      if (explicitId && (explicitId.length > 80 || existingIds.has(explicitId))) {
+        skipped += 1;
+        continue;
+      }
+      const sort = this.sortOf(record);
+      const assignedSort = sort === Number.MAX_SAFE_INTEGER ? ++nextSort : sort;
+      if (assignedSort !== Number.MAX_SAFE_INTEGER) nextSort = Math.max(nextSort, assignedSort);
+      const id = explicitId || this.newQuestionId();
+      if (existingIds.has(id)) {
+        skipped += 1;
+        continue;
+      }
+      existingIds.add(id);
+      fresh.push(
+        this.questions.create({
+          track,
+          questionId: id,
+          data: { ...record, id, question, answer, sort: assignedSort, markD: record['markD'] !== false },
+        }),
+      );
+    }
+    if (fresh.length) await this.questions.save(fresh, { chunk: 80 });
+    return { added: fresh.length, skipped };
+  }
+
   async listStars(userId: number, track: string): Promise<{ ids: string[] }> {
     this.assertTrack(track);
     await this.importLegacyStars(userId, track);
@@ -149,6 +219,19 @@ export class PracticeBanksService implements OnModuleInit {
     if (!values.length) return 0;
     await this.questions.save(values, { chunk: 80 });
     return values.length;
+  }
+
+  private sortOf(row: Record<string, unknown>): number {
+    if (typeof row['sort'] === 'number' && Number.isFinite(row['sort'])) return row['sort'];
+    if (typeof row['no'] === 'number' && Number.isFinite(row['no'])) return row['no'];
+    return Number.MAX_SAFE_INTEGER;
+  }
+
+  private questionSeq = 0;
+
+  private newQuestionId(): string {
+    this.questionSeq += 1;
+    return `added-${Date.now().toString(36)}-${this.questionSeq.toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
   }
 
   private async importLegacyStars(userId: number, track: string): Promise<void> {

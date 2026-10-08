@@ -36,8 +36,10 @@ export const PRACTICE_CATEGORY_LIST: PracticeCategory[] = [
 export type PracticeFilterCategory = PracticeCategory | 'all';
 export interface PracticeItem {
   id: string;
-  /** 题库 JSON 中的稳定编号，背题页展示并便于按数字检索 */
+  /** 题库 JSON 中的稳定编号。背题页不再用它当展示序号。 */
   no?: number;
+  /** 真实排序。可以是 49.5 这种小数，页面序号按它从小到大重排。 */
+  sort?: number;
   category: PracticeCategory;
   /** 问题 / 题干 */
   question: string;

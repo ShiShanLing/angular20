@@ -9,6 +9,7 @@ export interface FrontendSeedRow {
   question: string;
   answer: string;
   difficulty: string;
+  sort?: number;
 }
 
 /** 将合并后的前端题库（Angular / TypeScript / JavaScript / RxJS）转为背题条目。 */
@@ -22,6 +23,7 @@ export function frontendRowsToPracticeItems(rows: FrontendSeedRow[], importedAt:
     tags: [row.category, row.topic, row.difficulty].filter(Boolean).join(' · '),
     importedAt,
     markD: true,
+    ...(typeof row.sort === 'number' && Number.isFinite(row.sort) ? { sort: row.sort } : {}),
   }));
 }
 

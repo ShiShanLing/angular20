@@ -41,6 +41,7 @@ import { MarkdPipe } from './markd.pipe';
 import { PracticeStarredSyncService } from './practice-starred-sync.service';
 import { PracticeBankService, type PracticeBankSaveResult } from './practice-bank.service';
 import { bundledBankRows, mergeBankRows, practiceItemsFromBank, type PracticeBankRow } from './practice-bank.map';
+import { questionSortKey, sortKeyBeforeDisplay } from './practice-sort';
 
 type FilterValue = PracticeFilterCategory;
 
@@ -95,6 +96,14 @@ type FilterValue = PracticeFilterCategory;
               <button
                 nz-button
                 nzSize="small"
+                [nzType]="addQuestionOpen() ? 'primary' : 'default'"
+                (click)="toggleAddQuestion()"
+              >
+                添加题目
+              </button>
+              <button
+                nz-button
+                nzSize="small"
                 [nzType]="starredOnly() ? 'primary' : 'default'"
                 [disabled]="!starredCount() && !starredOnly()"
                 (click)="toggleStarredOnly()"
@@ -106,6 +115,73 @@ type FilterValue = PracticeFilterCategory;
             }
           </div>
         </div>
+
+        @if (reciteMode && addQuestionOpen()) {
+          <div class="add-question-panel">
+            <label class="add-question-label">
+              题目
+              <textarea
+                nz-input
+                [ngModel]="newQuestionText()"
+                (ngModelChange)="newQuestionText.set($event)"
+                placeholder="新题的题干"
+              ></textarea>
+            </label>
+            <label class="add-question-label">
+              答案
+              <textarea
+                nz-input
+                [ngModel]="newAnswerText()"
+                (ngModelChange)="newAnswerText.set($event)"
+                placeholder="参考答案"
+              ></textarea>
+            </label>
+            <div class="add-question-place">
+              <label>
+                插到第
+                <input
+                  nz-input
+                  type="number"
+                  min="1"
+                  step="1"
+                  [ngModel]="newQuestionPlace()"
+                  (ngModelChange)="onNewQuestionPlace($event)"
+                />
+                题前面
+              </label>
+              <label>
+                排序值
+                <input
+                  nz-input
+                  type="number"
+                  step="any"
+                  [ngModel]="newQuestionSort()"
+                  (ngModelChange)="onNewQuestionSort($event)"
+                />
+              </label>
+            </div>
+            <p class="add-question-hint">
+              页面上的 1、2、3 只是排好序后的序号。排序值才是真实顺序，可以填 49.5。插在现在的第 50 题前面时，排序值会变成 49.5，保存后它显示成 50，原来的 50 显示成 51。
+            </p>
+            <div class="add-question-actions">
+              <button nz-button nzType="primary" nzSize="small" [disabled]="addingQuestion()" (click)="submitNewQuestion()">
+                {{ addingQuestion() ? '提交中' : '添加到服务器' }}
+              </button>
+              <button nz-button nzSize="small" (click)="questionFileInput.click()">上传 JSON</button>
+              <input
+                #questionFileInput
+                type="file"
+                accept="application/json,.json"
+                hidden
+                (change)="onQuestionFile($event)"
+              />
+            </div>
+            <p class="add-question-hint">JSON 文件是数组。每题包含 question、answer，sort 可以写成 49.5。带了已有 id 的题会跳过，避免盖掉线上改过的答案。</p>
+            @if (addQuestionStatus()) {
+              <div class="answer-editor-status">{{ addQuestionStatus() }}</div>
+            }
+          </div>
+        }
 
         @if (!reciteMode) {
           <div class="stats-bar">
@@ -163,7 +239,7 @@ type FilterValue = PracticeFilterCategory;
             [class.expanded]="expandedIds().has(item.id)"
             [class.has-star]="reciteMode"
             [attr.data-question-id]="item.id"
-            [attr.data-question-no]="questionNo(item, i)"
+            [attr.data-question-no]="displayNo(item)"
           >
             @if (reciteMode) {
               <button
@@ -179,7 +255,7 @@ type FilterValue = PracticeFilterCategory;
             }
             <!-- 题目头部 -->
             <div class="question-header" (click)="toggleExpand(item.id)">
-              <span class="question-index">{{ item.no ?? i + 1 }}</span>
+              <span class="question-index">{{ reciteMode ? displayNo(item) : (item.no ?? i + 1) }}</span>
               @if (!reciteMode) {
                 <nz-tag [nzColor]="getCategoryColor(item.category)" class="cat-tag">
                   {{ getCategoryLabel(item.category) }}
@@ -635,6 +711,57 @@ type FilterValue = PracticeFilterCategory;
       color: var(--text-tertiary, #8c8c8c);
     }
 
+    .add-question-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 12px;
+      border: 1px solid var(--border-color, #f0f0f0);
+      border-radius: 8px;
+      background: var(--bg-secondary, #fafafa);
+    }
+
+    .add-question-label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 13px;
+      color: var(--text-secondary, #666);
+    }
+
+    .add-question-label textarea {
+      width: 100%;
+      min-height: 72px;
+    }
+
+    .add-question-place {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      font-size: 13px;
+      color: var(--text-secondary, #666);
+    }
+
+    .add-question-place input {
+      width: 96px;
+      margin: 0 6px;
+    }
+
+    .add-question-hint {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--text-tertiary, #8c8c8c);
+    }
+
+    .add-question-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
     .answer-content {
       background: var(--bg-tertiary, #f6ffed);
       border: 1px solid var(--border-color, #b7eb8f);
@@ -789,6 +916,13 @@ export class PracticeListComponent implements OnInit {
   answerSaving = signal(false);
   answerStatus = signal('');
   answerStatusId = signal<string | null>(null);
+  addQuestionOpen = signal(false);
+  newQuestionText = signal('');
+  newAnswerText = signal('');
+  newQuestionPlace = signal(1);
+  newQuestionSort = signal(1);
+  addingQuestion = signal(false);
+  addQuestionStatus = signal('');
   private readonly originalAnswers = new Map<string, { question: string; answer: string }>();
   private copyResetTimer = 0;
   /** 按住滑动时，显示在手指左侧的放大题号 */
@@ -822,9 +956,26 @@ export class PracticeListComponent implements OnInit {
     return this.starredOnly() ? `共 ${count} 题（标星）` : `共 ${count} 题`;
   });
 
+  /** 背题按排序值排列。页面序号是排完之后的 1、2、3。 */
+  readonly orderedItems = computed(() => {
+    const items = this.allItems();
+    if (!this.reciteMode) return items;
+    return [...items].sort((a, b) => {
+      const diff = questionSortKey(a) - questionSortKey(b);
+      if (diff !== 0) return diff;
+      return a.id.localeCompare(b.id);
+    });
+  });
+
+  readonly displayNumbers = computed(() => {
+    const numbers = new Map<string, number>();
+    this.orderedItems().forEach((item, index) => numbers.set(item.id, index + 1));
+    return numbers;
+  });
+
   /** 筛选后的题目列表。背题一次列出该科目全库，只允许搜索，不按分类裁切。 */
   readonly filteredItems = computed(() => {
-    let items = this.allItems();
+    let items = this.orderedItems();
     const filter = this.currentFilter();
     if (!this.reciteMode && filter !== 'all') {
       items = items.filter(i => i.category === filter);
@@ -840,14 +991,28 @@ export class PracticeListComponent implements OnInit {
   });
 
   /** 背题模式下的搜索命中列表，只用于定位跳转，不改变列表本身。 */
-  readonly searchResults = computed(() => this.filterItemsBySearch(this.filteredItems(), this.searchText()));
+  readonly searchResults = computed(() => {
+    const kw = this.searchText().trim().toLowerCase();
+    if (!kw) return [] as PracticeItem[];
+    const numbers = this.displayNumbers();
+    return this.filteredItems().filter((item) => {
+      if (String(numbers.get(item.id) ?? '') === kw) return true;
+      if (item.sort != null && String(item.sort) === kw) return true;
+      if (item.no != null && String(item.no) === kw) return true;
+      return (
+        item.question.toLowerCase().includes(kw) ||
+        item.answer.toLowerCase().includes(kw) ||
+        item.tags.toLowerCase().includes(kw)
+      );
+    });
+  });
 
   /** 右侧快捷条：有题的十位，例如 0、10、20。 */
   readonly indexTicks = computed(() => {
     if (!this.reciteMode) return [] as number[];
     const ticks = new Set<number>();
-    this.filteredItems().forEach((item, index) => {
-      ticks.add(Math.floor(this.questionNo(item, index) / 10) * 10);
+    this.filteredItems().forEach((item) => {
+      ticks.add(Math.floor(this.displayNo(item) / 10) * 10);
     });
     return [...ticks].sort((a, b) => a - b);
   });
@@ -1042,6 +1207,123 @@ export class PracticeListComponent implements OnInit {
   cancelAnswerEdit(): void {
     this.editingAnswerId.set(null);
     this.answerSaving.set(false);
+  }
+
+  toggleAddQuestion(): void {
+    const open = !this.addQuestionOpen();
+    this.addQuestionOpen.set(open);
+    if (open) {
+      this.addQuestionStatus.set('');
+      this.prepareNewQuestionPlace(this.orderedItems().length + 1);
+    }
+  }
+
+  onNewQuestionPlace(value: number | string): void {
+    const place = Number(value);
+    if (!Number.isFinite(place)) return;
+    this.prepareNewQuestionPlace(place);
+  }
+
+  onNewQuestionSort(value: number | string): void {
+    const sort = Number(value);
+    if (!Number.isFinite(sort)) return;
+    this.newQuestionSort.set(sort);
+  }
+
+  submitNewQuestion(): void {
+    const track = this.starredTrack();
+    const question = this.newQuestionText().trim();
+    const answer = this.newAnswerText().trim();
+    const sort = this.newQuestionSort();
+    if (!track || this.addingQuestion()) return;
+    if (!question || !answer) {
+      this.addQuestionStatus.set('题目和答案都不能为空');
+      return;
+    }
+    if (!Number.isFinite(sort)) {
+      this.addQuestionStatus.set('排序值不对');
+      return;
+    }
+    this.addingQuestion.set(true);
+    this.practiceBank
+      .create({ track, question, answer, sort })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        this.addingQuestion.set(false);
+        if (result.status === 'server' && result.row) {
+          this.bankRows = [...this.bankRows, result.row];
+          this.allItems.set(practiceItemsFromBank(track, this.bankRows, Date.now()));
+          this.newQuestionText.set('');
+          this.newAnswerText.set('');
+          this.prepareNewQuestionPlace(this.orderedItems().length + 1);
+          this.addQuestionStatus.set('已添加到服务器题库');
+          return;
+        }
+        this.addQuestionStatus.set(
+          result.status === 'local-only' ? '登录后才能添加到服务器' : '没写进服务器，请再试一次',
+        );
+      });
+  }
+
+  onQuestionFile(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    const track = this.starredTrack();
+    if (!file || !track || this.addingQuestion()) return;
+    void file.text().then((text) => {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        this.addQuestionStatus.set('这个 JSON 文件读不了');
+        return;
+      }
+      const questions = this.rowsFromQuestionFile(parsed);
+      if (!questions) {
+        this.addQuestionStatus.set('JSON 需要是题目数组，或包含 questions 数组');
+        return;
+      }
+      this.addingQuestion.set(true);
+      this.practiceBank
+        .importQuestions(track, questions)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((result) => {
+          if (result.status !== 'server') {
+            this.addingQuestion.set(false);
+            this.addQuestionStatus.set(
+              result.status === 'local-only' ? '登录后才能上传到服务器' : '上传没写进服务器',
+            );
+            return;
+          }
+          this.practiceBank
+            .load(track)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((rows) => {
+              this.addingQuestion.set(false);
+              if (rows) {
+                this.bankRows = mergeBankRows(bundledBankRows(track), rows);
+                this.allItems.set(practiceItemsFromBank(track, this.bankRows, Date.now()));
+              }
+              this.addQuestionStatus.set(`已添加 ${result.added} 题，跳过 ${result.skipped} 题`);
+            });
+        });
+    });
+  }
+
+  private prepareNewQuestionPlace(place: number): void {
+    this.newQuestionPlace.set(place);
+    this.newQuestionSort.set(sortKeyBeforeDisplay(this.orderedItems(), place));
+  }
+
+  private rowsFromQuestionFile(parsed: unknown): PracticeBankRow[] | null {
+    const rows = Array.isArray(parsed)
+      ? parsed
+      : parsed && typeof parsed === 'object' && Array.isArray((parsed as { questions?: unknown }).questions)
+        ? (parsed as { questions: unknown[] }).questions
+        : null;
+    if (!rows) return null;
+    return rows.filter((row): row is PracticeBankRow => !!row && typeof row === 'object' && !Array.isArray(row));
   }
 
   saveAnswerEdit(item: PracticeItem): void {
@@ -1270,13 +1552,17 @@ export class PracticeListComponent implements OnInit {
     this.expandQuestion(first.id);
   }
 
-  questionNo(item: PracticeItem, index: number): number {
-    return item.no ?? index + 1;
+  displayNo(item: PracticeItem): number {
+    return this.displayNumbers().get(item.id) ?? 0;
+  }
+
+  questionNo(item: PracticeItem, index = 0): number {
+    return this.reciteMode ? this.displayNo(item) : (item.no ?? index + 1);
   }
 
   indexTargetId(tick: number): string | null {
     const items = this.filteredItems();
-    const target = items.find((item, index) => this.questionNo(item, index) >= tick);
+    const target = items.find((item) => this.displayNo(item) >= tick);
     return target?.id ?? null;
   }
 
