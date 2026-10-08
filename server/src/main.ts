@@ -3,12 +3,17 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
+import { json, urlencoded } from 'express';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // 背题第一次保存会提交整份题库。默认 100KB 会把 iOS、前端题库拒掉。
+  // 必须在 listen 之前注册，后面的默认解析器才会让位。
+  app.use(json({ limit: '2mb' }));
+  app.use(urlencoded({ extended: true, limit: '2mb' }));
   const config = app.get(ConfigService);
 
   // 安全 HTTP 头（HTTP环境关闭 COOP/COEP/CSP升级/HSTS，避免浏览器强制 HTTPS）
