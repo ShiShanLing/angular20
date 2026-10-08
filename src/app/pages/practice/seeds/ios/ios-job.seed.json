@@ -735,9 +735,9 @@
     "category": "iOS",
     "topic": "Swift Concurrency",
     "question": "Structured Concurrency 和 Unstructured Task 有什么区别？为什么结构化并发更容易管理生命周期？",
-    "answer": "结构化并发中子任务有明确父子关系，父任务会等待、取消和传播错误，比如 async let、TaskGroup。优先用结构化并发。\n\nUnstructured Task 用 Task {} 创建，生命周期更独立，不自动受当前作用域管理。只有跨作用域任务才考虑非结构化。",
+    "answer": "结构化并发里，子任务有明确的父任务。父任务会等子任务做完；父任务取消时，子任务一起取消；子任务抛出的错误会传到父任务。async let 和 TaskGroup 都是这种，所以生命周期更好管。优先用结构化并发。\n\nUnstructured Task 用 Task {} 创建，不跟当前作用域自动绑定：函数结束了它还在跑，也不会自动取消。只有任务要活过当前作用域时才用它，并且要自己保存和取消。",
     "difficulty": "Hard",
-    "oralOneLiner": "结构化并发有父子生命周期，Task {} 更独立要谨慎。"
+    "oralOneLiner": "父任务等子任务做完，取消会往下传，错误会往上传；Task {} 要自己管。"
   },
   {
     "no": 75,
