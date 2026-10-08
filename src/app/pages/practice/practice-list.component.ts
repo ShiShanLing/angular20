@@ -161,6 +161,7 @@ type FilterValue = PracticeFilterCategory;
             [class.expanded]="expandedIds().has(item.id)"
             [class.has-star]="reciteMode"
             [attr.data-question-id]="item.id"
+            [attr.data-question-no]="questionNo(item, i)"
           >
             @if (reciteMode) {
               <button
@@ -702,6 +703,8 @@ export class PracticeListComponent implements OnInit {
   indexHintTop = signal(0);
   private indexPointerActive = false;
   private lastIndexPointerTick: number | null = null;
+  private indexScrollTarget: EventTarget | null = null;
+  private indexScrollRaf = 0;
 
   /** 展开的题目 ID 集合 */
   expandedIds = signal<Set<string>>(new Set());
@@ -769,7 +772,13 @@ export class PracticeListComponent implements OnInit {
     const scopes = this.scopesToLoad();
     this.ensureSeeds(scopes);
     this.allItems.set(this.loadItems(scopes));
-    this.destroyRef.onDestroy(() => window.clearTimeout(this.copyResetTimer));
+    this.destroyRef.onDestroy(() => {
+      window.clearTimeout(this.copyResetTimer);
+      this.unbindIndexScrollSpy();
+    });
+    if (this.reciteMode) {
+      afterNextRender(() => requestAnimationFrame(() => this.bindIndexScrollSpy()), { injector: this.injector });
+    }
     const track = this.starredTrack();
     if (track) {
       this.starredIds.set(new Set(this.storage.readStarredIds(track)));
@@ -1088,6 +1097,66 @@ export class PracticeListComponent implements OnInit {
     this.indexPointerActive = false;
     this.lastIndexPointerTick = null;
     this.indexHintTick.set(null);
+    this.syncActiveIndexFromScroll();
+  }
+
+  private readonly onIndexListScroll = (): void => {
+    if (this.indexPointerActive || this.indexScrollRaf) return;
+    this.indexScrollRaf = requestAnimationFrame(() => {
+      this.indexScrollRaf = 0;
+      if (!this.indexPointerActive) this.syncActiveIndexFromScroll();
+    });
+  };
+
+  private bindIndexScrollSpy(): void {
+    const root = this.host.nativeElement as HTMLElement;
+    const card = root.querySelector('.question-card') as HTMLElement | null;
+    if (!card) return;
+    const scroller = this.findScrollParent(card);
+    const target: EventTarget = scroller === window ? window : scroller;
+    if (this.indexScrollTarget !== target) {
+      this.unbindIndexScrollSpy();
+      target.addEventListener('scroll', this.onIndexListScroll, { passive: true });
+      this.indexScrollTarget = target;
+    }
+    this.syncActiveIndexFromScroll();
+  }
+
+  private unbindIndexScrollSpy(): void {
+    if (this.indexScrollRaf) {
+      cancelAnimationFrame(this.indexScrollRaf);
+      this.indexScrollRaf = 0;
+    }
+    this.indexScrollTarget?.removeEventListener('scroll', this.onIndexListScroll);
+    this.indexScrollTarget = null;
+  }
+
+  /** 列表滚动时，高亮当前贴在顶栏下方的那一档题号。 */
+  private syncActiveIndexFromScroll(): void {
+    const root = this.host.nativeElement as HTMLElement;
+    const cards = [...root.querySelectorAll<HTMLElement>('.question-card')];
+    if (cards.length === 0) return;
+    const firstTop = cards[0].getBoundingClientRect().top;
+    const lastTop = cards[cards.length - 1].getBoundingClientRect().top;
+    if (cards.length > 1 && firstTop === lastTop) return;
+
+    const sticky = root.querySelector('.list-head-sticky') as HTMLElement | null;
+    const scroller = this.findScrollParent(cards[0]);
+    const line =
+      (sticky?.getBoundingClientRect().bottom ??
+        (scroller === window ? 0 : (scroller as HTMLElement).getBoundingClientRect().top)) + 12;
+
+    let no = Number(cards[0].dataset['questionNo']);
+    for (const card of cards) {
+      if (card.getBoundingClientRect().top > line) break;
+      const value = Number(card.dataset['questionNo']);
+      if (Number.isFinite(value)) no = value;
+    }
+    if (!Number.isFinite(no)) return;
+    const tick = Math.floor(no / 10) * 10;
+    if (this.activeIndexTick() !== tick) {
+      this.activeIndexTick.set(tick);
+    }
   }
 
   private jumpFromIndexPointer(event: PointerEvent): void {

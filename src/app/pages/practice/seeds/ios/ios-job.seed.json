@@ -705,7 +705,7 @@
     "category": "iOS",
     "topic": "Swift Concurrency",
     "question": "`async/await` 和 GCD 如何选择？它们解决的问题有什么不同？",
-    "answer": "GCD 是底层任务调度工具，关注把闭包派发到队列。简单线程切换可用 GCD。\n\nasync/await 是语言级异步模型，关注把异步流程写得像同步代码，并和错误、取消、结构化并发集成。现代异步业务流程、并发请求和可取消任务优先 async/await。",
+    "answer": "GCD 是底层任务调度工具，关注把闭包派发到队列。简单线程切换可用 GCD。\n\nasync/await 是语言级异步模型，能把异步流程写得像同步代码，并整合了错误、取消和结构化并发。现代异步业务流程、并发请求和可取消任务优先 async/await。",
     "difficulty": "Medium",
     "oralOneLiner": "GCD 管派发，async/await 管异步流程表达。"
   },
