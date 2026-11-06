@@ -1,0 +1,355 @@
+<div class="practice-list-page">
+  <div class="list-head" [class.list-head-sticky]="reciteMode">
+    <!-- 顶部工具栏 -->
+    <div class="toolbar">
+      <h3 class="title">{{ pageTitle() }}</h3>
+      <div class="toolbar-right">
+        @if (!reciteMode && showCategoryTabs()) {
+          <div class="category-tabs">
+            @for (cat of filterCategories; track cat) {
+              <button
+                nz-button
+                [nzType]="currentFilter() === cat ? 'primary' : 'default'"
+                nzSize="small"
+                (click)="setFilter(cat)"
+              >
+                {{ getCategoryLabel(cat) }}
+              </button>
+            }
+          </div>
+        }
+        <!-- 搜索框 -->
+        <nz-input-wrapper nzSize="small" class="search-box">
+          <span nzInputPrefix><span nz-icon nzType="search"></span></span>
+          <input
+            nz-input
+            [placeholder]="searchPlaceholder()"
+            [ngModel]="searchText()"
+            (ngModelChange)="onSearchChange($event)"
+            (keydown.enter)="goSearchHit(1); $event.preventDefault()"
+          />
+        </nz-input-wrapper>
+        @if (searchText().trim()) {
+          <div class="search-hit-nav" aria-label="搜索命中导航">
+            <button
+              type="button"
+              nz-button
+              nzSize="small"
+              nzType="default"
+              [disabled]="!searchResults().length"
+              title="上一个命中"
+              (click)="goSearchHit(-1)"
+            >
+              <span nz-icon nzType="up"></span>
+            </button>
+            <span class="search-hit-label">{{ searchHitLabel() }}</span>
+            <button
+              type="button"
+              nz-button
+              nzSize="small"
+              nzType="default"
+              [disabled]="!searchResults().length"
+              title="下一个命中"
+              (click)="goSearchHit(1)"
+            >
+              <span nz-icon nzType="down"></span>
+            </button>
+          </div>
+        }
+        @if (reciteMode) {
+          <button
+            nz-button
+            nzSize="small"
+            [nzType]="addQuestionOpen() ? 'primary' : 'default'"
+            (click)="toggleAddQuestion()"
+          >
+            添加题目
+          </button>
+          <button
+            nz-button
+            nzSize="small"
+            [nzType]="starredOnly() ? 'primary' : 'default'"
+            [disabled]="!starredCount() && !starredOnly()"
+            (click)="toggleStarredOnly()"
+            title="只看已标星的易忘题"
+          >
+            <span nz-icon nzType="star" [nzTheme]="starredOnly() ? 'fill' : 'outline'"></span>
+            <span class="star-filter-text">仅看标星</span>{{ starredCount() ? ' ' + starredCount() : '' }}
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (reciteMode && addQuestionOpen()) {
+      <div class="add-question-panel">
+        <label class="add-question-label">
+          题目
+          <textarea
+            nz-input
+            [ngModel]="newQuestionText()"
+            (ngModelChange)="newQuestionText.set($event)"
+            placeholder="新题的题干"
+          ></textarea>
+        </label>
+        <label class="add-question-label">
+          答案
+          <textarea
+            nz-input
+            [ngModel]="newAnswerText()"
+            (ngModelChange)="newAnswerText.set($event)"
+            placeholder="参考答案"
+          ></textarea>
+        </label>
+        <div class="add-question-place">
+          <label>
+            插到第
+            <input
+              nz-input
+              type="number"
+              min="1"
+              step="1"
+              [ngModel]="newQuestionPlace()"
+              (ngModelChange)="onNewQuestionPlace($event)"
+            />
+            题前面
+          </label>
+          <label>
+            排序值
+            <input
+              nz-input
+              type="number"
+              step="any"
+              [ngModel]="newQuestionSort()"
+              (ngModelChange)="onNewQuestionSort($event)"
+            />
+          </label>
+        </div>
+        <p class="add-question-hint">
+          页面上的 1、2、3 只是排好序后的序号。排序值才是真实顺序，可以填 49.5。插在现在的第 50 题前面时，排序值会变成 49.5，保存后它显示成 50，原来的 50 显示成 51。
+        </p>
+        <div class="add-question-actions">
+          <button nz-button nzType="primary" nzSize="small" [disabled]="addingQuestion()" (click)="submitNewQuestion()">
+            {{ addingQuestion() ? '提交中' : '添加到服务器' }}
+          </button>
+          <button nz-button nzSize="small" (click)="questionFileInput.click()">上传 JSON</button>
+          <input
+            #questionFileInput
+            type="file"
+            accept="application/json,.json"
+            hidden
+            (change)="onQuestionFile($event)"
+          />
+        </div>
+        <p class="add-question-hint">JSON 文件是数组。每题包含 question、answer，sort 可以写成 49.5。带了已有 id 的题会跳过，避免盖掉线上改过的答案。</p>
+        @if (addQuestionStatus()) {
+          <div class="answer-editor-status">{{ addQuestionStatus() }}</div>
+        }
+      </div>
+    }
+
+    @if (!reciteMode) {
+      <div class="stats-bar">
+        <span>共 <strong>{{ filteredItems().length }}</strong> 题</span>
+        <span class="spacer"></span>
+        <button nz-button nzType="link" nzSize="small" (click)="toggleAllAnswers()">
+          {{ allExpanded() ? '全部隐藏答案' : '全部显示答案' }}
+        </button>
+        <button nz-button nzType="link" nzSize="small" (click)="collapseAll()">
+          全部折叠
+        </button>
+      </div>
+    }
+  </div>
+
+  @if (reciteMode && indexTicks().length > 1) {
+    <nav
+      class="index-rail"
+      aria-label="题号快捷跳转"
+      (pointerdown)="onIndexPointerDown($event)"
+      (pointermove)="onIndexPointerMove($event)"
+      (pointerup)="onIndexPointerEnd()"
+      (pointercancel)="onIndexPointerEnd()"
+    >
+      @if (indexHintTick() !== null) {
+        <div class="index-hint" [style.top.px]="indexHintTop()" aria-hidden="true">
+          {{ indexHintTick() }}
+        </div>
+      }
+      @for (tick of indexTicks(); track tick) {
+        <button
+          type="button"
+          class="index-tick"
+          [class.is-active]="activeIndexTick() === tick"
+          [attr.aria-label]="'跳到第 ' + tick + ' 题附近'"
+          (click)="jumpToIndexTick(tick); $event.stopPropagation()"
+        >
+          {{ tick }}
+        </button>
+      }
+    </nav>
+  }
+
+  <!-- 题目列表 -->
+  <div class="question-list">
+    @if (filteredItems().length === 0) {
+      <nz-empty
+        [nzNotFoundContent]="reciteMode && starredOnly() ? '还没有标星题' : '暂无题目'"
+      ></nz-empty>
+    }
+
+    @for (item of filteredItems(); track item.id; let i = $index) {
+      <div
+        class="question-card"
+        [class.expanded]="expandedIds().has(item.id)"
+        [class.has-star]="reciteMode"
+        [attr.data-question-id]="item.id"
+        [attr.data-question-no]="displayNo(item)"
+      >
+        @if (reciteMode) {
+          <button
+            type="button"
+            class="star-btn"
+            [class.is-starred]="isStarred(item.id)"
+            [attr.aria-label]="isStarred(item.id) ? '取消标星' : '标星'"
+            [attr.title]="isStarred(item.id) ? '取消标星' : '标为易忘题'"
+            (click)="toggleStar(item.id, $event)"
+          >
+            <span nz-icon nzType="star" [nzTheme]="isStarred(item.id) ? 'fill' : 'outline'"></span>
+          </button>
+        }
+        <!-- 题目头部 -->
+        <div class="question-header" (click)="toggleExpand(item.id)">
+          <span class="question-index">{{ reciteMode ? displayNo(item) : (item.no ?? i + 1) }}</span>
+          @if (!reciteMode) {
+            <nz-tag [nzColor]="getCategoryColor(item.category)" class="cat-tag">
+              {{ getCategoryLabel(item.category) }}
+            </nz-tag>
+          }
+          <span class="question-text">{{ item.question }}</span>
+          @if (reciteMode) {
+            <button
+              type="button"
+              class="copy-btn"
+              [class.is-copied]="copiedKey() === item.id + ':q'"
+              aria-label="复制题目"
+              [attr.title]="copiedKey() === item.id + ':q' ? '已复制题目' : '复制题目'"
+              (click)="copyText(item.question, item.id + ':q', $event)"
+            >
+              <span nz-icon [nzType]="copiedKey() === item.id + ':q' ? 'check-circle' : 'copy'" [nzTheme]="copiedKey() === item.id + ':q' ? 'fill' : 'outline'"></span>
+            </button>
+          }
+          <span class="expand-icon">
+            <span nz-icon [nzType]="expandedIds().has(item.id) ? 'up' : 'down'"></span>
+          </span>
+        </div>
+          
+        <!-- 展开区域：答案 + 手写框 -->
+        @if (expandedIds().has(item.id)) {
+          <div class="question-body">
+            <div class="answer-section">
+              <div class="answer-label">
+                <span nz-icon nzType="bulb" nzTheme="outline"></span>
+                参考答案
+                @if (reciteMode && revealedIds().has(item.id)) {
+                  <span class="answer-label-actions">
+                  <button
+                    type="button"
+                    class="copy-btn"
+                    aria-label="编辑答案"
+                    title="编辑答案"
+                    (click)="startAnswerEdit(item, $event)"
+                  >
+                    <span nz-icon nzType="edit" nzTheme="outline"></span>
+                  </button>
+                  <button
+                    type="button"
+                    class="copy-btn"
+                    [class.is-copied]="copiedKey() === item.id + ':a'"
+                    aria-label="复制答案"
+                    [attr.title]="copiedKey() === item.id + ':a' ? '已复制答案' : '复制答案'"
+                    (click)="copyText(item.explanation || item.answer, item.id + ':a', $event)"
+                  >
+                    <span nz-icon [nzType]="copiedKey() === item.id + ':a' ? 'check-circle' : 'copy'" [nzTheme]="copiedKey() === item.id + ':a' ? 'fill' : 'outline'"></span>
+                  </button>
+                  </span>
+                }
+                @if (!reciteMode) {
+                  <button nz-button nzType="link" nzSize="small" (click)="toggleAnswer(item.id); $event.stopPropagation()">
+                    {{ revealedIds().has(item.id) ? '隐藏' : '显示' }}
+                  </button>
+                }
+              </div>
+              @if (revealedIds().has(item.id) && editingAnswerId() === item.id) {
+                <div class="answer-editor">
+                  <label class="answer-editor-label">
+                    题目
+                    <textarea
+                      nz-input
+                      [ngModel]="editQuestionDraft()"
+                      (ngModelChange)="editQuestionDraft.set($event)"
+                    ></textarea>
+                  </label>
+                  <label class="answer-editor-label">
+                    答案
+                    <textarea
+                      nz-input
+                      [ngModel]="editAnswerDraft()"
+                      (ngModelChange)="editAnswerDraft.set($event)"
+                    ></textarea>
+                  </label>
+                  <div class="answer-editor-actions">
+                    <button nz-button nzType="primary" nzSize="small" [disabled]="answerSaving()" (click)="saveAnswerEdit(item)">
+                      {{ answerSaving() ? '提交中' : '提交到服务器' }}
+                    </button>
+                    <button nz-button nzSize="small" (click)="cancelAnswerEdit()">取消</button>
+                    <button nz-button nzType="link" nzSize="small" (click)="restoreOriginalAnswer(item)">恢复原答案</button>
+                  </div>
+                </div>
+              } @else if (revealedIds().has(item.id)) {
+                @if (item.options?.length) {
+                  <ul class="option-list">
+                    @for (opt of item.options; track opt.id) {
+                      <li [class.is-correct]="isCorrectOption(item, opt.id)">
+                        {{ opt.id }}. {{ opt.text }}
+                      </li>
+                    }
+                  </ul>
+                }
+                <div class="answer-content" [innerHTML]="(item.explanation || item.answer) | markd"></div>
+                @if (answerStatusId() === item.id && answerStatus()) {
+                  <div class="answer-editor-status">{{ answerStatus() }}</div>
+                }
+              } @else {
+                <div class="answer-hidden" (click)="toggleAnswer(item.id); $event.stopPropagation()">
+                  点击显示答案
+                </div>
+              }
+            </div>
+
+            @if (!reciteMode) {
+              <div class="memo-section">
+                <div class="memo-label">
+                  <span nz-icon nzType="edit" nzTheme="outline"></span>
+                  手写记忆（填写答案或抄写一遍）
+                </div>
+                <textarea
+                  nz-input
+                  cdkTextareaAutosize [cdkAutosizeMinRows]="2" [cdkAutosizeMaxRows]="8"
+                  placeholder="在这里默写答案，加深记忆..."
+                  [ngModel]="memoInputs()[item.id]"
+                  (ngModelChange)="setMemo(item.id, $event)"
+                  (blur)="onMemoBlur(item.id)"
+                ></textarea>
+                @if (memoInputs()[item.id] && revealedIds().has(item.id)) {
+                  <button nz-button nzType="link" nzSize="small" (click)="compareAnswer(item)">
+                    对比答案
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
