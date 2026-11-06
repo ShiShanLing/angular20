@@ -81,7 +81,7 @@ describe('PracticeComponent', () => {
     expect(component.listForNav().every(i => i.category === 'ios')).toBeTrue();
   });
 
-  it('search jumps to the first matching item instead of shrinking nav list', () => {
+  it('search keeps nav list and does not auto-jump to the first match', () => {
     const items = [
       makeItem({ id: 'q1', question: 'RunLoop 是什么？' }),
       makeItem({ id: 'q2', question: 'Block 为什么通常用 copy？' }),
@@ -95,10 +95,16 @@ describe('PracticeComponent', () => {
 
     expect(component.searchResults().map((item) => item.id)).toEqual(['q2']);
     expect(component.listForNav().map((item) => item.id)).toEqual(['q1', 'q2', 'q3']);
+    expect(component.searchHitIndex()).toBe(-1);
+    expect(component.currentItem()?.id).toBe('q1');
+
+    component.goSearchHit(1);
+
+    expect(component.searchHitIndex()).toBe(0);
     expect(component.currentItem()?.id).toBe('q2');
   });
 
-  it('search jumps to the first match when multiple items match', () => {
+  it('search next/prev cycles through multiple matches', () => {
     const items = [
       makeItem({ id: 'q1', question: 'Block copy 规则一' }),
       makeItem({ id: 'q2', question: 'Runtime 原理' }),
@@ -111,7 +117,20 @@ describe('PracticeComponent', () => {
     component.onSearchInput('block copy');
 
     expect(component.searchResults().map((item) => item.id)).toEqual(['q1', 'q3']);
+    expect(component.currentItem()?.id).toBe('q2');
+    expect(component.searchHitLabel()).toBe('— / 2');
+
+    component.goSearchHit(1);
     expect(component.currentItem()?.id).toBe('q1');
+    expect(component.searchHitLabel()).toBe('1 / 2');
+
+    component.goSearchHit(1);
+    expect(component.currentItem()?.id).toBe('q3');
+    expect(component.searchHitLabel()).toBe('2 / 2');
+
+    component.goSearchHit(1);
+    expect(component.currentItem()?.id).toBe('q1');
+    expect(component.searchHitLabel()).toBe('1 / 2');
   });
 
   it('currentItem returns item at currentIndex', () => {

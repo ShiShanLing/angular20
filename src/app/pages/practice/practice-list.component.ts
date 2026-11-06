@@ -90,8 +90,36 @@ type FilterValue = PracticeFilterCategory;
                 [placeholder]="searchPlaceholder()"
                 [ngModel]="searchText()"
                 (ngModelChange)="onSearchChange($event)"
+                (keydown.enter)="goSearchHit(1); $event.preventDefault()"
               />
             </nz-input-wrapper>
+            @if (searchText().trim()) {
+              <div class="search-hit-nav" aria-label="搜索命中导航">
+                <button
+                  type="button"
+                  nz-button
+                  nzSize="small"
+                  nzType="default"
+                  [disabled]="!searchResults().length"
+                  title="上一个命中"
+                  (click)="goSearchHit(-1)"
+                >
+                  <span nz-icon nzType="up"></span>
+                </button>
+                <span class="search-hit-label">{{ searchHitLabel() }}</span>
+                <button
+                  type="button"
+                  nz-button
+                  nzSize="small"
+                  nzType="default"
+                  [disabled]="!searchResults().length"
+                  title="下一个命中"
+                  (click)="goSearchHit(1)"
+                >
+                  <span nz-icon nzType="down"></span>
+                </button>
+              </div>
+            }
             @if (reciteMode) {
               <button
                 nz-button
@@ -491,6 +519,22 @@ type FilterValue = PracticeFilterCategory;
       width: 180px;
     }
 
+    .search-hit-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .search-hit-label {
+      min-width: 3.25rem;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-tertiary, #666);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
     .list-head-sticky {
       // 抵消内容区内边距，让背题栏贴住站点头部，题目不能从空隙透出
       --head-shift: calc(var(--app-content-pad, 24px) + var(--page-pad));
@@ -879,6 +923,7 @@ export class PracticeListComponent implements OnInit {
   readonly reciteMode = this.reciteTrack !== null || this.scopedBank !== null;
 
   /** 题库原始数据 */
+  
   allItems = signal<PracticeItem[]>([]);
 
   readonly pageTitle = computed(() => {
@@ -898,6 +943,9 @@ export class PracticeListComponent implements OnInit {
 
   /** 搜索文本 */
   searchText = signal('');
+
+  /** 当前搜索命中游标；-1 表示尚未定位 */
+  searchHitIndex = signal(-1);
 
   /** 背题标星 id */
   starredIds = signal<Set<string>>(new Set());
@@ -1007,6 +1055,14 @@ export class PracticeListComponent implements OnInit {
     });
   });
 
+  readonly searchHitLabel = computed(() => {
+    const total = this.searchResults().length;
+    if (!total) return '0 / 0';
+    const index = this.searchHitIndex();
+    if (index < 0) return `— / ${total}`;
+    return `${index + 1} / ${total}`;
+  });
+
   /** 右侧快捷条：有题的十位，例如 0、10、20。 */
   readonly indexTicks = computed(() => {
     if (!this.reciteMode) return [] as number[];
@@ -1024,8 +1080,15 @@ export class PracticeListComponent implements OnInit {
     return items.every(i => this.expandedIds().has(i.id));
   });
 
+  /*
+
+  循环引用是两个或多个对象互相强持有，导致引用计数无法归零。常见场景有 VC 强持有闭包，闭包强捕获 self；Timer 强持有 target；delegate 用 strong；对象之间互相 strong。解决方式是 weak/unowned、invalidate、解除观察或重新设计所有权。
+  
+  */
+  
   // MARK: 初始化
   // 组件初始化：同步移动端断点、订阅视口变化与路由事件
+  
   ngOnInit() {
     const scopes = this.scopesToLoad();
     this.ensureSeeds(scopes);
@@ -1058,7 +1121,7 @@ export class PracticeListComponent implements OnInit {
         });
     }
   }
-
+  
   private scopesToLoad(): PracticeStorageScope[] {
     if (this.reciteTrack) return reciteScopesForTrack(this.reciteTrack);
     if (this.scopedBank) return [this.scopedBank];
@@ -1177,17 +1240,27 @@ export class PracticeListComponent implements OnInit {
   // MARK: 设置
   setFilter(cat: FilterValue) {
     this.currentFilter.set(cat);
-    if (this.reciteMode) {
-      this.jumpToFirstMatchedQuestion();
-    }
+    this.searchHitIndex.set(-1);
   }
 
   // MARK: 搜索
   onSearchChange(value: string): void {
     this.searchText.set(value);
-    if (this.reciteMode) {
-      this.jumpToFirstMatchedQuestion();
-    }
+    this.searchHitIndex.set(-1);
+  }
+
+  goSearchHit(delta: 1 | -1): void {
+    const results = this.searchResults();
+    if (!results.length) return;
+    const current = this.searchHitIndex();
+    const next =
+      current < 0
+        ? delta > 0
+          ? 0
+          : results.length - 1
+        : (current + delta + results.length) % results.length;
+    this.searchHitIndex.set(next);
+    this.expandQuestion(results[next].id);
   }
 
   // MARK: 标星
@@ -1195,7 +1268,9 @@ export class PracticeListComponent implements OnInit {
     return this.starredIds().has(id);
   }
 
+
   startAnswerEdit(item: PracticeItem, ev: Event): void {
+    
     ev.stopPropagation();
     this.editingAnswerId.set(item.id);
     this.editQuestionDraft.set(item.question);
@@ -1203,12 +1278,13 @@ export class PracticeListComponent implements OnInit {
     this.answerStatus.set('');
     this.answerStatusId.set(item.id);
   }
-
+  
   cancelAnswerEdit(): void {
     this.editingAnswerId.set(null);
     this.answerSaving.set(false);
   }
 
+  
   toggleAddQuestion(): void {
     const open = !this.addQuestionOpen();
     this.addQuestionOpen.set(open);
@@ -1217,7 +1293,12 @@ export class PracticeListComponent implements OnInit {
       this.prepareNewQuestionPlace(this.orderedItems().length + 1);
     }
   }
+  
+  /*
+  
 
+
+  */
   onNewQuestionPlace(value: number | string): void {
     const place = Number(value);
     if (!Number.isFinite(place)) return;
@@ -1229,7 +1310,7 @@ export class PracticeListComponent implements OnInit {
     if (!Number.isFinite(sort)) return;
     this.newQuestionSort.set(sort);
   }
-
+  //
   submitNewQuestion(): void {
     const track = this.starredTrack();
     const question = this.newQuestionText().trim();
@@ -1244,6 +1325,8 @@ export class PracticeListComponent implements OnInit {
       this.addQuestionStatus.set('排序值不对');
       return;
     }
+    
+  
     this.addingQuestion.set(true);
     this.practiceBank
       .create({ track, question, answer, sort })
@@ -1259,6 +1342,8 @@ export class PracticeListComponent implements OnInit {
           this.addQuestionStatus.set('已添加到服务器题库');
           return;
         }
+        
+        
         this.addQuestionStatus.set(
           result.status === 'local-only' ? '登录后才能添加到服务器' : '没写进服务器，请再试一次',
         );
@@ -1284,6 +1369,7 @@ export class PracticeListComponent implements OnInit {
         this.addQuestionStatus.set('JSON 需要是题目数组，或包含 questions 数组');
         return;
       }
+
       this.addingQuestion.set(true);
       this.practiceBank
         .importQuestions(track, questions)
@@ -1310,12 +1396,17 @@ export class PracticeListComponent implements OnInit {
         });
     });
   }
-
+  /*
+  
+  项目有一个九宫格图片上传功能,有用户反馈可能会照成应用闪退,但是bugly闪退日志里没有业务堆栈,我们自己测试,使用公司测试机上传满9张图片有些卡顿,后来使用内存检查工具发现没上传一张图片内存就上涨一些.通过查资料了解到UIImag如果展示远超与本身的大图会照成内存压力.
+  后面使用的解决方案是,在拍照获取到UIImage对象后,压缩一份缩略图,然后保留一份JPEG data.这样性能好了很多.点击图片查看时再把Data转换成UIImage.
+  
+  */
   private prepareNewQuestionPlace(place: number): void {
     this.newQuestionPlace.set(place);
     this.newQuestionSort.set(sortKeyBeforeDisplay(this.orderedItems(), place));
   }
-
+  
   private rowsFromQuestionFile(parsed: unknown): PracticeBankRow[] | null {
     const rows = Array.isArray(parsed)
       ? parsed
@@ -1325,7 +1416,7 @@ export class PracticeListComponent implements OnInit {
     if (!rows) return null;
     return rows.filter((row): row is PracticeBankRow => !!row && typeof row === 'object' && !Array.isArray(row));
   }
-
+  
   saveAnswerEdit(item: PracticeItem): void {
     const track = this.starredTrack();
     if (!track || this.answerSaving()) return;
@@ -1335,6 +1426,9 @@ export class PracticeListComponent implements OnInit {
       this.answerStatusId.set(item.id);
       return;
     }
+
+
+    
     const question = this.editQuestionDraft().trim() || item.question;
     this.answerSaving.set(true);
     this.practiceBank
@@ -1344,6 +1438,7 @@ export class PracticeListComponent implements OnInit {
         question,
         answer,
       })
+      
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((result) => {
         this.answerSaving.set(false);
@@ -1358,8 +1453,14 @@ export class PracticeListComponent implements OnInit {
         this.answerStatusId.set(item.id);
         this.answerStatus.set(this.answerSaveStatus(result));
       });
+      
+      /*
+      KVO:键值观察
+      KVC:键值编码
+      */
   }
-
+  
+  
   restoreOriginalAnswer(item: PracticeItem): void {
     const track = this.starredTrack();
     const original = this.originalAnswers.get(item.id);
@@ -1383,6 +1484,7 @@ export class PracticeListComponent implements OnInit {
       applyOriginal();
       return;
     }
+    
     this.practiceBank
       .save({
         track,
@@ -1398,7 +1500,8 @@ export class PracticeListComponent implements OnInit {
         }
       });
   }
-
+  //
+  //
   private answerSaveStatus(result: PracticeBankSaveResult): string {
     if (result === 'server') return '已写入服务器题库，打开页面就会读到这版';
     if (result === 'failed') return '这台浏览器已经改好，服务器题库没写成功';
@@ -1430,7 +1533,8 @@ export class PracticeListComponent implements OnInit {
     }
     this.copyWithTextarea(value, done);
   }
-
+  //
+  
   private copyWithTextarea(value: string, done: () => void): void {
     const area = document.createElement('textarea');
     area.value = value;
@@ -1471,7 +1575,7 @@ export class PracticeListComponent implements OnInit {
     }
     return null;
   }
-
+  //
   // MARK: 切换
   toggleExpand(id: string) {
     if (this.expandedIds().has(id)) {
@@ -1496,7 +1600,7 @@ export class PracticeListComponent implements OnInit {
     if (!card) return;
     const sticky = root.querySelector('.list-head-sticky') as HTMLElement | null;
     const scroller = this.findScrollParent(card);
-    const frameGap = 8;
+    const frameGap = 8;;
     const targetTop =
       (sticky?.getBoundingClientRect().bottom ??
         (scroller === window ? 0 : (scroller as HTMLElement).getBoundingClientRect().top)) + frameGap;
@@ -1508,7 +1612,7 @@ export class PracticeListComponent implements OnInit {
     }
     (scroller as HTMLElement).scrollBy({ top: delta, behavior: 'auto' });
   }
-
+  
   private findScrollParent(el: HTMLElement): HTMLElement | Window {
     let current = el.parentElement;
     while (current) {
@@ -1544,14 +1648,6 @@ export class PracticeListComponent implements OnInit {
     );
   }
 
-  private jumpToFirstMatchedQuestion(): void {
-    const query = this.searchText().trim();
-    if (!query) return;
-    const first = this.searchResults()[0];
-    if (!first) return;
-    this.expandQuestion(first.id);
-  }
-
   displayNo(item: PracticeItem): number {
     return this.displayNumbers().get(item.id) ?? 0;
   }
@@ -1584,6 +1680,7 @@ export class PracticeListComponent implements OnInit {
     if (!this.indexPointerActive) return;
     this.jumpFromIndexPointer(event);
   }
+
 
   onIndexPointerEnd(): void {
     this.indexPointerActive = false;
@@ -1622,8 +1719,8 @@ export class PracticeListComponent implements OnInit {
     this.indexScrollTarget?.removeEventListener('scroll', this.onIndexListScroll);
     this.indexScrollTarget = null;
   }
+  
 
-  /** 列表滚动时，高亮当前贴在顶栏下方的那一档题号。 */
   private syncActiveIndexFromScroll(): void {
     const root = this.host.nativeElement as HTMLElement;
     const cards = [...root.querySelectorAll<HTMLElement>('.question-card')];
@@ -1631,13 +1728,13 @@ export class PracticeListComponent implements OnInit {
     const firstTop = cards[0].getBoundingClientRect().top;
     const lastTop = cards[cards.length - 1].getBoundingClientRect().top;
     if (cards.length > 1 && firstTop === lastTop) return;
-
+    // 
     const sticky = root.querySelector('.list-head-sticky') as HTMLElement | null;
     const scroller = this.findScrollParent(cards[0]);
     const line =
       (sticky?.getBoundingClientRect().bottom ??
         (scroller === window ? 0 : (scroller as HTMLElement).getBoundingClientRect().top)) + 12;
-
+    
     let no = Number(cards[0].dataset['questionNo']);
     for (const card of cards) {
       if (card.getBoundingClientRect().top > line) break;
@@ -1650,7 +1747,7 @@ export class PracticeListComponent implements OnInit {
       this.activeIndexTick.set(tick);
     }
   }
-
+  
   private jumpFromIndexPointer(event: PointerEvent): void {
     const ticks = this.indexTicks();
     if (ticks.length === 0) return;
@@ -1677,11 +1774,11 @@ export class PracticeListComponent implements OnInit {
       { injector: this.injector },
     );
   }
-
+  
   isCorrectOption(item: PracticeItem, optionId: string): boolean {
     return (item.correctAnswers ?? []).includes(optionId);
   }
-
+  
   // MARK: 切换
   toggleAnswer(id: string) {
     const set = new Set(this.revealedIds());
@@ -1690,9 +1787,17 @@ export class PracticeListComponent implements OnInit {
     } else {
       set.add(id);
     }
+
     this.revealedIds.set(set);
   }
-
+  /*
+  
+@escaping:逃逸闭包,表明该闭包可能会在函数返回后调用.常用来做网络请求延迟返回调用.
+@autoclosure:自动闭包,把一段代码包装成一个闭包,并且能当做参数传递.让代码看起来更加简洁.但是会因此实现细节,
+Codable:是swift中用来做json和models质检的转换的协议,他其实包括了decode和encode,
+Runtime消息派发机制
+  
+  */
   // MARK: 切换
   toggleAllAnswers() {
     if (this.allExpanded()) {
@@ -1705,19 +1810,69 @@ export class PracticeListComponent implements OnInit {
       this.revealedIds.set(new Set(ids));
     }
   }
-
+  
   // MARK: 列
   collapseAll() {
     this.expandedIds.set(new Set());
     this.revealedIds.set(new Set());
   }
-
-  // MARK: 设置
+  
+  // MARK: 设置 
   // 更新指定题目的手写记忆输入。
   setMemo(id: string, value: string) {
     this.memoInputs.update((memos) => ({ ...memos, [id]: value }));
   }
+  /*
+房价数据忘了看了.
+KVC:简直编码,通过setValue forkey 和valueforkey读取属性值的一种方式,这种方式不直接调用属性,而是通过字符串.查找过程,是先查找setName setIsName等方法,如果找不到,在类允许的请求下再获取属性名字 name _name isName_isName,如果还获取不到就会执行setValue ForundfindKey方法.
+KVO:键值观察,Runitme会生成一个被观察类的子类,然后把观察类的isa指向这个子类 并重新这个子类被观察属性的setting方法,在方法中执行willset 和 didset.这样在属性发生变化时就能出发willset和 didset.
+iOS APNs通知的原理:iOS APNs 通知原理:App向苹果通知服务注册 dev token. 然后把 dev token通过接口交给服务端.服务端把需要通知的内容和dev token发送给苹果的通知服务,然后由 APNs 通过dev token 找到对应设备推送
+Block类型，未捕获变量的BLock是全局block,捕获了普通局部变量的是栈block,捕获了成员变量的叫做堆block.执行了copy的block都是堆block.
+Block为什么要使用copy:因为不使用copy的block属于栈block在回调后可能就会被释放掉,所以在需要延迟回调的block需要使用copy,copy到堆上.
+Block的本质:BLock的本质是一个对象,它里面有isa flags invoke指针,descriptor,还有捕获的变量.
+invoke指向block真正执行的函数实现,desscriptor保存的有block大小,copy/dispose辅助函数等信息.如果block捕获了变量,那么被不活的变量也会作为block的一部分保存.
+@escaping:
+@autoclosure
+Codable
+Runtime消息派发机制
+Method Swizzling 的原理是什么？有哪些风险？
+Class 和 Meta ClassCategory 和 Extension 有什么区别
+离屏渲染
+响应链
+GCD
 
+actor:
+actor Isolation：
+MainActor:
+Sendable:
+结构化并发和非结构化任务：
+Task:
+async/await:
+runloop(一系列,常驻线程,timer不准确,和线程的管理):
+
+
+@Sendable和普通闭包的区别
+Weak为什么在对象释放后会变成nil，
+循环引用
+timer循环引用
+可测试的网络层
+依赖注入
+Coordinator
+模块化（分层，依赖， 跳转）：
+模块化和组件化的区别：
+如何避免模块之间循环依赖？App启动流程
+App启动优化
+大图加载卡顿降低内存峰值
+新增——————————————— 明天背这些。
+OOMApp 包体积优化
+Mach-O是什么
+静态库和动态库有什么区别？
+Link Map 能看什么？如何用它分析二进制体积和大符号？
++load +initalaze
+
+
+  */
+ 
   // MARK: 事件处理
   onMemoBlur(id: string) {
     // 可扩展：保存到 localStorage 或后端
@@ -1728,13 +1883,15 @@ export class PracticeListComponent implements OnInit {
       localStorage.setItem('practice_list_memos', JSON.stringify(memos));
     }
   }
-
+  /*
+  
+  */
   // MARK: 对比
   compareAnswer(item: PracticeItem) {
     const userAnswer = (this.memoInputs()[item.id] || '').trim().toLowerCase();
     const refAnswer = item.answer.trim().toLowerCase();
     if (!userAnswer) return;
-
+    
     // 简单相似度计算
     const similarity = this.calcSimilarity(userAnswer, refAnswer);
     const percent = Math.round(similarity * 100);

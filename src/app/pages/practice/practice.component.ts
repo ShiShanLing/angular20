@@ -188,6 +188,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
   readonly currentIndex = signal(0);
   readonly showAnswer = signal(false);
   readonly searchQuery = signal('');
+  /** 当前搜索命中游标；-1 表示尚未定位 */
+  readonly searchHitIndex = signal(-1);
   readonly userAnswer = signal('');
   readonly compareResult = signal<ComparePracticeResult | null>(null);
   readonly categoryMenuOpen = signal(false);
@@ -235,6 +237,14 @@ export class PracticeComponent implements OnInit, OnDestroy {
   readonly searchResults = computed(() =>
     applyPracticeSearchFilter(this.baseNavList(), this.searchQuery())
   );
+
+  readonly searchHitLabel = computed(() => {
+    const total = this.searchResults().length;
+    if (!total) return '0 / 0';
+    const index = this.searchHitIndex();
+    if (index < 0) return `— / ${total}`;
+    return `${index + 1} / ${total}`;
+  });
 
   /** 语音播放使用的列表；唱题模式不使用搜索结果，避免把播放范围缩成命中项。 */
   readonly listenList = computed(() => this.baseNavList());
@@ -773,12 +783,11 @@ export class PracticeComponent implements OnInit, OnDestroy {
   }
 
   // MARK: 事件处理
-  // 更新搜索关键词，并让当前题索引保持在合法范围。
+  // 更新搜索关键词；不自动跳题，由上一条/下一条定位。
   onSearchInput(value: string): void {
     this.exitFullQuiz();
     this.searchQuery.set(value);
-    this.jumpToFirstSearchResult();
-    this.resetQuestionUi();
+    this.searchHitIndex.set(-1);
   }
 
   // MARK: 清空
@@ -786,7 +795,25 @@ export class PracticeComponent implements OnInit, OnDestroy {
   clearSearch(): void {
     this.exitFullQuiz();
     this.searchQuery.set('');
+    this.searchHitIndex.set(-1);
     this.clampIndex();
+    this.resetQuestionUi();
+  }
+
+  goSearchHit(delta: 1 | -1): void {
+    const results = this.searchResults();
+    if (!results.length) return;
+    const current = this.searchHitIndex();
+    const next =
+      current < 0
+        ? delta > 0
+          ? 0
+          : results.length - 1
+        : (current + delta + results.length) % results.length;
+    this.searchHitIndex.set(next);
+    const index = this.listForNav().findIndex((item) => item.id === results[next].id);
+    if (index < 0) return;
+    this.currentIndex.set(index);
     this.resetQuestionUi();
   }
   
@@ -930,6 +957,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
   pickSearchResult(itemId: string): void {
     const index = this.listForNav().findIndex((item) => item.id === itemId);
     if (index < 0) return;
+    const hitIndex = this.searchResults().findIndex((item) => item.id === itemId);
+    this.searchHitIndex.set(hitIndex);
     this.currentIndex.set(index);
     this.resetQuestionUi();
   }
@@ -1443,20 +1472,6 @@ export class PracticeComponent implements OnInit, OnDestroy {
     if (this.currentIndex() < 0) {
       this.currentIndex.set(0);
     }
-  }
-
-  // MARK: 搜索
-  // 搜索时只定位到当前范围内的第一条命中题目，不改变导航列表本身。
-  private jumpToFirstSearchResult(): void {
-    const query = this.searchQuery().trim();
-    if (!query) {
-      this.clampIndex();
-      return;
-    }
-    const first = this.searchResults()[0];
-    if (!first) return;
-    const index = this.listForNav().findIndex((item) => item.id === first.id);
-    if (index >= 0) this.currentIndex.set(index);
   }
 
   // MARK: 重置

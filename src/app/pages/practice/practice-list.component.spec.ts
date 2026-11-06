@@ -98,7 +98,7 @@ describe('PracticeListComponent recite mode', () => {
     expect(component.allItems().some((item) => item.questionType === 'trueFalse' || item.questionType === 'single' || item.questionType === 'multiple')).toBeFalse();
   });
 
-  it('keeps the full recite list and jumps to the first matched question when searching', () => {
+  it('keeps the full recite list and does not auto-jump when searching', () => {
     const storage = new PracticeStorageService();
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
@@ -115,16 +115,30 @@ describe('PracticeListComponent recite mode', () => {
     component.ngOnInit();
 
     const total = component.filteredItems().length;
-    const first = component.allItems().find((item) => item.question.includes('ARC'));
-    expect(first).toBeTruthy();
 
-    component.onSearchChange('ARC');
+    component.onSearchChange('Associated Object');
 
+    const hits = component.searchResults();
     expect(component.filteredItems().length).toBe(total);
-    expect(component.searchResults().length).toBeGreaterThan(0);
-    expect(component.searchResults()[0].id).toBe(first!.id);
-    expect(component.expandedIds().has(first!.id)).toBeTrue();
-    expect(component.revealedIds().has(first!.id)).toBeTrue();
+    expect(hits.length).toBeGreaterThan(0);
+    expect(component.searchHitIndex()).toBe(-1);
+    expect(component.searchHitLabel()).toBe(`— / ${hits.length}`);
+    expect(component.expandedIds().size).toBe(0);
+
+    const firstHit = hits[0];
+    component.goSearchHit(1);
+
+    expect(component.searchHitIndex()).toBe(0);
+    expect(component.searchHitLabel()).toBe(`1 / ${hits.length}`);
+    expect(component.expandedIds().has(firstHit.id)).toBeTrue();
+    expect(component.revealedIds().has(firstHit.id)).toBeTrue();
+
+    if (hits.length > 1) {
+      const secondHit = hits[1];
+      component.goSearchHit(1);
+      expect(component.searchHitIndex()).toBe(1);
+      expect(component.expandedIds().has(secondHit.id)).toBeTrue();
+    }
   });
 
   it('stars a question and filters the recite list to starred items only', () => {

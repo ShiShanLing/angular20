@@ -253,6 +253,38 @@
   outline-offset: 0;
 }
 
+.practice-search__hit-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.practice-search__hit-btn {
+  min-width: 1.5rem;
+  padding: 2px 3px;
+  border: var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.practice-search__hit-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.practice-search__hit-label {
+  min-width: 3rem;
+  text-align: center;
+  font-size: 0.8em;
+  color: var(--fg-muted, #666);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .practice-search__clear {
   flex-shrink: 0;
   min-width: 1.75rem;

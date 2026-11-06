@@ -125,7 +125,29 @@
           autocomplete="off"
           spellcheck="false"
           [ngModel]="searchQuery()"
-          (ngModelChange)="onSearchInput($event)" />
+          (ngModelChange)="onSearchInput($event)"
+          (keydown.enter)="goSearchHit(1); $event.preventDefault()" />
+        @if (searchQuery().trim()) {
+          <div class="practice-search__hit-nav" aria-label="搜索命中导航">
+            <button
+              type="button"
+              class="practice-search__hit-btn"
+              [disabled]="!searchResults().length"
+              title="上一个命中"
+              (click)="goSearchHit(-1)">
+              ↑
+            </button>
+            <span class="practice-search__hit-label">{{ searchHitLabel() }}</span>
+            <button
+              type="button"
+              class="practice-search__hit-btn"
+              [disabled]="!searchResults().length"
+              title="下一个命中"
+              (click)="goSearchHit(1)">
+              ↓
+            </button>
+          </div>
+        }
         <button
           type="button"
           class="practice-search__clear"
@@ -143,7 +165,7 @@
         @if (searchQuery().trim()) {
           <div class="search-results-host">
             @if (searchResults().length) {
-              <div class="search-results__head">当前范围命中 {{ searchResults().length }} 题，点击跳转</div>
+              <div class="search-results__head">当前范围命中 {{ searchResults().length }} 题；用上一条/下一条或点击跳转</div>
               <ul class="search-results" role="listbox" aria-label="搜索结果">
                 @for (it of searchResults(); track it.id) {
                   <li>
