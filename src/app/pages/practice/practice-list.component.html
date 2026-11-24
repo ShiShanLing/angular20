@@ -18,15 +18,20 @@
             }
           </div>
         }
-        <!-- 搜索框 -->
+        <!-- 搜索框  -->
         <nz-input-wrapper nzSize="small" class="search-box">
           <span nzInputPrefix><span nz-icon nzType="search"></span></span>
           <input
             nz-input
+            type="search"
+            enterkeyhint="search"
+            autocomplete="off"
             [placeholder]="searchPlaceholder()"
             [ngModel]="searchText()"
             (ngModelChange)="onSearchChange($event)"
-            (keydown.enter)="goSearchHit(1); $event.preventDefault()"
+            (keydown.enter)="onSearchEnter($event)"
+            (keyup.enter)="onSearchEnter($event)"
+            (search)="onSearchEnter($event)"
           />
         </nz-input-wrapper>
         @if (searchText().trim()) {
@@ -278,6 +283,7 @@
                     {{ revealedIds().has(item.id) ? '隐藏' : '显示' }}
                   </button>
                 }
+              
               </div>
               @if (revealedIds().has(item.id) && editingAnswerId() === item.id) {
                 <div class="answer-editor">
@@ -315,6 +321,7 @@
                     }
                   </ul>
                 }
+                <!--  -->
                 <div class="answer-content" [innerHTML]="(item.explanation || item.answer) | markd"></div>
                 @if (answerStatusId() === item.id && answerStatus()) {
                   <div class="answer-editor-status">{{ answerStatus() }}</div>

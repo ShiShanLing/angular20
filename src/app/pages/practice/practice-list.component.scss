@@ -98,6 +98,18 @@
   width: 180px;
 }
 
+.search-box input {
+  color: var(--text-primary, #262626);
+  -webkit-text-fill-color: var(--text-primary, #262626);
+  caret-color: var(--text-primary, #262626);
+}
+
+.search-box input[type='search']::-webkit-search-cancel-button,
+.search-box input[type='search']::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 .search-hit-nav {
   display: inline-flex;
   align-items: center;
@@ -450,7 +462,7 @@
 @media (max-width: 768px) {
   .practice-list-page { --page-pad: 5px; }
   .toolbar {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 6px;
     margin-bottom: 0;
   }
@@ -460,15 +472,25 @@
     white-space: nowrap;
   }
   .toolbar-right {
-    flex: 1;
+    flex: 1 1 100%;
     min-width: 0;
-    flex-wrap: nowrap;
-    gap: 4px;
+    flex-wrap: wrap;
+    gap: 6px;
   }
   .search-box {
-    flex: 1;
+    flex: 1 1 100%;
     min-width: 0;
-    width: auto;
+    width: 100%;
+    order: -1;
+  }
+  .search-box input {
+    // iOS 小于 16px 时容易缩放/裁切，文字看起来像没显示
+    font-size: 16px;
+    line-height: 1.4;
+    min-height: 32px;
+  }
+  .search-hit-nav {
+    margin-left: auto;
   }
   .star-filter-text { display: none; }
   .list-head-sticky {
