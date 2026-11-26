@@ -102,6 +102,27 @@ export const routes: Routes = [
         data: { practiceHistoryTrack: 'angular' }
       },
       {
+        path: 'js-learning',
+        loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
+        data: { practiceScope: 'js-learning' }
+      },
+      {
+        path: 'js-learning/review',
+        loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
+        data: { practiceScope: 'js-learning', practiceFlow: 'full' }
+      },
+      {
+        path: 'js-learning/recite',
+        loadComponent: () => import('./pages/practice/practice-list.component').then(m => m.PracticeListComponent),
+        data: { reciteTrack: 'js' }
+      },
+      {
+        path: 'js-learning/history',
+        loadComponent: () =>
+          import('./pages/practice/practice-score-history.component').then(m => m.PracticeScoreHistoryComponent),
+        data: { practiceHistoryTrack: 'js' }
+      },
+      {
         path: 'ts-learning',
         loadComponent: () => import('./pages/practice/practice.component').then(m => m.PracticeComponent),
         data: { practiceScope: 'ts-learning' }

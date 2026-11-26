@@ -6,7 +6,9 @@ import iosSeedJson from './seeds/ios/ios.seed.json';
 import iosJobSeedJson from './seeds/ios/ios-job.seed.json';
 import agentJobSeedJson from './seeds/agent/agent-job.seed.json';
 import {
+  angularRowCategory,
   angularRowsToPracticeItems,
+  belongsToAngularTrack,
   bundledAngularRows,
   jobRowsToPracticeItems,
   type IosSeedRow,
@@ -27,6 +29,7 @@ export function bundledBankRows(track: PracticeHistoryTrack): PracticeBankRow[] 
       return iosSeedJson as PracticeBankRow[];
     case 'angular':
     case 'ts':
+    case 'js':
       return bundledAngularRows(track) as unknown as PracticeBankRow[];
     default:
       return [];
@@ -48,7 +51,11 @@ export function practiceItemsFromBank(
       return frontendRowsToPracticeItems(rows as unknown as FrontendSeedRow[], importedAt);
     case 'angular':
     case 'ts':
-      return angularRowsToPracticeItems(rows as unknown as IosSeedRow[], importedAt);
+    case 'js':
+      return angularRowsToPracticeItems(
+        (rows as unknown as IosSeedRow[]).filter((row) => belongsToAngularTrack(angularRowCategory(row), track)),
+        importedAt,
+      );
     default:
       return [];
   }

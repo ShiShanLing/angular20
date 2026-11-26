@@ -1543,5 +1543,1125 @@
     "difficulty": "Medium",
     "oralOneLiner": "二分查找最重要的是区间定义始终一致。",
     "markD": true
+  },
+  {
+    "no": 154,
+    "id": "ng-js-primitive-types",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "JavaScript 有哪些原始类型？`typeof null` 为什么是 `object`？",
+    "answer": "原始类型有 number、string、boolean、null、undefined、symbol、bigint。它们按值比较，本身不可变。对象、数组、函数是引用类型。`typeof null === \"object\"` 是早期实现留下的结果，不能用 typeof 判断 null，要写 `value === null`。",
+    "difficulty": "Easy",
+    "oralOneLiner": "七种原始类型，null 要用严格相等判断，不能信 typeof。"
+  },
+  {
+    "no": 155,
+    "id": "ng-js-eqeq-eqeqeq",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "`==` 和 `===` 有什么区别？什么时候可以写 `== null`？",
+    "answer": "`==` 会先做类型转换再比较，`===` 类型不同就直接是 false。`'' == 0`、`'1' == 1`、`null == undefined` 都是 true。业务比较用 `===`。`value == null` 可以同时判断 null 和 undefined，这是少数还会用 `==` 的地方。`NaN === NaN` 是 false，判断 NaN 用 `Number.isNaN`。",
+    "difficulty": "Easy",
+    "oralOneLiner": "等于号会转型，三个等号不转型。NaN 和自己也不严格相等。"
+  },
+  {
+    "no": 156,
+    "id": "ng-js-scope-chain",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "什么是作用域链？变量找不到时会怎么查？",
+    "answer": "函数执行时会记住定义位置的外层作用域。找变量先看自己的作用域，没有就向外一层层找，直到全局。找不到就报 ReferenceError。它只能向外找，不能去内层函数里找。闭包能访问外部变量，就是沿着这条链。",
+    "difficulty": "Easy",
+    "oralOneLiner": "作用域链是从当前函数向外找变量，直到全局。"
+  },
+  {
+    "no": 157,
+    "id": "ng-js-hoisting-tdz",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "变量提升和暂时性死区是什么？`let` 真的不会提升吗？",
+    "answer": "`var` 和函数声明会提升到作用域顶部。`var` 提升后初始值是 undefined，所以提前访问不会报错。`let` 和 `const` 也会被创建，但在声明语句执行前不能访问，这段区间叫暂时性死区，提前访问会抛 ReferenceError。所以不是 `let` 完全不提升，而是提升了也不能用。",
+    "difficulty": "Medium",
+    "oralOneLiner": "var 提升后是 undefined，let 在声明前处于暂时性死区。"
+  },
+  {
+    "no": 158,
+    "id": "ng-js-execution-context",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "什么是执行上下文？调用栈和它是什么关系？",
+    "answer": "每进入一个函数，就会创建一个执行上下文，里面有这个函数的变量、作用域链和 this。全局先有一个上下文。函数调用时把新的上下文压进调用栈，返回时弹出。栈顶才是正在执行的函数。栈太深会爆栈。异步回调不是立刻压栈，而是等事件循环再取出来执行。",
+    "difficulty": "Medium",
+    "oralOneLiner": "执行上下文是一次函数执行的环境，调用栈保存这些环境。"
+  },
+  {
+    "no": 159,
+    "id": "ng-js-inheritance",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "JavaScript 怎么做继承？`class extends` 背后是什么？",
+    "answer": "现在直接用 `class extends` 和 `super`。它是语法糖，本质仍是原型。构造函数里的属性用 `Parent.call(this)` 拷到子实例上，方法放在父类 prototype 上，子类 prototype 再链过去。不要把子类 prototype 直接设成父类实例，那样实例属性会被所有子实例共享。",
+    "difficulty": "Medium",
+    "oralOneLiner": "class extends 还是原型继承，属性在实例上，方法在原型上。"
+  },
+  {
+    "no": 160,
+    "id": "ng-js-event-delegation",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "什么是事件委托？它解决什么问题？",
+    "answer": "事件委托是把子元素的点击交给父元素处理，靠事件冒泡。父元素里用 `event.target` 判断点的是哪一个。列表很长或子元素会增减时，不用给每个子元素绑监听。不冒泡的事件，比如 focus、blur，不能靠普通冒泡做委托，要用捕获或 focusin。",
+    "difficulty": "Easy",
+    "oralOneLiner": "事件委托是父元素接住冒泡，少绑很多监听。"
+  },
+  {
+    "no": 161,
+    "id": "ng-js-float-precision",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "为什么 `0.1 + 0.2 !== 0.3`？金额怎么处理？",
+    "answer": "JavaScript 的 number 是 IEEE 754 双精度浮点，很多十进制小数不能精确表示，所以 `0.1 + 0.2` 得到的是接近 0.3 的数。展示可以 `toFixed`，比较金额不要直接用 `===`。金额用整数分，或者用十进制库计算。",
+    "difficulty": "Easy",
+    "oralOneLiner": "浮点不能精确表示十进制小数，金额用分来算。"
+  },
+  {
+    "no": 162,
+    "id": "ng-js-for-in-of",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "`for...in` 和 `for...of` 有什么区别？",
+    "answer": "`for...in` 遍历对象可枚举的键，包括原型链上的键，数组上也会得到下标字符串。`for...of` 遍历实现了迭代器的值，数组得到元素，不会去扫原型上的键。遍历数组、Set、Map 用 `for...of`。遍历普通对象的键用 `Object.keys`。",
+    "difficulty": "Easy",
+    "oralOneLiner": "for...in 走键，for...of 走迭代器里的值。"
+  },
+  {
+    "no": 163,
+    "id": "ng-js-map-set-weakmap",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "`Map`、`Set`、`WeakMap` 有什么区别？",
+    "answer": "`Set` 存不重复的值。`Map` 用任意值做键，键不会被转成字符串。`WeakMap` 的键必须是对象，而且是弱引用，对象没有别的引用时可以被回收，也不能被遍历。用对象给 DOM 或组件实例挂私有数据时，用 WeakMap，避免把那个对象一直留住。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Map 的键可以是对象，WeakMap 不阻止这个对象被回收。"
+  },
+  {
+    "no": 164,
+    "id": "ng-js-symbol",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "`Symbol` 是做什么的？",
+    "answer": "`Symbol` 每次调用都会得到一个唯一值，常用作对象的键，避免和别人的属性名撞上。`Symbol.iterator` 决定对象能不能被 `for...of` 遍历。普通枚举拿不到 symbol 键，`Object.getOwnPropertySymbols` 可以。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Symbol 用来做不会冲突的属性键。"
+  },
+  {
+    "no": 165,
+    "id": "ng-js-proxy",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "`Proxy` 是做什么的？和 `Object.defineProperty` 有什么差别？",
+    "answer": "`Proxy` 可以拦住对象的读取、赋值、删除、函数调用等操作。Vue 3 用它做响应式。`Object.defineProperty` 只能改已经存在的属性，新增和删除要额外处理，也不能自然拦住数组下标。`Proxy` 是包住整个对象，能听到更多操作。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Proxy 能拦截整个对象的读写，Vue 3 的响应式靠它。"
+  },
+  {
+    "no": 166,
+    "id": "ng-js-arrow-limits",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "箭头函数为什么不能当构造函数？它还有哪些没有？",
+    "answer": "箭头函数没有自己的 `this`、`arguments` 和 `prototype`。`this` 在定义时就定下来，不是调用时决定的。`new` 需要把 this 指到新对象上，箭头函数做不到，所以不能 `new`。它适合回调，不适合做需要动态 this 的对象方法。",
+    "difficulty": "Easy",
+    "oralOneLiner": "箭头函数没有自己的 this 和 prototype，所以不能 new。"
+  },
+  {
+    "no": 167,
+    "id": "ng-js-single-thread",
+    "category": "Angular",
+    "topic": "JavaScript 异步",
+    "question": "JavaScript 是单线程的，为什么还能做异步？",
+    "answer": "JavaScript 执行业务代码的主线程确实一次只跑一段同步代码。`setTimeout`、网络、文件这些异步任务交给浏览器或 Node 的其他线程去做。做完后把回调放进任务队列。主线程空了，事件循环再把回调拿回来执行。所以异步不是主线程同时跑两段 JavaScript。",
+    "difficulty": "Easy",
+    "oralOneLiner": "主线程一次只跑一段 JS，异步完成后再把回调排进来。"
+  },
+  {
+    "no": 168,
+    "id": "ng-js-promise-combinators",
+    "category": "Angular",
+    "topic": "JavaScript 异步",
+    "question": "`Promise.all`、`allSettled`、`race`、`any` 有什么区别？",
+    "answer": "`all` 等全部成功，有一个失败就立刻失败。`allSettled` 等全部结束，不管成功失败，都给出每项结果。`race` 谁先结束就用谁的结果，成功失败都算结束。`any` 谁先成功就用谁，全部失败才失败。多个请求都要成功才往下走，用 `all`。想知道每个接口的成败，用 `allSettled`。",
+    "difficulty": "Medium",
+    "oralOneLiner": "all 一个失败就失败，allSettled 会等每一项出结果。"
+  },
+  {
+    "no": 169,
+    "id": "ng-js-gc",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "JavaScript 怎么判断一块内存可以回收？",
+    "answer": "现在的引擎主要看对象还能不能从根被找到。根包括全局对象和正在执行的函数里的变量。从根出发到不了的对象就可以回收。标记清除是常见做法。闭包、定时器、DOM 引用如果还被根找得到，对应的数据就不会被收掉。",
+    "difficulty": "Medium",
+    "oralOneLiner": "从根找不到的对象，就可以被垃圾回收。"
+  },
+  {
+    "no": 170,
+    "id": "ng-js-memory-leaks",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "前端常见的内存泄漏有哪些？",
+    "answer": "常见是这几类：意外的全局变量，闭包一直抓住已经不用的大对象或 DOM，定时器没有清掉，事件监听没有移除，被删掉的 DOM 仍被 JavaScript 引用。组件销毁时要把定时器、订阅和监听解除。用 WeakMap 挂对象上的附加数据，不会单独把那个对象留住。",
+    "difficulty": "Medium",
+    "oralOneLiner": "泄漏通常是定时器、监听或闭包还抓着已经不用的对象。"
+  },
+  {
+    "no": 171,
+    "id": "ng-js-strict-mode",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "严格模式改变了什么？",
+    "answer": "严格模式用 `'use strict'` 打开。这时给未声明的变量赋值会报错，不再偷偷变成全局变量。普通函数里的 this 不再默认是全局对象，而是 undefined。重复的参数名、八进制字面量也不允许。模块和 class 里默认就是严格模式。",
+    "difficulty": "Easy",
+    "oralOneLiner": "严格模式禁止意外全局变量，函数里的 this 默认是 undefined。"
+  },
+  {
+    "no": 172,
+    "id": "ng-js-event-loop-render",
+    "category": "Angular",
+    "topic": "JavaScript 异步",
+    "question": "微任务、宏任务和页面渲染的先后是怎样的？",
+    "answer": "先跑完当前同步代码，然后把微任务队列清空，浏览器才有机会渲染，之后再取下一个宏任务。所以 `Promise.then` 会在这次渲染前执行，`setTimeout` 通常要等这一轮微任务完，还要等渲染时机。一串很长的微任务会挡住渲染，页面就卡住。",
+    "difficulty": "Medium",
+    "oralOneLiner": "同步代码之后先清空微任务，然后才渲染，再跑下一个宏任务。"
+  },
+  {
+    "no": 173,
+    "id": "ng-ts-what-erased",
+    "category": "Angular",
+    "topic": "TypeScript 基础",
+    "question": "TypeScript 是什么？类型在运行时还在吗？",
+    "answer": "TypeScript 是 JavaScript 的超集，多了类型检查。编译之后类型会被擦掉，运行的还是 JavaScript。所以类型不能代替接口返回值的校验，外部数据要在运行时再检查一遍。它的价值是写代码和重构时更早发现错误。",
+    "difficulty": "Easy",
+    "oralOneLiner": "类型只在编译期存在，跑起来就没了。"
+  },
+  {
+    "no": 174,
+    "id": "ng-ts-inference",
+    "category": "Angular",
+    "topic": "TypeScript 基础",
+    "question": "什么是类型推断？哪些地方仍要手写类型？",
+    "answer": "TypeScript 会根据赋值推断类型。`let count = 1` 就是 number，再赋字符串会报错。局部变量类型很明显时可以省略。导出的函数、公共方法、接口字段要写出来，让调用方看到约定，不靠推断去猜。",
+    "difficulty": "Easy",
+    "oralOneLiner": "局部变量可以推断，对外的函数参数和返回值要写明。"
+  },
+  {
+    "no": 175,
+    "id": "ng-ts-structural",
+    "category": "Angular",
+    "topic": "TypeScript 基础",
+    "question": "TypeScript 的类型兼容是按名字还是按结构？",
+    "answer": "TypeScript 看结构，不看类型名字。两个类型字段对得上，就可以互相赋值，即使名字不同。这叫结构类型。多出来的字段赋值给目标类型时，直接传对象字面量会报多余属性，先放进变量再传则可以。",
+    "difficulty": "Medium",
+    "oralOneLiner": "类型看字段是否对得上，不看类型叫什么名字。"
+  },
+  {
+    "no": 176,
+    "id": "ng-ts-enum-vs-union",
+    "category": "Angular",
+    "topic": "TypeScript 基础",
+    "question": "枚举和字符串字面量联合怎么选？",
+    "answer": "业务状态优先用字符串字面量联合，比如 `'draft' | 'sent'`。它编译后没有额外对象，改名时引用的地方都会报错。数字枚举编译后是双向映射，值和名字容易混。字符串枚举会留下一个运行时对象。新代码里状态、接口字段用字面量联合更清楚。",
+    "difficulty": "Medium",
+    "oralOneLiner": "状态用字符串字面量联合，少用数字枚举。"
+  },
+  {
+    "no": 177,
+    "id": "ng-ts-as-const",
+    "category": "Angular",
+    "topic": "TypeScript 基础",
+    "question": "`as const` 有什么用？",
+    "answer": "`as const` 把值收成最窄的字面量类型，数组变成只读元组，对象属性变成只读的字面量。路由表、状态列表写成 `as const` 之后，可以用 `typeof list[number]` 得到那几个字符串的联合类型。没有它，字符串数组会被推断成 `string[]`。",
+    "difficulty": "Medium",
+    "oralOneLiner": "as const 把值收成具体字面量，而不是放宽成 string。"
+  },
+  {
+    "no": 178,
+    "id": "ng-ts-satisfies",
+    "category": "Angular",
+    "topic": "TypeScript 基础",
+    "question": "`satisfies` 和类型断言有什么区别？",
+    "answer": "`satisfies` 检查这个值符不符合某个类型，但变量仍保留自己更具体的类型。类型断言是告诉编译器按你说的类型看，检查会被绕开。配置对象希望既符合接口，又保留每个键的具体值时，用 `satisfies`。",
+    "difficulty": "Medium",
+    "oralOneLiner": "satisfies 是检查之后仍保留原来的具体类型。"
+  },
+  {
+    "no": 179,
+    "id": "ng-ts-declaration-merging",
+    "category": "Angular",
+    "topic": "TypeScript 基础",
+    "question": "接口为什么可以重复声明？类型别名可以吗？",
+    "answer": "同名 interface 会合并到一起，适合给已有类型补字段，比如扩展第三方库的类型。`type` 别名同名会直接冲突，不能这样合并。需要对外扩展、或者分文件补充字段时用 interface。",
+    "difficulty": "Medium",
+    "oralOneLiner": "同名接口会合并，type 同名会报冲突。"
+  },
+  {
+    "no": 180,
+    "id": "ng-ts-generic-constraint",
+    "category": "Angular",
+    "topic": "TypeScript",
+    "question": "泛型约束 `extends` 是做什么的？",
+    "answer": "`T extends SomeType` 表示传进来的类型必须满足 SomeType。函数里就能安全使用 SomeType 上的字段。约束不是继承类，只是提出类型必须有哪些成员。`keyof T` 常和它一起用，保证传入的键属于这个对象。",
+    "difficulty": "Medium",
+    "oralOneLiner": "extends 是限制泛型至少要有哪些字段。"
+  },
+  {
+    "no": 181,
+    "id": "ng-ts-infer",
+    "category": "Angular",
+    "topic": "TypeScript",
+    "question": "条件类型里的 `infer` 是做什么的？",
+    "answer": "`infer` 写在条件类型里，用来把类型的某一截推断出来并命名。比如 `T extends Promise<infer U> ? U : T` 可以取出 Promise 里面的类型。`ReturnType`、`Parameters` 这些工具类型内部就是这么写的。它只能出现在 `extends` 后面的条件类型中。",
+    "difficulty": "Hard",
+    "oralOneLiner": "infer 是在条件类型里把匹配到的那一段类型取出来。"
+  },
+  {
+    "no": 182,
+    "id": "ng-ts-overload",
+    "category": "Angular",
+    "topic": "TypeScript",
+    "question": "函数重载适合什么时候用？",
+    "answer": "同一个函数按不同参数返回不同类型时，可以写多条重载签名，最后再写一个实现签名。调用方看到的是重载，实现签名对外不可见。参数组合不多、返回类型跟着参数变时有用。组合一多，联合类型或泛型通常更清楚。",
+    "difficulty": "Medium",
+    "oralOneLiner": "重载用来按不同参数给出不同返回类型。"
+  },
+  {
+    "no": 183,
+    "id": "ng-ts-readonly-optional",
+    "category": "Angular",
+    "topic": "TypeScript 基础",
+    "question": "`readonly`、可选属性和 `Readonly` 有什么区别？",
+    "answer": "属性后面的 `?` 表示可以不传。`readonly` 表示这个属性不能再赋值，只限制这一层，里面的对象仍可改。`Readonly<T>` 把一层属性都变成只读。需要深层只读要自己写递归类型。运行时没有只读检查，赋值绕过类型仍能改到。",
+    "difficulty": "Easy",
+    "oralOneLiner": "问号是可以不传，readonly 是类型上不能再赋值。"
+  },
+  {
+    "no": 184,
+    "id": "ng-ts-index-signature",
+    "category": "Angular",
+    "topic": "TypeScript 基础",
+    "question": "索引签名是做什么的？有什么缺点？",
+    "answer": "索引签名表示这个对象可以用任意字符串或数字当键，值是某一种类型，比如 `{ [key: string]: number }`。它适合字典。缺点是具体字段也会被这个签名约束，拼错的键也不会报错。键的范围已知时，用 `Record<'a' | 'b', number>` 比开放的索引签名更严。",
+    "difficulty": "Medium",
+    "oralOneLiner": "索引签名允许任意键，已知键名时别用它。"
+  },
+  {
+    "no": 185,
+    "id": "ng-ts-decorator",
+    "category": "Angular",
+    "topic": "TypeScript 基础",
+    "question": "装饰器是什么？Angular 里它实际做了什么？",
+    "answer": "装饰器是加在类、方法、属性上的函数，用来附加元数据或改写定义。Angular 的 `@Component`、`@Injectable` 就是装饰器，编译时记下选择器、模板和依赖。装饰器本身不替代业务逻辑。类型仍然会在编译后擦掉，装饰器留下的是运行时能读到的元数据。",
+    "difficulty": "Medium",
+    "oralOneLiner": "装饰器是挂在类上的函数，Angular 用它记录组件和依赖的信息。"
+  },
+  {
+    "no": 186,
+    "id": "ng-ts-runtime-check",
+    "category": "Angular",
+    "topic": "TypeScript 基础",
+    "question": "为什么接口返回的数据不能只靠 TypeScript 类型保证？",
+    "answer": "`as User` 只是编译期断言，接口多一个字段、少一个字段、类型不对，运行时都不会因此抛错。外部 JSON 要用运行时校验，比如自己判断字段，或用校验库。类型负责开发时约束，校验负责进来的数据。",
+    "difficulty": "Medium",
+    "oralOneLiner": "类型挡的是编译错误，接口数据还要在运行时校验。"
+  },
+  {
+    "no": 187,
+    "id": "ng-ts-literal-narrowing",
+    "category": "Angular",
+    "topic": "TypeScript",
+    "question": "为什么对象字面量多写一个字段会报错，先赋给变量再传就不报？",
+    "answer": "直接把对象字面量传给一个类型时，TypeScript 会做多余属性检查，防止拼错字段名。先赋给变量后，变量的类型可能更宽，再传过去只检查目标类型需要的字段在不在，多余字段就不再报。这是新鲜对象字面量才有的检查。",
+    "difficulty": "Medium",
+    "oralOneLiner": "多余属性检查只针对直接写出的对象字面量。"
+  },
+  {
+    "no": 188,
+    "id": "ng-js-null-undefined",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "`null` 和 `undefined` 有什么区别？",
+    "answer": "`undefined` 表示还没有赋值。变量声明了没赋、对象上没有这个属性、函数没有返回值，都是 `undefined`。`null` 是人为放进去的空值，表示这里本来该有对象，但现在没有。`null == undefined` 是 true，`null === undefined` 是 false。接口字段用 `null` 表示明确的空，没传才是 `undefined`。",
+    "difficulty": "Easy",
+    "oralOneLiner": "undefined 是还没给值，null 是明确给了一个空。"
+  },
+  {
+    "no": 189,
+    "id": "ng-js-prototype-vs-proto",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "`prototype` 和 `__proto__` 有什么区别？",
+    "answer": "`prototype` 是函数才有的属性，`new` 出来的实例会把内部的 `[[Prototype]]` 指向这个 `prototype`。`__proto__` 是实例上用来访问 `[[Prototype]]` 的，现在用 `Object.getPrototypeOf`。找属性时沿着实例的 `[[Prototype]]` 往上走，不是去翻构造函数自己的属性。",
+    "difficulty": "Medium",
+    "oralOneLiner": "prototype 在构造函数上，__proto__ 是实例指向那个原型。"
+  },
+  {
+    "no": 190,
+    "id": "ng-js-var-loop-closure",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "`for` 里用 `var` 配定时器，为什么打印出来都是同一个数？",
+    "answer": "`var` 没有块级作用域，循环里只有一个 `i`。定时器回调执行时循环已经结束，读到的是最后那个值。改成 `let` 后，每一轮有自己的 `i`。用 `var` 时也可以在当轮用一个函数把当前值传进去。",
+    "difficulty": "Medium",
+    "oralOneLiner": "var 整个循环共用一个 i，回调执行时循环已经结束。"
+  },
+  {
+    "no": 191,
+    "id": "ng-js-shallow-copy",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "浅拷贝和深拷贝差在哪里？哪些写法只是浅拷贝？",
+    "answer": "浅拷贝只复制第一层。嵌套的对象、数组仍然和原来指向同一块。展开、`Object.assign`、`slice`、`concat` 都是浅拷贝。深拷贝要把里面的每一层都复制成新的。改嵌套字段会互相影响，就是因为用了浅拷贝。",
+    "difficulty": "Easy",
+    "oralOneLiner": "展开和 Object.assign 只拷第一层，嵌套对象还是同一份。"
+  },
+  {
+    "no": 192,
+    "id": "ng-js-type-coercion",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "为什么 `[] == ![]` 是 true？隐式转换大致怎么发生？",
+    "answer": "`![]` 先把数组转成布尔值。数组是对象，转布尔是 true，取反得到 false。`[] == false` 时，两边会转成数字，空数组转成 0，false 也转成 0，所以是 true。这就是 `==` 会连续转型。业务判断用 `===`，不要靠这种结果。",
+    "difficulty": "Medium",
+    "oralOneLiner": "[] == ![] 是先取反再把两边转成数字 0。"
+  },
+  {
+    "no": 193,
+    "id": "ng-js-array-like",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "什么是类数组？它和数组差在哪？",
+    "answer": "类数组有按下标放的元素和 `length`，但没有数组的方法。`arguments`、DOM 集合就是这样。它不能直接 `map`。用 `Array.from` 或展开可以转成真数组。箭头函数没有 `arguments`，要收不定参数就写剩余参数。",
+    "difficulty": "Easy",
+    "oralOneLiner": "类数组有下标和 length，没有数组方法，要先转成数组。"
+  },
+  {
+    "no": 194,
+    "id": "ng-js-slice-splice",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "`slice` 和 `splice` 有什么区别？",
+    "answer": "`slice` 从原数组截一段出来，返回新数组，不改原数组。`splice` 会改原数组，可以删、插、替换，返回被删掉的那段。只是要一份副本用 `slice`，要改原来的列表用 `splice`。",
+    "difficulty": "Easy",
+    "oralOneLiner": "slice 不改原数组，splice 会改。"
+  },
+  {
+    "no": 195,
+    "id": "ng-js-in-hasown",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "`in` 和 `Object.hasOwn` 有什么区别？",
+    "answer": "`in` 会沿着原型链找，原型上有这个键也返回 true。`Object.hasOwn` 只看对象自己有没有这个键，不看原型。判断业务字段在不在自身上，用 `Object.hasOwn`，避免把原型上的方法当成自己的数据。",
+    "difficulty": "Easy",
+    "oralOneLiner": "in 会查原型链，hasOwn 只看自己身上有没有。"
+  },
+  {
+    "no": 196,
+    "id": "ng-js-object-is",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "`Object.is` 和 `===` 有什么差别？",
+    "answer": "大多数情况和 `===` 一样。两处不同：`Object.is(NaN, NaN)` 是 true，`Object.is(+0, -0)` 是 false。`===` 正好相反，NaN 不等于自己，正零和负零相等。需要区分这两个边界时用 `Object.is`。",
+    "difficulty": "Easy",
+    "oralOneLiner": "Object.is 把 NaN 当成相等，把正零和负零当成不等。"
+  },
+  {
+    "no": 197,
+    "id": "ng-js-promise-executor-sync",
+    "category": "Angular",
+    "topic": "JavaScript 异步",
+    "question": "`new Promise` 里的函数是同步还是异步？`then` 呢？",
+    "answer": "传给 `new Promise` 的执行函数会立刻同步跑。里面的 `resolve` 只是把状态改成功，并不会让后面的 `then` 马上执行。`then`、`catch`、`finally` 的回调进微任务队列，要等当前同步代码跑完。所以 executor 里的日志会先于外面的同步日志之后、再先于 `then`。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Promise 的执行函数是同步的，then 才进微任务。"
+  },
+  {
+    "no": 198,
+    "id": "ng-js-async-return",
+    "category": "Angular",
+    "topic": "JavaScript 异步",
+    "question": "`async` 函数的返回值是什么？里面 `return` 一个普通值会怎样？",
+    "answer": "`async` 函数一定返回 Promise。`return 1` 等价于返回一个已成功的 Promise，值是 1。`throw` 或里面没有接住的拒绝，会变成这个 Promise 的失败。调用方要用 `await` 或 `then` 拿结果，不能把返回值当普通数字用。",
+    "difficulty": "Easy",
+    "oralOneLiner": "async 函数永远返回 Promise，return 的值会包进成功结果。"
+  },
+  {
+    "no": 199,
+    "id": "ng-js-task-sources",
+    "category": "Angular",
+    "topic": "JavaScript 异步",
+    "question": "常见的宏任务和微任务分别有哪些？",
+    "answer": "宏任务常见有整段脚本、`setTimeout`、`setInterval`、I/O、用户点击。微任务常见有 `Promise.then`、`queueMicrotask`、`MutationObserver`。`async` 里 `await` 后面的代码也按微任务排。`requestAnimationFrame` 在渲染前调用，不要把它说成和 `setTimeout` 同一类任务。",
+    "difficulty": "Medium",
+    "oralOneLiner": "setTimeout 是宏任务，Promise.then 是微任务。"
+  },
+  {
+    "no": 200,
+    "id": "ng-js-dynamic-import",
+    "category": "Angular",
+    "topic": "JavaScript 模块化",
+    "question": "静态 `import` 和 `import()` 有什么区别？",
+    "answer": "文件顶部的 `import` 是静态的，打包时就能看出依赖，不能写在判断里。`import()` 是运行时再加载，返回 Promise，可以按条件或路由再去加载一块代码。页面上用不到的功能适合动态导入，减少首屏要下载的代码。",
+    "difficulty": "Medium",
+    "oralOneLiner": "顶部 import 打包时就确定，import() 是用到时再加载。"
+  },
+  {
+    "no": 201,
+    "id": "ng-js-destructure-rest",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "解构和剩余参数分别解决什么问题？",
+    "answer": "解构是从对象或数组里按位置把值取出来，可以带默认值。剩余参数 `...args` 把多出来的实参收成一个真数组。它和 `arguments` 不一样，剩余参数就是数组，能直接用数组方法。对象解构里的剩余会得到一个去掉已取字段的新对象。",
+    "difficulty": "Easy",
+    "oralOneLiner": "解构是把值拆出来，剩余参数是把多出来的收成数组。"
+  },
+  {
+    "no": 202,
+    "id": "ng-js-iterator-generator",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "迭代器和 `Generator` 是什么？`for...of` 靠的是哪个？",
+    "answer": "一个对象有 `Symbol.iterator`，并且每次 `next()` 返回 `{ value, done }`，它就可以被 `for...of` 遍历。`Generator` 是能暂停的函数，`yield` 交出一个值，下次再从那里继续。生成器本身就是迭代器。`async/await` 的写法来自生成器加 Promise，面试知道这层关系即可。",
+    "difficulty": "Medium",
+    "oralOneLiner": "for...of 靠迭代器，Generator 用 yield 把函数暂停。"
+  },
+  {
+    "no": 203,
+    "id": "ng-ts-object-object-empty",
+    "category": "Angular",
+    "topic": "TypeScript 基础",
+    "question": "`object`、`Object` 和 `{}` 有什么区别？",
+    "answer": "小写 `object` 表示非原始值，不能把 number、string 赋进去。大写 `Object` 是所有装箱对象的类型，范围很宽，几乎什么都能赋。空对象 `{}` 在类型位置上也几乎什么都能赋，因为 TypeScript 按结构看，它不要求有字段。要限制成真正的对象，用小写 `object`。",
+    "difficulty": "Medium",
+    "oralOneLiner": "小写 object 排除原始值，Object 和 {} 几乎什么都能接。"
+  },
+  {
+    "no": 204,
+    "id": "ng-ts-private-hash",
+    "category": "Angular",
+    "topic": "TypeScript 基础",
+    "question": "`private` 和 `#` 私有字段有什么区别？",
+    "answer": "`private` 只在编译期检查，编译成 JavaScript 后字段还在，运行时仍能访问。`#field` 是语言自己的私有字段，类外面访问会直接报错，子类也访问不到。只是想让类型提示别用这个字段，`private` 够用。要运行时也封住，用 `#`。",
+    "difficulty": "Medium",
+    "oralOneLiner": "private 只在编译期挡，# 字段运行时也访问不了。"
+  },
+  {
+    "no": 205,
+    "id": "ng-ts-abstract-vs-interface",
+    "category": "Angular",
+    "topic": "TypeScript 基础",
+    "question": "抽象类和接口怎么选？",
+    "answer": "接口只描述形状，编译后没有这段代码，一个类可以实现多个接口。抽象类可以带已经写好的方法，子类用 `extends` 继承，只能继承一个。几种无关的能力用接口。几种类要共用一块实现，用抽象类。",
+    "difficulty": "Easy",
+    "oralOneLiner": "接口只约定形状，抽象类可以带已经写好的方法。"
+  },
+  {
+    "no": 206,
+    "id": "ng-ts-tuple",
+    "category": "Angular",
+    "topic": "TypeScript 基础",
+    "question": "元组适合表达什么？它和数组有什么不同？",
+    "answer": "元组规定每一项的类型和位置，比如坐标 `[number, number]`，或 `useState` 那种 `[值, 更新函数]`。数组是同一类型的一串，长度不固定。位置有含义、项数固定时用元组，不要写成一个大联合的数组。",
+    "difficulty": "Easy",
+    "oralOneLiner": "元组是固定位置、每项类型可以不同。"
+  },
+  {
+    "no": 207,
+    "id": "ng-ts-union-common-props",
+    "category": "Angular",
+    "topic": "TypeScript",
+    "question": "为什么联合类型上只能直接访问共有字段？",
+    "answer": "`Admin | User` 在没缩小类型之前，TypeScript 只允许用两边都有的字段。只用某一边有的字段会报错，因为当前值可能是另一边。先用判别字段或 `in` 把类型收窄，才能访问那一边特有的字段。",
+    "difficulty": "Medium",
+    "oralOneLiner": "没收窄之前，联合类型只能用两边都有的字段。"
+  },
+  {
+    "no": 208,
+    "id": "ng-ts-utility-return",
+    "category": "Angular",
+    "topic": "TypeScript",
+    "question": "`ReturnType`、`Parameters`、`Exclude`、`Extract`、`NonNullable` 各取什么？",
+    "answer": "`ReturnType` 取函数返回值的类型，`Parameters` 取参数元组。`Exclude` 从联合里去掉一部分，`Extract` 从联合里只留下符合的那部分。`NonNullable` 去掉 `null` 和 `undefined`。这些都是条件类型写出来的，业务里用来跟着已有函数走，避免再手写一份。",
+    "difficulty": "Medium",
+    "oralOneLiner": "ReturnType 取返回值，Exclude 从联合里去掉不要的。"
+  },
+  {
+    "no": 209,
+    "id": "ng-ts-import-type",
+    "category": "Angular",
+    "topic": "TypeScript 工程化",
+    "question": "`import type` 是做什么的？",
+    "answer": "`import type` 只引入类型，编译后这条引入会被擦掉，不会留一个运行时的 import。类型和值同名时，用它明确这份只给类型用，避免打包进一个实际模块。只当类型用的依赖，写成 `import type`。",
+    "difficulty": "Medium",
+    "oralOneLiner": "import type 只在编译期用，运行时不会留下这句引入。"
+  },
+  {
+    "no": 210,
+    "id": "ng-ts-dts-declare",
+    "category": "Angular",
+    "topic": "TypeScript 工程化",
+    "question": "`.d.ts` 和 `declare` 是做什么的？",
+    "answer": "`.d.ts` 只有类型，没有实现。第三方库没有类型、或者要描述一个全局变量时，用它补充。`declare` 表示这个变量或模块在别处已经存在，这里只是告诉编译器它的类型，编译时不会生成对应的 JavaScript。给没有类型的旧库补声明就用这种方式。",
+    "difficulty": "Medium",
+    "oralOneLiner": "d.ts 只补充类型，declare 告诉编译器这个东西已经在运行时存在。"
+  },
+  {
+    "no": 211,
+    "id": "ng-ts-distributive",
+    "category": "Angular",
+    "topic": "TypeScript",
+    "question": "什么是分布式条件类型？",
+    "answer": "裸类型参数放在 `extends` 左边，并且传进来的是联合类型时，条件类型会对联合的每一项单独判断，再把结果合起来。所以 `Exclude<'a' | 'b', 'a'>` 得到 `'b'`，而不是把整个联合当成一个整体。用元组包住左边可以关掉这种分配，比如 `[T] extends [Something]`。",
+    "difficulty": "Hard",
+    "oralOneLiner": "联合类型碰到裸的条件类型时，会拆开每一项分别判断。"
+  },
+  {
+    "no": 212,
+    "id": "ng-ts-implements",
+    "category": "Angular",
+    "topic": "TypeScript 基础",
+    "question": "`implements` 做了什么？它会不会继承实现？",
+    "answer": "`implements` 只检查这个类有没有接口要求的字段和方法，不会把接口里的东西拷进类。接口也没有可继承的实现。漏了字段，编译直接报错。要复用已有方法，用 `extends` 一个类，不要指望 `implements` 把代码带过来。",
+    "difficulty": "Easy",
+    "oralOneLiner": "implements 只检查类是否符合接口，不带来实现。"
+  },
+  {
+    "no": 213,
+    "id": "ng-js-fn-declaration-expression",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "函数声明和函数表达式有什么区别？",
+    "answer": "函数声明会被整个提升，写在调用后面也能用。函数表达式只是把函数赋给变量，变量名会按 var 或 let 的规则提升，赋值还在原来那一行，提前调用会报错。箭头函数也是表达式，没有自己的 this。要复用、会被提前调用的，写成函数声明。只当值传来传去的，写成表达式。",
+    "difficulty": "Easy",
+    "oralOneLiner": "函数声明整体提升，函数表达式要等赋值那一行执行。"
+  },
+  {
+    "no": 214,
+    "id": "ng-js-higher-order",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "什么是高阶函数？",
+    "answer": "高阶函数是接收函数作为参数，或者返回一个函数。map、filter、防抖都是。它把「做什么」传进去，调用方只关心结果。返回的函数如果记住了外部变量，就是闭包。",
+    "difficulty": "Easy",
+    "oralOneLiner": "高阶函数要么接收函数，要么返回函数。"
+  },
+  {
+    "no": 215,
+    "id": "ng-js-array-unique",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "数组怎么去重？对象和 NaN 要注意什么？",
+    "answer": "原始值用 Set 最直接，展开回去就是新数组。Set 把 NaN 当成同一个。对象去重要先定规则，因为两个长得一样的对象不是同一个引用，Set 去不掉。用对象当字典来去重时，键会被转成字符串，1 和 '1' 会撞在一起。",
+    "difficulty": "Easy",
+    "oralOneLiner": "原始值用 Set 去重，对象要先定用哪个字段判断是同一个。"
+  },
+  {
+    "no": 216,
+    "id": "ng-js-parseint-number",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "`parseInt` 和 `Number` 有什么区别？",
+    "answer": "`Number` 要求整段字符串都是数字，`'12px'` 会得到 NaN，空字符串会得到 0。`parseInt` 从左边读数字，`'12px'` 得到 12，读不到数字就是 NaN。用 `parseInt` 时写上进制，避免旧环境把 0 开头当成八进制。金额和接口字段优先用 `Number`，确认整段都是数。",
+    "difficulty": "Easy",
+    "oralOneLiner": "Number 整段必须是数字，parseInt 从左边能读多少是多少。"
+  },
+  {
+    "no": 217,
+    "id": "ng-js-primitive-boxing",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "为什么字符串能点出 `length`？给原始值加属性为什么留不住？",
+    "answer": "访问原始值的属性时，引擎会临时包成对应的对象，读完就丢掉。所以 `'abc'.length` 能用。给这个临时对象加的属性，下一行再读已经不是同一个对象，读到的是 undefined。要长期挂数据，用真正的对象。",
+    "difficulty": "Easy",
+    "oralOneLiner": "点属性时原始值会被临时包成对象，加的属性留不住。"
+  },
+  {
+    "no": 218,
+    "id": "ng-js-empty-object",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "怎么判断一个对象是空的？",
+    "answer": "`Object.keys(obj).length === 0` 只看自身可枚举的字符串键。Symbol 键和不可枚举的键不算。`JSON.stringify(obj) === '{}'` 也会漏掉这些，还有函数、undefined。先确认它是普通对象，再看有没有自己的键。",
+    "difficulty": "Easy",
+    "oralOneLiner": "Object.keys 长度为 0 表示没有自身可枚举的字符串键。"
+  },
+  {
+    "no": 219,
+    "id": "ng-js-callback-hell",
+    "category": "Angular",
+    "topic": "JavaScript 异步",
+    "question": "什么是回调地狱？Promise 解决了哪一部分？",
+    "answer": "回调地狱是请求的回调里再发请求，一层层缩进，错误也要每层单独处理。Promise 把下一步接到 then 后面，失败集中到 catch。它没有让请求变快，只是把异步的顺序和错误写直。async/await 是在这之上换成同步的写法。",
+    "difficulty": "Easy",
+    "oralOneLiner": "回调地狱是一层套一层，Promise 把顺序和错误摊平。"
+  },
+  {
+    "no": 220,
+    "id": "ng-js-try-catch-async",
+    "category": "Angular",
+    "topic": "JavaScript 异步",
+    "question": "为什么 `try/catch` 有时抓不到异步错误？",
+    "answer": "`try/catch` 只抓当前这次同步执行里抛出的错。`setTimeout` 里的 throw 是下一轮宏任务，外面的 try 已经结束了。没有 await 的 Promise 拒绝也一样，要在这条 Promise 上 catch，或者 await 之后用 try。定时器内部自己写 try。",
+    "difficulty": "Easy",
+    "oralOneLiner": "try/catch 只抓这一轮同步抛出的错，抓不到下一轮的定时器和没 await 的拒绝。"
+  },
+  {
+    "no": 221,
+    "id": "ng-js-template-string",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "模板字符串解决了什么？",
+    "answer": "反引号可以换行，用 `${}` 把变量嵌进去，不用一截一截拼接。表达式会先算再转成字符串。标签模板是在插值前先把字符串片段交给一个函数，业务里少用，库里用来做安全转义或样式。",
+    "difficulty": "Easy",
+    "oralOneLiner": "模板字符串用反引号和 ${} 拼字符串，还能直接换行。"
+  },
+  {
+    "no": 222,
+    "id": "ng-js-async-defer",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "普通 script、`async`、`defer` 对页面解析有什么差别？",
+    "answer": "没有这两个属性的脚本会停下 HTML 解析，下完并执行完才继续。`defer` 并行下载，等文档解析完，按书写顺序执行，赶在 DOMContentLoaded 之前。`async` 也是并行下载，但一下完就执行，多个脚本谁先到谁先跑，顺序不保证。依赖 DOM 或其他脚本的，用 defer。互不依赖的统计脚本可以用 async。",
+    "difficulty": "Medium",
+    "oralOneLiner": "普通脚本堵住解析，defer 按顺序延后执行，async 下载完立刻执行。"
+  },
+  {
+    "no": 223,
+    "id": "ng-js-stop-propagation",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "`stopPropagation`、`stopImmediatePropagation`、`preventDefault` 各挡什么？",
+    "answer": "`stopPropagation` 阻止事件继续传到别的节点，捕获和冒泡都停。`stopImmediatePropagation` 还挡住当前元素上还没跑的其他监听。`preventDefault` 不挡传播，只取消浏览器默认行为，比如链接跳转、表单提交。要取消默认行为就用 preventDefault，要隔离父子点击才用 stopPropagation。",
+    "difficulty": "Medium",
+    "oralOneLiner": "stopPropagation 停传播，preventDefault 停默认行为。"
+  },
+  {
+    "no": 224,
+    "id": "ng-js-pubsub",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "发布订阅和观察者模式有什么区别？",
+    "answer": "观察者是主题自己拿着观察者名单，状态变了直接逐个调用。发布订阅中间有一条事件通道，发布的人只报一个事件名，订阅的人自己来听，两边不持有对方。前端的事件总线是发布订阅。组件之间点对点通知，更像观察者。",
+    "difficulty": "Medium",
+    "oralOneLiner": "观察者是主题直接叫人，发布订阅中间隔着一条事件通道。"
+  },
+  {
+    "no": 225,
+    "id": "ng-js-pure-function",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "什么是纯函数？为什么业务里要尽量把计算写成纯函数？",
+    "answer": "同样的参数永远得到同样的结果，而且不改外部变量、不请求、不写界面。这样的函数好测，调用顺序也不会互相踩。请求、改全局状态、操作 DOM 是副作用，放到边缘。中间的价格、校验、数据转换保持纯函数。",
+    "difficulty": "Medium",
+    "oralOneLiner": "纯函数是同样的参数永远同样的结果，并且不碰外面。"
+  },
+  {
+    "no": 226,
+    "id": "ng-js-compose-over-inherit",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "为什么说组合优于继承？",
+    "answer": "继承把子类绑在父类的实现上，父类一改，子类一起受影响，层次一深就很难改。组合是拿另一个对象来完成某段能力，需要就放进来，不需要就换掉。多个变化方向不要叠成一条继承链。共用数据和行为稳定时，继承仍然合适。",
+    "difficulty": "Medium",
+    "oralOneLiner": "组合是拿别的对象来完成能力，避免继承链越叠越死。"
+  },
+  {
+    "no": 227,
+    "id": "ng-js-property-descriptor",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "属性描述符有哪些？`defineProperty` 默认和普通赋值有什么不同？",
+    "answer": "数据属性有 value、writable、enumerable、configurable。访问器属性用 get 和 set 代替 value 和 writable。普通赋值得到的属性默认可写、可枚举、可配置。`defineProperty` 不写这些开关时，默认都是 false，所以 `Object.keys` 看不到。冻结对象就是把 writable 和 configurable 关掉。",
+    "difficulty": "Medium",
+    "oralOneLiner": "defineProperty 不写开关时，属性默认不可枚举。"
+  },
+  {
+    "no": 228,
+    "id": "ng-js-key-order",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "对象自己的键，遍历时顺序是怎样的？",
+    "answer": "整数形式的键按数值从小到大。其余字符串键按插入顺序。Symbol 键在最后。`Object.keys` 按这个规则，但不包括 Symbol。`for...in` 还会走到原型上，顺序不要依赖它。要稳定顺序，用 Map 或数组。",
+    "difficulty": "Medium",
+    "oralOneLiner": "整数键按数字排序，其他字符串键按插入顺序。"
+  },
+  {
+    "no": 229,
+    "id": "ng-js-esm-cycle",
+    "category": "Angular",
+    "topic": "JavaScript 模块化",
+    "question": "模块循环引用时，ESM 和 CommonJS 各拿到什么？",
+    "answer": "ESM 的绑定先建立，但求值还没走到时去读，会处在暂时性死区，直接报错。CommonJS 拿到的是当时 `exports` 上已经挂好的部分，还没赋上的是 undefined，不一定立刻报错。能拆开的依赖就不要绕成环。",
+    "difficulty": "Medium",
+    "oralOneLiner": "ESM 循环引用可能读到还没初始化的绑定，CommonJS 拿到当时已导出的那一部分。"
+  },
+  {
+    "no": 230,
+    "id": "ng-js-fetch-xhr",
+    "category": "Angular",
+    "topic": "JavaScript 异步",
+    "question": "`fetch` 和 `XMLHttpRequest` 怎么选？`fetch` 遇到 404 会怎样？",
+    "answer": "`fetch` 返回 Promise，写法直接。404 和 500 不会 reject，只有断网、CORS 失败这类才会。要自己看 `response.ok`。取消请求把 `AbortSignal` 传进去。要上传进度时，XHR 的 progress 事件更直接。新代码默认用 fetch。",
+    "difficulty": "Medium",
+    "oralOneLiner": "fetch 的 404 不会进 catch，要看 response.ok。"
+  },
+  {
+    "no": 231,
+    "id": "ng-js-timer-accuracy",
+    "category": "Angular",
+    "topic": "JavaScript 异步",
+    "question": "为什么 `setTimeout` 不准？倒计时应该怎么写？",
+    "answer": "延时到了只是把回调放进任务队列，还要等主线程把当前同步代码和微任务跑完。嵌套多层之后，浏览器会把最短间隔抬到大约 4 毫秒。后台标签页还会被拉得更长。倒计时记下结束的时间戳，每次用现在的时间去减，不要靠次数乘间隔。",
+    "difficulty": "Medium",
+    "oralOneLiner": "定时器到点只是入队，倒计时要用时间戳相减。"
+  },
+  {
+    "no": 232,
+    "id": "ng-js-intersection-observer",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "图片懒加载为什么用 `IntersectionObserver`，而不是监听滚动？",
+    "answer": "它在元素和视口相交时回调，不用每次滚动都自己算位置。滚动监听容易触发频繁布局计算。图片进入视口再把真实地址赋上去，离开页面时 disconnect。列表曝光也可以用同一套。",
+    "difficulty": "Medium",
+    "oralOneLiner": "IntersectionObserver 在元素进入视口时通知，不用自己监听滚动算位置。"
+  },
+  {
+    "no": 233,
+    "id": "ng-js-v8-gc",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "V8 的垃圾回收是怎么分代的？",
+    "answer": "新创建的对象放新生代。新生代空间分成两半，回收时把还活着的对象拷到另一半，死掉的直接丢掉，所以小而勤。活过几轮的晋升到老生代。老生代用标记清除，碎片多了再把活对象挪到一起，叫标记整理。为了少停顿，标记可以穿插在执行中间做。主算法不是引用计数。",
+    "difficulty": "Hard",
+    "oralOneLiner": "新生代用复制，老生代用标记清除，碎片多了再整理。"
+  },
+  {
+    "no": 234,
+    "id": "ng-js-stack-heap",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "栈和堆里各放什么？闭包为什么会让堆上的对象活着？",
+    "answer": "调用栈放执行上下文。原始值的临时数据多在栈上，对象分配在堆上，栈里留一个引用。函数返回后，这个执行上下文弹出。闭包如果还抓着里面的对象，堆上那块就还能从根找到，回收不掉。爆栈是调用太深。堆一直涨，是对象还被引用着。",
+    "difficulty": "Hard",
+    "oralOneLiner": "执行上下文在栈上，对象在堆上，闭包会把堆上的对象留住。"
+  },
+  {
+    "no": 235,
+    "id": "ng-js-node-event-loop",
+    "category": "Angular",
+    "topic": "JavaScript 异步",
+    "question": "浏览器和 Node 的事件循环有什么不同？",
+    "answer": "浏览器一轮是一个宏任务，然后清空微任务，中间可能渲染。Node 把定时器、I/O、setImmediate 分到不同阶段。`process.nextTick` 比 Promise 的微任务更早清空。`setImmediate` 在 check 阶段，和 `setTimeout(0)` 谁先不一定。不要把 Node 说成和浏览器同一套队列。",
+    "difficulty": "Hard",
+    "oralOneLiner": "Node 分阶段跑，nextTick 比 Promise 微任务更早。"
+  },
+  {
+    "no": 236,
+    "id": "ng-js-raf",
+    "category": "Angular",
+    "topic": "JavaScript 异步",
+    "question": "做动画为什么用 `requestAnimationFrame`，不用 `setInterval`？",
+    "answer": "`requestAnimationFrame` 赶在下一次绘制前执行，和刷新对齐。页面卡的时候它跟着掉帧，不会在一帧里补跑多次。切到后台会停。`setInterval` 对不齐绘制，时间会漂，后台也还在跑。一秒大约跟屏幕刷新次数走，不是写死 60 次。纯透明度变化优先用 CSS，不必用脚本去改。",
+    "difficulty": "Hard",
+    "oralOneLiner": "requestAnimationFrame 跟着绘制走，后台会停，setInterval 对不齐帧。"
+  },
+  {
+    "no": 237,
+    "id": "ng-js-recursion-starve",
+    "category": "Angular",
+    "topic": "JavaScript 异步",
+    "question": "函数直接递归、用 `setTimeout` 递归、用 `Promise.then` 递归，分别会怎样？",
+    "answer": "函数里同步调用自己，调用栈一直叠，很快 RangeError。`setTimeout` 里再调自己，这次函数已经返回，栈空了，只是不断预约宏任务，不会爆栈，页面还能干别的。`Promise.then` 里再调自己也不会爆栈，但微任务永远清不空，渲染和后面的宏任务插不进来，页面卡死。`new Promise` 的执行函数是同步的，在里面直接再调自己，同样爆栈。",
+    "difficulty": "Hard",
+    "oralOneLiner": "同步递归爆栈，then 递归不爆栈但会把渲染饿死。"
+  },
+  {
+    "no": 238,
+    "id": "ng-js-concurrency-limit",
+    "category": "Angular",
+    "topic": "JavaScript 异步",
+    "question": "如何限制同时只发固定数量的请求？",
+    "answer": "不要一开始把全部 Promise 都创建出来。用一个队列，空位小于上限就取下一个开始。有一个结束，再补一个。失败也要释放空位，不然队列卡住。结果按原来的下标放回去，不要按完成顺序当成业务顺序。",
+    "difficulty": "Hard",
+    "oralOneLiner": "并发限制是维持固定个空位，完成一个再补一个。"
+  },
+  {
+    "no": 239,
+    "id": "ng-js-yield-main",
+    "category": "Angular",
+    "topic": "JavaScript 异步",
+    "question": "一段长计算把页面卡住了，怎么把主线程让出去？",
+    "answer": "主线程一次同步计算太长，点击和渲染都得等它结束。把循环切成小段，每段之后用 `setTimeout` 或 `scheduler.yield` 把控制权交回去。只是纯计算、不碰页面，放到 Worker。动画和读布局不要混在同一次长任务里。",
+    "difficulty": "Hard",
+    "oralOneLiner": "长计算切成小段让出主线程，纯计算丢给 Worker。"
+  },
+  {
+    "no": 240,
+    "id": "ng-js-heap-snapshot",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "怎么确认是内存泄漏，而不是正常占用？",
+    "answer": "先看内存曲线离开页面后能不能降下来。降不下来就打两份堆快照做对比，看哪种对象的数量一直涨。页面上已经没有、快照里还在的 DOM，叫分离节点，说明还有 JavaScript 抓着它。常见是没卸的监听、定时器和缓存。改完再打一次，数量不再涨才算修好。",
+    "difficulty": "Hard",
+    "oralOneLiner": "两份堆快照对比，数量一直涨的对象就是泄漏嫌疑。"
+  },
+  {
+    "no": 241,
+    "id": "ng-js-hidden-class",
+    "category": "Angular",
+    "topic": "JavaScript 基础",
+    "question": "为什么同一个形状的对象访问更快？`delete` 有什么代价？",
+    "answer": "结构一样的对象会共用隐藏类，属性在固定偏移上，访问快。后面又加字段、或者 `delete` 掉字段，对象会退化成字典，查找变慢。创建时把会用到的字段一次写上，不用的字段设成 null，不要中途删。",
+    "difficulty": "Hard",
+    "oralOneLiner": "形状稳定的对象访问快，delete 会把对象打成字典。"
+  },
+  {
+    "no": 242,
+    "id": "ng-js-global-error",
+    "category": "Angular",
+    "topic": "JavaScript 异步",
+    "question": "页面上没被人接住的错误，从哪里听到？",
+    "answer": "同步脚本错误走 `window.onerror`。资源加载失败不冒泡，要在捕获阶段听。没人处理的 Promise 拒绝走 `unhandledrejection`。跨域脚本报错常常只剩 Script error，要把脚本的跨域头和标签上的 crossorigin 配对，才能看到真实信息。上报时避开把错误处理自己再抛一遍。",
+    "difficulty": "Hard",
+    "oralOneLiner": "同步错误走 onerror，没人接的 Promise 走 unhandledrejection。"
+  },
+  {
+    "no": 243,
+    "id": "ng-js-abort-controller",
+    "category": "Angular",
+    "topic": "JavaScript 异步",
+    "question": "`AbortController` 是做什么的？",
+    "answer": "它用来取消一次 fetch 或一段可取消的异步工作。把 `controller.signal` 交给请求，调用 `abort()` 后请求失败，错误名字是 AbortError。页面离开或新的一次输入开始时调用，避免旧请求回来把新状态盖掉。判断是取消就不要当成业务失败去弹错。",
+    "difficulty": "Hard",
+    "oralOneLiner": "AbortController 用来取消请求，取消的错误不要当成业务失败。"
+  },
+  {
+    "no": 244,
+    "id": "ng-ts-params",
+    "category": "Angular",
+    "topic": "TypeScript 基础",
+    "question": "可选参数、默认参数、剩余参数在类型上怎么写？",
+    "answer": "可选参数用问号，必须写在必选参数后面。默认值让调用时可以不传，类型一般就是那个默认值的类型。剩余参数是一个数组。回调里的可选参数和实现时的可选参数，兼容规则不一样，对外的函数签名要把可选和必选写清楚。",
+    "difficulty": "Easy",
+    "oralOneLiner": "问号表示可以不传，剩余参数的类型是数组。"
+  },
+  {
+    "no": 245,
+    "id": "ng-ts-literal",
+    "category": "Angular",
+    "topic": "TypeScript 基础",
+    "question": "什么是字面量类型？它和 `string` 有什么不同？",
+    "answer": "`let name = 'a'` 会被放宽成 string。`const name = 'a'` 才是字面量类型 `'a'`。`'draft' | 'sent'` 只允许这几个值，传别的字符串会报错。接口状态、事件名用字面量联合，不要先放成 string 再去比较。",
+    "difficulty": "Easy",
+    "oralOneLiner": "字面量类型是具体的那几个值，不是任意 string。"
+  },
+  {
+    "no": 246,
+    "id": "ng-ts-array-type",
+    "category": "Angular",
+    "topic": "TypeScript 基础",
+    "question": "`number[]`、`Array<number>` 和只读数组有什么差别？",
+    "answer": "`number[]` 和 `Array<number>` 是同一种类型。`readonly number[]` 不能 push、不能按下标赋值，适合表示不要改的列表。元组是固定长度、每一项类型可以不同，数组是同一类型的一串。",
+    "difficulty": "Easy",
+    "oralOneLiner": "number[] 和 Array 相同，readonly 数组不能再改内容。"
+  },
+  {
+    "no": 247,
+    "id": "ng-ts-void-callback",
+    "category": "Angular",
+    "topic": "TypeScript 基础",
+    "question": "为什么返回 `void` 的函数类型，实现里却可以 `return` 一个值？",
+    "answer": "这里的 void 表示调用方不会使用返回值，不是要求函数真的什么都不 return。所以把一个返回数字的函数，赋给 `() => void` 的回调是允许的。如果返回类型写成 undefined，那就必须真的返回 undefined。不要用返回值来传递结果时，回调才写成 void。",
+    "difficulty": "Medium",
+    "oralOneLiner": "void 表示调用方忽略返回值，不是禁止函数返回。"
+  },
+  {
+    "no": 248,
+    "id": "ng-ts-extends-meanings",
+    "category": "Angular",
+    "topic": "TypeScript",
+    "question": "`extends` 在 TypeScript 里有哪几种用法？",
+    "answer": "一个关键字三种地方。接口和类后面的 extends 是继承。泛型上的 `T extends 某类型` 是约束，传进来的类型必须满足它。条件类型里的 `T extends U ? X : Y` 是在问能不能赋值，用来选分支。看到 extends 先看它写在哪。",
+    "difficulty": "Medium",
+    "oralOneLiner": "extends 可以是继承、泛型约束，或条件类型的判断。"
+  },
+  {
+    "no": 249,
+    "id": "ng-ts-deep-partial",
+    "category": "Angular",
+    "topic": "TypeScript",
+    "question": "`Partial` 为什么不够用？深度可选怎么写？",
+    "answer": "`Partial` 只把第一层变成可选，里面的对象还是必填。深度可选是映射类型加递归：对象的每个字段变成可选，再对字段类型做同样的事。函数、日期不要继续往下拆。表单草稿、局部更新用得上。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Partial 只改第一层，深度可选要递归到里面的对象。"
+  },
+  {
+    "no": 250,
+    "id": "ng-ts-awaited",
+    "category": "Angular",
+    "topic": "TypeScript",
+    "question": "`Awaited` 解决什么问题？",
+    "answer": "`Promise<string>` 用 Awaited 得到 string。套了好几层 Promise 也会剥到最里面。自己写就是条件类型里 infer Promise 的那个类型，再递归。async 函数的返回值要用它，才能拿到真正 resolve 的类型，而不是还带着 Promise。",
+    "difficulty": "Medium",
+    "oralOneLiner": "Awaited 把 Promise 一层层剥开，取出里面的类型。"
+  },
+  {
+    "no": 251,
+    "id": "ng-ts-template-literal",
+    "category": "Angular",
+    "topic": "TypeScript",
+    "question": "模板字面量类型适合做什么？",
+    "answer": "它用字符串拼类型。比如事件名 `on${Capitalize<事件>}`，或路由 `/${string}`。联合放进去会逐个拼接。适合事件名、属性前缀这种有规则的字符串。没有规则的自由文本，仍然用 string。",
+    "difficulty": "Medium",
+    "oralOneLiner": "模板字面量类型按规则拼出字符串类型，比如事件名。"
+  },
+  {
+    "no": 252,
+    "id": "ng-ts-key-remapping",
+    "category": "Angular",
+    "topic": "TypeScript",
+    "question": "映射类型里的 `as` 是做什么的？",
+    "answer": "映射类型默认用原来的键。`as` 可以把键改名，或者改成 never 把这个键去掉。给每个键加前缀、按值的类型过滤键，都靠它。它改的是键的名字，不是值的类型。",
+    "difficulty": "Medium",
+    "oralOneLiner": "映射类型的 as 用来改键名，或把某个键去掉。"
+  },
+  {
+    "no": 253,
+    "id": "ng-ts-required",
+    "category": "Angular",
+    "topic": "TypeScript",
+    "question": "`Required` 和 `Partial` 是什么关系？",
+    "answer": "`Partial` 把每个字段加上问号，`Required` 把问号拿掉。都只作用于一层。`-?` 就是去掉可选。对外接口要保证字段一定有时，用 Required，不要只在运行时碰运气。",
+    "difficulty": "Easy",
+    "oralOneLiner": "Required 去掉可选，Partial 加上可选，都只改一层。"
+  },
+  {
+    "no": 254,
+    "id": "ng-ts-branded",
+    "category": "Angular",
+    "topic": "TypeScript",
+    "question": "为什么用户 id 和订单 id 都是 `string`，类型上还是会传错？怎么挡？",
+    "answer": "TypeScript 看结构。两个 string 可以互相传。要挡住，就做成品牌类型：在 string 上交叉一个唯一的标记，只有专门的函数能造出这种值。原始字符串就不能再直接传进只收用户 id 的函数。这是在结构类型上补一层名义上的区分。",
+    "difficulty": "Medium",
+    "oralOneLiner": "结构类型分不开两种 string，用品牌类型给其中一种打标记。"
+  },
+  {
+    "no": 255,
+    "id": "ng-ts-module-augment",
+    "category": "Angular",
+    "topic": "TypeScript 工程化",
+    "question": "怎么给第三方库的类型补字段？",
+    "answer": "用 `declare module` 打开那个模块，再对已有的 interface 做同名合并，把缺的字段补上。不要去改 node_modules。补的是类型，运行时那个字段还得库真的有，或者自己保证有。升级库之后要再看这段补充还成不成立。",
+    "difficulty": "Medium",
+    "oralOneLiner": "declare module 里合并接口，用来给第三方类型补字段。"
+  },
+  {
+    "no": 256,
+    "id": "ng-ts-catch-unknown",
+    "category": "Angular",
+    "topic": "TypeScript 基础",
+    "question": "严格模式下 `catch` 的错误为什么是 `unknown`？",
+    "answer": "抛出的不一定是 Error，任何值都能 throw。严格配置里 catch 的变量是 unknown，不能直接读 message。先判断它是 Error，再取信息。当成 any 会把不是错误对象的值也当错误用。",
+    "difficulty": "Medium",
+    "oralOneLiner": "catch 到的不一定是 Error，所以类型是 unknown。"
+  },
+  {
+    "no": 257,
+    "id": "ng-ts-const-enum",
+    "category": "Angular",
+    "topic": "TypeScript 基础",
+    "question": "`const enum` 和普通枚举差在哪？为什么业务里少用？",
+    "answer": "普通数字枚举编译后是一个对象，还能从值反查名字。`const enum` 会在用到的地方直接写成那个值，运行时没有这个对象。单独编译、打包工具隔离模块时，跨文件使用容易出问题。状态字段用字符串字面量联合更稳。",
+    "difficulty": "Medium",
+    "oralOneLiner": "const enum 会把值内联掉，运行时没有那个对象。"
+  },
+  {
+    "no": 258,
+    "id": "ng-ts-variance",
+    "category": "Angular",
+    "topic": "TypeScript",
+    "question": "协变和逆变是什么？函数参数为什么是反的？",
+    "answer": "协变是子类型关系保持原方向。Dog 是 Animal 的子类，返回 Dog 的函数就可以当成返回 Animal 的函数。逆变是方向反过来。开了严格函数类型后，参数位置是逆变：能处理 Animal 的函数，可以拿来处理 Dog，因为 Dog 也是 Animal。只写了处理 Dog 的函数，不能拿去处理任意 Animal。写成类的方法时，参数检查比函数类型松，仍然双向都允许。",
+    "difficulty": "Hard",
+    "oralOneLiner": "返回值协变，严格模式下函数参数逆变：能处理父类型，就能处理子类型。"
+  },
+  {
+    "no": 259,
+    "id": "ng-ts-array-variance",
+    "category": "Angular",
+    "topic": "TypeScript",
+    "question": "为什么 `Dog[]` 能赋给 `Animal[]`，随后却可能推进去一只猫？",
+    "answer": "数组按协变处理，Dog 数组可以赋给 Animal 数组。赋完之后按 Animal 数组来 push，类型上允许放别的动物，运行时就进了原来的 Dog 数组。这是为了好用留下的洞。不希望被写的列表，类型写成只读数组，写入这条路就关了。",
+    "difficulty": "Hard",
+    "oralOneLiner": "数组协变让子类数组能赋给父类数组，只读数组才能挡住写入。"
+  },
+  {
+    "no": 260,
+    "id": "ng-ts-infer-position",
+    "category": "Angular",
+    "topic": "TypeScript",
+    "question": "同一个 `infer` 出现多次，为什么有时得到联合，有时得到交叉？",
+    "answer": "infer 跟它所在的位置走。在属性值、返回值这种协变位置出现多次，结果合成联合。在函数参数这种逆变位置出现多次，结果合成交叉。联合转交叉就是先把联合拆成好几个函数类型，再在参数位置做 infer。",
+    "difficulty": "Hard",
+    "oralOneLiner": "infer 在返回值位置合成联合，在参数位置合成交叉。"
+  },
+  {
+    "no": 261,
+    "id": "ng-ts-union-to-intersection",
+    "category": "Angular",
+    "topic": "TypeScript",
+    "question": "联合类型怎么转成交叉类型？原理是什么？",
+    "answer": "先利用分布式条件类型，把联合的每一项变成一个函数的参数。这些函数再合成联合。然后用 infer 去推断这个参数。参数位置是逆变的，多个候选项会收成交叉。所以 `{a:1} | {b:2}` 能变成两者的交叉。交叉没法再可靠地拆回联合。",
+    "difficulty": "Hard",
+    "oralOneLiner": "联合先拆成函数参数，再靠参数位置的 infer 收成交叉。"
+  },
+  {
+    "no": 262,
+    "id": "ng-ts-never-distribute",
+    "category": "Angular",
+    "topic": "TypeScript",
+    "question": "为什么把 `never` 放进分布式条件类型，结果常常还是 `never`？",
+    "answer": "裸类型参数遇到联合会拆开。never 表示没有成员，拆完没有一项可算，结果就是 never，不会走 false 分支。要判断是不是 never，把两边包进元组，例如 `[T] extends [never]`，这样就不再分发。",
+    "difficulty": "Hard",
+    "oralOneLiner": "never 分发后没有成员，结果仍是 never。用元组包住才能判断它。"
+  },
+  {
+    "no": 263,
+    "id": "ng-ts-variance-annotations",
+    "category": "Angular",
+    "topic": "TypeScript",
+    "question": "类型参数上的 `in` 和 `out` 是干什么的？",
+    "answer": "`out` 表示这个类型参数用在返回值、属性这种协变位置。`in` 表示用在函数参数这种逆变位置。标错了，编译器会指出你用反了位置。它帮助检查和推断，不把结构类型改成按名字兼容。",
+    "difficulty": "Hard",
+    "oralOneLiner": "out 标在返回位置，in 标在参数位置，标反了会报错。"
+  },
+  {
+    "no": 264,
+    "id": "ng-ts-deep-readonly",
+    "category": "Angular",
+    "topic": "TypeScript",
+    "question": "怎么把一个对象类型递归变成只读？",
+    "answer": "`Readonly` 只读第一层，里面的对象还能改。深度只读用映射类型给每一层加上 readonly，再对字段类型递归。数组要收成只读数组，否则里面仍能 push。函数不要往下拆。运行时没有只读，断言仍然改得了。",
+    "difficulty": "Hard",
+    "oralOneLiner": "深度只读是每一层都加 readonly，数组要收成只读数组。"
+  },
+  {
+    "no": 265,
+    "id": "ng-ts-type-too-deep",
+    "category": "Angular",
+    "topic": "TypeScript 工程化",
+    "question": "类型体操为什么会把编译拖慢，甚至报类型太深？",
+    "answer": "递归条件类型每深一层，编译器都要展开一次。层级不封顶，就会报类型实例化过深，编辑器也会卡。业务类型把递归限制在实际数据的层数内。能用现成工具类型就不要再套一层。类型是给人读的，算不出来就拆开写。",
+    "difficulty": "Hard",
+    "oralOneLiner": "递归类型展开太深，编译会报实例化过深。"
   }
 ]

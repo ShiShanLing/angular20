@@ -8,7 +8,7 @@ import { PracticeBank } from './practice-bank.entity';
 import { PracticeQuestion } from './practice-question.entity';
 import { PracticeStar } from './practice-star.entity';
 
-const TRACKS = new Set(['ios', 'frontend', 'angular', 'ts', 'agent', 'practice']);
+const TRACKS = new Set(['ios', 'frontend', 'angular', 'ts', 'js', 'agent', 'practice']);
 const LEGACY_STAR_TYPE = 'practice-starred';
 
 @Injectable()

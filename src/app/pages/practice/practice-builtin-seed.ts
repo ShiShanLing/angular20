@@ -23,6 +23,8 @@ export function builtinSeedForScope(
       return angularJobSeedToPracticeItems(importedAt, 'angular');
     case 'ts-learning':
       return angularJobSeedToPracticeItems(importedAt, 'ts');
+    case 'js-learning':
+      return angularJobSeedToPracticeItems(importedAt, 'js');
     case 'frontend-learning':
       return frontendJobSeedToPracticeItems(importedAt);
     case 'agent-learning':

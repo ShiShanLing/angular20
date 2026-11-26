@@ -86,16 +86,12 @@ function objectiveRowsToPracticeItems(
 /** 将 Angular 知识刷题计划 JSON 转为本应用 PracticeItem。 */
 export function angularJobSeedToPracticeItems(
   importedAt: number,
-  track: 'angular' | 'ts' | 'all' = 'all'
+  track: 'angular' | 'ts' | 'js' | 'all' = 'all'
 ): PracticeItem[] {
   const rows = angularJobSeedJson as IosSeedRow[];
   return rows
     .map((row) => ({ row, category: angularRowCategory(row) }))
-    .filter(({ category }) => {
-      if (track === 'ts') return category === 'angular-ts';
-      if (track === 'angular') return category !== 'angular-ts';
-      return true;
-    })
+    .filter(({ category }) => belongsToAngularTrack(category, track))
     .map(({ row, category }) => rowToPracticeItem(row, importedAt, category));
 }
 
@@ -111,11 +107,10 @@ export function angularRowsToPracticeItems(rows: IosSeedRow[], importedAt: numbe
   return rows.map((row) => rowToPracticeItem(row, importedAt, angularRowCategory(row)));
 }
 
-export function bundledAngularRows(track: 'angular' | 'ts'): IosSeedRow[] {
-  return (angularJobSeedJson as IosSeedRow[]).filter((row) => {
-    const category = angularRowCategory(row);
-    return track === 'ts' ? category === 'angular-ts' : category !== 'angular-ts';
-  });
+export function bundledAngularRows(track: 'angular' | 'ts' | 'js'): IosSeedRow[] {
+  return (angularJobSeedJson as IosSeedRow[]).filter((row) =>
+    belongsToAngularTrack(angularRowCategory(row), track)
+  );
 }
 
 function rowsToPracticeItems(
@@ -149,12 +144,22 @@ function rowToPracticeItem(row: IosSeedRow, importedAt: number, category: Practi
   return item;
 }
 
-function angularRowCategory(row: IosSeedRow): PracticeItem['category'] {
+export function angularRowCategory(row: IosSeedRow): PracticeItem['category'] {
   const topic = row.topic ?? '';
   if (topic.startsWith('TypeScript')) return 'angular-ts';
   if (topic.startsWith('JavaScript')) return 'angular-js';
   if (topic === 'CSS' || topic.includes('样式')) return 'angular-css';
   return 'angular';
+}
+
+export function belongsToAngularTrack(
+  category: PracticeItem['category'],
+  track: 'angular' | 'ts' | 'js' | 'all'
+): boolean {
+  if (track === 'ts') return category === 'angular-ts';
+  if (track === 'js') return category === 'angular-js';
+  if (track === 'angular') return category !== 'angular-ts' && category !== 'angular-js';
+  return true;
 }
 
 function objectiveTypeLabel(type: ObjectiveSeedRow['type']): string {

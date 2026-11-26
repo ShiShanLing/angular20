@@ -51,7 +51,7 @@ import {
 type FilterValue = PracticeFilterCategory;
 type ChantPhase = 'idle' | 'question' | 'answer';
 type PracticeQuestionMode = 'objective' | 'subjective';
-type LearningTrack = 'ios' | 'android' | 'angular' | 'ts' | 'agent' | 'general';
+type LearningTrack = 'ios' | 'android' | 'angular' | 'ts' | 'js' | 'agent' | 'general';
 type PracticeFlowMode = 'daily' | 'full';
 
 const FONT_SCALE_KEY = 'angular20_practice_font_scale_v1';
@@ -144,6 +144,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
     if (this.learningTrack === 'android') return 'Android 学习';
     if (this.isAngularLearning) return 'Angular 学习';
     if (this.learningTrack === 'ts') return 'TypeScript 学习';
+    if (this.learningTrack === 'js') return 'JavaScript 学习';
     if (this.isAgentObjectiveLearning) return 'Agent 选择判断';
     if (this.isAgentLearning) return 'Agent 简答题';
     return '知识刷题';
@@ -1376,6 +1377,14 @@ export class PracticeComponent implements OnInit, OnDestroy {
         this.reloadFromStorage();
       }
     }
+    if (this.isAngularLearning) {
+      const scope = this.activeStorageScope();
+      const kept = this.storage.load(scope).filter((item) => item.category !== 'angular-js');
+      if (kept.length !== this.items().length) {
+        this.storage.save(kept, scope);
+        this.reloadFromStorage();
+      }
+    }
     this.dailyState.set(this.storage.readDailyState(this.activeStorageScope()));
     this.ensureTodayPractice();
     this.setFilter(this.storage.readSavedFilterCategory(this.activeStorageScope()));
@@ -1493,6 +1502,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
     if (this.isIosLearning) return iosJobSeedToPracticeItems(importedAt);
     if (this.learningTrack === 'android') return [];
     if (this.learningTrack === 'ts') return angularJobSeedToPracticeItems(importedAt, 'ts');
+    if (this.learningTrack === 'js') return angularJobSeedToPracticeItems(importedAt, 'js');
     if (this.isAngularLearning) return angularJobSeedToPracticeItems(importedAt, 'angular');
     if (this.isAgentLearning && this.questionMode() === 'objective') {
       return agentObjectiveSeedToPracticeItems(importedAt);
@@ -1519,6 +1529,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
       scope === 'android-learning' ||
       scope === 'angular-learning' ||
       scope === 'ts-learning' ||
+      scope === 'js-learning' ||
       scope === 'agent-learning' ||
       scope === 'agent-objective-learning'
     ) {
@@ -1543,6 +1554,7 @@ export class PracticeComponent implements OnInit, OnDestroy {
     if (this.routeScope === 'android-learning') return 'android';
     if (this.routeScope === 'angular-learning') return 'angular';
     if (this.routeScope === 'ts-learning') return 'ts';
+    if (this.routeScope === 'js-learning') return 'js';
     if (this.routeScope === 'agent-learning' || this.routeScope === 'agent-objective-learning') {
       return 'agent';
     }

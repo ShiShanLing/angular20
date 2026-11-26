@@ -3,7 +3,8 @@
 > 来源：`ios.job.questions.codex.json`
 > 题目数量：155 题
 >
-# 需要背的单词 some,none,guard,Comparable,existential,Codable,Present,Signature,unrecognized,Associated,Extension,Swizzling,descriptor,prepare,reuse,Gesture,Recognizer,keychain,Operation,Concurrency,isolation,reentrancy,drain,fliter,Commands,Segment,Section,
+# 需要背的单词 some,none,guard,Comparable,existential,Codable,Present,Signature,unrecognized,Associated,Extension,Swizzling,descriptor,prepare,reuse,Gesture,Recognizer,keychain,Operation,Concurrency,isolation,reentrancy,drain,fliter,Commands,Segment,Section,Isolation,nonisolated.Instruments
+
 
 ## 目录
 

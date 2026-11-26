@@ -21,14 +21,19 @@ function isTypeScriptRow(row) {
   return String(row.topic ?? '').startsWith('TypeScript');
 }
 
+function isJavaScriptRow(row) {
+  return String(row.topic ?? '').startsWith('JavaScript');
+}
+
 const angularRows = load('angular/angular-job.seed.json');
 const banks = {
   ios: load('ios/ios-job.seed.json'),
   frontend: load('frontend/frontend-job.seed.json'),
   agent: load('agent/agent-job.seed.json'),
   practice: load('ios/ios.seed.json'),
-  angular: angularRows.filter((row) => !isTypeScriptRow(row)),
+  angular: angularRows.filter((row) => !isTypeScriptRow(row) && !isJavaScriptRow(row)),
   ts: angularRows.filter((row) => isTypeScriptRow(row)),
+  js: angularRows.filter((row) => isJavaScriptRow(row)),
 };
 
 const outDir = join(root, 'server/src/practice-banks');

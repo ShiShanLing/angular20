@@ -16,7 +16,7 @@ export function formatSessionAt(at: number): string {
 export function sessionKindLabel(kind: PracticeSessionRecord['kind']): string {
   return kind === 'review' ? '复习' : '每日学习';
 }
-
+//
 function pointsForKind(
   records: PracticeSessionRecord[],
   kind: PracticeSessionRecord['kind']
@@ -52,7 +52,7 @@ export function buildScoreTrendOption(
   const canSlide = chronological.length >= SLIDE_AFTER;
   const visible = Math.min(VISIBLE_POINTS, chronological.length);
   const startPercent = canSlide ? Math.max(0, 100 - (visible / chronological.length) * 100) : 0;
-
+  
   return {
     color: ['#1677ff', '#52c41a'],
     tooltip: {

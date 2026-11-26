@@ -58,6 +58,16 @@ export const FEATURE_MENU_ITEMS: FeatureMenuItem[] = [
         ]
       },
       {
+        label: 'JavaScript',
+        icon: 'code',
+        children: [
+          { path: '/js-learning', label: '每日学习', permission: 'practice.view' },
+          { path: '/js-learning/review', label: '复习', permission: 'practice.view' },
+          { path: '/js-learning/recite', label: '背题', permission: 'practice.view' },
+          { path: '/js-learning/history', label: '成绩走势', permission: 'practice.view' },
+        ]
+      },
+      {
         label: 'TS',
         icon: 'experiment',
         children: [
