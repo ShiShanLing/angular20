@@ -65,6 +65,11 @@ server/src/practice-banks/practice-seeds.json
 server/.env
 /.angular20-release-*.json
 
+# 本机代理和软件说明，不要随发布脚本提交
+docs/日本美国自动切换.yaml
+docs/微信分身修改说明.md
+docs/静态LSP修改说明.md
+
 # SQLite database
 *.db
 *.db-journal
